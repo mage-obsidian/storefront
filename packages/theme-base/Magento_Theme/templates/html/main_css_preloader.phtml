@@ -1,0 +1,68 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+/**
+ * @var \Magento\Framework\View\Element\Template $block
+ * @var \Magento\Framework\Escaper $escaper
+ * @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
+ */
+
+?>
+<div data-role="main-css-loader" class="loading-mask">
+    <div
+            class="loader"
+            style="
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            margin: auto;
+            display: grid;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255,255,255,.9);
+        ">
+        <div style="
+            box-sizing: border-box;
+            width: 40px;
+            height: 40px;
+            margin: 4px;
+            border: 4px solid #ccc;
+            border-top: 4px solid #333;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        ">
+        </div>
+    </div>
+    <style>
+        body,
+        html {
+            &:not(.loaded) {
+                overflow: hidden;
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+    <script>
+        window.addEventListener('load', () => {
+            document.body.classList.add('loaded');
+            document.documentElement.classList.add('loaded');
+            const loader = document.querySelector('[data-role="main-css-loader"]');
+            if (loader) {
+                loader.style.opacity = '0';
+                loader.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => loader.remove(), 300); // Remover el loader después de que desaparezca
+            }
+        });
+    </script>
+</div>

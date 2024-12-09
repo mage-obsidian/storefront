@@ -1,0 +1,20 @@
+<?php
+
+use MageObsidian\ModernFrontend\Model\Config\ConfigProvider;
+use MageObsidian\ModernFrontend\Block\Template;
+
+/** @var Template $block */
+/** @var ConfigProvider $configViewModel */
+$configViewModel = $block->getConfigProvider();
+?>
+
+<?= $block->getChildHtml(); ?>
+<?php
+if ($configViewModel->isHmrEnabled()): ?>
+    <script type="module" src="/@vite/client"></script>
+<?php else: ?>
+    <link href="<?= $block->getViewFileUrl($configViewModel->getViteGeneratedPath() . '/css/style.css') ?>"
+          rel="stylesheet"/>
+<?php endif; ?>
+
+<script type="module" src="<?= $block->getViewLibFileUrl('vue') ?>"></script>

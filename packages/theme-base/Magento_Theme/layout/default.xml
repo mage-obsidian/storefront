@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<page layout="3columns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="default_head_blocks"/>
+    <body>
+        <referenceContainer name="after.body.start">
+            <block class="Magento\Framework\View\Element\FormKey" name="formkey"/>
+        </referenceContainer>
+        <referenceContainer name="content">
+            <container name="content.top" label="Main Content Top">
+                <block name="main_css_preloader" as="main_css_preloader"
+                       template="Magento_Theme::html/main_css_preloader.phtml"
+                       ifconfig="dev/css/use_css_critical_path"/>
+            </container>
+        </referenceContainer>
+        <referenceContainer name="global_notices">
+            <block class="Magento\Theme\Block\Html\Notices" name="global_notices_block"
+                   template="Magento_Theme::html/notices.phtml"/>
+        </referenceContainer>
+        <referenceContainer name="content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" template="Magento_Theme::demo.phtml"/>
+        </referenceContainer>
+    </body>
+</page>

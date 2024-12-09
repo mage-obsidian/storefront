@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<layout xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_layout.xsd">
+    <container name="root" htmlTag="div" htmlId="root">
+        <container name="after.body.start" as="after_body_start" before="-" htmlTag="div" htmlId="after-body-start"/>
+        <container name="page.wrapper" as="page_wrapper" htmlTag="div" htmlId="page_wrapper"/>
+        <container name="before.body.end" as="before_body_end" after="-" htmlTag="div" htmlId="before-body-end"/>
+    </container>
+</layout>

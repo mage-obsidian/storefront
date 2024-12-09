@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<layout xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_layout.xsd">
+    <update handle="empty"/>
+    <referenceContainer name="page.wrapper">
+        <container name="global.notices" as="global_notices" before="-" htmlTag="div"/>
+        <container name="header.container" as="header_container" htmlTag="header" htmlClass="header_container" before="main.content"/>
+        <container name="page.top" as="page_top" after="header.container" htmlTag="div" htmlId="page_top"/>
+        <container name="main.content" htmlTag="main" htmlId="maincontent">
+            <container name="columns.top" htmlTag="div" htmlClass="columns_top"/>
+            <container name="columns" htmlTag="div" htmlClass="columns">
+                <container name="content" as="content" htmlTag="div" htmlClass="content" label="Main Content"/>
+            </container>
+        </container>
+        <container name="page.bottom.container" as="page_bottom_container" after="main.content" htmlTag="div" htmlId="page_bottom_container">
+            <container name="footer-container" as="footer_container" after="-" htmlTag="footer" htmlClass="footer_container"/>
+        </container>
+    </referenceContainer>
+</layout>
