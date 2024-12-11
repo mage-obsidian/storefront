@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<page layout="3columns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock
+                name="header-content">
+            <block class="MageObsidian\ModernFrontend\Block\Html\Topmenu" name="catalog.topnav"
+                   template="Magento_Catalog::html/topmenu.phtml" ttl="3600" after="logo"/>
+        </referenceBlock>
+    </body>
+</page>
