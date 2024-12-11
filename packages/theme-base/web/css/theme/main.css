@@ -1,0 +1,13 @@
+@import "header.css";
+
+[v-cloak] {
+    display: none !important;
+}
+
+#page_wrapper {
+    @apply bg-background min-h-screen;
+}
+
+main#maincontent {
+    @apply container mx-auto p-4 ;
+}

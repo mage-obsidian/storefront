@@ -1,0 +1,76 @@
+header.header_container {
+    @apply bg-gray-50 shadow-md;
+
+    .header.content {
+        @apply flex items-center justify-between p-4 mx-auto;
+
+        nav.navigation ul.menu {
+            @apply flex items-center;
+
+            li {
+                @apply text-text-primary;
+
+                a {
+                    @apply p-4 text-nowrap flex w-full items-center rounded-md;
+
+                    &:hover {
+                        @apply bg-surface text-link-hover;
+                    }
+                }
+
+                &:has(a:hover) {
+                    & > a {
+                        @apply bg-surface text-link-hover;
+                    }
+                }
+            }
+
+            ul.submenu {
+                @apply absolute bg-white border border-surface rounded-md shadow-lg flex-col text-sm;
+            }
+
+            li.parent {
+                @apply relative;
+
+                & > a {
+                    &::after {
+                        @apply content-[''] w-0 h-0;
+                        @apply inline-block relative top-[1px] ml-2;
+                        @apply border-solid border-t-[6px] border-l-[6px] border-r-[6px];
+                        @apply border-transparent border-t-text-primary;
+                        @apply transition-transform duration-200;
+                        @apply rotate-[-90deg];
+                    }
+
+                    &:hover {
+                        &::after {
+                            @apply border-t-link-hover;
+                        }
+                    }
+                }
+
+                &:has(a:hover) {
+                    & > a::after {
+                        @apply border-t-link-hover;
+                    }
+                }
+
+                &.level-top {
+                    & > a {
+                        &::after {
+                            @apply rotate-0;
+                        }
+                    }
+                }
+            }
+        }
+
+        .links.topnav {
+            @apply flex items-center gap-3;
+        }
+    }
+
+    .nav-toggle {
+        @apply hidden;
+    }
+}
