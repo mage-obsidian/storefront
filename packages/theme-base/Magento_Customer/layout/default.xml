@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<page layout="3columns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="links.topnav">
+            <block
+                    class="MageObsidian\ModernFrontend\Block\Template"
+                    name="customer.links"
+                    template="Magento_Customer::header/customer_links.phtml"
+            >
+                <arguments>
+                    <argument
+                            name="customer_authentication_status"
+                            xsi:type="object"
+                    >MageObsidian\ModernFrontend\ViewModel\customer\CustomerAuthenticationStatus
+                    </argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

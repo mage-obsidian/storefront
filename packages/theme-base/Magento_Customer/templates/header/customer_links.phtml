@@ -1,0 +1,91 @@
+<?php
+declare(strict_types=1);
+
+use MageObsidian\ModernFrontend\Block\Template;
+use MageObsidian\ModernFrontend\ViewModel\customer\CustomerAuthenticationStatus;
+
+/**
+ * @var Template $block
+ * @var CustomerAuthenticationStatus $customerAuthenticationStatus
+ */
+$customerAuthenticationStatus = $block->getCustomerAuthenticationStatus();
+$isAuthenticated = $customerAuthenticationStatus->isAuthenticated();
+?>
+
+
+<div id="customer-links">
+    <div class="relative inline-block text-left text-text-primary" ref="root">
+        <button
+                type="button"
+                aria-label="<?= __('Toggle Dropdown') ?>"
+                @click="toggleDropdown"
+                class="flex items-center justify-center w-10 h-10 rounded-full bg-surface transition-all duration-300"
+                :class="{ 'text-link-hover ring-2 ring-offset-2 ring-link-hover': dropdownOpen }"
+        >
+            <?= $block->getHeroIcon('user') ?>
+        </button>
+        <div v-cloak
+             :class="{ 'hidden': !dropdownOpen }"
+             class="origin-top-right absolute mt-2 right-0 w-48 bg-white border border-surface rounded-md shadow-lg z-50 text-sm"
+        >
+            <?php if ($isAuthenticated): ?>
+                <a
+                        href="<?= $block->getUrl('customer/account') ?>"
+                        class="block p-4  hover:bg-surface hover:text-link-hover"
+                >
+                    <?= __('My Account') ?>
+                </a>
+                <a
+                        href="<?= $block->getUrl('customer/account/logout') ?>"
+                        class="block p-4  hover:bg-surface hover:text-link-hover"
+                >
+                    <?= __('Sign Out') ?>
+                </a>
+            <?php else: ?>
+                <a
+                        href="<?= $block->getUrl('customer/account/login') ?>"
+                        class="block p-4  hover:bg-surface hover:text-link-hover"
+                >
+                    <?= __('Sign In') ?>
+                </a>
+                <a
+                        href="<?= $block->getUrl('customer/account/create') ?>"
+                        class="block p-4  hover:bg-surface hover:text-link-hover"
+                >
+                    <?= __('Create Account') ?>
+                </a>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import {createApp, ref, onMounted, onUnmounted} from 'vue';
+
+    const app = createApp({
+        setup() {
+            const root = ref(null)
+            const dropdownOpen = ref(false)
+            const toggleDropdown = () => {
+                dropdownOpen.value = !dropdownOpen.value
+            }
+            const onClickOutside = (event) => {
+                if (root.value && !root.value.contains(event.target)) {
+                    dropdownOpen.value = false
+                }
+            }
+            onMounted(() => {
+                window.addEventListener('click', onClickOutside)
+            })
+            onUnmounted(() => {
+                window.removeEventListener('click', onClickOutside)
+            })
+            return {
+                dropdownOpen,
+                toggleDropdown,
+                root
+            }
+        }
+    })
+    app.mount('#customer-links')
+</script>
