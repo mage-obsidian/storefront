@@ -1,0 +1,35 @@
+<?php
+declare(strict_types=1);
+
+use MageObsidian\ModernFrontend\Block\Template;
+
+/** @var Template $block */
+?>
+
+<div class="container mx-auto p-8 bg-gradient-to-r from-gray-50 to-gray-200 shadow-xl rounded-lg">
+    <header class="text-center mb-12">
+        <h1 class="text-6xl font-extrabold text-gray-900 tracking-tight leading-tight">
+            Mage<span class="text-blue-500">Obsidian</span> Theme
+        </h1>
+        <p class="text-xl text-gray-700 mt-6 max-w-3xl mx-auto">
+            A cutting-edge solution for Magento 2 frontend development, designed for performance, scalability, and
+            design freedom.
+        </p>
+    </header>
+
+    <section class="mb-20 min-h-[468px]">
+        <?= $block->renderVueComponent('MageObsidian_ModernFrontend::TechnologiesSlider') ?>
+    </section>
+
+    <section class="text-center">
+        <h2 class="text-4xl font-semibold text-gray-800 mb-8">Resources and Documentation</h2>
+        <p class="text-lg text-gray-600 mb-10 max-w-3xl mx-auto">
+            Access comprehensive guides, best practices, and in-depth tutorials for leveraging the MageObsidian theme in
+            your Magento 2 projects.
+        </p>
+        <a href="http://mage-obsidian.jeanmarcos.dev/"
+           class="inline-block bg-gradient-to-r from-blue-600 to-purple-700 text-white font-medium py-4 px-8 rounded-xl shadow-xl hover:shadow-2xl hover:from-blue-700 hover:to-purple-800 transition-all duration-300 ease-in-out">
+            View Documentation
+        </a>
+    </section>
+</div>
