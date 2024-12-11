@@ -8,7 +8,7 @@ use MageObsidian\ModernFrontend\Block\Template;
 $configViewModel = $block->getConfigProvider();
 ?>
 
-<?= $block->getChildHtml(); ?>
+<?= $block->getBlockHtml('critical_css_block'); ?>
 <?php
 if ($configViewModel->isHmrEnabled()): ?>
     <script type="module" src="/@vite/client"></script>
@@ -17,4 +17,5 @@ if ($configViewModel->isHmrEnabled()): ?>
           rel="stylesheet"/>
 <?php endif; ?>
 
-<script type="module" src="<?= $block->getViewLibFileUrl('vue') ?>"></script>
+    <script type="module" src="<?= $block->getViewLibFileUrl('vue') ?>"></script>
+<?= $block->getChildHtmlWithExclusions(excludedBlocks: ['critical_css_block']); ?>
