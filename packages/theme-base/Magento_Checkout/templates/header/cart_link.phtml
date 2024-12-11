@@ -1,0 +1,85 @@
+<?php
+declare(strict_types=1);
+
+use MageObsidian\ModernFrontend\Block\Template;
+
+/**
+ * @var Template $block
+ */
+?>
+
+<div id="cart-link">
+    <div class="relative inline-block text-left text-text-primary" ref="root">
+        <button
+                type="button"
+                aria-label="<?= __('Toggle Cart') ?>"
+                @click="mainStore.toggleCart"
+                class="flex items-center justify-center w-10 h-10 rounded-full bg-surface transition-all duration-300"
+                :class="{ 'text-link-hover ring-2 ring-offset-2 ring-link-hover': mainStore.cartOpen }"
+        >
+            <?= $block->getHeroIcon('shopping-cart') ?>
+
+            <span
+                    v-cloak
+                    v-if="mainStore.cartItemCount > 0"
+                    class="absolute top-0 right-0 transform translate-x-2 -translate-y-2
+                bg-red-500 text-white text-xs font-bold min-h-[1.25rem] min-w-[1.25rem] px-1
+                flex items-center justify-center rounded-full shadow-md"
+            >
+                {{ mainStore.cartItemCount }}
+            </span>
+        </button>
+        <div
+                v-cloak
+                v-if="mainStore.cartOpen"
+                class="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-10"
+        >
+            <ul v-if="mainStore.cartItemCount > 0" class="p-4 space-y-2">
+                <li v-for="(item, index) in mainStore.cart" :key="index" class="flex justify-between items-center">
+                    <span class="text-sm text-gray-700">{{ item }}</span>
+                    <button @click="mainStore.removeFromCart(index)" class="text-red-500 hover:text-red-700">
+                        &times;
+                    </button>
+                </li>
+            </ul>
+            <div v-if="mainStore.cart.length === 0" class="p-4 text-center text-gray-500">
+                <?= __('Your cart is empty.') ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import {createApp, ref, onMounted, onUnmounted} from 'vue';
+    import {pinia, useMainStore} from 'mainStore';
+
+    const app = createApp({
+        setup() {
+            const mainStore = useMainStore(); // Instancia del store
+            const root = ref(null);
+
+            const onClickOutside = (event) => {
+                if (root.value && !root.value.contains(event.target)) {
+                    mainStore.cartOpen = false; // Cierra el dropdown al hacer clic fuera
+                }
+            };
+
+            onMounted(() => {
+                window.addEventListener('click', onClickOutside);
+            });
+
+            onUnmounted(() => {
+                window.removeEventListener('click', onClickOutside);
+            });
+
+            return {
+                mainStore,
+                root,
+            };
+        },
+    });
+
+    app.use(pinia);
+
+    app.mount('#cart-link');
+</script>

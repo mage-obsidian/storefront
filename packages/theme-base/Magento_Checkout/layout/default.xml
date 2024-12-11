@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<page layout="3columns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="links.topnav">
+            <block
+                    class="MageObsidian\ModernFrontend\Block\Template"
+                    name="cart.link"
+                    template="Magento_Checkout::header/cart_link.phtml"
+                    after="customer.links"
+            />
+        </referenceContainer>
+    </body>
+</page>
