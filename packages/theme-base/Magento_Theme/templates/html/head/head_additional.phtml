@@ -9,6 +9,14 @@ $configViewModel = $block->getConfigProvider();
 ?>
 
 <?= $block->getBlockHtml('critical_css_block'); ?>
+    <script type="importmap">
+        {
+            "imports": {
+                "vue": "<?= $block->getViewLibFileUrl('vue') ?>",
+                "mainStore": "<?= $block->resolvePathByName('js/store/main.js') ?>"
+        }
+    }
+    </script>
 <?php
 if ($configViewModel->isHmrEnabled()): ?>
     <script type="module" src="/@vite/client"></script>
@@ -17,5 +25,4 @@ if ($configViewModel->isHmrEnabled()): ?>
           rel="stylesheet"/>
 <?php endif; ?>
 
-    <script type="module" src="<?= $block->getViewLibFileUrl('vue') ?>"></script>
 <?= $block->getChildHtmlWithExclusions(excludedBlocks: ['critical_css_block']); ?>

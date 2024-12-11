@@ -1,0 +1,38 @@
+<?php
+declare(strict_types=1);
+
+use Magento\Framework\Escaper;
+use Magento\Theme\Block\Html\Header\Logo;
+use Magento\Theme\ViewModel\Block\Html\Header\LogoSizeResolverInterface;
+
+/**
+ * @var Logo $block
+ * @var LogoSizeResolverInterface|null $logoSizeResolver
+ * @var Escaper $escaper
+ */
+$storeName = $block->getThemeName() ? $block->getThemeName() : $block->getLogoAlt();
+$logoSizeResolver = $block->getLogoSizeResolver();
+$logoWidth = $logoSizeResolver !== null && $logoSizeResolver->getWidth() ? $logoSizeResolver->getWidth() : $block->getLogoWidth();
+$logoHeight = $logoSizeResolver !== null && $logoSizeResolver->getHeight() ? $logoSizeResolver->getHeight() : $block->getLogoHeight();
+if ($logoWidth === 0) {
+    $logoWidth = 189;
+}
+if ($logoHeight === 0) {
+    $logoHeight = 64;
+}
+?>
+<span data-action="toggle-nav"
+      class="action nav-toggle"><span><?= $escaper->escapeHtml(__('Toggle Nav')) ?></span></span>
+<a
+        class="logo h-full"
+        href="<?= $escaper->escapeUrl($block->getUrl('')) ?>"
+        title="<?= $escaper->escapeHtmlAttr($storeName) ?>"
+        aria-label="store logo">
+    <img class="h-full object-contain"
+         src="<?= $escaper->escapeUrl($block->getLogoSrc()) ?>"
+         title="<?= $escaper->escapeHtmlAttr($block->getLogoAlt()) ?>"
+         alt="<?= $escaper->escapeHtmlAttr($block->getLogoAlt()) ?>"
+            <?= 'width="' . $escaper->escapeHtmlAttr($logoWidth) . '"' ?>
+            <?= 'height="' . $escaper->escapeHtmlAttr($logoHeight) . '"' ?>
+    />
+</a>

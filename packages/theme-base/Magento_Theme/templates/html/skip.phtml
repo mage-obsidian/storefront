@@ -1,0 +1,21 @@
+<?php
+
+use Magento\Framework\View\Element\Template;
+use Magento\Framework\Escaper;
+
+/**
+ * @var Template $block
+ * @var Escaper $escaper
+ */
+
+$target = $block->getTarget();
+$label = $block->getLabel();
+?>
+<a
+        class="action skip <?= $escaper->escapeHtmlAttr($target) ?> sr-only
+    focus:not-sr-only focus:absolute focus:z-40 focus:bg-gray focus:w-full focus:py-2 focus:text-center focus:bg-gray-300"
+        href="#<?= $escaper->escapeHtmlAttr($target) ?>">
+    <span>
+        <?= $escaper->escapeHtml($label) ?>
+    </span>
+</a>

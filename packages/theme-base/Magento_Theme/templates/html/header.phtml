@@ -1,0 +1,15 @@
+<?php
+declare(strict_types=1);
+/**
+ * @var \Magento\Theme\Block\Html\Header $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+?>
+
+<div class="header content container">
+    <?= $block->getChildHtml('logo') ?>
+
+    <?= $block->getChildHtml('catalog.topnav') ?>
+
+    <?= $block->getChildHtml('links.topnav') ?>
+</div>

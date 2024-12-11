@@ -8,9 +8,9 @@
         <block
                 name="head.additional"
                 class="MageObsidian\ModernFrontend\Block\Template"
-                template="Magento_Theme::html/head_additional.phtml"
+                template="Magento_Theme::html/head/head_additional.phtml"
         >
-            <block name="critical_css_block" as="critical_css" template="Magento_Theme::html/header/criticalCss.phtml"
+            <block name="critical_css_block" as="critical_css" template="Magento_Theme::html/head/criticalCss.phtml"
                    ifconfig="dev/css/use_css_critical_path">
                 <arguments>
                     <argument name="criticalCssViewModel" xsi:type="object">
