@@ -1,31 +1,28 @@
-import { defineStore, createPinia } from '#/pinia';
+import {defineStore, createPinia} from '#/pinia';
 
 const pinia = createPinia(); // Crea la instancia de Pinia
 
 const useMainStore = defineStore('main', {
     state: () => ({
-        user: null,
-        isAuthenticated: false,
-        theme: 'light',
+        cart: [],
+        cartOpen: false,
     }),
     getters: {
-        isUserLoggedIn: (state) => !!state.user,
-        themePreference: (state) => state.theme,
+        cartItemCount() {
+            return this.cart.length;
+        }
     },
     actions: {
-        login(user) {
-            this.user = user;
-            this.isAuthenticated = true;
+        addToCart(item) {
+            this.cart.push(item);
         },
-        logout() {
-            this.user = null;
-            this.isAuthenticated = false;
+        removeFromCart(index) {
+            this.cart.splice(index, 1);
         },
-        toggleTheme() {
-            this.theme = this.theme === 'light' ? 'dark' : 'light';
+        toggleCart() {
+            this.cartOpen = !this.cartOpen;
         },
     },
 });
 
-// Exporta el store y la instancia de Pinia
-export { pinia, useMainStore };
+export {pinia, useMainStore};
