@@ -1,0 +1,53 @@
+<?php
+declare(strict_types=1);
+
+use Magento\Directory\Block\Currency;
+use MageObsidian\ModernFrontend\ViewModel\ViteResolver;
+use Magento\Framework\Escaper;
+
+/**
+ * @var Currency $block
+ * @var ViteResolver $viteResolver
+ * @var Escaper $escaper
+ */
+$viteResolver = $block->getViteResolver();
+?>
+<?php if ($block->getCurrencyCount() > 1): ?>
+    <?php $currencies = $block->getCurrencies(); ?>
+    <?php $currentCurrencyCode = $block->getCurrentCurrencyCode(); ?>
+    <?php $id = $block->getIdModifier() ? '-' . $block->getIdModifier() : '' ?>
+    <div id="switcher-currency<?= $escaper->escapeHtmlAttr($id) ?>" class="m-1 min-h-[36px]">
+        <slot-dropdown :show-arrow="true">
+            <template #trigger>
+                <div class="p-1">
+                    <?= $escaper->escapeHtml($currentCurrencyCode) ?>
+                    <?php if ($currencies[$currentCurrencyCode]): ?>
+                        - <?= $escaper->escapeHtml($currencies[$currentCurrencyCode]) ?>
+                    <?php endif; ?>
+                </div>
+            </template>
+
+            <template #content>
+                <?php foreach ($currencies as $_code => $_name): ?>
+                    <?php if ($_code != $currentCurrencyCode): ?>
+                        <a class="inline-block" href="#" data-post='<?= /* @noEscape */
+                        $block->getSwitchCurrencyPostData($_code) ?>'><?= $escaper->escapeHtml($_code) ?>
+                            - <?= $escaper->escapeHtml($_name) ?></a>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </template>
+        </slot-dropdown>
+    </div>
+    <script type="module">
+        import {createApp, ref} from 'vue';
+        import SlotDropdown from '<?= $viteResolver->resolveComponentPath('elements/SlotDropdown') ?>';
+
+        const app = createApp({
+            components: {
+                SlotDropdown,
+            }
+        });
+
+        app.mount("#switcher-currency<?= $escaper->escapeHtmlAttr($id) ?>");
+    </script>
+<?php endif; ?>
