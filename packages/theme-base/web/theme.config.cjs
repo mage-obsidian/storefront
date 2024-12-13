@@ -7,31 +7,36 @@ module.exports = {
         theme: {
             extend: {
                 ...defaultTheme,
-            },
-            colors: {
-                primary: 'rgb(var(--color-primary))',
-                secondary: 'rgb(var(--color-secondary))',
-                tertiary: 'rgb(var(--color-tertiary))',
-                accent: 'rgb(var(--color-accent))',
-                background: 'rgb(var(--color-background))',
-                surface: 'rgb(var(--color-surface))',
-                border: 'rgb(var(--color-border))',
+                opacity: {
+                    '15': '0.15',
+                    '50': '0.50',
+                    '65': '0.65',
+                },
+                colors: {
+                    primary: 'rgb(var(--color-primary))',
+                    secondary: 'rgb(var(--color-secondary))',
+                    tertiary: 'rgb(var(--color-tertiary))',
+                    accent: 'rgb(var(--color-accent))',
+                    background: 'rgb(var(--color-background))',
+                    surface: 'rgb(var(--color-surface))',
+                    border: 'rgb(var(--color-border))',
 
-                'text-primary': 'rgb(var(--color-text-primary))',
-                'text-secondary': 'rgb(var(--color-text-secondary))',
-                'text-muted': 'rgb(var(--color-text-muted))',
+                    'text-primary': 'rgb(var(--color-text-primary))',
+                    'text-secondary': 'rgb(var(--color-text-secondary))',
+                    'text-muted': 'rgb(var(--color-text-muted))',
 
-                link: 'rgb(var(--color-link))',
-                'link-hover': 'rgb(var(--color-link-hover))',
-                'link-visited': 'rgb(var(--color-link-visited))',
+                    link: 'rgb(var(--color-link))',
+                    'link-hover': 'rgb(var(--color-link-hover))',
+                    'link-visited': 'rgb(var(--color-link-visited))',
 
-                success: 'rgb(var(--color-success))',
-                warning: 'rgb(var(--color-warning))',
-                error: 'rgb(var(--color-error))',
-                info: 'rgb(var(--color-info))',
+                    success: 'rgb(var(--color-success))',
+                    warning: 'rgb(var(--color-warning))',
+                    error: 'rgb(var(--color-error))',
+                    info: 'rgb(var(--color-info))',
 
-                'primary-hover': 'rgb(var(--color-primary-hover))',
-                'secondary-hover': 'rgb(var(--color-secondary-hover))',
+                    'primary-hover': 'rgb(var(--color-primary-hover))',
+                    'secondary-hover': 'rgb(var(--color-secondary-hover))',
+                }
             }
         },
         plugins: [
