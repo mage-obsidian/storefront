@@ -3,8 +3,7 @@
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
         <referenceContainer name="footer">
-            <container name="cms_footer_links_container" label="CMS Footer Links" htmlTag="div" htmlClass="links"
-                       before="footer_links"/>
+
         </referenceContainer>
         <referenceBlock name="footer_links">
             <block class="Magento\Framework\View\Element\Html\Link\Current" name="privacy-policy-link">
@@ -13,6 +12,8 @@
                     <argument name="path" xsi:type="string">privacy-policy-cookie-restriction-mode</argument>
                 </arguments>
             </block>
+            <container name="cms_footer_links_container" label="CMS Footer Links" htmlTag="div" htmlClass="links"
+                       before="footer_links"/>
         </referenceBlock>
     </body>
 </page>
