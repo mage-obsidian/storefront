@@ -1,4 +1,4 @@
-import {defineStore, createPinia} from '#/pinia';
+import {defineStore, createPinia} from 'pinia';
 
 const pinia = createPinia(); // Crea la instancia de Pinia
 
@@ -6,6 +6,8 @@ const useMainStore = defineStore('main', {
     state: () => ({
         cart: [],
         cartOpen: false,
+        searchOpen: false,
+        searchLink: null
     }),
     getters: {
         cartItemCount() {
@@ -22,6 +24,12 @@ const useMainStore = defineStore('main', {
         toggleCart() {
             this.cartOpen = !this.cartOpen;
         },
+        toggleSearch() {
+            this.searchOpen = !this.searchOpen;
+        },
+        setSearchLink(link) {
+            this.searchLink = link;
+        }
     },
 });
 
