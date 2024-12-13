@@ -1,0 +1,49 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+/** @var \Magento\Newsletter\Block\Subscribe $block */
+?>
+<div class="block newsletter text-right m-auto mr-0">
+    <div class="sr-only">
+        <strong><?= $escaper->escapeHtml(__('Newsletter')) ?></strong>
+    </div>
+    <div class="content max-w-xl">
+        <form class="form subscribe space-y-4"
+              novalidate
+              action="<?= $escaper->escapeUrl($block->getFormActionUrl()) ?>"
+              method="post"
+              data-mage-init='{"validation": {"errorClass": "mage-error"}}'
+              id="newsletter-validate-detail">
+            <div class="field newsletter">
+                <label for="newsletter" class="sr-only block text-sm font-medium text-gray-700">
+                    <?= $escaper->escapeHtml(__('Sign Up for Our Newsletter:')) ?>
+                </label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                    <input name="email"
+                           type="email"
+                           id="newsletter"
+                           placeholder="<?= $escaper->escapeHtml(__('Enter your email address')) ?>"
+                           data-mage-init='{"mage/trim-input":{}}'
+                           data-validate="{required:true, 'validate-email':true}"
+                           class="block w-full pl-3 pr-10 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
+                </div>
+            </div>
+            <div class="actions text-right">
+                <button class="action subscribe primary bg-indigo-600 text-white font-medium py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        title="<?= $escaper->escapeHtmlAttr(__('Subscribe')) ?>"
+                        type="submit"
+                        aria-label="Subscribe"
+                        <?php if ($block->getButtonLockManager()
+                                        ->isDisabled('newsletter_form_submit')): ?>
+                            disabled="disabled"
+                            class="opacity-50 cursor-not-allowed"
+                        <?php endif; ?>>
+                    <?= $escaper->escapeHtml(__('Subscribe')) ?>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
