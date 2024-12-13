@@ -1,0 +1,45 @@
+<?php
+declare(strict_types=1);
+
+use MageObsidian\ModernFrontend\Block\Template;
+
+/**
+ * @var Template $block
+ */
+?>
+
+<div id="search-link">
+    <div class="relative inline-block text-left text-text-primary">
+        <button
+                ref="root"
+                type="button"
+                aria-label="<?= __('Toggle Cart') ?>"
+                @click="mainStore.toggleSearch"
+                class="flex items-center justify-center w-10 h-10 rounded-full bg-surface transition-all duration-300"
+                :class="{ 'text-link-hover ring-2 ring-offset-2 ring-link-hover': mainStore.searchOpen }"
+        >
+            <?= $block->getHeroIcon('magnifying-glass') ?>
+        </button>
+    </div>
+</div>
+
+<script type="module">
+    import {createApp, ref, onMounted, onUnmounted} from 'vue';
+    import {pinia, useMainStore} from 'mainStore';
+
+    const app = createApp({
+        setup() {
+            const root = ref(null);
+            const mainStore = useMainStore();
+            mainStore.setSearchLink(root);
+            return {
+                mainStore,
+                root
+            };
+        },
+    });
+
+    app.use(pinia);
+
+    app.mount('#search-link');
+</script>
