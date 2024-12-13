@@ -13,7 +13,9 @@ $configViewModel = $block->getConfigProvider();
         {
             "imports": {
                 "vue": "<?= $block->getViewLibFileUrl('vue') ?>",
-                "mainStore": "<?= $block->resolvePathByName('js/store/main.js') ?>"
+                "mainStore": "<?= $block->resolvePathByName('js/store/main.js') ?>",
+                "@vueuse/core": "<?= $block->getViewLibFileUrl('@vueuse/core') ?>",
+                "mini-vueuse": "<?= $block->resolvePathByName('js/lib/mini-vueuse') ?>"
         }
     }
     </script>

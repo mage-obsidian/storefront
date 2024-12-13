@@ -5,11 +5,15 @@
     <body>
         <referenceContainer name="after.body.start">
             <block class="Magento\Framework\View\Element\FormKey" name="formkey"/>
+            <block class="Magento\Theme\Block\Html\Notices" name="global_notices"
+                   template="Magento_Theme::html/notices.phtml"/>
         </referenceContainer>
 
         <referenceContainer name="header.container">
-            <container name="header.panel.wrapper" htmlClass="panel wrapper" htmlTag="div" before="-">
-                <container name="header.panel" label="Page Header Panel" htmlTag="div" htmlClass="panel header">
+            <container name="header.panel.wrapper" htmlClass="panel wrapper" htmlTag="div"
+                       before="-">
+                <container name="header.panel" label="Page Header Panel" htmlTag="div"
+                           htmlClass="panel header">
                     <block name="skip_to_content"
                            template="Magento_Theme::html/skip.phtml">
                         <arguments>
@@ -17,18 +21,10 @@
                             <argument name="label" translate="true" xsi:type="string">Skip to Content</argument>
                         </arguments>
                     </block>
-                    <block class="Magento\Store\Block\Switcher" name="store_language" as="store_language"
-                           template="Magento_Store::switch/languages.phtml">
-                        <arguments>
-                            <argument name="view_model" xsi:type="object">Magento\Store\ViewModel\SwitcherUrlProvider
-                            </argument>
-                        </arguments>
-                    </block>
-                    <block class="Magento\Customer\Block\Account\Navigation" name="top.links">
-                        <arguments>
-                            <argument name="css_class" xsi:type="string">header links</argument>
-                        </arguments>
-                    </block>
+                    <block
+                            template="Magento_Theme::html/header/panel.phtml"
+                            name="header.panel.block"
+                    />
                 </container>
             </container>
             <container name="header-wrapper" label="Page Header" as="header-wrapper">
@@ -84,11 +80,32 @@
                        ifconfig="dev/css/use_css_critical_path"/>
             </container>
         </referenceContainer>
-        <referenceContainer name="global_notices">
-            <block class="Magento\Theme\Block\Html\Notices" name="global_notices_block"
-                   template="Magento_Theme::html/notices.phtml"/>
+        <referenceContainer name="footer-container" htmlClass="shadow-inner bg-white mt-4">
+            <container name="footer" as="footer" label="Page Footer">
+                <block
+                        template="Magento_Theme::html/footer.phtml"
+                        name="footer.content" as="footer_content"
+                >
+                    <container name="footer_content_container" label="Page Footer Content">
+                        <block
+                                class="Magento\Framework\View\Element\Html\Links"
+                                name="footer_links"
+                        >
+                            <arguments>
+                                <argument name="css_class" xsi:type="string">footer links</argument>
+                            </arguments>
+                        </block>
+                    </container>
+                </block>
+                <block class="Magento\Theme\Block\Html\Footer" name="copyright"
+                       template="Magento_Theme::html/copyright.phtml"/>
+                <block class="Magento\Framework\View\Element\Template" name="report.bugs"
+                       template="Magento_Theme::html/bugreport.phtml" ifconfig="design/footer/report_bugs"/>
+            </container>
         </referenceContainer>
-        <referenceContainer name="content">
+        <referenceContainer name="before.body.end">
+            <block class="Magento\Theme\Block\Html\Footer" name="absolute_footer"
+                   template="Magento_Theme::html/absolute_footer.phtml"/>
         </referenceContainer>
     </body>
 </page>

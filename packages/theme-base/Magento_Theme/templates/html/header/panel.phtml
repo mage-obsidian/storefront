@@ -1,0 +1,23 @@
+<?php
+declare(strict_types=1);
+
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+
+/**
+ * @var Template $block
+ * @var Escaper $escaper
+ */
+
+$html = $block->getChildHtml();
+
+if ($html):
+    ?>
+    <section class="border-b">
+        <div class="container mx-auto flex flex-row-reverse">
+            <?= $block->getChildHtml() ?>
+        </div>
+    </section>
+    <?php
+endif;
+?>

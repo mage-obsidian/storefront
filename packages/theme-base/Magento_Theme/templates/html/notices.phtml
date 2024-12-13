@@ -1,24 +1,25 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
+declare(strict_types=1);
+
+use Magento\Framework\View\Helper\SecureHtmlRenderer;
+use Magento\Theme\Block\Html\Notices;
+use Magento\Framework\Escaper;
 
 /**
- * @var $block \Magento\Theme\Block\Html\Notices
- * @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
+ * @var Notices $block
+ * @var SecureHtmlRenderer $secureRenderer
+ * @var Escaper $escaper
  */
+
 ?>
 <?php if ($block->displayNoscriptNotice()): ?>
     <noscript>
-        <div class="message global noscript">
+        <div class="message global noscript p-2 bg-orange-300 text-white text-center">
             <div class="content">
                 <p>
-                    <strong><?= $block->escapeHtml(__('JavaScript seems to be disabled in your browser.')) ?></strong>
+                    <strong><?= $escaper->escapeHtml(__('JavaScript seems to be disabled in your browser.')) ?></strong>
                     <span>
-                        <?= $block->escapeHtml(
-                            __('For the best experience on our site, be sure to turn on Javascript in your browser.')
-                        ) ?>
+                        <?= $escaper->escapeHtml(__('For the best experience on our site, be sure to turn on Javascript in your browser.')) ?>
                     </span>
                 </p>
             </div>
@@ -26,45 +27,28 @@
     </noscript>
 <?php endif; ?>
 <?php if ($block->displayNoLocalStorageNotice()): ?>
-    <div class="notice global site local_storage">
+    <div id="local_storage_notice" class="notice global site local_storage text-center p-2 hidden">
         <div class="content">
             <p>
-                <strong><?= $block->escapeHtml(__('Local Storage seems to be disabled in your browser.')) ?></strong>
-                <br />
-                <?= $block->escapeHtml(
-                    __('For the best experience on our site, be sure to turn on Local Storage in your browser.')
-                ) ?>
+                <strong><?= $escaper->escapeHtml(__('Local Storage seems to be disabled in your browser.')) ?></strong>
+                <br/>
+                <?= $escaper->escapeHtml(__('For the best experience on our site, be sure to turn on Local Storage in your browser.')) ?>
             </p>
         </div>
     </div>
-    <?= /* @noEscape */ $secureRenderer->renderStyleAsTag('display: none;', 'div.notice.global.site.local_storage') ?>
-
-    <?php $scriptString = <<<script
-
-require(['jquery'], function(jQuery){
-
-        // <![CDATA[
-        (function($) {
-            var test = 'test';
-            try {
-                localStorage.setItem(test, test);
-                localStorage.removeItem(test);
-            } catch(e) {
-                $(".notice.global.site.local_storage").show();
-            }
-        })(jQuery);
-        // ]]>
-
-});
-
-script;
-    ?>
-    <?= /* @noEscape */ $secureRenderer->renderTag('script', [], $scriptString, false) ?>
+    <script type="module">
+        try {
+            localStorage.setItem('mage-obsidian-test-local-storage', '1');
+            localStorage.removeItem('mage-obsidian-test-local-storage');
+        } catch (e) {
+            document.querySelector('#local_storage_notice').classList.remove('hidden');
+        }
+    </script>
 <?php endif; ?>
 <?php if ($block->displayDemoNotice()): ?>
-    <div class="message global demo">
-        <div class="content">
-            <p><?= $block->escapeHtml(__('This is a demo store. No orders will be fulfilled.')) ?></p>
+    <div class="message global demo p-2 bg-red-500 text-white">
+        <div class="content text-center">
+            <p><?= $escaper->escapeHtml(__('This is a demo store. No orders will be fulfilled.')) ?></p>
         </div>
     </div>
 <?php endif; ?>
