@@ -1,0 +1,49 @@
+<?php
+declare(strict_types=1);
+
+use Magento\Store\Block\Switcher;
+use MageObsidian\ModernFrontend\ViewModel\ViteResolver;
+use Magento\Framework\Escaper;
+
+/**
+ * @var Switcher $block
+ * @var ViteResolver $viteResolver
+ * @var Escaper $escaper
+ */
+$viteResolver = $block->getViteResolver();
+?>
+
+<?php if (count($block->getStores()) > 1): ?>
+    <div id="vue-component-store-switcher" class="m-1 min-h-[36px]">
+        <slot-dropdown :show-arrow="true">
+            <template #trigger>
+                <div class="p-1">
+                    <?= $escaper->escapeHtml($block->getStoreName()) ?>
+                </div>
+            </template>
+
+            <template #content>
+                <?php foreach ($block->getStores() as $_lang): ?>
+                    <?php if ($_lang->getId() != $block->getCurrentStoreId()): ?>
+                        <a class="inline-block w-full" href="<?= $escaper->escapeUrl($block->getViewModel()
+                                                                                           ->getTargetStoreRedirectUrl($_lang)) ?>">
+                            <?= $escaper->escapeHtml($_lang->getName()) ?>
+                        </a>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </template>
+        </slot-dropdown>
+    </div>
+    <script type="module">
+        import {createApp, ref} from 'vue';
+        import SlotDropdown from '<?= $viteResolver->resolveComponentPath('elements/SlotDropdown') ?>';
+
+        const app = createApp({
+            components: {
+                SlotDropdown,
+            }
+        });
+
+        app.mount('#vue-component-store-switcher');
+    </script>
+<?php endif; ?>
