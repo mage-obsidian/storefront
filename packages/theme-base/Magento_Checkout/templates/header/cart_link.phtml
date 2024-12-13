@@ -50,26 +50,19 @@ use MageObsidian\ModernFrontend\Block\Template;
 </div>
 
 <script type="module">
-    import {createApp, ref, onMounted, onUnmounted} from 'vue';
+    import {createApp, ref} from 'vue';
     import {pinia, useMainStore} from 'mainStore';
+    import {onClickOutside} from 'mini-vueuse'
 
     const app = createApp({
         setup() {
-            const mainStore = useMainStore(); // Instancia del store
+            const mainStore = useMainStore();
             const root = ref(null);
 
-            const onClickOutside = (event) => {
+            onClickOutside(root, (event) => {
                 if (root.value && !root.value.contains(event.target)) {
-                    mainStore.cartOpen = false; // Cierra el dropdown al hacer clic fuera
+                    mainStore.cartOpen = false;
                 }
-            };
-
-            onMounted(() => {
-                window.addEventListener('click', onClickOutside);
-            });
-
-            onUnmounted(() => {
-                window.removeEventListener('click', onClickOutside);
             });
 
             return {
