@@ -27,7 +27,7 @@
 
 <script setup>
 import {ref, onMounted, onUnmounted} from 'vue';
-import {ChevronLeftIcon, ChevronRightIcon} from '#/@heroicons/vue/24/outline';
+import {ChevronLeftIcon, ChevronRightIcon} from '@heroicons/vue/24/outline';
 import viteLogo from 'MageObsidian_ModernFrontend::assets/vite_logo.png';
 import tailwindLogo from 'MageObsidian_ModernFrontend::assets/tailwind_logo.png';
 import vueLogo from 'MageObsidian_ModernFrontend::assets/vue_logo.png';
