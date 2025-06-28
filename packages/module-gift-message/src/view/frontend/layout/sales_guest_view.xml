@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!-- Same gift-message display on the guest order view (standalone, no account shell). -->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="sales.guest.order.view">
+            <arguments>
+                <argument name="gift_message" xsi:type="object">MageObsidian\GiftMessage\ViewModel\OrderGiftMessage</argument>
+            </arguments>
+        </referenceBlock>
+    </body>
+</page>

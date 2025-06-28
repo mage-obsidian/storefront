@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+  Attaches the gift-options editor to the MageObsidian cart without coupling
+  Magento_Checkout to gift messages: the GiftOptions ViewModel is read from the
+  cart Twig as block.getGiftOptions(). The editor is a single Vue island mounted
+  outside the morphed cart region (it posts straight to the gift-message REST
+  endpoints, so a qty refresh never disturbs it).
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="obsidian.cart">
+            <arguments>
+                <argument name="gift_options" xsi:type="object">MageObsidian\GiftMessage\ViewModel\GiftOptions</argument>
+            </arguments>
+        </referenceBlock>
+    </body>
+</page>

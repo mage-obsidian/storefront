@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!--
+  Shows the saved gift message on the customer order view (order-level and per
+  item). The OrderGiftMessage ViewModel is injected as an optional argument the
+  shared order-view / item-options Twig reads when present, so the display lives
+  here (GiftMessage) and Magento_Sales stays unaware of it.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="account.order.view">
+            <arguments>
+                <argument name="gift_message" xsi:type="object">MageObsidian\GiftMessage\ViewModel\OrderGiftMessage</argument>
+            </arguments>
+        </referenceBlock>
+    </body>
+</page>

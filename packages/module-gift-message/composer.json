@@ -1,0 +1,19 @@
+{
+    "name": "mage-obsidian/module-gift-message",
+    "description": "Gift message domain compatibility for MageObsidian: the cart gift-options editor (order and per-item) server-rendered with a Vue island, plus gift-message display on the customer order view.",
+    "require": {
+        "mage-obsidian/module-modern-frontend": "^1"
+    },
+    "type": "magento2-module",
+    "license": [
+        "MIT"
+    ],
+    "autoload": {
+        "files": [
+            "src/registration.php"
+        ],
+        "psr-4": {
+            "MageObsidian\\GiftMessage\\": "src/"
+        }
+    }
+}
