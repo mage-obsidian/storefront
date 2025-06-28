@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!--
+  Search results listing structure.
+
+  MageObsidian suppresses the frontend layout of non-opted-in core modules, so
+  Magento_CatalogSearch's own catalogsearch_result_index.xml — which declares
+  search.result / the search product list / toolbar — never loads. This module
+  (which IS enabled) re-declares the structure, reusing the core block CLASSES
+  with our Twig templates and the catalog ProductCard ViewModel.
+
+  search.result is core Magento\CatalogSearch\Block\Result: in _prepareLayout it
+  sets the document <title> ("Search results for: 'X'") and adds the Home/search
+  breadcrumbs — so no custom title block is needed. search_result_list is the
+  core virtualType (a ListProduct wired to the Search layer), so our category
+  grid (product/list.twig + card.twig) and toolbar work unchanged.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <!-- The Result block owns the <h1> (rendered in result.twig); drop the
+             generic page.main.title so there is a single heading. -->
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="Magento\CatalogSearch\Block\Result" name="search.result"
+                   template="Magento_CatalogSearch::result.twig">
+                <!-- No `as`: the Result block resolves the list via the
+                     hardcoded alias `search_result_list` (getListBlock), so the
+                     alias must equal the name. -->
+                <block class="Magento\CatalogSearch\Block\SearchResult\ListProduct" name="search_result_list"
+                       template="Magento_Catalog::product/list.twig">
+                    <arguments>
+                        <argument name="card" xsi:type="object">MageObsidian\Catalog\ViewModel\ProductCard</argument>
+                    </arguments>
+                    <!-- ItemList JSON-LD; MageObsidian Template so json_ld works,
+                         reuses the parent list's already-loaded collection. -->
+                    <block class="MageObsidian\ModernFrontend\Block\Template" name="search.product.item_list"
+                           as="item_list" template="Magento_Catalog::product/item-list.twig"/>
+                    <block class="Magento\Catalog\Block\Product\ProductList\Toolbar" name="product_list_toolbar"
+                           as="toolbar" template="Magento_Catalog::product/list/toolbar.twig">
+                        <block class="Magento\Theme\Block\Html\Pager" name="product_list_toolbar_pager"
+                               template="Magento_Theme::html/pager.twig"/>
+                    </block>
+                    <action method="setToolbarBlockName">
+                        <argument name="name" xsi:type="string">product_list_toolbar</argument>
+                    </action>
+                </block>
+                <!-- Populate available sort orders (incl. Relevance), view modes
+                     and the collection on the list block (native wiring). -->
+                <action method="setListOrders"/>
+                <action method="setListModes"/>
+                <action method="setListCollection"/>
+            </block>
+        </referenceContainer>
+
+        <!-- Delegated add-to-cart enhancer (progressive; cards POST without JS). -->
+        <referenceContainer name="before.body.end">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.cart_actions"
+                   template="Magento_Catalog::cart-actions.twig"/>
+        </referenceContainer>
+    </body>
+</page>

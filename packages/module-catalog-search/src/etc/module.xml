@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="MageObsidian_CatalogSearch">
+        <sequence>
+            <!-- Search box is header chrome owned by the storefront foundation;
+                 results reuse its add-to-cart enhancer and toast. -->
+            <module name="MageObsidian_Storefront"/>
+            <module name="MageObsidian_ModernFrontend"/>
+            <!-- Reuses the catalog ProductCard ViewModel and the grid/card/toolbar
+                 Twig templates for the results listing. -->
+            <module name="MageObsidian_Catalog"/>
+            <!-- Load after the core search module whose frontend this adapts. -->
+            <module name="Magento_CatalogSearch"/>
+            <module name="Magento_Catalog"/>
+        </sequence>
+    </module>
+</config>

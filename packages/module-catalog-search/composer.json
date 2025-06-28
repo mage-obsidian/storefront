@@ -1,0 +1,19 @@
+{
+    "name": "mage-obsidian/module-catalog-search",
+    "description": "Catalog search domain compatibility for MageObsidian: the search results page, reusing the catalog product grid, toolbar and card on native CatalogSearch blocks, plus the header search box with accessible autocomplete.",
+    "require": {
+        "mage-obsidian/module-modern-frontend": "^1"
+    },
+    "type": "magento2-module",
+    "license": [
+        "MIT"
+    ],
+    "autoload": {
+        "files": [
+            "src/registration.php"
+        ],
+        "psr-4": {
+            "MageObsidian\\CatalogSearch\\": "src/"
+        }
+    }
+}
