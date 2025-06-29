@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="MageObsidian_Catalog">
+        <sequence>
+            <!-- Builds on the storefront foundation: shares its cart primitives
+                 (the configurable island imports MageObsidian_Storefront::js/useCart)
+                 and inherits its legacy-layout neutralization. -->
+            <module name="MageObsidian_Storefront"/>
+            <module name="MageObsidian_ModernFrontend"/>
+            <!-- Load after the core catalog/swatches modules whose frontend this
+                 adapts, so our re-declared layout wins the merge. -->
+            <module name="Magento_Catalog"/>
+            <module name="Magento_Swatches"/>
+        </sequence>
+    </module>
+</config>
