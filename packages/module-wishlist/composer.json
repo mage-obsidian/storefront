@@ -1,0 +1,19 @@
+{
+    "name": "mage-obsidian/module-wishlist",
+    "description": "Wishlist domain compatibility for MageObsidian: the customer wish-list page (move to cart, remove) on the account shell, server-rendered with native progressive-enhancement forms.",
+    "require": {
+        "mage-obsidian/module-modern-frontend": "^1"
+    },
+    "type": "magento2-module",
+    "license": [
+        "MIT"
+    ],
+    "autoload": {
+        "files": [
+            "src/registration.php"
+        ],
+        "psr-4": {
+            "MageObsidian\\Wishlist\\": "src/"
+        }
+    }
+}
