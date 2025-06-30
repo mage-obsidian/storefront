@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!--
+  Header account state, present on every page. The static "Account" link in the
+  theme header is replaced by an island child block: AccountMenu reads the
+  client-side `customer` customer-data section (FPC-safe — the name is never
+  baked into cached HTML) and shows either a guest "Sign In" link or the
+  logged-in disclosure. The AccountState ViewModel supplies the store-aware URLs;
+  the labels stay in the Twig template.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="header-content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.account_menu"
+                   as="account_menu" template="Magento_Customer::html/account-menu.twig">
+                <arguments>
+                    <argument name="account_state" xsi:type="object">MageObsidian\Customer\ViewModel\AccountState</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+    </body>
+</page>

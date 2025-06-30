@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!--
+  Registration page structure (see customer_account_login.xml for why the core
+  layout is re-declared). Reuses Magento\Customer\Block\Form\Register as a data
+  source (post URL, persisted form data, region/country config). The form POSTs
+  natively to customer/account/createPost; register-enhancer.ts adds inline
+  validation only — account creation runs through the native flow (email
+  confirmation, redirects) unchanged.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <meta name="robots" content="NOINDEX,NOFOLLOW"/>
+        <!-- Re-declare the title the suppressed core <head> would have set. -->
+        <title>Create New Customer Account</title>
+    </head>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.customer.create"
+                   template="Magento_Customer::form/register.twig">
+                <block class="Magento\Customer\Block\Form\Register" name="customer.form.register.data" as="form_data"/>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

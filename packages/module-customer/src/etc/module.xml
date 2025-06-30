@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="MageObsidian_Customer">
+        <sequence>
+            <!-- Builds on the storefront foundation: the auth enhancers reuse its
+                 form-key-provider, and it inherits the legacy-layout neutralization. -->
+            <module name="MageObsidian_Storefront"/>
+            <module name="MageObsidian_ModernFrontend"/>
+            <!-- Load after the core customer module whose frontend this adapts, so
+                 our re-declared layout wins the merge. -->
+            <module name="Magento_Customer"/>
+        </sequence>
+    </module>
+</config>

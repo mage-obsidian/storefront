@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!--
+  Login page structure.
+
+  MageObsidian suppresses the frontend layout of non-opted-in core modules, so
+  Magento_Customer's own customer_account_login.xml (and its jQuery validation /
+  captcha UI-components) never loads. This module (which IS enabled) re-declares
+  the structure, reusing the core Magento\Customer\Block\Form\Login CLASS as a
+  data source (post URL, persisted username, forgot-password URL) behind our
+  Twig. The form POSTs natively to customer/account/loginPost (works without JS);
+  login-enhancer.ts upgrades it to an AJAX sign-in via the native customer/ajax/
+  login endpoint, refreshing customer-data so the header reflects the new state
+  without a full reload.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <!-- Auth pages carry no indexable content and often duplicate; keep them
+             out of the index (the reset page is token-specific besides). -->
+        <meta name="robots" content="NOINDEX,NOFOLLOW"/>
+        <!-- The document <title> is set by the core layout's <head>, which the
+             engine suppresses; re-declare it (without it the page has no title). -->
+        <title>Customer Login</title>
+    </head>
+    <body>
+        <!-- Our Twig owns the page <h1>; drop the generic one for a single heading. -->
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.customer.login"
+                   template="Magento_Customer::form/login.twig">
+                <!-- Core block as DATA SOURCE only (post URL, persisted username). -->
+                <block class="Magento\Customer\Block\Form\Login" name="customer.form.login.data" as="form_data"/>
+            </block>
+        </referenceContainer>
+    </body>
+</page>
