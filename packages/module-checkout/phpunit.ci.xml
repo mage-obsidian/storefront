@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    CI unit suite: pure-logic tests that run on a vanilla PHP runner without a
+    Magento install. The CartTitle block test mocks Magento framework types, so it
+    runs in a real Magento root (see phpunit.xml) and is excluded here.
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+         bootstrap="src/Test/Unit/bootstrap.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache"
+         failOnWarning="true"
+         failOnRisky="true">
+    <testsuites>
+        <testsuite name="MageObsidian Checkout Standalone Unit">
+            <directory>src/Test/Unit</directory>
+            <exclude>src/Test/Unit/Block/CartTitleTest.php</exclude>
+        </testsuite>
+    </testsuites>
+</phpunit>

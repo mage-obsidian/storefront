@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!--
+  Shopping bag page structure.
+
+  MageObsidian suppresses the frontend layout of non-opted-in core modules (the
+  engine filters layout files by `isModuleEnabled`, true only for modules that
+  ship mage_obsidian_compatibility.xml). So Magento_Checkout's own
+  checkout_cart_index.xml — and its Knockout/UI-component item renderers, shipping
+  estimator and totals — never load. This module (which IS enabled) re-declares
+  the structure instead, reusing the core block CLASSES (Totals, Coupon,
+  Crosssell) as data sources behind our Twig, with a CartItems ViewModel for the
+  lines. Mutations are progressive: native forms POST to the core controllers,
+  enhanced to AJAX by cart-page.js. The shipping estimator (Knockout-heavy) is
+  intentionally deferred to the checkout wave.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <!-- Our CartTitle owns the page <h1>; drop the generic page.main.title so
+             there is a single heading (category/PDP/home do the same). -->
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.cart"
+                   template="Magento_Checkout::cart/page.twig" cacheable="false">
+                <arguments>
+                    <argument name="cart_items" xsi:type="object">MageObsidian\Checkout\ViewModel\CartItems</argument>
+                </arguments>
+                <!-- Cart <h1> + document <title> (the native title wiring is
+                     suppressed along with the core module layout). -->
+                <block class="MageObsidian\Checkout\Block\CartTitle" name="checkout.cart.title"
+                       as="cart_title" template="Magento_Checkout::cart/title.twig"/>
+                <!-- Core blocks as DATA SOURCES only, rendered by our Twig. -->
+                <block class="Magento\Checkout\Block\Cart\Totals" name="checkout.cart.totals"
+                       as="totals" template="Magento_Checkout::cart/totals.twig"/>
+                <block class="Magento\Checkout\Block\Cart\Coupon" name="checkout.cart.coupon"
+                       as="coupon" template="Magento_Checkout::cart/coupon.twig"/>
+                <block class="Magento\Checkout\Block\Cart\Crosssell" name="checkout.cart.crosssell"
+                       as="crosssell" template="Magento_Checkout::cart/cross-sell.twig"/>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

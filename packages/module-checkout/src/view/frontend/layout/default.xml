@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+  Mini-cart mount (every page).
+
+  The mini-cart is a Checkout-domain concern, so it injects itself from this
+  module rather than the storefront base hardcoding it (the base must never
+  depend on a domain module). We mount the eager island into before.body.end —
+  the Drawer teleports to <body> and the island binds to the header's
+  [data-minicart-trigger] hook via the document, so the mount location is
+  immaterial. The Twig template lives in the theme (presentation layer).
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="before.body.end">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.minicart"
+                   template="Magento_Checkout::cart/mini-cart.twig"/>
+        </referenceContainer>
+    </body>
+</page>
