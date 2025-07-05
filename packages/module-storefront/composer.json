@@ -1,0 +1,19 @@
+{
+    "name": "mage-obsidian/module-storefront",
+    "description": "Storefront logic for MageObsidian: ViewModels, legacy layout neutralization and shared Vue islands that bring Luma-level functionality to the modern frontend.",
+    "require": {
+        "mage-obsidian/module-modern-frontend": "^1"
+    },
+    "type": "magento2-module",
+    "license": [
+        "MIT"
+    ],
+    "autoload": {
+        "files": [
+            "src/registration.php"
+        ],
+        "psr-4": {
+            "MageObsidian\\Storefront\\": "src/"
+        }
+    }
+}
