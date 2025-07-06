@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!--
+  Order detail. Pulls in the account shell, then renders our Twig over the core
+  Order\View / Items / Totals / Info blocks (kept as data sources for the order,
+  line items, totals, addresses and payment HTML). OrderTitle restores the
+  <title> (the controller does not set it). cacheable="false" — customer data.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="customer_account"/>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceBlock name="account.shell">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="account.order.view"
+                   as="account_content" template="Magento_Sales::account/order-view.twig" cacheable="false">
+                <block class="MageObsidian\Sales\Block\OrderTitle" name="account.order.title"/>
+                <block class="Magento\Sales\Block\Order\View" name="sales.order.view" as="view"/>
+                <block class="Magento\Sales\Block\Order\Items" name="order_items" as="items"/>
+                <block class="Magento\Sales\Block\Order\Totals" name="order_totals" as="totals"
+                       template="Magento_Sales::account/order-totals.twig"/>
+                <block class="Magento\Sales\Block\Order\Info" name="sales.order.info" as="info"/>
+            </block>
+        </referenceBlock>
+    </body>
+</page>

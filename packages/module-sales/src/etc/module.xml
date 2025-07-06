@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="MageObsidian_Sales">
+        <sequence>
+            <!-- Renders on the account shell (sidebar/title) and inherits the
+                 legacy-layout neutralization from the storefront foundation. -->
+            <module name="MageObsidian_Storefront"/>
+            <module name="MageObsidian_ModernFrontend"/>
+            <!-- The account shell and sidebar live in the customer domain. -->
+            <module name="MageObsidian_Customer"/>
+            <!-- Load after the core sales module whose frontend this adapts. -->
+            <module name="Magento_Sales"/>
+        </sequence>
+    </module>
+</config>
