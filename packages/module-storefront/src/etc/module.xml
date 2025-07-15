@@ -4,6 +4,9 @@
     <module name="MageObsidian_Storefront">
         <sequence>
             <module name="MageObsidian_ModernFrontend"/>
+            <!-- The whole theme renders through Twig; the storefront registers a
+                 commerce Twig extension on the engine, so it loads after it. -->
+            <module name="MageObsidian_ModernFrontendTwig"/>
             <!-- Load after Magento_Theme so our layout overrides and legacy
                  block removals win during the layout merge. -->
             <module name="Magento_Theme"/>
