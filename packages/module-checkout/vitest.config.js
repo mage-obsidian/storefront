@@ -25,6 +25,14 @@ export default defineConfig({
             "MageObsidian_Storefront::js/form-key-provider": fileURLToPath(
                 new URL("./src/Test/Js/stubs/form-key-provider.js", import.meta.url),
             ),
+            // The shared-Pinia enabler is engine glue; stub it so store tests run
+            // against a plain test Pinia. The checkout store/api are the real files.
+            "MageObsidian_ModernFrontend::js/store": fileURLToPath(
+                new URL("./src/Test/Js/stubs/store.js", import.meta.url),
+            ),
+            "MageObsidian_Checkout::js/useCheckout": fileURLToPath(
+                new URL("./src/view/frontend/web/js/useCheckout.js", import.meta.url),
+            ),
         },
     },
     test: {

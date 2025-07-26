@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!--
+  One-page checkout structure.
+
+  MageObsidian suppresses the frontend layout of non-opted-in core modules, so
+  Magento_Checkout's checkout_index_index.xml — its huge Knockout `jsLayout` and
+  the whole UI-component tree — never loads. This module (which IS enabled)
+  re-declares the page as a single Vue island that talks to the native quote REST
+  endpoints. The island is seeded from the CheckoutConfig ViewModel (server-primed
+  quote + auth mode), so the first paint needs zero REST round-trips. Mounted
+  eager: the checkout IS the page.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <!-- The checkout controller does not set a title (the native one came from
+             the suppressed core layout), so we own it here. -->
+        <title>Checkout</title>
+    </head>
+    <body>
+        <!-- CheckoutTitle owns the page <h1>; drop the generic page.main.title so
+             there is a single heading (cart/category/PDP do the same). -->
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.checkout"
+                   template="Magento_Checkout::checkout/page.twig" cacheable="false">
+                <arguments>
+                    <argument name="checkout_config" xsi:type="object">MageObsidian\Checkout\ViewModel\CheckoutConfig</argument>
+                </arguments>
+                <block class="MageObsidian\Checkout\Block\CheckoutTitle" name="checkout.title"
+                       as="checkout_title" template="Magento_Checkout::checkout/title.twig"/>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

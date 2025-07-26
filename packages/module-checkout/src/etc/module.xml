@@ -11,6 +11,8 @@
             <!-- Load after the core checkout module whose frontend this adapts, so
                  our re-declared layout wins the merge. -->
             <module name="Magento_Checkout"/>
+            <!-- The Vue checkout talks to the native quote REST endpoints. -->
+            <module name="Magento_Quote"/>
         </sequence>
     </module>
 </config>
