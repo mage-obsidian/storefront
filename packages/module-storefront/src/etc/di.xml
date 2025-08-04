@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+    Registers the commerce Twig extension on the engine's shared environment by
+    adding an item to its `extensions` array. The array merges across modules by
+    item key, so this contributes `storefront_price` alongside the engine's own
+    `mage_obsidian` and `format` items without editing the engine.
+
+    Declared at GLOBAL scope (not etc/frontend) on purpose: array arguments merge
+    cumulatively within a scope, but an area scope (frontend) REPLACES a global
+    array instead of merging — which would drop the engine's own extensions in
+    the frontend. The extension is only ever instantiated when the Twig
+    environment is built (frontend rendering), so a global declaration is inert
+    elsewhere. Requires MageObsidian_ModernFrontendTwig (declared in sequence).
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="MageObsidian\ModernFrontendTwig\Model\Template\EnvironmentFactory">
+        <arguments>
+            <argument name="extensions" xsi:type="array">
+                <item name="storefront_price" xsi:type="object">MageObsidian\Storefront\Model\Template\Extension\PriceExtension</item>
+            </argument>
+        </arguments>
+    </type>
+</config>
