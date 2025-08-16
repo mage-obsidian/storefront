@@ -1,0 +1,43 @@
+/* ============================================================
+   MageObsidian Storefront — shared island styles.
+   Picked up by the engine (module.extend.css) and merged into the
+   theme build ahead of the theme's own CSS.
+   ============================================================ */
+
+/* Drawer (off-canvas) enter/leave: backdrop fades, panel slides from its side.
+   Vue applies these classes to the backdrop (the v-if root), which also carries
+   the justify-start/justify-end side class. Plain selectors, not Tailwind
+   utilities, so the tree-shaker keeps them. */
+.obsidian-drawer-enter-active,
+.obsidian-drawer-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.obsidian-drawer-enter-active [role="dialog"],
+.obsidian-drawer-leave-active [role="dialog"] {
+  transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.obsidian-drawer-enter-from,
+.obsidian-drawer-leave-to {
+  opacity: 0;
+}
+
+.obsidian-drawer-enter-from.justify-start [role="dialog"],
+.obsidian-drawer-leave-to.justify-start [role="dialog"] {
+  transform: translateX(-100%);
+}
+
+.obsidian-drawer-enter-from.justify-end [role="dialog"],
+.obsidian-drawer-leave-to.justify-end [role="dialog"] {
+  transform: translateX(100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .obsidian-drawer-enter-active,
+  .obsidian-drawer-leave-active,
+  .obsidian-drawer-enter-active [role="dialog"],
+  .obsidian-drawer-leave-active [role="dialog"] {
+    transition: none;
+  }
+}

@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+  Storefront neutralization of legacy Magento_Theme markup.
+
+  Lives in module-storefront (sequenced over Magento_Theme), so these removals
+  win the layout merge and are inherited by every theme using this module —
+  versioned and testable, never re-done per theme. Only Theme-owned legacy is
+  touched here; other modules' legacy is removed in their own migration wave.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <!-- "Report All Bugs" footer link: a Luma demo affordance. -->
+        <referenceBlock name="report.bugs" remove="true"/>
+        <!-- Critical-CSS-path loading spinner: superseded by the Vite asset pipeline. -->
+        <referenceBlock name="main_css_preloader" remove="true"/>
+    </body>
+</page>
