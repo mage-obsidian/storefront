@@ -82,18 +82,29 @@ const oldPrice = computed(() => {
     return null;
 });
 
-// Swap the gallery's main image when a full variant resolves.
+// Drive the gallery when a full variant resolves: rebuild the whole thumbnail
+// strip from the variant's media and swap the hero. When the selection no longer
+// resolves to a variant, tell the gallery to restore the base product.
 watch(variantId, (id) => {
     if (!id) {
+        window.dispatchEvent(new CustomEvent(VARIANT_EVENT, { detail: { reset: true } }));
         return;
     }
-    const images = config.images?.[id];
-    if (Array.isArray(images) && images.length) {
-        const main = images.find((image) => image.isMain) ?? images[0];
-        window.dispatchEvent(
-            new CustomEvent(VARIANT_EVENT, { detail: { large: main.full || main.img, label: main.caption } }),
-        );
+    const images = (config.images?.[id] ?? []).filter((image) => image && (image.full || image.img));
+    if (!images.length) {
+        return;
     }
+    const tiles = images.map((image) => ({
+        large: image.full || image.img,
+        thumb: image.thumb || image.img || image.full,
+        label: image.caption || "",
+    }));
+    const main = images.find((image) => image.isMain) ?? images[0];
+    window.dispatchEvent(
+        new CustomEvent(VARIANT_EVENT, {
+            detail: { large: main.full || main.img, label: main.caption || "", tiles },
+        }),
+    );
 });
 
 /** Classify a swatch by its value: hex → color, path → image, else text. */
