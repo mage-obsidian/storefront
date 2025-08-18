@@ -1,6 +1,7 @@
 <script setup>
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
+import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 
 // Root of the Vue one-page checkout, replacing Magento's Knockout flow. It mounts
 // eager (it IS the page) and is seeded from the server-primed CheckoutConfig, so
@@ -13,6 +14,15 @@ const props = defineProps({
 
 const checkout = useCheckout();
 checkout.init(props.config);
+
+// The checkout server-primes the authoritative quote, so it is the strongest
+// "the cart is exactly this right now" signal there is. Reconcile the shared cart
+// section from it on mount so the header badge / mini-cart can never linger on a
+// stale count that contradicts what checkout will actually order.
+const customerData = useCustomerData();
+onMounted(() => {
+    customerData.reload(["cart"]);
+});
 
 const t = (key, fallback) => props.labels?.[key] ?? fallback;
 

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import { setActivePinia, createPinia } from "pinia";
 import Checkout from "./Checkout.vue";
+import { reload, __reset } from "../../../../../Test/Js/stubs/customerData.js";
 
 const CONFIG = {
     isLoggedIn: false,
@@ -19,6 +20,7 @@ describe("Checkout.vue", () => {
     beforeEach(() => {
         pinia = createPinia();
         setActivePinia(pinia);
+        __reset();
     });
 
     function render(config = CONFIG, labels = {}) {
@@ -56,5 +58,10 @@ describe("Checkout.vue", () => {
         const wrapper = render(CONFIG, { stepShipping: "Envío", summary: "Resumen" });
         expect(wrapper.text()).toContain("Envío");
         expect(wrapper.text()).toContain("Resumen");
+    });
+
+    it("reconciles the cart section from the authoritative quote on mount", () => {
+        render();
+        expect(reload.calls).toContainEqual([["cart"]]);
     });
 });
