@@ -1,0 +1,8 @@
+[data-add-to-wishlist].is-saved button {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+[data-add-to-wishlist].is-saved svg {
+    fill: var(--color-accent);
+}
