@@ -136,6 +136,37 @@ class ProductViewTest extends TestCase
         $this->assertFalse($this->viewModel($product)->isOnSale());
     }
 
+    public function testOptionYearsSpanCurrentYearThroughPlusTwenty(): void
+    {
+        $years = $this->viewModel($this->product('simple', false))->getOptionYears();
+
+        $this->assertCount(21, $years);
+        $this->assertSame((int)date('Y'), $years[0]);
+        $this->assertSame((int)date('Y') + 20, $years[20]);
+    }
+
+    public function testCurrencyFormatComesFromTheStoreCurrency(): void
+    {
+        $currency = $this->getMockBuilder(\stdClass::class)
+            ->addMethods(['getOutputFormat'])
+            ->getMock();
+        $currency->method('getOutputFormat')->willReturn('$%s');
+
+        $registry = $this->createMock(Registry::class);
+        $priceCurrency = $this->createMock(PriceCurrencyInterface::class);
+        $priceCurrency->method('getCurrency')->willReturn($currency);
+
+        $view = new ProductView(
+            $registry,
+            $this->createMock(OutputHelper::class),
+            $this->createMock(UrlInterface::class),
+            $this->createMock(UrlHelper::class),
+            $priceCurrency
+        );
+
+        $this->assertSame('$%s', $view->getCurrencyFormat());
+    }
+
     public function testDescriptionRunsThroughOutputFilter(): void
     {
         $product = $this->product('simple', false);

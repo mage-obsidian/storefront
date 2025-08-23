@@ -44,6 +44,12 @@
                 <!-- Visible-on-front additional attributes, read for the spec list. -->
                 <block class="Magento\Catalog\Block\Product\View\Attributes"
                        name="product.attributes" as="product_attributes"/>
+                <!-- Custom options data source: read for getOptions() (structure)
+                     and getJsonConfig() (per-value price deltas). Rendered by our
+                     reusable Twig partials (native field names), never by this
+                     core block, so it carries no template. -->
+                <block class="Magento\Catalog\Block\Product\View\Options"
+                       name="product.info.options" as="product_options"/>
             </block>
         </referenceContainer>
 

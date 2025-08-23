@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
 import ProductForm from "./ProductForm.vue";
-import { __calls, __reset, __setResult } from "MageObsidian_Storefront::js/useCart";
+import { __rawCalls, __reset, __setResult } from "MageObsidian_Storefront::js/useCart";
 
 // Configurable buy-box island. We assert the selection contract: a radiogroup per
 // attribute, impossible combinations greyed out, full selection drives price +
@@ -119,13 +119,13 @@ describe("ProductForm", () => {
         await wrapper.find("form").trigger("submit");
         await flushPromises();
 
-        expect(__calls).toHaveLength(1);
-        expect(__calls[0]).toMatchObject({
-            action: "/checkout/cart/add",
-            product: 7,
-            uenc: "ENC",
-            superAttribute: { 93: "5", 144: "7" },
-        });
+        expect(__rawCalls).toHaveLength(1);
+        expect(__rawCalls[0].action).toBe("/checkout/cart/add");
+        const body = __rawCalls[0].body;
+        expect(body.get("product")).toBe("7");
+        expect(body.get("uenc")).toBe("ENC");
+        expect(body.get("super_attribute[93]")).toBe("5");
+        expect(body.get("super_attribute[144]")).toBe("7");
         expect(toast).toHaveBeenCalledTimes(1);
         expect(toast.mock.calls[0][0].detail.message).toBe("Added");
 
@@ -144,7 +144,7 @@ describe("ProductForm", () => {
         await wrapper.find("form").trigger("submit");
         await flushPromises();
 
-        expect(__calls).toHaveLength(1);
+        expect(__rawCalls).toHaveLength(1);
         expect(toast.mock.calls.at(-1)[0].detail.message).toBe("Failed");
 
         window.removeEventListener("obsidian:toast", toast);

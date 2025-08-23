@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { useCart } from "MageObsidian_Storefront::js/useCart";
+import { createProductOptions } from "MageObsidian_Catalog::js/product-options";
 
 // Configurable buy box. Parses core's getJsonConfig / getJsonSwatchConfig and
 // owns the selection flow. Stock truth stays server-side — we only grey out
@@ -12,6 +13,7 @@ const props = defineProps({
     action: { type: String, required: true },
     uenc: { type: String, default: "" },
     initialPrice: { type: String, default: "" },
+    initialPriceAmount: { type: [Number, String], default: null },
     labels: { type: Object, default: () => ({}) },
 });
 
@@ -39,6 +41,26 @@ const qty = ref(1);
 const adding = ref(false);
 
 const cart = useCart();
+
+// Custom options live as server-rendered fields (native names) next to the
+// island so the no-JS POST still carries them; here we read that same DOM to add
+// their price delta live, validate required ones, and append them (incl. file
+// uploads) to the add-to-cart body. Reuses the shared product-options logic.
+const optionsDelta = ref(0);
+let productOptions = null;
+
+onMounted(() => {
+    const root = document.querySelector("[data-pdp] [data-product-options]");
+    if (!root) {
+        return;
+    }
+    productOptions = createProductOptions(root);
+    const sync = () => {
+        optionsDelta.value = productOptions.delta();
+    };
+    productOptions.onChange(sync);
+    sync();
+});
 
 /** Variant ids (keys of the index) compatible with a (partial) selection. */
 function matchingVariants(selection) {
@@ -71,13 +93,19 @@ function formatAmount(amount) {
 
 const price = computed(() => {
     const prices = variantId.value && config.optionPrices?.[variantId.value];
-    return prices ? formatAmount(prices.finalPrice.amount) : props.initialPrice;
+    // No variant chosen and no option delta: keep the server-formatted initial
+    // string (avoids depending on a numeric base we may not have).
+    if (!prices && optionsDelta.value === 0) {
+        return props.initialPrice;
+    }
+    const base = prices ? Number(prices.finalPrice.amount) : Number(props.initialPriceAmount ?? 0);
+    return formatAmount(base + optionsDelta.value);
 });
 
 const oldPrice = computed(() => {
     const prices = variantId.value && config.optionPrices?.[variantId.value];
     if (prices && prices.oldPrice && Number(prices.oldPrice.amount) > Number(prices.finalPrice.amount)) {
-        return formatAmount(prices.oldPrice.amount);
+        return formatAmount(Number(prices.oldPrice.amount) + optionsDelta.value);
     }
     return null;
 });
@@ -156,18 +184,23 @@ async function add() {
         announce(props.labels.selectOptions, "error");
         return;
     }
+    if (productOptions && !productOptions.validate()) {
+        return;
+    }
     adding.value = true;
-    const superAttribute = {};
+    // Build the multipart body ourselves so it can carry super_attribute AND the
+    // custom-option fields (including file uploads), then let the base post it.
+    const body = new FormData();
+    body.set("product", String(props.productId));
+    body.set("qty", String(qty.value));
+    if (props.uenc) {
+        body.set("uenc", props.uenc);
+    }
     attributes.forEach((attr) => {
-        superAttribute[attr.id] = selected.value[attr.id];
+        body.set(`super_attribute[${attr.id}]`, String(selected.value[attr.id]));
     });
-    const ok = await cart.addProduct({
-        action: props.action,
-        product: props.productId,
-        qty: qty.value,
-        uenc: props.uenc,
-        superAttribute,
-    });
+    productOptions?.appendTo(body);
+    const ok = await cart.addRaw(props.action, body);
     announce(ok ? props.labels.added : props.labels.failed, ok ? "success" : "error");
     adding.value = false;
 }

@@ -260,6 +260,32 @@ class ProductView implements ArgumentInterface
     }
 
     /**
+     * Store currency output pattern with a `%s` placeholder (e.g. "$%s"), so the
+     * options enhancer can format a live total (base price + option deltas)
+     * client-side, mirroring the configurable island's currencyFormat.
+     *
+     * @return string
+     */
+    public function getCurrencyFormat(): string
+    {
+        return (string)$this->priceCurrency->getCurrency()->getOutputFormat();
+    }
+
+    /**
+     * Selectable years for a date custom option (current year through +20),
+     * matching Magento's default date-range behaviour. Rendered as dropdowns so
+     * a date option works without JS (no calendar widget).
+     *
+     * @return array<int, int>
+     */
+    public function getOptionYears(): array
+    {
+        $start = (int)date('Y');
+
+        return range($start, $start + 20);
+    }
+
+    /**
      * Run a product attribute through the catalog output filter.
      *
      * @param string $attribute

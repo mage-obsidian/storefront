@@ -7,11 +7,15 @@
 import { ref } from "vue";
 
 export const __calls = [];
+export const __formCalls = [];
+export const __rawCalls = [];
 
 let result = true;
 
 export function __reset() {
     __calls.length = 0;
+    __formCalls.length = 0;
+    __rawCalls.length = 0;
     result = true;
 }
 
@@ -26,7 +30,14 @@ export function useCart() {
             __calls.push(payload);
             return Promise.resolve(result);
         },
-        addFromForm: () => Promise.resolve(result),
+        addFromForm: (form) => {
+            __formCalls.push(form);
+            return Promise.resolve(result);
+        },
+        addRaw: (action, body) => {
+            __rawCalls.push({ action, body });
+            return Promise.resolve(result);
+        },
     };
 }
 
