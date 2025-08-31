@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!--
+  Customer shipment view. The shipment block lives in Magento_Shipping (not
+  Magento_Sales): it is the data source for the order and its shipment
+  collection (with tracking). Account shell + our Twig + Order\Info. OrderTitle
+  restores the <title>. cacheable="false".
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="customer_account"/>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceBlock name="account.shell">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="account.order.shipment"
+                   as="account_content" template="Magento_Sales::account/order-shipment.twig" cacheable="false">
+                <block class="MageObsidian\Sales\Block\OrderTitle" name="account.shipment.title"/>
+                <block class="Magento\Shipping\Block\Order\Shipment" name="sales.order.shipment" as="shipment"/>
+                <block class="Magento\Sales\Block\Order\Info" name="sales.order.info" as="info"/>
+            </block>
+        </referenceBlock>
+    </body>
+</page>

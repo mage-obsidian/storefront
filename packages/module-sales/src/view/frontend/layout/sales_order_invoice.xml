@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!--
+  Customer invoice view. Same shape as sales_order_view: account shell + our Twig
+  over the core Order\Invoice block (data source for the order and its invoice
+  collection) and Order\Info (formatted addresses). OrderTitle restores the
+  <title>. cacheable="false" — customer data.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="customer_account"/>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceBlock name="account.shell">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="account.order.invoice"
+                   as="account_content" template="Magento_Sales::account/order-invoice.twig" cacheable="false">
+                <block class="MageObsidian\Sales\Block\OrderTitle" name="account.invoice.title"/>
+                <block class="Magento\Sales\Block\Order\Invoice" name="sales.order.invoice" as="invoice"/>
+                <block class="Magento\Sales\Block\Order\Info" name="sales.order.info" as="info"/>
+            </block>
+        </referenceBlock>
+    </body>
+</page>
