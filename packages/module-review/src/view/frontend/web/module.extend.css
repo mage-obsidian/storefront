@@ -1,0 +1,52 @@
+/*
+ * Star-rating display for the reviews UI (see review/stars.twig). A gold fill
+ * layer is clipped over a muted track so fractional ratings render precisely.
+ */
+.obsidian-stars {
+    position: relative;
+    display: inline-block;
+    font-size: 0.95rem;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+}
+
+.obsidian-stars__track {
+    color: var(--color-ash-300);
+}
+
+.obsidian-stars__fill {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    overflow: hidden;
+    color: var(--color-accent);
+}
+
+/* Interactive star input: radios are visually hidden; labels are the stars.
+   Hovering or focusing a star fills it and every star before it. */
+.review-rating__stars {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    gap: 0.15rem;
+}
+
+.review-rating__star {
+    cursor: pointer;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--color-ash-300);
+    transition: color 0.12s ease;
+}
+
+.review-rating__star:hover,
+.review-rating__star:hover ~ .review-rating__star,
+.review-rating__input:checked ~ .review-rating__star,
+.review-rating__input:focus-visible + .review-rating__star {
+    color: var(--color-accent);
+}
+
+.review-rating__input:focus-visible + .review-rating__star {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}

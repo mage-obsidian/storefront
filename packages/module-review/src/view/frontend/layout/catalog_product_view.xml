@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!--
+  PDP product reviews.
+
+  MageObsidian suppresses the core review frontend layout, so Magento_Review's
+  own catalog_product_view.xml never loads. This module re-declares the reviews
+  structure as children of product.info.main (the catalog PDP main block), which
+  exposes two optional hooks in its Twig: child_html('review_summary') under the
+  title and child_html('reviews') in a dedicated section. If this module is not
+  installed those hooks render empty, so the catalog stays independent of reviews.
+
+  The approved-review list and the aggregateRating/review JSON-LD come from our
+  ProductReviews ViewModel; the submit form reuses the core Block\Form as a data
+  source for the rating types and the native post action. Gated by
+  catalog/review/active, like core.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="product.info.main">
+            <!-- Compact stars + review count near the title; links to the section. -->
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.review.summary"
+                   as="review_summary" template="Magento_Review::review/summary.twig"
+                   ifconfig="catalog/review/active">
+                <arguments>
+                    <argument name="reviews" xsi:type="object">MageObsidian\Review\ViewModel\ProductReviews</argument>
+                </arguments>
+            </block>
+            <!-- Approved review list + submit form + review JSON-LD. -->
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.reviews"
+                   as="reviews" template="Magento_Review::review/reviews.twig"
+                   ifconfig="catalog/review/active">
+                <arguments>
+                    <argument name="reviews" xsi:type="object">MageObsidian\Review\ViewModel\ProductReviews</argument>
+                </arguments>
+                <!-- Data source only: rating types/options + the native post URL. -->
+                <block class="Magento\Review\Block\Form" name="product.review.form" as="form"/>
+            </block>
+        </referenceBlock>
+    </body>
+</page>

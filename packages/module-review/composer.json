@@ -1,0 +1,19 @@
+{
+    "name": "mage-obsidian/module-review",
+    "description": "Product reviews domain compatibility for MageObsidian: the PDP rating summary, approved review list and submit form on native Magento_Review blocks, with review/aggregateRating JSON-LD.",
+    "require": {
+        "mage-obsidian/module-modern-frontend": "^1"
+    },
+    "type": "magento2-module",
+    "license": [
+        "MIT"
+    ],
+    "autoload": {
+        "files": [
+            "src/registration.php"
+        ],
+        "psr-4": {
+            "MageObsidian\\Review\\": "src/"
+        }
+    }
+}

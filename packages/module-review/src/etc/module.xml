@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="MageObsidian_Review">
+        <sequence>
+            <module name="MageObsidian_Storefront"/>
+            <module name="MageObsidian_ModernFrontend"/>
+            <!-- Hooks into the catalog PDP (review_summary / reviews child blocks). -->
+            <module name="MageObsidian_Catalog"/>
+            <!-- Load after the core review module whose frontend this adapts. -->
+            <module name="Magento_Review"/>
+        </sequence>
+    </module>
+</config>
