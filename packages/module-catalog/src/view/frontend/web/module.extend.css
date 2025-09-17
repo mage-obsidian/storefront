@@ -1,0 +1,8 @@
+[data-add-to-compare].is-compared button {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+[data-add-to-compare].is-compared svg {
+    fill: var(--color-accent);
+}

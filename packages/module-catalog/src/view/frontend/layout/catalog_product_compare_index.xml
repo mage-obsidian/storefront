@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+  Re-declares the suppressed compare page, reusing the native ListCompare block
+  (items + comparable attributes) through our Twig. Not cacheable: visitor-specific.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Compare Products</title>
+    </head>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="Magento\Catalog\Block\Product\Compare\ListCompare" name="catalog.compare.list"
+                   template="Magento_Catalog::product/compare/list.twig" cacheable="false"/>
+        </referenceContainer>
+    </body>
+</page>

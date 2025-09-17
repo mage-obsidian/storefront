@@ -58,6 +58,8 @@
         <referenceContainer name="before.body.end">
             <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.pdp_cart_actions"
                    template="Magento_Catalog::cart-actions.twig"/>
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.pdp_compare_actions"
+                   template="Magento_Catalog::compare-actions.twig"/>
         </referenceContainer>
     </body>
 </page>
