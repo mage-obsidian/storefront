@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+  "Email to a Friend" share form (sendfriend/product/send/id/X). Standalone
+  (1column). Reuses the core Block\Send as the data source (post URL, prefilled
+  sender, max recipients) rendered by our Twig. Recipient rows are static (no JS
+  row-builder); empty rows are ignored server-side.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Email to a Friend</title>
+    </head>
+    <body>
+        <referenceContainer name="content">
+            <block class="Magento\SendFriend\Block\Send" name="sendfriend.send"
+                   template="Magento_SendFriend::send.twig"/>
+        </referenceContainer>
+    </body>
+</page>
