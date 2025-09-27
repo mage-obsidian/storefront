@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<!--
+  Category product listing structure.
+
+  MageObsidian suppresses the frontend layout of non-opted-in core modules (the
+  engine filters layout files by `isModuleEnabled`, true only for modules that
+  ship mage_obsidian_compatibility.xml). So Magento_Catalog's own
+  catalog_category_view.xml — which declares category.products.list / the
+  toolbar — never loads. The storefront module (which IS enabled) re-declares the
+  structure instead, reusing the core block CLASSES (View, ListProduct, Toolbar,
+  Pager) with our Twig templates and ViewModels.
+
+  category.view is core Magento\Catalog\Block\Category\View: it owns the
+  display-mode decision (products / static-and-products / static-only). Our
+  view.twig dispatches on it — rendering the product list and/or the subcategory
+  landing grid (CategoryLanding). 1column for now (the layered-navigation sidebar
+  returns with its batch).
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <!-- Our CategoryTitle owns the category <h1>; drop the generic
+             page.main.title so there is a single heading (the designed home does
+             the same). -->
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <!-- Category <h1> + document <title> (the native title wiring is
+                 suppressed along with the core module layout). Always present so
+                 the title is set regardless of display mode. -->
+            <block class="MageObsidian\Storefront\Block\Catalog\CategoryTitle" name="category.title"
+                   before="-" template="Magento_Catalog::category/title.twig"/>
+            <block class="Magento\Catalog\Block\Category\View" name="category.view"
+                   template="Magento_Catalog::category/view.twig">
+                <arguments>
+                    <!-- Subcategory tiles for PAGE / static landings. -->
+                    <argument name="landing" xsi:type="object">MageObsidian\Storefront\ViewModel\CategoryLanding</argument>
+                </arguments>
+                <block class="Magento\Catalog\Block\Product\ListProduct" name="category.products.list"
+                       as="product_list" template="Magento_Catalog::product/list.twig">
+                    <arguments>
+                        <argument name="card" xsi:type="object">MageObsidian\Storefront\ViewModel\ProductCard</argument>
+                    </arguments>
+                    <!-- ItemList JSON-LD; MageObsidian Template so json_ld works,
+                         reuses the parent list's already-loaded collection. -->
+                    <block class="MageObsidian\ModernFrontend\Block\Template" name="category.product.item_list"
+                           as="item_list" template="Magento_Catalog::product/item-list.twig"/>
+                    <block class="Magento\Catalog\Block\Product\ProductList\Toolbar" name="product_list_toolbar"
+                           as="toolbar" template="Magento_Catalog::product/list/toolbar.twig">
+                        <block class="Magento\Theme\Block\Html\Pager" name="product_list_toolbar_pager"
+                               template="Magento_Theme::html/pager.twig"/>
+                    </block>
+                    <action method="setToolbarBlockName">
+                        <argument name="name" xsi:type="string">product_list_toolbar</argument>
+                    </action>
+                </block>
+            </block>
+        </referenceContainer>
+
+        <!-- Delegated add-to-cart enhancer (progressive; cards POST without JS). -->
+        <referenceContainer name="before.body.end">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.cart_actions"
+                   template="Magento_Catalog::cart-actions.twig"/>
+        </referenceContainer>
+    </body>
+</page>
