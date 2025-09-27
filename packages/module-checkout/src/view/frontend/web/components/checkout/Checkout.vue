@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted } from "vue";
 import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
@@ -7,10 +7,13 @@ import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 // eager (it IS the page) and is seeded from the server-primed CheckoutConfig, so
 // the step rail and order summary paint with zero REST round-trips. Each step's
 // UI lands in later milestones; M0 is the shell + summary + the REST auth crux.
-const props = defineProps({
-    config: { type: Object, default: () => ({}) },
-    labels: { type: Object, default: () => ({}) },
-});
+const props = withDefaults(
+    defineProps<{
+        config?: Record<string, unknown>;
+        labels?: Record<string, string>;
+    }>(),
+    { config: () => ({}), labels: () => ({}) },
+);
 
 const checkout = useCheckout();
 checkout.init(props.config);
@@ -24,7 +27,7 @@ onMounted(() => {
     customerData.reload(["cart"]);
 });
 
-const t = (key, fallback) => props.labels?.[key] ?? fallback;
+const t = (key: string, fallback: string): string => props.labels?.[key] ?? fallback;
 
 const steps = computed(() => [
     { key: "identification", label: t("stepIdentification", "Identification") },

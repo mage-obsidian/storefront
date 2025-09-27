@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref, watch, onMounted, onBeforeUnmount, useId } from "vue";
 import Drawer from "MageObsidian_Storefront::elements/Drawer";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
@@ -9,18 +9,37 @@ import { useCart } from "MageObsidian_Storefront::js/useCart";
 // and quantity/removal delegate to useCart's native sidebar endpoints. The trigger
 // is the header's [data-minicart-trigger] link: with no JS it navigates to the
 // cart page; here we intercept it to open the drawer instead.
-const props = defineProps({
-    cartUrl: { type: String, required: true },
-    checkoutUrl: { type: String, required: true },
-    updateUrl: { type: String, required: true },
-    removeUrl: { type: String, required: true },
-    labels: { type: Object, default: () => ({}) },
-});
+interface CartItem {
+    item_id: number | string;
+    qty: number | string;
+    product_name?: string;
+    product_url?: string;
+    product_price?: string;
+    product_image?: { src?: string; alt?: string };
+    options?: Array<{ label: string; value: string }>;
+}
+
+interface CartSection {
+    items?: CartItem[];
+    summary_count?: number | string;
+    subtotal?: string;
+}
+
+const props = withDefaults(
+    defineProps<{
+        cartUrl: string;
+        checkoutUrl: string;
+        updateUrl: string;
+        removeUrl: string;
+        labels?: Record<string, string>;
+    }>(),
+    { labels: () => ({}) },
+);
 
 const customerData = useCustomerData();
 const cart = useCart();
 
-const section = computed(() => customerData.section("cart") ?? {});
+const section = computed<CartSection>(() => (customerData.section("cart") ?? {}) as CartSection);
 const items = computed(() => section.value.items ?? []);
 const count = computed(() => Number(section.value.summary_count ?? 0));
 const subtotal = computed(() => section.value.subtotal ?? "");
@@ -29,11 +48,11 @@ const isEmpty = computed(() => items.value.length === 0);
 const open = ref(false);
 // Item id currently mutating — disables its controls so a reload can't race a
 // second click. Cleared once the customer-data reload settles.
-const busyId = ref(null);
+const busyId = ref<number | string | null>(null);
 
 const drawerId = `minicart-${useId()}`;
 
-async function setQty(item, qty) {
+async function setQty(item: CartItem, qty: number | string): Promise<void> {
     const next = Math.max(1, Math.trunc(Number(qty) || 0));
     if (next === Number(item.qty) || busyId.value) {
         return;
@@ -46,11 +65,11 @@ async function setQty(item, qty) {
     }
 }
 
-function onQtyInput(item, event) {
-    setQty(item, event.target.value);
+function onQtyInput(item: CartItem, event: Event): void {
+    setQty(item, (event.target as HTMLInputElement).value);
 }
 
-async function remove(item) {
+async function remove(item: CartItem): Promise<void> {
     if (busyId.value) {
         return;
     }
@@ -64,8 +83,8 @@ async function remove(item) {
 
 // Bind every header trigger: wire dialog semantics and open the drawer instead of
 // navigating. Kept on the document so the island can mount anywhere.
-const triggers = [];
-const onTriggerClick = (event) => {
+const triggers: Element[] = [];
+const onTriggerClick = (event: Event): void => {
     event.preventDefault();
     open.value = true;
 };

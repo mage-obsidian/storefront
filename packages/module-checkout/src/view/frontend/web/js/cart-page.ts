@@ -20,10 +20,10 @@ const customerData = useCustomerData();
 
 let busy = false;
 
-const root = () => document.querySelector(ROOT);
-const within = (el) => !!el && !!root()?.contains(el);
+const root = (): HTMLElement | null => document.querySelector<HTMLElement>(ROOT);
+const within = (el: Element | null | undefined): boolean => !!el && !!root()?.contains(el);
 
-function endpoints() {
+function endpoints(): { update?: string; remove?: string } {
     const el = root();
     return { update: el?.dataset.updateUrl, remove: el?.dataset.removeUrl };
 }
@@ -33,7 +33,7 @@ function endpoints() {
  * totals/discount reflect the authoritative server state. Falls back to a full
  * reload if anything is off.
  */
-async function refresh() {
+async function refresh(): Promise<void> {
     try {
         const response = await fetch(window.location.href, {
             headers: { "X-Requested-With": "XMLHttpRequest" },
@@ -56,10 +56,8 @@ async function refresh() {
 /**
  * Run a single mutation, then refresh. Guards against overlapping operations so a
  * second click can't race the refresh.
- *
- * @param {() => Promise<unknown>} mutate
  */
-async function run(mutate) {
+async function run(mutate: () => Promise<unknown>): Promise<void> {
     if (busy) {
         return;
     }
@@ -73,20 +71,20 @@ async function run(mutate) {
     }
 }
 
-function applyQty(input) {
+function applyQty(input: HTMLInputElement): void {
     const qty = Math.max(1, parseInt(input.value, 10) || 1);
     input.value = String(qty);
     run(() => cart.updateItemQty(input.dataset.itemId, qty, endpoints().update));
 }
 
 document.addEventListener("click", (event) => {
-    const step = event.target.closest?.("[data-cart-step]");
+    const step = (event.target as HTMLElement | null)?.closest?.<HTMLElement>("[data-cart-step]");
     if (within(step)) {
-        const input = step.closest("[data-cart-line]")?.querySelector("[data-cart-qty]");
+        const input = step!.closest("[data-cart-line]")?.querySelector<HTMLInputElement>("[data-cart-qty]");
         if (!input) {
             return;
         }
-        const next = Math.max(1, (parseInt(input.value, 10) || 1) + parseInt(step.dataset.cartStep, 10));
+        const next = Math.max(1, (parseInt(input.value, 10) || 1) + parseInt(step!.dataset.cartStep ?? "0", 10));
         if (next === (parseInt(input.value, 10) || 1)) {
             return;
         }
@@ -95,29 +93,29 @@ document.addEventListener("click", (event) => {
         return;
     }
 
-    const remove = event.target.closest?.("[data-cart-remove]");
+    const remove = (event.target as HTMLElement | null)?.closest?.<HTMLElement>("[data-cart-remove]");
     if (within(remove)) {
         event.preventDefault();
-        run(() => cart.removeItem(remove.dataset.itemId, endpoints().remove));
+        run(() => cart.removeItem(remove!.dataset.itemId, endpoints().remove));
     }
 });
 
 document.addEventListener("change", (event) => {
-    const input = event.target.closest?.("[data-cart-qty]");
+    const input = (event.target as HTMLElement | null)?.closest?.<HTMLInputElement>("[data-cart-qty]");
     if (within(input)) {
-        applyQty(input);
+        applyQty(input!);
     }
 });
 
 document.addEventListener("submit", (event) => {
-    const coupon = event.target.closest?.("[data-cart-coupon]");
+    const coupon = (event.target as HTMLElement | null)?.closest?.<HTMLFormElement>("[data-cart-coupon]");
     if (within(coupon)) {
         event.preventDefault();
         run(async () => {
-            await fetch(coupon.action, {
+            await fetch(coupon!.action, {
                 method: "POST",
                 headers: { "X-Requested-With": "XMLHttpRequest" },
-                body: new FormData(coupon),
+                body: new FormData(coupon!),
                 credentials: "same-origin",
             });
             await customerData.reload(["cart"]);
@@ -125,12 +123,12 @@ document.addEventListener("submit", (event) => {
         return;
     }
 
-    const form = event.target.closest?.("[data-cart-form]");
+    const form = (event.target as HTMLElement | null)?.closest?.<HTMLFormElement>("[data-cart-form]");
     if (within(form)) {
         // The "Update bag" button / Enter: apply any quantities edited without a
         // blur, then refresh once.
         event.preventDefault();
-        const inputs = [...form.querySelectorAll("[data-cart-qty]")];
+        const inputs = [...form!.querySelectorAll<HTMLInputElement>("[data-cart-qty]")];
         run(async () => {
             for (const input of inputs) {
                 const qty = Math.max(1, parseInt(input.value, 10) || 1);

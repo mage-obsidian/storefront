@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createCheckoutApi } from "./useCheckoutApi.js";
+import { createCheckoutApi } from "./useCheckoutApi.ts";
 
 const REST = "https://shop.test/rest/default/V1/";
 

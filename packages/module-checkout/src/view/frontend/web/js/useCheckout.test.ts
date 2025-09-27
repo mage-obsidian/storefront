@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
-import { useCheckout } from "./useCheckout.js";
+import { useCheckout } from "./useCheckout.ts";
 
 const GUEST_CONFIG = {
     isLoggedIn: false,

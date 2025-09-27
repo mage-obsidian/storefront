@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import { setActivePinia, createPinia } from "pinia";
 import Checkout from "./Checkout.vue";
-import { reload, __reset } from "../../../../../Test/Js/stubs/customerData.js";
+import { reload, __reset } from "../../../../../Test/Js/stubs/customerData.ts";
 
 const CONFIG = {
     isLoggedIn: false,

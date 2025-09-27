@@ -5,31 +5,36 @@
 // tested in module-storefront's useCart.test.js.
 import { ref } from "vue";
 
-export const __calls = [];
+interface CartCall {
+    type: string;
+    [key: string]: unknown;
+}
+
+export const __calls: CartCall[] = [];
 
 let result = true;
 
-export function __reset() {
+export function __reset(): void {
     __calls.length = 0;
     result = true;
 }
 
-export function __setResult(value) {
+export function __setResult(value: boolean): void {
     result = value;
 }
 
 export function useCart() {
     return {
         count: ref(0),
-        updateItemQty: (itemId, qty, action) => {
+        updateItemQty: (itemId: number | string, qty: number | string, action: string) => {
             __calls.push({ type: "updateItemQty", itemId, qty, action });
             return Promise.resolve(result);
         },
-        removeItem: (itemId, action) => {
+        removeItem: (itemId: number | string, action: string) => {
             __calls.push({ type: "removeItem", itemId, action });
             return Promise.resolve(result);
         },
-        addProduct: (payload) => {
+        addProduct: (payload: Record<string, unknown>) => {
             __calls.push({ type: "addProduct", ...payload });
             return Promise.resolve(result);
         },

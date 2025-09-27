@@ -9,6 +9,14 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { ensureSharedPinia } from 'MageObsidian_ModernFrontend::js/store';
 
+export interface CheckoutItem {
+    id: number | string;
+    name?: string;
+    image?: string;
+    qty?: number | string;
+    rowTotal?: string;
+}
+
 // The fixed step order of the one-page flow.
 export const STEPS = ['identification', 'shipping', 'payment', 'review'];
 
@@ -18,7 +26,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const step = ref('identification');
     const isLoggedIn = ref(false);
     const email = ref('');
-    const items = ref([]);
+    const items = ref<CheckoutItem[]>([]);
     const subtotal = ref('');
     const grandTotal = ref('');
     let seeded = false;
@@ -26,10 +34,8 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     /**
      * Seed the store from the server-primed config. Idempotent: the island mounts
      * once, but guarding keeps re-mounts (HMR) from clobbering live state.
-     *
-     * @param {Record<string, any>} config
      */
-    function init(config) {
+    function init(config: Record<string, any>): void {
         if (seeded) {
             return;
         }
@@ -47,12 +53,8 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         }
     }
 
-    /**
-     * Move to a known step.
-     *
-     * @param {string} key
-     */
-    function goToStep(key) {
+    /** Move to a known step. */
+    function goToStep(key: string): void {
         if (STEPS.includes(key)) {
             step.value = key;
         }

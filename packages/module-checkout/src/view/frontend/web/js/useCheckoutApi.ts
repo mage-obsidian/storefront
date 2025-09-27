@@ -10,29 +10,27 @@
  * wraps it with reactive step state.
  */
 
-/**
- * @typedef {object} CheckoutApiConfig
- * @property {string} restBaseUrl   e.g. 'https://shop.test/rest/default/V1/'
- * @property {boolean} isLoggedIn
- * @property {string} maskedCartId  guest cart id (ignored when logged in)
- */
+export interface CheckoutApiConfig {
+    /** e.g. 'https://shop.test/rest/default/V1/' */
+    restBaseUrl?: string;
+    isLoggedIn?: boolean;
+    /** guest cart id (ignored when logged in) */
+    maskedCartId?: string;
+}
 
-/**
- * @param {CheckoutApiConfig} config
- */
-export function createCheckoutApi(config) {
+interface MagentoError {
+    message?: string;
+    parameters?: Record<string, string> | string[];
+}
+
+type HttpMethod = 'GET' | 'POST' | 'PUT';
+
+export function createCheckoutApi(config: CheckoutApiConfig) {
     const { restBaseUrl = '', isLoggedIn = false, maskedCartId = '' } = config || {};
     const cartPath = isLoggedIn ? 'carts/mine' : `guest-carts/${maskedCartId}`;
 
-    /**
-     * Issue a same-origin JSON request against a cart-scoped endpoint.
-     *
-     * @param {'GET'|'POST'|'PUT'} method
-     * @param {string} endpoint path under the cart (e.g. 'totals-information')
-     * @param {object} [body]
-     * @returns {Promise<any>}
-     */
-    async function request(method, endpoint, body) {
+    /** Issue a same-origin JSON request against a cart-scoped endpoint. */
+    async function request(method: HttpMethod, endpoint: string, body?: unknown): Promise<unknown> {
         const response = await fetch(`${restBaseUrl}${cartPath}/${endpoint}`, {
             method,
             credentials: 'same-origin',
@@ -52,15 +50,15 @@ export function createCheckoutApi(config) {
 
     return {
         /** Recalculate totals for a shipping address + method selection. */
-        setTotalsInformation(totalsInformation) {
+        setTotalsInformation(totalsInformation: unknown) {
             return request('POST', 'totals-information', { totalsInformation });
         },
         /** Available shipping methods (rates) for an address. */
-        estimateShippingMethods(address) {
+        estimateShippingMethods(address: unknown) {
             return request('POST', 'estimate-shipping-methods', { address });
         },
         /** Persist the shipping address + method; returns payment methods + totals. */
-        setShippingInformation(addressInformation) {
+        setShippingInformation(addressInformation: unknown) {
             return request('POST', 'shipping-information', { addressInformation });
         },
         /** Payment methods available for the cart. */
@@ -68,7 +66,7 @@ export function createCheckoutApi(config) {
             return request('GET', 'payment-methods');
         },
         /** Place the order: save payment + billing, returns the order id. */
-        placeOrder(payload) {
+        placeOrder(payload: unknown) {
             return request('POST', 'payment-information', payload);
         },
     };
@@ -77,11 +75,8 @@ export function createCheckoutApi(config) {
 /**
  * Turn Magento's `{ message, parameters }` error shape into a readable string,
  * substituting `%1`/named placeholders.
- *
- * @param {{ message?: string, parameters?: Record<string, string>|Array<string> } | null} payload
- * @returns {string}
  */
-function formatError(payload) {
+function formatError(payload: MagentoError | null): string {
     if (!payload || typeof payload.message !== 'string') {
         return '';
     }
