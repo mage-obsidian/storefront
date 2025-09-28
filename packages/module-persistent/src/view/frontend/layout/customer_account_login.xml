@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!--
+  Remember-me checkbox on the sign-in form. The Remember ViewModel is injected
+  into the login block (read as block.getRemember()); it self-gates on the native
+  persistent + remember-me flags, so Magento_Customer stays unaware of Persistent.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="obsidian.customer.login">
+            <arguments>
+                <argument name="remember" xsi:type="object">MageObsidian\Persistent\ViewModel\Remember</argument>
+            </arguments>
+        </referenceBlock>
+    </body>
+</page>

@@ -1,0 +1,8 @@
+{
+    "name": "mage-obsidian/module-persistent",
+    "description": "Persistent (Remember Me) compatibility for MageObsidian: the remember-me checkbox on the sign-in and registration forms.",
+    "require": {"mage-obsidian/module-modern-frontend": "^1"},
+    "type": "magento2-module",
+    "license": ["MIT"],
+    "autoload": {"files": ["src/registration.php"], "psr-4": {"MageObsidian\\Persistent\\": "src/"}}
+}
