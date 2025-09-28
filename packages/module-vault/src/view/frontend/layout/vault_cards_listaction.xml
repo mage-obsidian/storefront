@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+  "Stored Payment Methods" account page. The native Vault layout is suppressed
+  (Magento_Vault not opted-in), so this re-declares it on the account shell. The
+  StoredCards ViewModel reads the customer's visible card tokens directly, so the
+  list renders without the provider's KO card renderer; the delete form POSTs
+  natively to the vault delete controller. cacheable false — customer data.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="customer_account"/>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceBlock name="account.shell">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="vault.cards.list"
+                   as="account_content" template="Magento_Vault::cards_list.twig"
+                   cacheable="false">
+                <arguments>
+                    <argument name="stored_cards" xsi:type="object">MageObsidian\Vault\ViewModel\StoredCards</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+    </body>
+</page>

@@ -1,0 +1,8 @@
+{
+    "name": "mage-obsidian/module-vault",
+    "description": "Vault (stored payment methods) compatibility for MageObsidian: the customer account card management rendered with Twig over the native Vault tokens.",
+    "require": {"mage-obsidian/module-modern-frontend": "^1"},
+    "type": "magento2-module",
+    "license": ["MIT"],
+    "autoload": {"files": ["src/registration.php"], "psr-4": {"MageObsidian\\Vault\\": "src/"}}
+}
