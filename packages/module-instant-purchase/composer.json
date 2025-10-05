@@ -1,0 +1,8 @@
+{
+    "name": "mage-obsidian/module-instant-purchase",
+    "description": "Instant Purchase compatibility for MageObsidian: the PDP one-click buy button rendered as a Vue island over the native instant-purchase customer-data section.",
+    "require": {"mage-obsidian/module-modern-frontend": "^1"},
+    "type": "magento2-module",
+    "license": ["MIT"],
+    "autoload": {"files": ["src/registration.php"], "psr-4": {"MageObsidian\\InstantPurchase\\": "src/"}}
+}

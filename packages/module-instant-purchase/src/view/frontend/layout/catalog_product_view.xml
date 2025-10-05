@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+  Instant Purchase one-click button on the PDP. The native Magento_InstantPurchase
+  layout (Knockout button block) is suppressed; this injects our InstantPurchase
+  ViewModel into the product-view block (read as block.getInstantPurchase()), and
+  product/view.twig renders a Vue island over the native instant-purchase
+  customer-data section. The VM self-gates on the module flag, the island on the
+  section's availability — so Magento_Catalog stays unaware of the feature.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="product.info.main">
+            <arguments>
+                <argument name="instant_purchase" xsi:type="object">MageObsidian\InstantPurchase\ViewModel\InstantPurchase</argument>
+            </arguments>
+        </referenceBlock>
+    </body>
+</page>

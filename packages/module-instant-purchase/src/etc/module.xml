@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="MageObsidian_InstantPurchase">
+        <sequence>
+            <module name="MageObsidian_Storefront"/>
+            <module name="MageObsidian_ModernFrontend"/>
+            <module name="MageObsidian_Catalog"/>
+            <module name="MageObsidian_Vault"/>
+            <module name="Magento_InstantPurchase"/>
+        </sequence>
+    </module>
+</config>
