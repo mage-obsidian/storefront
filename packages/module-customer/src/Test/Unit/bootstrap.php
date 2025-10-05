@@ -12,8 +12,8 @@ declare(strict_types=1);
  */
 
 $autoloadCandidates = [
-    __DIR__ . '/../../../../../autoload.php',           // vendor/mage-obsidian/module-customer/src/Test/Unit -> vendor/autoload.php
-    __DIR__ . '/../../../vendor/autoload.php',           // standalone repo with its own vendor/
+    __DIR__ . '/../../../../../autoload.php',  // installed under a Magento root's vendor/
+    __DIR__ . '/../../../vendor/autoload.php', // standalone repo with its own vendor/
 ];
 
 foreach ($autoloadCandidates as $autoload) {

@@ -4,6 +4,7 @@ import {
     email,
     minLength,
     matches,
+    when,
     runRules,
     isValidEmail,
     enhanceValidation,
@@ -40,6 +41,12 @@ describe("form-validation pure rules", () => {
         expect(runRules("", {}, [required(), email()])).toBe("This is a required field.");
         expect(runRules("bad", {}, [required(), email()])).toBe("Please enter a valid email address.");
         expect(runRules("a@b.co", {}, [required(), email()])).toBeNull();
+    });
+
+    it("when applies a rule only while the predicate holds", () => {
+        const rule = when((all) => all.toggle === "1", required("req"));
+        expect(rule("", { toggle: "1" })).toBe("req");
+        expect(rule("", { toggle: "" })).toBeNull();
     });
 });
 
@@ -107,6 +114,31 @@ describe("enhanceValidation DOM wiring", () => {
             { email: "ada@shop.test", password: "secret" },
             form,
         );
+    });
+
+    it("gates a conditional field on its checkbox", () => {
+        document.body.innerHTML = `
+            <form>
+                <input type="checkbox" name="toggle" value="1" />
+                <input id="f-extra" name="extra" />
+                <button type="submit">Go</button>
+            </form>`;
+        const form = document.querySelector("form") as HTMLFormElement;
+        enhanceValidation(form, {
+            toggle: [],
+            extra: [when((all) => all.toggle !== "", required())],
+        });
+
+        // Checkbox off → the empty conditional field does not block submit.
+        let submit = new Event("submit", { cancelable: true });
+        form.dispatchEvent(submit);
+        expect(submit.defaultPrevented).toBe(false);
+
+        // Checkbox on + field empty → blocked.
+        (form.querySelector('[name="toggle"]') as HTMLInputElement).checked = true;
+        submit = new Event("submit", { cancelable: true });
+        form.dispatchEvent(submit);
+        expect(submit.defaultPrevented).toBe(true);
     });
 
     it("lets a valid form submit natively when no callback is given", () => {

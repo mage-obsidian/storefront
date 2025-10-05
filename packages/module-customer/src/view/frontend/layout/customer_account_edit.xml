@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--
+  Edit account information. The wrapper is a MageObsidian Template (so vite_url is
+  available for the enhancer); the core Form\Edit block is its child data source
+  and MUST keep the name `customer_edit` — the Edit controller looks it up by that
+  name to seed the form. Native POST to editPost; edit-enhancer.ts validates.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="customer_account"/>
+    <head>
+        <title>Account Information</title>
+    </head>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceBlock name="account.shell">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="account.edit"
+                   as="account_content" template="Magento_Customer::account/edit.twig" cacheable="false">
+                <block class="Magento\Customer\Block\Form\Edit" name="customer_edit" as="form_data"/>
+            </block>
+        </referenceBlock>
+    </body>
+</page>

@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+  Account shell, shared by every account page (pages pull it in with
+  <update handle="customer_account"/>). Renders the sidebar nav (AccountNav
+  ViewModel, since the native Account\Navigation links come from suppressed
+  layout contributions) and a slot for the page content.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <meta name="robots" content="NOINDEX,NOFOLLOW"/>
+        <title>My Account</title>
+    </head>
+    <body>
+        <referenceContainer name="content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="account.shell"
+                   template="Magento_Customer::account/shell.twig">
+                <arguments>
+                    <argument name="account_nav" xsi:type="object">MageObsidian\Customer\ViewModel\AccountNav</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

@@ -26,6 +26,10 @@ export const minLength = (length: number, message?: string): Rule =>
 export const matches = (otherField: string, message = "The two passwords do not match."): Rule =>
     (value, all) => (value !== (all[otherField] ?? "") ? message : null);
 
+/** Apply a rule only when the predicate holds (e.g. a field shown by a checkbox). */
+export const when = (predicate: (all: Record<string, string>) => boolean, rule: Rule): Rule =>
+    (value, all) => (predicate(all) ? rule(value, all) : null);
+
 /** First failing rule's message, or null when the value passes every rule. */
 export function runRules(value: string, all: Record<string, string>, rules: Rule[]): string | null {
     for (const rule of rules) {
@@ -54,7 +58,14 @@ function collectValues(form: HTMLFormElement, fields: string[]): Record<string, 
     const values: Record<string, string> = {};
     for (const name of fields) {
         const field = form.elements.namedItem(name);
-        values[name] = field instanceof HTMLInputElement ? field.value : "";
+        if (field instanceof HTMLInputElement) {
+            // A checkbox reports its value only when checked, so predicates can
+            // gate rules on it (e.g. validate the password only when "change
+            // password" is ticked).
+            values[name] = field.type === "checkbox" ? (field.checked ? field.value || "1" : "") : field.value;
+        } else {
+            values[name] = "";
+        }
     }
     return values;
 }

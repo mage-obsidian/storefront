@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+  Account dashboard. Pulls in the shell, then adds the dashboard content to its
+  slot, reusing the core Dashboard\Info and Dashboard\Address blocks as data
+  sources behind our Twig.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="customer_account"/>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceBlock name="account.shell">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="account.dashboard"
+                   as="account_content" template="Magento_Customer::account/dashboard.twig" cacheable="false">
+                <block class="Magento\Customer\Block\Account\Dashboard\Info" name="account.dashboard.info" as="info"/>
+                <block class="Magento\Customer\Block\Account\Dashboard\Address" name="account.dashboard.address" as="address"/>
+            </block>
+        </referenceBlock>
+    </body>
+</page>
