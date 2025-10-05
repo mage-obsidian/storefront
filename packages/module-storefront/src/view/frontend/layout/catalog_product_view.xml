@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<!--
+  Product detail page structure.
+
+  MageObsidian suppresses the frontend layout of non-opted-in core modules, so
+  Magento_Catalog's own catalog_product_view.xml — the gallery, price box,
+  add-to-cart form, options, attribute list — never loads. The storefront module
+  (which IS enabled) re-declares the structure, reusing core block CLASSES purely
+  as data sources behind our Twig + ViewModels:
+
+    - product.info.main is a MageObsidian Template (so render_vue / image /
+      json_ld are available) driven by ProductView + ProductGallery ViewModels.
+    - product.info.options.configurable is core's Swatches Configurable renderer,
+      declared only for its getJsonConfig()/getJsonSwatchConfig() data — never
+      rendered as HTML; it feeds the configurable Vue island.
+    - product.attributes is core's attribute block, read for the spec list.
+
+  Product/Offer + BreadcrumbList JSON-LD are emitted by the engine, so the
+  templates stay presentation-only. 1column for now (reviews/related return with
+  their waves).
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <!-- Our PDP owns the product <h1>; drop the generic page.main.title so
+             there is a single heading. -->
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <!-- Self-contained trail (populate + render); the core populator is
+                 suppressed with the catalog layout. -->
+            <block class="MageObsidian\Storefront\Block\Catalog\Breadcrumbs" name="catalog.breadcrumbs"
+                   before="-" template="Magento_Theme::html/breadcrumbs.twig"/>
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="product.info.main"
+                   template="Magento_Catalog::product/view.twig">
+                <arguments>
+                    <argument name="view" xsi:type="object">MageObsidian\Storefront\ViewModel\ProductView</argument>
+                    <argument name="gallery" xsi:type="object">MageObsidian\Storefront\ViewModel\ProductGallery</argument>
+                </arguments>
+                <!-- Data source only: core assembles the variant index / prices /
+                     images / swatch config; we read it and hand it to the island.
+                     Never rendered as HTML (no child_html call), so no template. -->
+                <block class="Magento\Swatches\Block\Product\Renderer\Configurable"
+                       name="product.info.options.configurable" as="configurable"/>
+                <!-- Visible-on-front additional attributes, read for the spec list. -->
+                <block class="Magento\Catalog\Block\Product\View\Attributes"
+                       name="product.attributes" as="product_attributes"/>
+            </block>
+        </referenceContainer>
+
+        <!-- Delegated add-to-cart enhancer (progressive; the simple form POSTs
+             without JS). Same enhancer used by the listing. -->
+        <referenceContainer name="before.body.end">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.pdp_cart_actions"
+                   template="Magento_Catalog::cart-actions.twig"/>
+        </referenceContainer>
+    </body>
+</page>
