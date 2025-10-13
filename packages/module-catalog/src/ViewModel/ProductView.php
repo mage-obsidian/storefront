@@ -12,10 +12,12 @@ namespace MageObsidian\Catalog\ViewModel;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Helper\Output as OutputHelper;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
+use Magento\Framework\Pricing\Render as PriceRender;
 use Magento\Framework\Registry;
 use Magento\Framework\Url\Helper\Data as UrlHelper;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
+use Magento\Framework\View\LayoutInterface;
 use Throwable;
 
 /**
@@ -39,13 +41,15 @@ class ProductView implements ArgumentInterface
      * @param UrlInterface $url
      * @param UrlHelper $urlHelper
      * @param PriceCurrencyInterface $priceCurrency
+     * @param LayoutInterface $layout
      */
     public function __construct(
         private readonly Registry $registry,
         private readonly OutputHelper $outputHelper,
         private readonly UrlInterface $url,
         private readonly UrlHelper $urlHelper,
-        private readonly PriceCurrencyInterface $priceCurrency
+        private readonly PriceCurrencyInterface $priceCurrency,
+        private readonly LayoutInterface $layout
     ) {
     }
 
@@ -186,6 +190,32 @@ class ProductView implements ArgumentInterface
     public function isOnSale(): bool
     {
         return $this->getRegularPrice() > $this->getFinalPrice() && $this->getFinalPrice() > 0.0;
+    }
+
+    /**
+     * Native final-price markup for the buy box (special/tier/range), re-skinned
+     * to OBSIDIAN via CSS. The render block is restored by this module's
+     * default.xml; empty when it or the product is unavailable.
+     *
+     * @return string
+     */
+    public function getPriceHtml(): string
+    {
+        try {
+            $product = $this->getProduct();
+            $priceRender = $this->layout->getBlock('product.price.render.default');
+            if ($product === null || !$priceRender instanceof PriceRender) {
+                return '';
+            }
+
+            return (string)$priceRender->render(
+                'final_price',
+                $product,
+                ['zone' => 'item_view', 'use_link_for_as_low_as' => true]
+            );
+        } catch (Throwable) {
+            return '';
+        }
     }
 
     /**

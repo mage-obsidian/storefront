@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+  Restores the price-render bridge on every storefront page. AbstractProduct's
+  getProductPrice() resolves the unassigned product.price.render.default block to
+  render special/tier/range pricing; it lives in Magento_Catalog's base layout,
+  which the engine suppresses. Re-declared here (opted-in) so cards/PDP get native
+  pricing. The pool it draws from is in this module's catalog_product_prices.xml.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <block class="Magento\Framework\Pricing\Render" name="product.price.render.default">
+            <arguments>
+                <argument name="price_render_handle" xsi:type="string">catalog_product_prices</argument>
+                <argument name="use_link_for_as_low_as" xsi:type="boolean">true</argument>
+            </arguments>
+        </block>
+    </body>
+</page>

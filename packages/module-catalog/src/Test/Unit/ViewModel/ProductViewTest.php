@@ -10,9 +10,11 @@ use Magento\Framework\Pricing\Amount\AmountInterface;
 use Magento\Framework\Pricing\Price\PriceInterface;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Framework\Pricing\PriceInfoInterface;
+use Magento\Framework\Pricing\Render as PriceRender;
 use Magento\Framework\Registry;
 use Magento\Framework\Url\Helper\Data as UrlHelper;
 use Magento\Framework\UrlInterface;
+use Magento\Framework\View\LayoutInterface;
 use MageObsidian\Catalog\ViewModel\ProductView;
 use PHPUnit\Framework\TestCase;
 
@@ -32,8 +34,11 @@ class ProductViewTest extends TestCase
         }
     }
 
-    private function viewModel(?Product $product, ?OutputHelper $output = null): ProductView
-    {
+    private function viewModel(
+        ?Product $product,
+        ?OutputHelper $output = null,
+        ?LayoutInterface $layout = null
+    ): ProductView {
         $registry = $this->createMock(Registry::class);
         $registry->method('registry')->with('current_product')->willReturn($product);
 
@@ -51,7 +56,8 @@ class ProductViewTest extends TestCase
             $output ?? $this->createMock(OutputHelper::class),
             $url,
             $urlHelper,
-            $priceCurrency
+            $priceCurrency,
+            $layout ?? $this->createMock(LayoutInterface::class)
         );
     }
 
@@ -161,10 +167,39 @@ class ProductViewTest extends TestCase
             $this->createMock(OutputHelper::class),
             $this->createMock(UrlInterface::class),
             $this->createMock(UrlHelper::class),
-            $priceCurrency
+            $priceCurrency,
+            $this->createMock(LayoutInterface::class)
         );
 
         $this->assertSame('$%s', $view->getCurrencyFormat());
+    }
+
+    public function testPriceHtmlRendersFinalPriceThroughTheRenderBlock(): void
+    {
+        $product = $this->product('simple', false);
+
+        $priceRender = $this->createMock(PriceRender::class);
+        $priceRender->expects($this->once())
+            ->method('render')
+            ->with('final_price', $product, $this->arrayHasKey('zone'))
+            ->willReturn('<span class="price">$8.00</span>');
+
+        $layout = $this->createMock(LayoutInterface::class);
+        $layout->method('getBlock')->with('product.price.render.default')->willReturn($priceRender);
+
+        $view = $this->viewModel($product, null, $layout);
+
+        $this->assertSame('<span class="price">$8.00</span>', $view->getPriceHtml());
+    }
+
+    public function testPriceHtmlIsEmptyWithoutTheRenderBlock(): void
+    {
+        $layout = $this->createMock(LayoutInterface::class);
+        $layout->method('getBlock')->willReturn(null);
+
+        $view = $this->viewModel($this->product('simple', false), null, $layout);
+
+        $this->assertSame('', $view->getPriceHtml());
     }
 
     public function testDescriptionRunsThroughOutputFilter(): void
