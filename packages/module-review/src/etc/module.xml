@@ -9,6 +9,8 @@
             <module name="MageObsidian_Catalog"/>
             <!-- Load after the core review module whose frontend this adapts. -->
             <module name="Magento_Review"/>
+            <!-- Contributes the "My Product Reviews" link to the account nav. -->
+            <module name="MageObsidian_Customer"/>
         </sequence>
     </module>
 </config>

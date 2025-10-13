@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!--
+  Single review detail in the account shell, reusing the native Customer\View block.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="customer_account"/>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceBlock name="account.shell">
+            <block class="Magento\Review\Block\Customer\View" name="customers_review"
+                   as="account_content" template="Magento_Review::customer/view.twig"
+                   cacheable="false" ifconfig="catalog/review/active"/>
+        </referenceBlock>
+    </body>
+</page>
