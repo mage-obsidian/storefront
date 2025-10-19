@@ -50,6 +50,14 @@
                      core block, so it carries no template. -->
                 <block class="Magento\Catalog\Block\Product\View\Options"
                        name="product.info.options" as="product_options"/>
+                <!-- Downloadable data sources: the link selector (titles, prices,
+                     purchased-separately/required flags) and the sample list. Read
+                     by form/downloadable.twig; the native type layout that declares
+                     them is suppressed, so they are re-declared here. -->
+                <block class="Magento\Downloadable\Block\Catalog\Product\Links"
+                       name="downloadable.links" as="downloadable_links"/>
+                <block class="Magento\Downloadable\Block\Catalog\Product\Samples"
+                       name="downloadable.samples" as="downloadable_samples"/>
             </block>
         </referenceContainer>
 

@@ -122,6 +122,14 @@ class ProductViewTest extends TestCase
         $this->assertTrue($view->isConfigurable());
     }
 
+    public function testDownloadableProductIsDownloadable(): void
+    {
+        $view = $this->viewModel($this->product('downloadable', false));
+
+        $this->assertTrue($view->isDownloadable());
+        $this->assertFalse($view->isConfigurable());
+    }
+
     public function testOnSaleWhenRegularExceedsFinal(): void
     {
         $product = $this->product('simple', false);

@@ -145,6 +145,16 @@ class ProductView implements ArgumentInterface
     }
 
     /**
+     * Whether the product is a downloadable (drives the link selector form).
+     *
+     * @return bool
+     */
+    public function isDownloadable(): bool
+    {
+        return $this->getTypeId() === 'downloadable';
+    }
+
+    /**
      * Current sale price (special price applied) as a raw number.
      *
      * @return float
