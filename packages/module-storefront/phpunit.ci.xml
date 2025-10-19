@@ -20,11 +20,6 @@
             <exclude>src/Test/Unit/ViewModel/StoreSwitcherTest.php</exclude>
             <exclude>src/Test/Unit/ViewModel/CurrencySwitcherTest.php</exclude>
             <exclude>src/Test/Unit/ViewModel/FeaturedCategoriesTest.php</exclude>
-            <exclude>src/Test/Unit/ViewModel/ProductCardTest.php</exclude>
-            <exclude>src/Test/Unit/ViewModel/CategoryLandingTest.php</exclude>
-            <exclude>src/Test/Unit/ViewModel/ProductViewTest.php</exclude>
-            <exclude>src/Test/Unit/ViewModel/ProductGalleryTest.php</exclude>
-            <exclude>src/Test/Unit/Block/Catalog/CategoryTitleTest.php</exclude>
         </testsuite>
     </testsuites>
 </phpunit>
