@@ -41,6 +41,12 @@ export function runRules(value: string, all: Record<string, string>, rules: Rule
     return null;
 }
 
+/** Any control enhanceValidation can read and flag (text inputs, selects, textareas). */
+export type ValidatableField = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+
+const isValidatable = (el: unknown): el is ValidatableField =>
+    el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement;
+
 export interface FieldRules {
     [fieldName: string]: Rule[];
 }
@@ -63,6 +69,8 @@ function collectValues(form: HTMLFormElement, fields: string[]): Record<string, 
             // gate rules on it (e.g. validate the password only when "change
             // password" is ticked).
             values[name] = field.type === "checkbox" ? (field.checked ? field.value || "1" : "") : field.value;
+        } else if (field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement) {
+            values[name] = field.value;
         } else {
             values[name] = "";
         }
@@ -72,7 +80,7 @@ function collectValues(form: HTMLFormElement, fields: string[]): Record<string, 
 
 function setFieldError(form: HTMLFormElement, name: string, message: string | null): void {
     const field = form.elements.namedItem(name);
-    if (!(field instanceof HTMLInputElement)) {
+    if (!isValidatable(field)) {
         return;
     }
     const errorId = `${field.id || name}-error`;
@@ -122,7 +130,7 @@ export function enhanceValidation(
 
     for (const name of fields) {
         const field = form.elements.namedItem(name);
-        if (field instanceof HTMLInputElement) {
+        if (isValidatable(field)) {
             // Validate on blur once the user has engaged; clears as they fix it.
             field.addEventListener("blur", () => validateField(name));
         }
@@ -139,7 +147,7 @@ export function enhanceValidation(
         if (firstInvalid !== null) {
             event.preventDefault();
             const field = form.elements.namedItem(firstInvalid);
-            if (field instanceof HTMLInputElement) {
+            if (isValidatable(field)) {
                 field.focus();
             }
             return;

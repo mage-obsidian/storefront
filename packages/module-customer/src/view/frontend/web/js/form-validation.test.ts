@@ -141,6 +141,29 @@ describe("enhanceValidation DOM wiring", () => {
         expect(submit.defaultPrevented).toBe(true);
     });
 
+    it("validates and flags a required select", () => {
+        document.body.innerHTML = `
+            <form>
+                <select id="f-region" name="region_id">
+                    <option value="">Pick one</option>
+                    <option value="1">Alabama</option>
+                </select>
+                <button type="submit">Go</button>
+            </form>`;
+        const form = document.querySelector("form") as HTMLFormElement;
+        enhanceValidation(form, { region_id: [required()] });
+
+        let submit = new Event("submit", { cancelable: true });
+        form.dispatchEvent(submit);
+        expect(submit.defaultPrevented).toBe(true);
+        expect(document.getElementById("f-region")?.getAttribute("aria-invalid")).toBe("true");
+
+        (document.getElementById("f-region") as HTMLSelectElement).value = "1";
+        submit = new Event("submit", { cancelable: true });
+        form.dispatchEvent(submit);
+        expect(submit.defaultPrevented).toBe(false);
+    });
+
     it("lets a valid form submit natively when no callback is given", () => {
         const form = buildForm();
         enhanceValidation(form, { email: [required(), email()] });
