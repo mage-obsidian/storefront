@@ -33,6 +33,24 @@ export default defineConfig({
             "MageObsidian_Checkout::js/useCheckout": fileURLToPath(
                 new URL("./src/view/frontend/web/js/useCheckout.ts", import.meta.url),
             ),
+            // The checkout REST wrapper is the real file (the store drives it
+            // through a mocked fetch); the foundation's address helper + form are
+            // stubbed so this repo tests itself without the sibling.
+            "MageObsidian_Checkout::js/useCheckoutApi": fileURLToPath(
+                new URL("./src/view/frontend/web/js/useCheckoutApi.ts", import.meta.url),
+            ),
+            "MageObsidian_Storefront::js/address": fileURLToPath(
+                new URL("./src/Test/Js/stubs/address.ts", import.meta.url),
+            ),
+            "MageObsidian_Storefront::form/AddressForm": fileURLToPath(
+                new URL("./src/Test/Js/stubs/AddressForm.vue", import.meta.url),
+            ),
+            "MageObsidian_Checkout::checkout/IdentificationStep": fileURLToPath(
+                new URL("./src/view/frontend/web/components/checkout/IdentificationStep.vue", import.meta.url),
+            ),
+            "MageObsidian_Checkout::checkout/ShippingStep": fileURLToPath(
+                new URL("./src/view/frontend/web/components/checkout/ShippingStep.vue", import.meta.url),
+            ),
         },
     },
     test: {

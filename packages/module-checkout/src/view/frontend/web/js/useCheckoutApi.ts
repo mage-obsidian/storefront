@@ -48,7 +48,34 @@ export function createCheckoutApi(config: CheckoutApiConfig) {
         return payload;
     }
 
+    /** Issue a same-origin JSON request against a non-cart-scoped endpoint. */
+    async function rootRequest(method: HttpMethod, endpoint: string, body?: unknown): Promise<unknown> {
+        const response = await fetch(`${restBaseUrl}${endpoint}`, {
+            method,
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: body === undefined ? undefined : JSON.stringify(body),
+        });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
+            throw new Error(formatError(payload as MagentoError | null) || `Checkout request failed (${response.status})`);
+        }
+        return payload;
+    }
+
     return {
+        /**
+         * Whether the email has no existing account (true → free to check out as a
+         * guest; false → an account exists and the shopper should sign in). Native
+         * `customers/isEmailAvailable`, not cart-scoped.
+         */
+        isEmailAvailable(customerEmail: string, websiteId?: number) {
+            const body: Record<string, unknown> = { customerEmail };
+            if (websiteId !== undefined) {
+                body.websiteId = websiteId;
+            }
+            return rootRequest('POST', 'customers/isEmailAvailable', body) as Promise<boolean>;
+        },
         /** Recalculate totals for a shipping address + method selection. */
         setTotalsInformation(totalsInformation: unknown) {
             return request('POST', 'totals-information', { totalsInformation });

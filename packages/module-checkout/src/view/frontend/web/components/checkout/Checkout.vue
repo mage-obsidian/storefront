@@ -1,22 +1,50 @@
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
+import { computed, defineAsyncComponent, onMounted } from "vue";
 import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
+import type { RegionData } from "MageObsidian_Storefront::js/address";
 
 // Root of the Vue one-page checkout, replacing Magento's Knockout flow. It mounts
-// eager (it IS the page) and is seeded from the server-primed CheckoutConfig, so
-// the step rail and order summary paint with zero REST round-trips. Each step's
-// UI lands in later milestones; M0 is the shell + summary + the REST auth crux.
+// eager (it IS the page) and is seeded from the server-primed CheckoutConfig +
+// DirectoryData, so the step rail and order summary paint with zero REST
+// round-trips. The per-step UIs are code-split (dynamic import) so a shopper only
+// downloads the step they reach.
+interface DirectoryData {
+    countries: Array<{ value: string; label: string }>;
+    regions: Record<string, RegionData[]>;
+    statesRequired: string[];
+    displayAllRegions: boolean;
+    defaultCountry: string;
+}
+
 const props = withDefaults(
     defineProps<{
         config?: Record<string, unknown>;
+        directory?: DirectoryData;
+        loginUrl?: string;
         labels?: Record<string, string>;
+        identificationLabels?: Record<string, string>;
+        shippingLabels?: Record<string, string>;
+        addressLabels?: Record<string, string>;
     }>(),
-    { config: () => ({}), labels: () => ({}) },
+    {
+        config: () => ({}),
+        directory: () => ({ countries: [], regions: {}, statesRequired: [], displayAllRegions: false, defaultCountry: "" }),
+        loginUrl: "",
+        labels: () => ({}),
+        identificationLabels: () => ({}),
+        shippingLabels: () => ({}),
+        addressLabels: () => ({}),
+    },
 );
 
+const IdentificationStep = defineAsyncComponent(
+    () => import("MageObsidian_Checkout::checkout/IdentificationStep"),
+);
+const ShippingStep = defineAsyncComponent(() => import("MageObsidian_Checkout::checkout/ShippingStep"));
+
 const checkout = useCheckout();
-checkout.init(props.config);
+checkout.init({ ...props.config, defaultCountry: props.directory.defaultCountry });
 
 // The checkout server-primes the authoritative quote, so it is the strongest
 // "the cart is exactly this right now" signal there is. Reconcile the shared cart
@@ -66,10 +94,22 @@ const isEmpty = computed(() => checkout.itemCount === 0);
                 aria-labelledby="checkout-step-heading"
                 class="rounded-edge border border-ash-200 bg-alabaster-raised p-6 md:p-8"
             >
-                <h2 id="checkout-step-heading" class="font-display text-2xl text-ink">
+                <h2 id="checkout-step-heading" class="mb-6 font-display text-2xl text-ink">
                     {{ currentStepLabel }}
                 </h2>
-                <p class="mt-3 text-ink-soft">
+
+                <IdentificationStep
+                    v-if="checkout.step === 'identification'"
+                    :login-url="loginUrl"
+                    :labels="identificationLabels"
+                />
+                <ShippingStep
+                    v-else-if="checkout.step === 'shipping'"
+                    :directory="directory"
+                    :labels="shippingLabels"
+                    :address-labels="addressLabels"
+                />
+                <p v-else class="text-ink-soft">
                     {{ t('stepPlaceholder', 'This step comes online in the next milestone.') }}
                 </p>
             </section>

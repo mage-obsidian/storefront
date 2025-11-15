@@ -43,6 +43,7 @@ class CheckoutConfigTest extends TestCase
         $this->assertSame(2, $config['quote']['itemCount']);
         $this->assertSame('$80.00', $config['quote']['subtotal']);
         $this->assertSame('$88.00', $config['quote']['grandTotal']);
+        $this->assertSame('$%s', $config['currencyFormat']);
     }
 
     public function testLoggedInConfigOmitsTheMaskAndCarriesEmail(): void
@@ -83,10 +84,13 @@ class CheckoutConfigTest extends TestCase
         $storeManager = $this->createMock(StoreManagerInterface::class);
         $storeManager->method('getStore')->willReturn($store);
 
+        $currency = $this->getMockBuilder(\stdClass::class)->addMethods(['getOutputFormat'])->getMock();
+        $currency->method('getOutputFormat')->willReturn('$%s');
         $priceCurrency = $this->createMock(PriceCurrencyInterface::class);
         $priceCurrency->method('format')->willReturnCallback(
             static fn ($amount): string => '$' . number_format((float)$amount, 2)
         );
+        $priceCurrency->method('getCurrency')->willReturn($currency);
 
         $quoteIdToMaskedQuoteId = $this->createMock(QuoteIdToMaskedQuoteIdInterface::class);
         $quoteIdToMaskedQuoteId->method('execute')->willReturn($maskedId);

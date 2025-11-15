@@ -112,6 +112,7 @@ class CheckoutConfig implements ArgumentInterface
             'baseUrl' => $baseUrl,
             'restBaseUrl' => $baseUrl . 'rest/' . $storeCode . '/V1/',
             'customerEmail' => $isLoggedIn ? $this->customerEmail() : '',
+            'currencyFormat' => $this->currencyFormat(),
             'quote' => $this->quoteSummary($quote),
         ];
     }
@@ -146,6 +147,22 @@ class CheckoutConfig implements ArgumentInterface
         $this->quoteIdMaskResource->save($quoteIdMask);
 
         return (string)$quoteIdMask->getMaskedId();
+    }
+
+    /**
+     * Currency output format (e.g. "$%s") for client-side price rendering.
+     *
+     * Lets the island format the shipping rates the same way the store does.
+     *
+     * @return string
+     */
+    private function currencyFormat(): string
+    {
+        try {
+            return (string)$this->priceCurrency->getCurrency()->getOutputFormat();
+        } catch (Throwable) {
+            return '%s';
+        }
     }
 
     /**

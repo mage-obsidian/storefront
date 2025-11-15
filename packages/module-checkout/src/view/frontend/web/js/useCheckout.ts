@@ -2,12 +2,15 @@
  * `useCheckout` — the checkout island's central state (a Pinia store so the step
  * components share one source of truth). It is seeded once from the server-primed
  * `CheckoutConfig` via `init()`, so the first paint (order summary + identity)
- * needs ZERO REST round-trips; the REST mutations (totals/shipping/payment) layer
- * on in later steps via `useCheckoutApi`.
+ * needs ZERO REST round-trips; the REST mutations (shipping rates, shipping
+ * information, payment) layer on through the actions, which wrap the Vue-free
+ * `createCheckoutApi` against Magento's native quote endpoints.
  */
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { ensureSharedPinia } from 'MageObsidian_ModernFrontend::js/store';
+import { createCheckoutApi } from 'MageObsidian_Checkout::js/useCheckoutApi';
+import { emptyAddress, toRestAddress, type AddressData } from 'MageObsidian_Storefront::js/address';
 
 export interface CheckoutItem {
     id: number | string;
@@ -15,6 +18,21 @@ export interface CheckoutItem {
     image?: string;
     qty?: number | string;
     rowTotal?: string;
+}
+
+export interface ShippingMethod {
+    carrier_code: string;
+    method_code: string;
+    carrier_title?: string;
+    method_title?: string;
+    amount?: number;
+    available?: boolean;
+    error_message?: string;
+}
+
+interface ShippingInformationResult {
+    payment_methods?: Array<{ code: string; title: string }>;
+    totals?: { grand_total?: number };
 }
 
 // The fixed step order of the one-page flow.
@@ -29,7 +47,18 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const items = ref<CheckoutItem[]>([]);
     const subtotal = ref('');
     const grandTotal = ref('');
+    const currencyFormat = ref('');
+
+    const shippingAddress = ref<AddressData>(emptyAddress());
+    const shippingMethods = ref<ShippingMethod[]>([]);
+    const selectedMethod = ref<ShippingMethod | null>(null);
+    const paymentMethods = ref<Array<{ code: string; title: string }>>([]);
+    const loadingRates = ref(false);
+    const savingShipping = ref(false);
+    const error = ref('');
+
     let seeded = false;
+    let api: ReturnType<typeof createCheckoutApi> | null = null;
 
     /**
      * Seed the store from the server-primed config. Idempotent: the island mounts
@@ -47,6 +76,13 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         items.value = Array.isArray(quote.items) ? quote.items : [];
         subtotal.value = quote.subtotal || '';
         grandTotal.value = quote.grandTotal || '';
+        currencyFormat.value = cfg.currencyFormat || '';
+        shippingAddress.value = emptyAddress(cfg.defaultCountry || '');
+        api = createCheckoutApi({
+            restBaseUrl: cfg.restBaseUrl || '',
+            isLoggedIn: isLoggedIn.value,
+            maskedCartId: cfg.maskedCartId || '',
+        });
         // Skip the identity step entirely for known customers.
         if (isLoggedIn.value && email.value) {
             step.value = 'shipping';
@@ -60,8 +96,114 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         }
     }
 
+    /** Record the guest email and advance to the shipping step. */
+    function setEmail(value: string): void {
+        email.value = value;
+        goToStep('shipping');
+    }
+
+    /**
+     * Whether the email is free of an existing account (native
+     * `customers/isEmailAvailable`). A check failure never blocks the guest, so
+     * it degrades to "available".
+     */
+    async function checkEmailAvailable(value: string): Promise<boolean> {
+        if (!api) {
+            return true;
+        }
+        try {
+            return (await api.isEmailAvailable(value)) !== false;
+        } catch {
+            return true;
+        }
+    }
+
+    /**
+     * Fetch the shipping rates for the current address from the native
+     * estimate-shipping-methods endpoint, keeping only the available ones and
+     * pre-selecting the first when nothing is chosen yet.
+     */
+    async function estimateShipping(): Promise<boolean> {
+        if (!api) {
+            return false;
+        }
+        loadingRates.value = true;
+        error.value = '';
+        try {
+            const rest = toRestAddress(shippingAddress.value);
+            const rates = (await api.estimateShippingMethods(rest)) as ShippingMethod[];
+            shippingMethods.value = (Array.isArray(rates) ? rates : []).filter((r) => r.available !== false);
+            if (shippingMethods.value.length > 0 && !methodInList(selectedMethod.value)) {
+                selectedMethod.value = shippingMethods.value[0];
+            }
+            return true;
+        } catch (e) {
+            error.value = e instanceof Error ? e.message : String(e);
+            shippingMethods.value = [];
+            return false;
+        } finally {
+            loadingRates.value = false;
+        }
+    }
+
+    /** Choose a shipping method by carrier+method code. */
+    function selectMethod(method: ShippingMethod): void {
+        selectedMethod.value = method;
+    }
+
+    /**
+     * Persist the shipping address + method via the native shipping-information
+     * endpoint. On success it stores the returned payment methods + totals (for
+     * the payment step) and advances. The guest billing address mirrors shipping
+     * until the payment step lets the shopper change it.
+     */
+    async function saveShipping(): Promise<boolean> {
+        if (!api || !selectedMethod.value) {
+            return false;
+        }
+        savingShipping.value = true;
+        error.value = '';
+        try {
+            const address = toRestAddress(shippingAddress.value, isLoggedIn.value ? {} : { email: email.value });
+            const result = (await api.setShippingInformation({
+                shipping_address: address,
+                billing_address: address,
+                shipping_carrier_code: selectedMethod.value.carrier_code,
+                shipping_method_code: selectedMethod.value.method_code,
+            })) as ShippingInformationResult;
+            paymentMethods.value = result.payment_methods ?? [];
+            if (typeof result.totals?.grand_total === 'number') {
+                grandTotal.value = formatTotal(result.totals.grand_total);
+            }
+            goToStep('payment');
+            return true;
+        } catch (e) {
+            error.value = e instanceof Error ? e.message : String(e);
+            return false;
+        } finally {
+            savingShipping.value = false;
+        }
+    }
+
+    /** Format a raw total with the store currency format (e.g. 64 → "$64.00"). */
+    function formatTotal(amount: number): string {
+        return (currencyFormat.value || '%s').replace('%s', amount.toFixed(2));
+    }
+
+    function methodInList(method: ShippingMethod | null): boolean {
+        return (
+            method !== null &&
+            shippingMethods.value.some(
+                (r) => r.carrier_code === method.carrier_code && r.method_code === method.method_code,
+            )
+        );
+    }
+
     const stepIndex = computed(() => STEPS.indexOf(step.value));
     const itemCount = computed(() => items.value.length);
+    const selectedMethodKey = computed(() =>
+        selectedMethod.value ? `${selectedMethod.value.carrier_code}_${selectedMethod.value.method_code}` : '',
+    );
 
     return {
         step,
@@ -72,8 +214,22 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         itemCount,
         subtotal,
         grandTotal,
+        currencyFormat,
+        shippingAddress,
+        shippingMethods,
+        selectedMethod,
+        selectedMethodKey,
+        paymentMethods,
+        loadingRates,
+        savingShipping,
+        error,
         init,
         goToStep,
+        setEmail,
+        checkEmailAvailable,
+        estimateShipping,
+        selectMethod,
+        saveShipping,
     };
 });
 
