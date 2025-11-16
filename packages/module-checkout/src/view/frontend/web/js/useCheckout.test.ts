@@ -9,6 +9,7 @@ const GUEST_CONFIG = {
     maskedCartId: "mask42",
     defaultCountry: "US",
     currencyFormat: "$%s",
+    successUrl: "https://shop.test/checkout/onepage/success/",
     quote: {
         items: [{ id: 1, name: "Joust Duffle Bag", qty: 1, rowTotal: "$34.00" }],
         subtotal: "$34.00",
@@ -167,5 +168,91 @@ describe("useCheckout — shipping actions", () => {
 
         expect(ok).toBe(false);
         expect(fetchMock).not.toHaveBeenCalled();
+    });
+});
+
+describe("useCheckout — payment, coupon and order", () => {
+    beforeEach(() => {
+        setActivePinia(createPinia());
+        vi.restoreAllMocks();
+    });
+
+    function ready() {
+        const checkout = useCheckout();
+        checkout.init(GUEST_CONFIG);
+        Object.assign(checkout.shippingAddress, {
+            firstname: "Ada",
+            lastname: "Lovelace",
+            street: ["1 Analytical Way", ""],
+            city: "Los Angeles",
+            region: "California",
+            regionId: 12,
+            postcode: "90001",
+            countryId: "US",
+            telephone: "5550100",
+        });
+        return checkout;
+    }
+
+    it("applies a coupon and refreshes the totals breakdown", async () => {
+        mockFetch({ grand_total: 54, total_segments: [{ code: "discount", title: "Discount", value: -10 }, { code: "grand_total", title: "Grand Total", value: 54 }] });
+        const checkout = ready();
+
+        const ok = await checkout.applyCoupon("SAVE10");
+
+        expect(ok).toBe(true);
+        expect(checkout.appliedCoupon).toBe("SAVE10");
+        expect(checkout.totalSegments).toHaveLength(2);
+        expect(checkout.grandTotal).toBe("$54.00");
+    });
+
+    it("surfaces a rejected coupon without applying it", async () => {
+        mockFetch({ message: "Code is not valid" }, false, 404);
+        const checkout = ready();
+
+        const ok = await checkout.applyCoupon("BAD");
+
+        expect(ok).toBe(false);
+        expect(checkout.appliedCoupon).toBe("");
+        expect(checkout.couponError).toBe("Code is not valid");
+    });
+
+    it("places the order with the shipping address as billing and redirects to success", async () => {
+        const assign = vi.fn();
+        Object.defineProperty(window, "location", { value: { assign }, writable: true });
+        const fetchMock = mockFetch(424242);
+        const checkout = ready();
+        checkout.selectPayment("checkmo");
+
+        const orderId = await checkout.placeOrder();
+
+        expect(orderId).toBe(424242);
+        const [url, init] = fetchMock.mock.calls[0];
+        expect(url).toBe("https://shop.test/rest/default/V1/guest-carts/mask42/payment-information");
+        const body = JSON.parse(init.body);
+        expect(body.email).toBe("");
+        expect(body.paymentMethod).toEqual({ method: "checkmo" });
+        expect(body.billingAddress).toMatchObject({ city: "Los Angeles", region_id: 12, country_id: "US" });
+        expect(assign).toHaveBeenCalledWith("https://shop.test/checkout/onepage/success/");
+    });
+
+    it("refuses to place an order with no payment method", async () => {
+        const fetchMock = mockFetch(1);
+        const checkout = ready();
+
+        expect(await checkout.placeOrder()).toBeNull();
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it("surfaces a place-order failure without redirecting", async () => {
+        const assign = vi.fn();
+        Object.defineProperty(window, "location", { value: { assign }, writable: true });
+        mockFetch({ message: "Transaction declined" }, false, 400);
+        const checkout = ready();
+        checkout.selectPayment("checkmo");
+
+        expect(await checkout.placeOrder()).toBeNull();
+        expect(checkout.orderError).toBe("Transaction declined");
+        expect(assign).not.toHaveBeenCalled();
     });
 });

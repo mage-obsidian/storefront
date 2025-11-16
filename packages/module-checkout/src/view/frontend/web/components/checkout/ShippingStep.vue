@@ -95,8 +95,8 @@ async function toPayment(): Promise<void> {
             <h3 id="shipping-methods-heading" class="mb-4 font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">
                 {{ t("methodsHeading", "Shipping method") }}
             </h3>
-            <ul class="flex flex-col gap-3" role="radiogroup" :aria-label="t('methodsHeading', 'Shipping method')">
-                <li v-for="method in checkout.shippingMethods" :key="`${method.carrier_code}_${method.method_code}`">
+            <div class="flex flex-col gap-3" role="radiogroup" :aria-label="t('methodsHeading', 'Shipping method')">
+                <div v-for="method in checkout.shippingMethods" :key="`${method.carrier_code}_${method.method_code}`">
                     <label
                         class="flex cursor-pointer items-center justify-between gap-4 rounded-edge border px-4 py-3 transition-colors"
                         :class="checkout.selectedMethodKey === `${method.carrier_code}_${method.method_code}` ? 'border-ink bg-alabaster-raised' : 'border-ash-300 hover:border-ink'"
@@ -116,8 +116,8 @@ async function toPayment(): Promise<void> {
                         </span>
                         <span class="font-mono text-sm text-ink">{{ formatPrice(method.amount ?? 0) }}</span>
                     </label>
-                </li>
-            </ul>
+                </div>
+            </div>
 
             <button
                 type="button"

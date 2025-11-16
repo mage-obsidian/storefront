@@ -111,6 +111,7 @@ class CheckoutConfig implements ArgumentInterface
             'storeCode' => $storeCode,
             'baseUrl' => $baseUrl,
             'restBaseUrl' => $baseUrl . 'rest/' . $storeCode . '/V1/',
+            'successUrl' => $baseUrl . 'checkout/onepage/success/',
             'customerEmail' => $isLoggedIn ? $this->customerEmail() : '',
             'currencyFormat' => $this->currencyFormat(),
             'quote' => $this->quoteSummary($quote),
@@ -210,6 +211,7 @@ class CheckoutConfig implements ArgumentInterface
             'storeCode' => '',
             'baseUrl' => '',
             'restBaseUrl' => '',
+            'successUrl' => '',
             'customerEmail' => '',
             'quote' => ['items' => [], 'itemCount' => 0, 'subtotal' => '', 'grandTotal' => ''],
         ];

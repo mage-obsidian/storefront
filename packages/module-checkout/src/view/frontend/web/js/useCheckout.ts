@@ -10,6 +10,7 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { ensureSharedPinia } from 'MageObsidian_ModernFrontend::js/store';
 import { createCheckoutApi } from 'MageObsidian_Checkout::js/useCheckoutApi';
+import { useCustomerData } from 'MageObsidian_ModernFrontend::js/customer-data';
 import { emptyAddress, toRestAddress, type AddressData } from 'MageObsidian_Storefront::js/address';
 
 export interface CheckoutItem {
@@ -30,9 +31,25 @@ export interface ShippingMethod {
     error_message?: string;
 }
 
+export interface PaymentMethod {
+    code: string;
+    title: string;
+}
+
+export interface TotalSegment {
+    code: string;
+    title: string;
+    value: number | null;
+}
+
+interface QuoteTotals {
+    grand_total?: number;
+    total_segments?: TotalSegment[];
+}
+
 interface ShippingInformationResult {
-    payment_methods?: Array<{ code: string; title: string }>;
-    totals?: { grand_total?: number };
+    payment_methods?: PaymentMethod[];
+    totals?: QuoteTotals;
 }
 
 // The fixed step order of the one-page flow.
@@ -52,10 +69,21 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const shippingAddress = ref<AddressData>(emptyAddress());
     const shippingMethods = ref<ShippingMethod[]>([]);
     const selectedMethod = ref<ShippingMethod | null>(null);
-    const paymentMethods = ref<Array<{ code: string; title: string }>>([]);
+    const paymentMethods = ref<PaymentMethod[]>([]);
     const loadingRates = ref(false);
     const savingShipping = ref(false);
     const error = ref('');
+
+    const billingAddress = ref<AddressData>(emptyAddress());
+    const sameAsShipping = ref(true);
+    const selectedPayment = ref('');
+    const totalSegments = ref<TotalSegment[]>([]);
+    const couponCode = ref('');
+    const appliedCoupon = ref('');
+    const couponError = ref('');
+    const placingOrder = ref(false);
+    const orderError = ref('');
+    const successUrl = ref('');
 
     let seeded = false;
     let api: ReturnType<typeof createCheckoutApi> | null = null;
@@ -77,7 +105,9 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         subtotal.value = quote.subtotal || '';
         grandTotal.value = quote.grandTotal || '';
         currencyFormat.value = cfg.currencyFormat || '';
+        successUrl.value = cfg.successUrl || '';
         shippingAddress.value = emptyAddress(cfg.defaultCountry || '');
+        billingAddress.value = emptyAddress(cfg.defaultCountry || '');
         api = createCheckoutApi({
             restBaseUrl: cfg.restBaseUrl || '',
             isLoggedIn: isLoggedIn.value,
@@ -172,9 +202,10 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
                 shipping_method_code: selectedMethod.value.method_code,
             })) as ShippingInformationResult;
             paymentMethods.value = result.payment_methods ?? [];
-            if (typeof result.totals?.grand_total === 'number') {
-                grandTotal.value = formatTotal(result.totals.grand_total);
+            if (paymentMethods.value.length > 0 && !selectedPayment.value) {
+                selectedPayment.value = paymentMethods.value[0].code;
             }
+            captureTotals(result.totals);
             goToStep('payment');
             return true;
         } catch (e) {
@@ -185,7 +216,100 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         }
     }
 
-    /** Format a raw total with the store currency format (e.g. 64 → "$64.00"). */
+    function selectPayment(code: string): void {
+        selectedPayment.value = code;
+    }
+
+    async function applyCoupon(code: string): Promise<boolean> {
+        if (!api || code.trim() === '') {
+            return false;
+        }
+        couponError.value = '';
+        try {
+            await api.applyCoupon(code.trim());
+            appliedCoupon.value = code.trim();
+            couponCode.value = '';
+            await refreshTotals();
+            return true;
+        } catch (e) {
+            couponError.value = e instanceof Error ? e.message : String(e);
+            return false;
+        }
+    }
+
+    async function removeCoupon(): Promise<boolean> {
+        if (!api) {
+            return false;
+        }
+        couponError.value = '';
+        try {
+            await api.removeCoupon();
+            appliedCoupon.value = '';
+            await refreshTotals();
+            return true;
+        } catch (e) {
+            couponError.value = e instanceof Error ? e.message : String(e);
+            return false;
+        }
+    }
+
+    async function refreshTotals(): Promise<void> {
+        if (!api) {
+            return;
+        }
+        try {
+            captureTotals((await api.getTotals()) as QuoteTotals);
+        } catch {
+            // Keep the last known totals on a transient failure.
+        }
+    }
+
+    async function placeOrder(): Promise<number | null> {
+        if (!api || selectedPayment.value === '') {
+            return null;
+        }
+        placingOrder.value = true;
+        orderError.value = '';
+        try {
+            const source = sameAsShipping.value ? shippingAddress.value : billingAddress.value;
+            const billing = toRestAddress(source, isLoggedIn.value ? {} : { email: email.value });
+            const payload: Record<string, unknown> = {
+                paymentMethod: { method: selectedPayment.value },
+                billingAddress: billing,
+            };
+            if (!isLoggedIn.value) {
+                payload.email = email.value;
+            }
+            const orderId = (await api.placeOrder(payload)) as number;
+            // REST place-order does not bump the section version cookie, so the
+            // cart badge would stay stale; force a refresh before leaving.
+            try {
+                await useCustomerData().reload(['cart'], { force: true });
+            } catch {
+                // Non-fatal: the cart page would still reconcile on next load.
+            }
+            if (successUrl.value !== '') {
+                window.location.assign(successUrl.value);
+            }
+            return orderId;
+        } catch (e) {
+            orderError.value = e instanceof Error ? e.message : String(e);
+            return null;
+        } finally {
+            placingOrder.value = false;
+        }
+    }
+
+    function captureTotals(totals?: QuoteTotals): void {
+        if (!totals) {
+            return;
+        }
+        totalSegments.value = Array.isArray(totals.total_segments) ? totals.total_segments : [];
+        if (typeof totals.grand_total === 'number') {
+            grandTotal.value = formatTotal(totals.grand_total);
+        }
+    }
+
     function formatTotal(amount: number): string {
         return (currencyFormat.value || '%s').replace('%s', amount.toFixed(2));
     }
@@ -223,6 +347,16 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         loadingRates,
         savingShipping,
         error,
+        billingAddress,
+        sameAsShipping,
+        selectedPayment,
+        totalSegments,
+        couponCode,
+        appliedCoupon,
+        couponError,
+        placingOrder,
+        orderError,
+        formatTotal,
         init,
         goToStep,
         setEmail,
@@ -230,6 +364,11 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         estimateShipping,
         selectMethod,
         saveShipping,
+        selectPayment,
+        applyCoupon,
+        removeCoupon,
+        refreshTotals,
+        placeOrder,
     };
 });
 

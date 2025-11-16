@@ -25,6 +25,8 @@ const props = withDefaults(
         labels?: Record<string, string>;
         identificationLabels?: Record<string, string>;
         shippingLabels?: Record<string, string>;
+        paymentLabels?: Record<string, string>;
+        reviewLabels?: Record<string, string>;
         addressLabels?: Record<string, string>;
     }>(),
     {
@@ -34,6 +36,8 @@ const props = withDefaults(
         labels: () => ({}),
         identificationLabels: () => ({}),
         shippingLabels: () => ({}),
+        paymentLabels: () => ({}),
+        reviewLabels: () => ({}),
         addressLabels: () => ({}),
     },
 );
@@ -42,6 +46,8 @@ const IdentificationStep = defineAsyncComponent(
     () => import("MageObsidian_Checkout::checkout/IdentificationStep"),
 );
 const ShippingStep = defineAsyncComponent(() => import("MageObsidian_Checkout::checkout/ShippingStep"));
+const PaymentStep = defineAsyncComponent(() => import("MageObsidian_Checkout::checkout/PaymentStep"));
+const ReviewStep = defineAsyncComponent(() => import("MageObsidian_Checkout::checkout/ReviewStep"));
 
 const checkout = useCheckout();
 checkout.init({ ...props.config, defaultCountry: props.directory.defaultCountry });
@@ -109,9 +115,16 @@ const isEmpty = computed(() => checkout.itemCount === 0);
                     :labels="shippingLabels"
                     :address-labels="addressLabels"
                 />
-                <p v-else class="text-ink-soft">
-                    {{ t('stepPlaceholder', 'This step comes online in the next milestone.') }}
-                </p>
+                <PaymentStep
+                    v-else-if="checkout.step === 'payment'"
+                    :directory="directory"
+                    :labels="paymentLabels"
+                    :address-labels="addressLabels"
+                />
+                <ReviewStep
+                    v-else-if="checkout.step === 'review'"
+                    :labels="reviewLabels"
+                />
             </section>
 
             <aside
@@ -145,7 +158,18 @@ const isEmpty = computed(() => checkout.itemCount === 0);
                     </li>
                 </ul>
 
-                <dl class="flex flex-col gap-2 font-mono text-sm">
+                <dl v-if="checkout.totalSegments.length > 0" class="flex flex-col gap-2 font-mono text-sm">
+                    <div
+                        v-for="seg in checkout.totalSegments"
+                        :key="seg.code"
+                        class="flex justify-between"
+                        :class="seg.code === 'grand_total' ? 'border-t border-ash-200 pt-2 text-base text-ink' : 'text-ink-soft'"
+                    >
+                        <dt>{{ seg.title }}</dt>
+                        <dd>{{ seg.value === null ? '—' : checkout.formatTotal(seg.value) }}</dd>
+                    </div>
+                </dl>
+                <dl v-else class="flex flex-col gap-2 font-mono text-sm">
                     <div class="flex justify-between text-ink-soft">
                         <dt>{{ t('subtotal', 'Subtotal') }}</dt>
                         <dd>{{ checkout.subtotal }}</dd>

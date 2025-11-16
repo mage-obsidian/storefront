@@ -64,6 +64,44 @@ describe("createCheckoutApi — auth-mode URL resolution", () => {
     });
 });
 
+describe("createCheckoutApi — coupons and totals", () => {
+    beforeEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it("applies a coupon via PUT coupons/{code}, url-encoding it", async () => {
+        const fetchMock = mockFetch(true);
+        const api = createCheckoutApi({ restBaseUrl: REST, isLoggedIn: false, maskedCartId: "m" });
+
+        await api.applyCoupon("SAVE 20");
+
+        const [url, init] = fetchMock.mock.calls[0];
+        expect(url).toBe("https://shop.test/rest/default/V1/guest-carts/m/coupons/SAVE%2020");
+        expect(init.method).toBe("PUT");
+    });
+
+    it("removes the coupon via DELETE coupons", async () => {
+        const fetchMock = mockFetch(true);
+        const api = createCheckoutApi({ restBaseUrl: REST, isLoggedIn: true });
+
+        await api.removeCoupon();
+
+        const [url, init] = fetchMock.mock.calls[0];
+        expect(url).toBe("https://shop.test/rest/default/V1/carts/mine/coupons");
+        expect(init.method).toBe("DELETE");
+    });
+
+    it("reads the totals via GET totals", async () => {
+        const fetchMock = mockFetch({ grand_total: 64 });
+        const api = createCheckoutApi({ restBaseUrl: REST, isLoggedIn: true });
+
+        await api.getTotals();
+
+        expect(fetchMock.mock.calls[0][0]).toBe("https://shop.test/rest/default/V1/carts/mine/totals");
+        expect(fetchMock.mock.calls[0][1].method).toBe("GET");
+    });
+});
+
 describe("createCheckoutApi — errors", () => {
     beforeEach(() => {
         vi.restoreAllMocks();

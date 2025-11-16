@@ -23,7 +23,7 @@ interface MagentoError {
     parameters?: Record<string, string> | string[];
 }
 
-type HttpMethod = 'GET' | 'POST' | 'PUT';
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 export function createCheckoutApi(config: CheckoutApiConfig) {
     const { restBaseUrl = '', isLoggedIn = false, maskedCartId = '' } = config || {};
@@ -91,6 +91,15 @@ export function createCheckoutApi(config: CheckoutApiConfig) {
         /** Payment methods available for the cart. */
         getPaymentMethods() {
             return request('GET', 'payment-methods');
+        },
+        getTotals() {
+            return request('GET', 'totals');
+        },
+        applyCoupon(code: string) {
+            return request('PUT', `coupons/${encodeURIComponent(code)}`) as Promise<boolean>;
+        },
+        removeCoupon() {
+            return request('DELETE', 'coupons') as Promise<boolean>;
         },
         /** Place the order: save payment + billing, returns the order id. */
         placeOrder(payload: unknown) {
