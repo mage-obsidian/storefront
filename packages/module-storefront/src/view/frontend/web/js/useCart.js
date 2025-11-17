@@ -106,7 +106,35 @@ export function useCart() {
         }));
     }
 
-    return { count, addFromForm, addProduct };
+    /**
+     * Change a line item's quantity from the mini-cart, via Magento's native
+     * sidebar endpoint (which invalidates the `cart` section; we reload it so the
+     * lines, subtotal and badge update reactively). The endpoint URL is provided
+     * by the server (`checkout/sidebar/updateItemQty`) so store-code/secure-base
+     * resolution stays correct.
+     *
+     * @param {(number|string)} itemId quote item id
+     * @param {(number|string)} qty new quantity
+     * @param {string} action sidebar updateItemQty URL
+     * @returns {Promise<boolean>}
+     */
+    function updateItemQty(itemId, qty, action) {
+        return post(action, toFormData({ item_id: itemId, item_qty: qty }));
+    }
+
+    /**
+     * Remove a line item from the mini-cart, via Magento's native sidebar
+     * endpoint (`checkout/sidebar/removeItem`). Reloads the `cart` section after.
+     *
+     * @param {(number|string)} itemId quote item id
+     * @param {string} action sidebar removeItem URL
+     * @returns {Promise<boolean>}
+     */
+    function removeItem(itemId, action) {
+        return post(action, toFormData({ item_id: itemId }));
+    }
+
+    return { count, addFromForm, addProduct, updateItemQty, removeItem };
 }
 
 export default useCart;

@@ -75,4 +75,45 @@ describe("useCart", () => {
         expect(body.get("form_key")).toBe("ck");
         expect(reload.calls.at(-1)).toEqual([["cart"]]);
     });
+
+    it("updates a line item quantity via the sidebar endpoint and reloads the cart", async () => {
+        const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+        vi.stubGlobal("fetch", fetchMock);
+        document.cookie = "form_key=ck";
+
+        const ok = await useCart().updateItemQty(15, 3, "/checkout/sidebar/updateItemQty");
+
+        expect(ok).toBe(true);
+        const [action, init] = fetchMock.mock.calls.at(-1);
+        expect(action).toBe("/checkout/sidebar/updateItemQty");
+        expect(init.method).toBe("POST");
+        expect(init.body.get("item_id")).toBe("15");
+        expect(init.body.get("item_qty")).toBe("3");
+        expect(init.body.get("form_key")).toBe("ck");
+        expect(reload.calls.at(-1)).toEqual([["cart"]]);
+    });
+
+    it("removes a line item via the sidebar endpoint and reloads the cart", async () => {
+        const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+        vi.stubGlobal("fetch", fetchMock);
+        document.cookie = "form_key=ck";
+
+        const ok = await useCart().removeItem(15, "/checkout/sidebar/removeItem");
+
+        expect(ok).toBe(true);
+        const [action, init] = fetchMock.mock.calls.at(-1);
+        expect(action).toBe("/checkout/sidebar/removeItem");
+        expect(init.body.get("item_id")).toBe("15");
+        expect(reload.calls.at(-1)).toEqual([["cart"]]);
+    });
+
+    it("still reloads the cart when a sidebar mutation fails", async () => {
+        vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
+        document.cookie = "form_key=ck";
+
+        const ok = await useCart().removeItem(9, "/checkout/sidebar/removeItem");
+
+        expect(ok).toBe(false);
+        expect(reload.calls.at(-1)).toEqual([["cart"]]);
+    });
 });
