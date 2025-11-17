@@ -130,6 +130,14 @@ class ProductViewTest extends TestCase
         $this->assertFalse($view->isConfigurable());
     }
 
+    public function testGroupedProductIsGrouped(): void
+    {
+        $view = $this->viewModel($this->product('grouped', true));
+
+        $this->assertTrue($view->isGrouped());
+        $this->assertFalse($view->isDownloadable());
+    }
+
     public function testOnSaleWhenRegularExceedsFinal(): void
     {
         $product = $this->product('simple', false);

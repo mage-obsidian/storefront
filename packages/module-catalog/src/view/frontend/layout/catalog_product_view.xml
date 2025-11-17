@@ -58,6 +58,12 @@
                        name="downloadable.links" as="downloadable_links"/>
                 <block class="Magento\Downloadable\Block\Catalog\Product\Samples"
                        name="downloadable.samples" as="downloadable_samples"/>
+                <!-- Grouped data source: the associated simple products (name, qty
+                     default, saleability) and, since it extends AbstractProduct,
+                     getProductPrice() for the per-row native price. Read by
+                     form/grouped.twig; the native type layout is suppressed. -->
+                <block class="Magento\GroupedProduct\Block\Product\View\Type\Grouped"
+                       name="product.info.grouped" as="grouped"/>
             </block>
         </referenceContainer>
 

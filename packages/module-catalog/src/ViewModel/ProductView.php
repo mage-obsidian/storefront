@@ -155,6 +155,16 @@ class ProductView implements ArgumentInterface
     }
 
     /**
+     * Whether the product is a grouped (drives the associated-products table).
+     *
+     * @return bool
+     */
+    public function isGrouped(): bool
+    {
+        return $this->getTypeId() === 'grouped';
+    }
+
+    /**
      * Current sale price (special price applied) as a raw number.
      *
      * @return float
