@@ -10,52 +10,36 @@ declare(strict_types=1);
 namespace MageObsidian\Wishlist\Plugin\CustomerData;
 
 use Magento\Framework\UrlInterface;
-use Magento\Store\Model\StoreManagerInterface;
 use Magento\Wishlist\CustomerData\Wishlist;
 use Magento\Wishlist\Helper\Data as WishlistHelper;
 use Throwable;
 
 /**
- * Reshapes the wishlist section for the storefront islands. Two things: the
- * native `items` render each product price through `product.price.render.default`,
- * which the engine suppresses (so a non-empty wishlist 400s the section); and the
- * heart needs every membership, while native `items` caps at 3. We fall back to a
- * price-free payload on that failure and always attach `saved` (product id →
- * remove url) — the only wishlist data the islands read.
+ * Attaches `saved` (product id → remove url) to the wishlist section so the
+ * heart reflects every membership; the native `items` cap at three. (Price
+ * rendering itself is handled now that product.price.render.default is restored.)
  */
 class WishlistSection
 {
     /**
      * @param WishlistHelper $wishlistHelper
      * @param UrlInterface $url
-     * @param StoreManagerInterface $storeManager
      */
     public function __construct(
         private readonly WishlistHelper $wishlistHelper,
-        private readonly UrlInterface $url,
-        private readonly StoreManagerInterface $storeManager
+        private readonly UrlInterface $url
     ) {
     }
 
     /**
-     * Reshape the wishlist section: price-free fallback plus the `saved` map.
+     * Attach the `saved` map to the section payload.
      *
      * @param Wishlist $subject
-     * @param callable $proceed
+     * @param array $result
      * @return array
      */
-    public function aroundGetSectionData(Wishlist $subject, callable $proceed): array
+    public function afterGetSectionData(Wishlist $subject, array $result): array
     {
-        try {
-            $result = $proceed();
-        } catch (Throwable) {
-            $result = [
-                'counter' => null,
-                'items' => [],
-                'websiteId' => $this->storeManager->getWebsite()->getId(),
-                'storeId' => $this->storeManager->getStore()->getId(),
-            ];
-        }
         $result['saved'] = $this->buildSaved();
 
         return $result;
