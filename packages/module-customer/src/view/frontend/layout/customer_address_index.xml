@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--
+  Address book. Pulls in the shell, then renders our Twig over the native
+  Address\Book and Address\Grid blocks (kept as data sources). The Book block
+  MUST keep the name `address_book` — the Index controller looks it up by name.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="customer_account"/>
+    <head>
+        <title>Address Book</title>
+    </head>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceBlock name="account.shell">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="account.address.book"
+                   as="account_content" template="Magento_Customer::account/address-book.twig" cacheable="false">
+                <block class="Magento\Customer\Block\Address\Book" name="address_book" as="book"/>
+                <block class="Magento\Customer\Block\Address\Grid" name="address_grid" as="grid"/>
+            </block>
+        </referenceBlock>
+    </body>
+</page>

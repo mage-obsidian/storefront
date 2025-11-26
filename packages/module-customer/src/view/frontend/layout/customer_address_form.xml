@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!--
+  Add / edit address. Pulls in the shell, then renders our Twig over the native
+  Address\Edit block (kept as data source for URLs, the saved address, region
+  JSON and default flags). The block MUST keep the name `customer_address_edit`
+  — the Form controller seeds it by that name. AddressForm supplies clean
+  country/region option lists so the Twig can render OBSIDIAN selects.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="customer_account"/>
+    <head>
+        <title>Address</title>
+    </head>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceBlock name="account.shell">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="account.address.form"
+                   as="account_content" template="Magento_Customer::account/address-form.twig" cacheable="false">
+                <arguments>
+                    <argument name="address_form" xsi:type="object">MageObsidian\Customer\ViewModel\AddressForm</argument>
+                </arguments>
+                <block class="Magento\Customer\Block\Address\Edit" name="customer_address_edit" as="edit">
+                    <arguments>
+                        <argument name="attribute_data" xsi:type="object">Magento\Customer\Block\DataProviders\AddressAttributeData</argument>
+                        <argument name="post_code_config" xsi:type="object">Magento\Customer\Block\DataProviders\PostCodesPatternsAttributeData</argument>
+                        <argument name="view_model" xsi:type="object">Magento\Customer\ViewModel\Address</argument>
+                        <argument name="region_provider" xsi:type="object">Magento\Customer\ViewModel\Address\RegionProvider</argument>
+                    </arguments>
+                </block>
+            </block>
+        </referenceBlock>
+    </body>
+</page>
