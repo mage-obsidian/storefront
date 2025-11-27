@@ -35,6 +35,23 @@
                     </item>
                 </item>
             </argument>
+            <!-- Bundle pricing: the From/To range box and the per-selection
+                 amounts. Mirrors Magento_Bundle's catalog_product_prices.xml, which
+                 is suppressed with its module. -->
+            <argument name="bundle" xsi:type="array">
+                <item name="prices" xsi:type="array">
+                    <item name="tier_price" xsi:type="array">
+                        <item name="render_template" xsi:type="string">Magento_Bundle::product/price/tier_prices.phtml</item>
+                    </item>
+                    <item name="final_price" xsi:type="array">
+                        <item name="render_class" xsi:type="string">Magento\Bundle\Pricing\Render\FinalPriceBox</item>
+                        <item name="render_template" xsi:type="string">Magento_Bundle::product/price/final_price.phtml</item>
+                    </item>
+                    <item name="bundle_option" xsi:type="array">
+                        <item name="amount_render_template" xsi:type="string">Magento_Bundle::product/price/selection/amount.phtml</item>
+                    </item>
+                </item>
+            </argument>
         </arguments>
     </block>
 </layout>

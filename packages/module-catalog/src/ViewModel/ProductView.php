@@ -165,6 +165,16 @@ class ProductView implements ArgumentInterface
     }
 
     /**
+     * Whether the product is a bundle (drives the option selector form).
+     *
+     * @return bool
+     */
+    public function isBundle(): bool
+    {
+        return $this->getTypeId() === 'bundle';
+    }
+
+    /**
      * Current sale price (special price applied) as a raw number.
      *
      * @return float
