@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onBeforeUnmount, nextTick, useId } from "vue";
 
 // Reusable store / language / currency switcher. One component, two looks:
@@ -11,21 +11,30 @@ import { ref, onBeforeUnmount, nextTick, useId } from "vue";
 //     popover would overflow.
 // Options are plain links to native Magento switch URLs (GET), so switching
 // works even before the island hydrates.
-const props = defineProps({
-    label: { type: String, default: "" },
-    srLabel: { type: String, default: "" },
-    items: { type: Array, default: () => [] },
-    variant: { type: String, default: "dropdown" },
-});
+interface SwitcherItem {
+    label: string;
+    url: string;
+    current?: boolean;
+}
+
+withDefaults(
+    defineProps<{
+        label?: string;
+        srLabel?: string;
+        items?: SwitcherItem[];
+        variant?: string;
+    }>(),
+    { label: "", srLabel: "", items: () => [], variant: "dropdown" },
+);
 
 const open = ref(false);
-const root = ref(null);
-const trigger = ref(null);
-const panel = ref(null);
+const root = ref<HTMLElement | null>(null);
+const trigger = ref<HTMLElement | null>(null);
+const panel = ref<HTMLElement | null>(null);
 const panelId = useId();
 
-const onDocumentClick = (event) => {
-    if (root.value && !root.value.contains(event.target)) {
+const onDocumentClick = (event: Event): void => {
+    if (root.value && !root.value.contains(event.target as Node | null)) {
         close(false);
     }
 };

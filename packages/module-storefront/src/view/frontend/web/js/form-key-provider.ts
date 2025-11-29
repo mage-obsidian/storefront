@@ -12,14 +12,20 @@ const COOKIE = 'form_key';
 const LENGTH = 16;
 const CHARS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-function readCookie() {
+// Magento publishes cookie restrictions as a global; not a standard Window prop.
+interface CookiesConfig {
+    secure?: boolean;
+    samesite?: string;
+}
+
+function readCookie(): string {
     const match = typeof document !== 'undefined'
         ? document.cookie.match(/(?:^|;\s*)form_key=([^;]+)/)
         : null;
     return match ? decodeURIComponent(match[1]) : '';
 }
 
-function generate() {
+function generate(): string {
     const buffer = new Uint32Array(LENGTH);
     if (window.crypto?.getRandomValues) {
         window.crypto.getRandomValues(buffer);
@@ -32,8 +38,8 @@ function generate() {
     return key;
 }
 
-function writeCookie(value) {
-    const config = window.cookiesConfig ?? {};
+function writeCookie(value: string): void {
+    const config = (window as unknown as { cookiesConfig?: CookiesConfig }).cookiesConfig ?? {};
     const secure = config.secure ? '; secure' : '';
     const sameSite = `; samesite=${config.samesite || 'lax'}`;
     const expires = `; expires=${new Date(Date.now() + 86400000).toUTCString()}`;
@@ -43,16 +49,14 @@ function writeCookie(value) {
 /**
  * Return the current form key, creating the cookie if absent, and align every
  * rendered form_key input with it (overwriting any stale baked value).
- *
- * @returns {string}
  */
-export function ensureFormKey() {
+export function ensureFormKey(): string {
     let key = readCookie();
     if (!key) {
         key = generate();
         writeCookie(key);
     }
-    document.querySelectorAll('input[name="form_key"]').forEach((input) => {
+    document.querySelectorAll<HTMLInputElement>('input[name="form_key"]').forEach((input) => {
         input.value = key;
     });
     return key;

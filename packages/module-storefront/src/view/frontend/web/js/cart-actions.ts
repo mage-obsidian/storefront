@@ -5,28 +5,34 @@
  * intercepts those submits, adds via `useCart` (AJAX, no reload), and announces
  * the result through a toast event. The reactive cart count updates on its own.
  */
-import { useCart } from './useCart.js';
-import { ensureFormKey } from './form-key-provider.js';
+import { useCart } from 'MageObsidian_Storefront::js/useCart';
+import { ensureFormKey } from 'MageObsidian_Storefront::js/form-key-provider';
+
+declare global {
+    interface Window {
+        __OBSIDIAN_CART_I18N__?: { added?: string; failed?: string };
+    }
+}
 
 const TOAST_EVENT = 'obsidian:toast';
 
-function announce(message, tone) {
+function announce(message: string, tone: string): void {
     window.dispatchEvent(new CustomEvent(TOAST_EVENT, { detail: { message, tone } }));
 }
 
-function init() {
+function init(): void {
     // FPC-safe form key: the baked key may be stale on cached HTML.
     ensureFormKey();
     const cart = useCart();
 
     document.addEventListener('submit', async (event) => {
-        const form = event.target.closest?.('form[data-add-to-cart]');
+        const form = (event.target as HTMLElement | null)?.closest?.<HTMLFormElement>('form[data-add-to-cart]');
         if (!form) {
             return;
         }
         event.preventDefault();
 
-        const button = form.querySelector('button[type="submit"]');
+        const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
         const label = button?.textContent;
         if (button) {
             button.disabled = true;

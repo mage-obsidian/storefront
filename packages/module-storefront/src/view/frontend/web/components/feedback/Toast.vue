@@ -1,21 +1,27 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from "vue";
 
 // Global toast host (mounted once). Listens for `obsidian:toast` window events —
 // dispatched by cart-actions and reusable by wishlist/compare later — and shows
 // transient, accessible notifications. The container is an aria-live region so
 // screen readers announce each message; success uses polite, errors assertive.
+interface ToastItem {
+    id: number;
+    message: string;
+    tone: string;
+}
+
 const DURATION = 3200;
 
 let nextId = 0;
-const toasts = ref([]);
+const toasts = ref<ToastItem[]>([]);
 
-function dismiss(id) {
+function dismiss(id: number): void {
     toasts.value = toasts.value.filter((t) => t.id !== id);
 }
 
-function onToast(event) {
-    const { message, tone = "success" } = event.detail ?? {};
+function onToast(event: Event): void {
+    const { message, tone = "success" } = (event as CustomEvent).detail ?? {};
     if (!message) {
         return;
     }

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, useId } from "vue";
 import Drawer from "../elements/Drawer.vue";
 import Switcher from "./Switcher.vue";
@@ -8,20 +8,41 @@ import Switcher from "./Switcher.vue";
 // links and the (optional) store/currency switchers are all server-provided, so
 // the markup is data-driven, not hard-coded here — and the switchers reuse the
 // same Switcher component as the desktop header (inline variant for the drawer).
-const props = defineProps({
-    links: { type: Array, default: () => [] },
-    label: { type: String, default: "Menu" },
-    // Distinct from `label`: the dialog is labelled "Menu", so the inner nav uses
-    // its own label to avoid a screen reader announcing "Menu, Menu".
-    navLabel: { type: String, default: "Browse" },
-    stores: { type: Object, default: null },
-    currencies: { type: Object, default: null },
-});
+interface NavLink {
+    label: string;
+    url: string;
+}
+
+interface SwitcherGroup {
+    label: string;
+    srLabel: string;
+    items: Array<{ label: string; url: string; current?: boolean }>;
+}
+
+withDefaults(
+    defineProps<{
+        links?: NavLink[];
+        label?: string;
+        // Distinct from `label`: the dialog is labelled "Menu", so the inner nav
+        // uses its own label to avoid a screen reader announcing "Menu, Menu".
+        navLabel?: string;
+        stores?: SwitcherGroup | null;
+        currencies?: SwitcherGroup | null;
+    }>(),
+    {
+        links: () => [],
+        label: "Menu",
+        navLabel: "Browse",
+        stores: null,
+        currencies: null,
+    },
+);
 
 const open = ref(false);
 const drawerId = `mobile-menu-${useId()}`;
 
-const hasSwitcher = (group) => group && Array.isArray(group.items) && group.items.length > 1;
+const hasSwitcher = (group: SwitcherGroup | null) =>
+    group && Array.isArray(group.items) && group.items.length > 1;
 </script>
 
 <template>

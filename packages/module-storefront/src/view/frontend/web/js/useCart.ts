@@ -11,7 +11,7 @@ import { computed } from 'vue';
 import { useCustomerData } from 'MageObsidian_ModernFrontend::js/customer-data';
 
 /** Read Magento's form key from its cookie (set by the page-cache layer). */
-export function getFormKey() {
+export function getFormKey(): string {
     const match = typeof document !== 'undefined'
         ? document.cookie.match(/(?:^|;\s*)form_key=([^;]+)/)
         : null;
@@ -21,11 +21,8 @@ export function getFormKey() {
 /**
  * Flatten a fields object into FormData, expanding one nested level into
  * `parent[child]` keys (how Magento expects `super_attribute[attrId]`).
- *
- * @param {Record<string, unknown>} fields
- * @returns {FormData}
  */
-function toFormData(fields) {
+function toFormData(fields: Record<string, unknown>): FormData {
     const body = new FormData();
     for (const [key, value] of Object.entries(fields)) {
         if (value === undefined || value === null) {
@@ -52,12 +49,8 @@ export function useCart() {
      * section. Backfills the form key from the cookie if a cached page shipped
      * without it. Always reloads the section afterwards so reactive state stays
      * consistent even on failure.
-     *
-     * @param {string} action
-     * @param {FormData} body
-     * @returns {Promise<boolean>} whether the add succeeded
      */
-    async function post(action, body) {
+    async function post(action: string, body: FormData): Promise<boolean> {
         if (!body.get('form_key')) {
             body.set('form_key', getFormKey());
         }
@@ -79,11 +72,8 @@ export function useCart() {
 
     /**
      * Add from a server-rendered add-to-cart form (simple/virtual/downloadable).
-     *
-     * @param {HTMLFormElement} form
-     * @returns {Promise<boolean>}
      */
-    function addFromForm(form) {
+    function addFromForm(form: HTMLFormElement): Promise<boolean> {
         return post(form.action, new FormData(form));
     }
 
@@ -93,11 +83,14 @@ export function useCart() {
      *
      * The form key is backfilled from the cookie by post() (kept fresh by the
      * form-key provider), so it is not threaded through here.
-     *
-     * @param {{action: string, product: (number|string), qty?: number, uenc?: string, superAttribute?: Record<string, (number|string)>}} params
-     * @returns {Promise<boolean>}
      */
-    function addProduct({ action, product, qty = 1, uenc, superAttribute }) {
+    function addProduct({ action, product, qty = 1, uenc, superAttribute }: {
+        action: string;
+        product: number | string;
+        qty?: number;
+        uenc?: string;
+        superAttribute?: Record<string, number | string>;
+    }): Promise<boolean> {
         return post(action, toFormData({
             product,
             qty,
@@ -112,25 +105,16 @@ export function useCart() {
      * lines, subtotal and badge update reactively). The endpoint URL is provided
      * by the server (`checkout/sidebar/updateItemQty`) so store-code/secure-base
      * resolution stays correct.
-     *
-     * @param {(number|string)} itemId quote item id
-     * @param {(number|string)} qty new quantity
-     * @param {string} action sidebar updateItemQty URL
-     * @returns {Promise<boolean>}
      */
-    function updateItemQty(itemId, qty, action) {
+    function updateItemQty(itemId: number | string, qty: number | string, action: string): Promise<boolean> {
         return post(action, toFormData({ item_id: itemId, item_qty: qty }));
     }
 
     /**
      * Remove a line item from the mini-cart, via Magento's native sidebar
      * endpoint (`checkout/sidebar/removeItem`). Reloads the `cart` section after.
-     *
-     * @param {(number|string)} itemId quote item id
-     * @param {string} action sidebar removeItem URL
-     * @returns {Promise<boolean>}
      */
-    function removeItem(itemId, action) {
+    function removeItem(itemId: number | string, action: string): Promise<boolean> {
         return post(action, toFormData({ item_id: itemId }));
     }
 

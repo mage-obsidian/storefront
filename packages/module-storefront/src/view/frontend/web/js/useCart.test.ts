@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { useCart, getFormKey } from "./useCart.js";
+import { useCart, getFormKey } from "./useCart.ts";
 import { __setSection, __reset, reload } from "MageObsidian_ModernFrontend::js/customer-data";
 
 // useCart reuses Magento's native session quote: POST to checkout/cart/add, then

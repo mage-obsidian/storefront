@@ -14,7 +14,7 @@ export default defineConfig({
     resolve: {
         alias: {
             "MageObsidian_ModernFrontend::js/customer-data": fileURLToPath(
-                new URL("./src/Test/Js/stubs/customerData.js", import.meta.url),
+                new URL("./src/Test/Js/stubs/customerData.ts", import.meta.url),
             ),
         },
     },

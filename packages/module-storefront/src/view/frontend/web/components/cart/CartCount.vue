@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from "vue";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 
@@ -6,10 +6,13 @@ import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 // updates reactively after add-to-cart (and stays FPC-safe — the count is never
 // baked into the cached HTML). The visible badge is decorative; an sr-only live
 // region announces changes to assistive tech.
-const props = defineProps({
-    // i18n-friendly accessible label, e.g. "in your bag" (passed from Twig).
-    label: { type: String, default: "in your bag" },
-});
+withDefaults(
+    defineProps<{
+        // i18n-friendly accessible label, e.g. "in your bag" (passed from Twig).
+        label?: string;
+    }>(),
+    { label: "in your bag" },
+);
 
 const customerData = useCustomerData();
 const count = computed(() => Number(customerData.section("cart")?.summary_count ?? 0));

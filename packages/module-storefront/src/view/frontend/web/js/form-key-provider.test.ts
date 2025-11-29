@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { ensureFormKey } from "./form-key-provider.js";
+import { ensureFormKey } from "./form-key-provider.ts";
 
 beforeEach(() => {
     document.cookie = "form_key=; max-age=0; path=/";

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, watch, nextTick, onBeforeUnmount, useId } from "vue";
 
 // Shared off-canvas drawer. Presentation-agnostic: the mobile menu fills it now,
@@ -6,16 +6,24 @@ import { ref, watch, nextTick, onBeforeUnmount, useId } from "vue";
 // close affordances (Escape, backdrop), body scroll-lock, and a focus trap (Tab
 // cycles within the dialog); the parent owns the `open` state and reacts to
 // `close`. Exposes an `id` so a trigger can wire `aria-controls` to it.
-const props = defineProps({
-    open: { type: Boolean, default: false },
-    side: { type: String, default: "right" },
-    label: { type: String, default: "" },
-    id: { type: String, default: () => `drawer-${useId()}` },
-});
-const emit = defineEmits(["close"]);
+const props = withDefaults(
+    defineProps<{
+        open?: boolean;
+        side?: string;
+        label?: string;
+        id?: string;
+    }>(),
+    {
+        open: false,
+        side: "right",
+        label: "",
+        id: () => `drawer-${useId()}`,
+    },
+);
+const emit = defineEmits<{ close: [] }>();
 
-const panel = ref(null);
-let previouslyFocused = null;
+const panel = ref<HTMLElement | null>(null);
+let previouslyFocused: HTMLElement | null = null;
 
 const FOCUSABLE = [
     "a[href]",
@@ -26,11 +34,12 @@ const FOCUSABLE = [
     '[tabindex]:not([tabindex="-1"])',
 ].join(",");
 
-const focusables = () => (panel.value ? [...panel.value.querySelectorAll(FOCUSABLE)] : []);
+const focusables = (): HTMLElement[] =>
+    panel.value ? [...panel.value.querySelectorAll<HTMLElement>(FOCUSABLE)] : [];
 
-const requestClose = () => emit("close");
+const requestClose = (): void => emit("close");
 
-const onKeydown = (event) => {
+const onKeydown = (event: KeyboardEvent): void => {
     if (event.key === "Escape") {
         requestClose();
         return;
@@ -62,7 +71,7 @@ watch(
     () => props.open,
     (isOpen) => {
         if (isOpen) {
-            previouslyFocused = document.activeElement;
+            previouslyFocused = document.activeElement as HTMLElement | null;
             document.body.style.overflow = "hidden";
             document.addEventListener("keydown", onKeydown);
             nextTick(() => (focusables()[0] ?? panel.value)?.focus());
