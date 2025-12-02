@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!--
+  Guest order view. Standalone (no account shell) — reuses the customer
+  order-view Twig with route_prefix=sales/guest and is_guest=true so its cross
+  links and back link target the guest routes. Same core Order\* data sources.
+  OrderTitle restores the <title> (registered by the guest helper).
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="sales.guest.order.view"
+                   template="Magento_Sales::account/order-view.twig" cacheable="false">
+                <arguments>
+                    <argument name="route_prefix" xsi:type="string">sales/guest</argument>
+                    <argument name="is_guest" xsi:type="boolean">true</argument>
+                </arguments>
+                <block class="MageObsidian\Sales\Block\OrderTitle" name="guest.order.title"/>
+                <block class="Magento\Sales\Block\Order\View" name="sales.order.view" as="view"/>
+                <block class="Magento\Sales\Block\Order\Items" name="order_items" as="items"/>
+                <block class="Magento\Sales\Block\Order\Totals" name="order_totals" as="totals"
+                       template="Magento_Sales::account/order-totals.twig"/>
+                <block class="Magento\Sales\Block\Order\Info" name="sales.order.info" as="info"/>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

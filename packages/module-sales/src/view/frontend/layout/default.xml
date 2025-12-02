@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+  "Orders and Returns" footer link. Magento_Sales' native layout (which adds it)
+  is suppressed, so it is re-added here to give the guest order lookup an entry
+  point in the footer — the same pattern as the Contact link in module-storefront.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="footer_links">
+            <block class="Magento\Framework\View\Element\Html\Link\Current" name="orders-and-returns-link">
+                <arguments>
+                    <argument name="label" xsi:type="string" translate="true">Orders and Returns</argument>
+                    <argument name="path" xsi:type="string">sales/guest/form</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+    </body>
+</page>

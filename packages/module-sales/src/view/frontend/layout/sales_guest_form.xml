@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+  Guest "Orders and Returns" lookup form. Standalone (a guest has no account
+  shell). The OrdersReturnsForm ViewModel feeds the Vue island its action URL and
+  form key. The controller sets the page title.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="sales.guest.form"
+                   template="Magento_Sales::guest/form.twig">
+                <arguments>
+                    <argument name="orders_returns" xsi:type="object">MageObsidian\Sales\ViewModel\OrdersReturnsForm</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--
+  Guest shipment view. Standalone; reuses the customer order-shipment Twig with
+  the guest route prefix. Shipment data comes from Shipping\Block\Order\Shipment.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="sales.guest.order.shipment"
+                   template="Magento_Sales::account/order-shipment.twig" cacheable="false">
+                <arguments>
+                    <argument name="route_prefix" xsi:type="string">sales/guest</argument>
+                    <argument name="is_guest" xsi:type="boolean">true</argument>
+                </arguments>
+                <block class="MageObsidian\Sales\Block\OrderTitle" name="guest.shipment.title"/>
+                <block class="Magento\Shipping\Block\Order\Shipment" name="sales.order.shipment" as="shipment"/>
+                <block class="Magento\Sales\Block\Order\Info" name="sales.order.info" as="info"/>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

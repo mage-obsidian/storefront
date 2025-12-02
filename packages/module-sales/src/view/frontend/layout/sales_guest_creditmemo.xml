@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--
+  Guest credit memo view. Standalone; reuses the customer order-creditmemo Twig
+  with the guest route prefix. Same core Order\Creditmemo / Order\Info sources.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="sales.guest.order.creditmemo"
+                   template="Magento_Sales::account/order-creditmemo.twig" cacheable="false">
+                <arguments>
+                    <argument name="route_prefix" xsi:type="string">sales/guest</argument>
+                    <argument name="is_guest" xsi:type="boolean">true</argument>
+                </arguments>
+                <block class="MageObsidian\Sales\Block\OrderTitle" name="guest.creditmemo.title"/>
+                <block class="Magento\Sales\Block\Order\Creditmemo" name="sales.order.creditmemo" as="creditmemo"/>
+                <block class="Magento\Sales\Block\Order\Info" name="sales.order.info" as="info"/>
+            </block>
+        </referenceContainer>
+    </body>
+</page>
