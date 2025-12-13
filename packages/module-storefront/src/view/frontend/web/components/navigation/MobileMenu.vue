@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, useId } from "vue";
-import Drawer from "../elements/Drawer.vue";
-import Switcher from "./Switcher.vue";
+import Drawer from "MageObsidian_Storefront::elements/Drawer";
+import Switcher from "MageObsidian_Storefront::navigation/Switcher";
 
 // Mobile navigation island. The hamburger lives inside the island (mounted eager
 // so it is interactive above the fold); the Drawer carries the dialog a11y. Nav

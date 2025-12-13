@@ -7,14 +7,22 @@ import { fileURLToPath } from "node:url";
 // drive (focus, scroll-lock, keyboard), and @vitejs/plugin-vue compiles the SFCs.
 //
 // The `Vendor_Module::path` import specifier is resolved by the engine's Vite
-// plugins at build time; for tests we alias the customer-data bridge to a small
-// controllable stub so cart components run without the live Magento section data.
+// plugins at build time; for tests we map them here. The customer-data bridge
+// points at a small controllable stub so cart components run without the live
+// Magento section data; the intra-module Drawer/Switcher specifiers (used by
+// MobileMenu in shipped code) resolve to their real local components.
 export default defineConfig({
     plugins: [vue()],
     resolve: {
         alias: {
             "MageObsidian_ModernFrontend::js/customer-data": fileURLToPath(
                 new URL("./src/Test/Js/stubs/customerData.ts", import.meta.url),
+            ),
+            "MageObsidian_Storefront::elements/Drawer": fileURLToPath(
+                new URL("./src/view/frontend/web/components/elements/Drawer.vue", import.meta.url),
+            ),
+            "MageObsidian_Storefront::navigation/Switcher": fileURLToPath(
+                new URL("./src/view/frontend/web/components/navigation/Switcher.vue", import.meta.url),
             ),
         },
     },
