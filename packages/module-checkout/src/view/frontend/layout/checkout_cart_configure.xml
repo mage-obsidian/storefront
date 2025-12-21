@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!--
+  Reconfigure a cart item. The controller renders the product detail page with the
+  item's saved selection preconfigured; we just load our PDP layout. The buy-box
+  form detects configure mode (ProductView::isConfigureMode) and posts to
+  updateItemOptions with the item id instead of adding a new line.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="catalog_product_view"/>
+</page>

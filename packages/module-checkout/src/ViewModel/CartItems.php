@@ -13,6 +13,7 @@ use Magento\Catalog\Helper\Image as ImageHelper;
 use Magento\Catalog\Helper\Product\ConfigurationPool;
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
+use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
 use Magento\Quote\Model\Quote\Item as QuoteItem;
 use Throwable;
@@ -46,12 +47,14 @@ class CartItems implements ArgumentInterface
      * @param ConfigurationPool $configurationPool
      * @param ImageHelper $imageHelper
      * @param PriceCurrencyInterface $priceCurrency
+     * @param UrlInterface $url
      */
     public function __construct(
         private readonly CheckoutSession $checkoutSession,
         private readonly ConfigurationPool $configurationPool,
         private readonly ImageHelper $imageHelper,
-        private readonly PriceCurrencyInterface $priceCurrency
+        private readonly PriceCurrencyInterface $priceCurrency,
+        private readonly UrlInterface $url
     ) {
     }
 
@@ -98,7 +101,34 @@ class CartItems implements ArgumentInterface
             'price' => (string)$this->priceCurrency->format((float)$item->getCalculationPrice(), false),
             'rowTotal' => (string)$this->priceCurrency->format((float)$rowTotal, false),
             'options' => $this->options($item),
+            'configureUrl' => $this->configureUrl($item),
         ];
+    }
+
+    /**
+     * Reconfigure url for an item that has options to change, empty otherwise.
+     *
+     * @param QuoteItem $item
+     * @return string
+     */
+    private function configureUrl(QuoteItem $item): string
+    {
+        $product = $item->getProduct();
+        if (!$product) {
+            return '';
+        }
+        try {
+            if (!$product->getTypeInstance()->canConfigure($product)) {
+                return '';
+            }
+
+            return (string)$this->url->getUrl(
+                'checkout/cart/configure',
+                ['id' => (int)$item->getItemId(), 'product_id' => (int)$product->getId()]
+            );
+        } catch (Throwable) {
+            return '';
+        }
     }
 
     /**

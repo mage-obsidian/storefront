@@ -7,8 +7,10 @@ use Magento\Catalog\Helper\Image as ImageHelper;
 use Magento\Catalog\Helper\Product\Configuration\ConfigurationInterface;
 use Magento\Catalog\Helper\Product\ConfigurationPool;
 use Magento\Catalog\Model\Product;
+use Magento\Catalog\Model\Product\Type\AbstractType;
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
+use Magento\Framework\UrlInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\Quote\Item as QuoteItem;
 use MageObsidian\Checkout\ViewModel\CartItems;
@@ -30,8 +32,12 @@ class CartItemsTest extends TestCase
 
     public function testMapsVisibleQuoteItemsToRows(): void
     {
+        $type = $this->createMock(AbstractType::class);
+        $type->method('canConfigure')->willReturn(true);
         $product = $this->createMock(Product::class);
         $product->method('getProductUrl')->willReturn('https://shop.test/chaz.html');
+        $product->method('getId')->willReturn(42);
+        $product->method('getTypeInstance')->willReturn($type);
 
         $item = $this->getMockBuilder(QuoteItem::class)
             ->disableOriginalConstructor()
@@ -69,6 +75,7 @@ class CartItemsTest extends TestCase
                 ['label' => 'Size', 'value' => 'M'],
                 ['label' => 'Color', 'value' => 'Gray'],
             ],
+            'configureUrl' => 'https://shop.test/checkout/cart/configure/id/15/product_id/42/',
         ], $rows[0]);
     }
 
@@ -98,11 +105,18 @@ class CartItemsTest extends TestCase
             static fn ($amount): string => '$' . number_format((float)$amount, 2)
         );
 
+        $url = $this->createMock(UrlInterface::class);
+        $url->method('getUrl')->willReturnCallback(
+            static fn (string $route, array $params): string =>
+                "https://shop.test/$route/id/{$params['id']}/product_id/{$params['product_id']}/"
+        );
+
         return new CartItems(
             $session,
             $pool ?? $this->createMock(ConfigurationPool::class),
             $image,
-            $priceCurrency
+            $priceCurrency,
+            $url
         );
     }
 }
