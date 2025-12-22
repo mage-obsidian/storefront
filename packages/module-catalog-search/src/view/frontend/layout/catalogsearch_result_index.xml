@@ -14,12 +14,22 @@
   core virtualType (a ListProduct wired to the Search layer), so our category
   grid (product/list.twig + card.twig) and toolbar work unchanged.
 -->
-<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<page layout="2columns-left" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
+        <attribute name="class" value="page-with-filter"/>
         <!-- The Result block owns the <h1> (rendered in result.twig); drop the
              generic page.main.title so there is a single heading. -->
         <referenceBlock name="page.main.title" remove="true"/>
+        <!-- Layered navigation for search. Reuses the Search Navigation block
+             (native Search layer + filters) in the sidebar; same Twig as the
+             category sidebar. Filters are links — they work with no JS. -->
+        <referenceContainer name="sidebar.main">
+            <block class="Magento\LayeredNavigation\Block\Navigation\Search" name="catalogsearch.leftnav"
+                   before="-" template="Magento_LayeredNavigation::layer/view.twig">
+                <block class="Magento\LayeredNavigation\Block\Navigation\State" name="catalogsearch.navigation.state" as="state"/>
+            </block>
+        </referenceContainer>
         <referenceContainer name="content">
             <block class="Magento\CatalogSearch\Block\Result" name="search.result"
                    template="Magento_CatalogSearch::result.twig">
