@@ -16,13 +16,24 @@
   landing grid (CategoryLanding). 1column for now (the layered-navigation sidebar
   returns with its batch).
 -->
-<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<page layout="2columns-left" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
+        <attribute name="class" value="page-with-filter"/>
         <!-- Our CategoryTitle owns the category <h1>; drop the generic
              page.main.title so there is a single heading (the designed home does
              the same). -->
         <referenceBlock name="page.main.title" remove="true"/>
+        <!-- Layered navigation. The native LN layout is suppressed (module not
+             opted-in); we re-declare the Category Navigation block (reusing the
+             native Catalog layer + filters) in the sidebar. Filters are links —
+             they work with no JS. The State child carries the active filters. -->
+        <referenceContainer name="sidebar.main">
+            <block class="Magento\LayeredNavigation\Block\Navigation\Category" name="catalog.leftnav"
+                   before="-" template="Magento_LayeredNavigation::layer/view.twig">
+                <block class="Magento\LayeredNavigation\Block\Navigation\State" name="category.navigation.state" as="state"/>
+            </block>
+        </referenceContainer>
         <referenceContainer name="content">
             <!-- Category <h1> + document <title> (the native title wiring is
                  suppressed along with the core module layout). Always present so
