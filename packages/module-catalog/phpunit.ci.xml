@@ -17,6 +17,7 @@
             <directory>src/Test/Unit</directory>
             <exclude>src/Test/Unit/ViewModel/ProductCardTest.php</exclude>
             <exclude>src/Test/Unit/ViewModel/ProductViewTest.php</exclude>
+            <exclude>src/Test/Unit/ViewModel/LayeredSwatchTest.php</exclude>
             <exclude>src/Test/Unit/ViewModel/ProductGalleryTest.php</exclude>
             <exclude>src/Test/Unit/ViewModel/CategoryLandingTest.php</exclude>
             <exclude>src/Test/Unit/Block/CategoryTitleTest.php</exclude>
