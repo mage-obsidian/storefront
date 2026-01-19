@@ -10,6 +10,8 @@
             <!-- Load after the core customer module whose frontend this adapts, so
                  our re-declared layout wins the merge. -->
             <module name="Magento_Customer"/>
+            <!-- Newsletter subscription management is an account sub-page. -->
+            <module name="Magento_Newsletter"/>
         </sequence>
     </module>
 </config>
