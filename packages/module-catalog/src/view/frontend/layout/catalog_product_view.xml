@@ -99,6 +99,24 @@
                         </arguments>
                     </block>
                 </block>
+                <!-- Related + upsell: native link-based product lists (suppressed
+                     with the core layout). Both extend AbstractProduct, so they
+                     reuse the listing ProductCard (image/add-to-cart helpers) via
+                     the shared card.twig. Rendered by view.twig through child_html. -->
+                <block class="Magento\Catalog\Block\Product\ProductList\Related"
+                       name="catalog.product.related" as="related"
+                       template="Magento_Catalog::product/related.twig">
+                    <arguments>
+                        <argument name="card" xsi:type="object">MageObsidian\Catalog\ViewModel\ProductCard</argument>
+                    </arguments>
+                </block>
+                <block class="Magento\Catalog\Block\Product\ProductList\Upsell"
+                       name="product.info.upsell" as="upsell"
+                       template="Magento_Catalog::product/upsell.twig">
+                    <arguments>
+                        <argument name="card" xsi:type="object">MageObsidian\Catalog\ViewModel\ProductCard</argument>
+                    </arguments>
+                </block>
             </block>
         </referenceContainer>
 
