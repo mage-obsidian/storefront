@@ -24,7 +24,9 @@ const count = computed(() => Number(customerData.section("cart")?.summary_count 
             v-if="count > 0"
             class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 font-mono text-[0.6rem] leading-none text-alabaster"
             aria-hidden="true"
-        >{{ count }}</span>
+        ><!-- Optical nudge: JetBrains Mono's unused descender leaves a single digit
+            sitting ~1px high in the circle; shift the glyph down to center it. -->
+            <span class="translate-y-px">{{ count }}</span></span>
         <span v-else class="h-1.5 w-1.5 rounded-full bg-ash-400" aria-hidden="true"></span>
         <span class="sr-only" role="status" aria-live="polite">{{ count }} {{ label }}</span>
     </span>
