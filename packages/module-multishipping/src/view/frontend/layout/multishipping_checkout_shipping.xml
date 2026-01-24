@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+  Step 2 — pick a shipping method per address. Reuses the native Shipping block
+  (rates per address) behind our Twig; native POST to the shipping controller.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Select Shipping Method</title>
+    </head>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="Magento\Multishipping\Block\Checkout\Shipping" name="checkout_shipping"
+                   template="Magento_Multishipping::checkout/shipping.twig" cacheable="false"/>
+        </referenceContainer>
+    </body>
+</page>

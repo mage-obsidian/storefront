@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+  Step 1 — assign items to shipping addresses. Re-declares the suppressed core
+  handle, reusing the native Addresses block as a data source behind our Twig.
+  The form POSTs to the native controller (works without JS); item info is
+  rendered inline (no renderer-list machinery needed).
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Ship to Multiple Addresses</title>
+    </head>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="Magento\Multishipping\Block\Checkout\Addresses" name="checkout_addresses"
+                   template="Magento_Multishipping::checkout/addresses.twig" cacheable="false"/>
+        </referenceContainer>
+    </body>
+</page>

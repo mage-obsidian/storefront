@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!--
+  Step 5 — confirmation. Reuses the native Success block (per-order ids + ship-to
+  recap) behind our Twig.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Thank you for your purchase</title>
+    </head>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="Magento\Multishipping\Block\Checkout\Success" name="checkout_success"
+                   template="Magento_Multishipping::checkout/success.twig" cacheable="false">
+                <arguments>
+                    <argument name="checkout_data" xsi:type="object">Magento\Multishipping\Block\DataProviders\Success</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

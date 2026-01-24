@@ -1,0 +1,8 @@
+{
+    "name": "mage-obsidian/module-multishipping",
+    "description": "Multishipping (ship to multiple addresses) compatibility for MageObsidian: the multi-address checkout flow rendered with Twig over the native Multishipping blocks.",
+    "require": {"mage-obsidian/module-modern-frontend": "^1"},
+    "type": "magento2-module",
+    "license": ["MIT"],
+    "autoload": {"files": ["src/registration.php"], "psr-4": {"MageObsidian\\Multishipping\\": "src/"}}
+}

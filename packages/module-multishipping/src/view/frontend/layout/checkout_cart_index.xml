@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+  Inject the multishipping cart entry point. Magento_Multishipping's own
+  checkout_cart_index (which adds the link to checkout.cart.methods) is
+  suppressed; this module (opted-in) instead hands the MultishippingLink
+  ViewModel to MageObsidian's bag block, decoupled via referenceBlock so
+  module-checkout never depends on multishipping. The bag Twig renders the
+  "Check Out with Multiple Addresses" link only when the VM allows it.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="obsidian.cart">
+            <arguments>
+                <argument name="multishipping_link" xsi:type="object">MageObsidian\Multishipping\ViewModel\MultishippingLink</argument>
+            </arguments>
+        </referenceBlock>
+    </body>
+</page>

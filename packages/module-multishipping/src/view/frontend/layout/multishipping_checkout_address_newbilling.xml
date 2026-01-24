@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<!-- Multishipping address newbilling form: reuses the migrated customer address form. -->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="multishipping_checkout_customer_address"/>
+</page>

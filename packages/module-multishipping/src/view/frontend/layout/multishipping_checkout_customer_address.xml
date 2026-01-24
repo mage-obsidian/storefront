@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!--
+  Address create/edit during multishipping reuses MageObsidian's migrated customer
+  address form (the Address\Edit block under the account shell). The multishipping
+  Address controllers set the success/back URLs; the form posts natively.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="customer_address_form"/>
+</page>

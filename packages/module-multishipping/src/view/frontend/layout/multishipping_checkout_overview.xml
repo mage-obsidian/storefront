@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+  Step 4 — review and place order. Reuses the native Overview block (per-address
+  items, totals, payment info) behind our Twig; native POST places the orders.
+  The Totals + Payment\Info child blocks are data sources for the recap.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Review Order</title>
+    </head>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="Magento\Multishipping\Block\Checkout\Overview" name="checkout_overview"
+                   template="Magento_Multishipping::checkout/overview.twig" cacheable="false">
+                <arguments>
+                    <argument name="checkout_data" xsi:type="object">Magento\Multishipping\Block\DataProviders\Overview</argument>
+                </arguments>
+                <block class="Magento\Multishipping\Block\Checkout\Payment\Info" name="payment_info">
+                    <action method="setInfoTemplate">
+                        <argument name="method" xsi:type="string"/>
+                        <argument name="template" xsi:type="string"/>
+                    </action>
+                </block>
+                <block class="Magento\Checkout\Block\Cart\Totals" name="totals"/>
+                <container name="checkout.multishipping.overview.items.after" as="items_after" label="Overview Items After"/>
+            </block>
+        </referenceContainer>
+    </body>
+</page>
