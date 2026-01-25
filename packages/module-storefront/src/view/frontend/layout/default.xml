@@ -14,5 +14,19 @@
         <referenceBlock name="report.bugs" remove="true"/>
         <!-- Critical-CSS-path loading spinner: superseded by the Vite asset pipeline. -->
         <referenceBlock name="main_css_preloader" remove="true"/>
+
+        <!-- Header quick-search island. Foundation chrome (present on every page),
+             so it mounts from the storefront layout — the same way the customer
+             domain adds its account menu child. MageObsidian Template child so
+             render_vue is available; the SearchForm ViewModel wraps the native
+             search helper (store-aware URLs + length limits). -->
+        <referenceBlock name="header-content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.search"
+                   as="search" template="Magento_Search::search-form.twig">
+                <arguments>
+                    <argument name="search_form" xsi:type="object">MageObsidian\Storefront\ViewModel\SearchForm</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
     </body>
 </page>
