@@ -25,6 +25,17 @@ interface MagentoError {
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
+// Magento gates session-based customer auth for the Web API behind this header
+// (Magento\Webapi\Model\Plugin\Authorization\CustomerSessionUserContext only
+// honours the customer session on XHR requests). The legacy jQuery checkout got
+// it for free; fetch does not set it, so a logged-in `carts/mine` call would be
+// treated as a guest and rejected with "not authorized to access self".
+const JSON_HEADERS = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
+};
+
 export function createCheckoutApi(config: CheckoutApiConfig) {
     const { restBaseUrl = '', isLoggedIn = false, maskedCartId = '' } = config || {};
     const cartPath = isLoggedIn ? 'carts/mine' : `guest-carts/${maskedCartId}`;
@@ -34,10 +45,7 @@ export function createCheckoutApi(config: CheckoutApiConfig) {
         const response = await fetch(`${restBaseUrl}${cartPath}/${endpoint}`, {
             method,
             credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
-            },
+            headers: JSON_HEADERS,
             body: body === undefined ? undefined : JSON.stringify(body),
         });
 
@@ -53,7 +61,7 @@ export function createCheckoutApi(config: CheckoutApiConfig) {
         const response = await fetch(`${restBaseUrl}${endpoint}`, {
             method,
             credentials: 'same-origin',
-            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            headers: JSON_HEADERS,
             body: body === undefined ? undefined : JSON.stringify(body),
         });
         const payload = await response.json().catch(() => null);

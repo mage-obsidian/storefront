@@ -45,6 +45,26 @@ describe("createCheckoutApi — auth-mode URL resolution", () => {
         expect(init.body).toBeUndefined();
     });
 
+    it("sends the X-Requested-With header so session auth holds for carts/mine", async () => {
+        const fetchMock = mockFetch([]);
+        const api = createCheckoutApi({ restBaseUrl: REST, isLoggedIn: true });
+
+        await api.estimateShippingMethods({ country_id: "US" });
+
+        expect(fetchMock.mock.calls[0][1].headers["X-Requested-With"]).toBe("XMLHttpRequest");
+    });
+
+    it("sends the X-Requested-With header on root (non-cart) endpoints too", async () => {
+        const fetchMock = mockFetch(true);
+        const api = createCheckoutApi({ restBaseUrl: REST, isLoggedIn: false, maskedCartId: "m" });
+
+        await api.isEmailAvailable("buyer@shop.test");
+
+        const [url, init] = fetchMock.mock.calls[0];
+        expect(url).toBe("https://shop.test/rest/default/V1/customers/isEmailAvailable");
+        expect(init.headers["X-Requested-With"]).toBe("XMLHttpRequest");
+    });
+
     it("wraps payloads under their REST envelope key", async () => {
         const fetchMock = mockFetch([]);
         const api = createCheckoutApi({ restBaseUrl: REST, isLoggedIn: false, maskedCartId: "m" });
