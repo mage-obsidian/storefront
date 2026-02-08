@@ -100,6 +100,16 @@ export function useCart() {
     }
 
     /**
+     * Add from a pre-built FormData body — used by the configurable island when
+     * the product also has custom options: it assembles super_attribute plus the
+     * option fields (including file uploads, which need multipart) and posts the
+     * lot. The form key is backfilled by post().
+     */
+    function addRaw(action: string, body: FormData): Promise<boolean> {
+        return post(action, body);
+    }
+
+    /**
      * Change a line item's quantity from the mini-cart, via Magento's native
      * sidebar endpoint (which invalidates the `cart` section; we reload it so the
      * lines, subtotal and badge update reactively). The endpoint URL is provided
@@ -118,7 +128,7 @@ export function useCart() {
         return post(action, toFormData({ item_id: itemId }));
     }
 
-    return { count, addFromForm, addProduct, updateItemQty, removeItem };
+    return { count, addFromForm, addProduct, addRaw, updateItemQty, removeItem };
 }
 
 export default useCart;
