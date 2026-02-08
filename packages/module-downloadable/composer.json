@@ -1,0 +1,19 @@
+{
+    "name": "mage-obsidian/module-downloadable",
+    "description": "Downloadable domain compatibility for MageObsidian: the customer \"My Downloadable Products\" area and purchased-link rendering inside order documents, server-rendered on the account shell.",
+    "require": {
+        "mage-obsidian/module-modern-frontend": "^1"
+    },
+    "type": "magento2-module",
+    "license": [
+        "MIT"
+    ],
+    "autoload": {
+        "files": [
+            "src/registration.php"
+        ],
+        "psr-4": {
+            "MageObsidian\\Downloadable\\": "src/"
+        }
+    }
+}
