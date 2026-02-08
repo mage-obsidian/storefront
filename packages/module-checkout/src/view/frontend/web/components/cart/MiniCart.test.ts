@@ -93,6 +93,29 @@ describe("MiniCart", () => {
         expect(text).toContain("$104.00");
     });
 
+    it("flattens array option values and strips price markup (bundle/downloadable)", async () => {
+        const bundle = {
+            ...ITEM,
+            item_id: 16,
+            product_name: "Sprite Yoga Kit",
+            options: [
+                { label: "Sprite Stasis Ball", value: ['1 x Sprite Stasis Ball <span class="price">$27.00</span>'] },
+                { label: "Downloads", value: ["Episode 1", "Episode 2"] },
+            ],
+        };
+        __setSection("cart", { summary_count: 1, subtotal: "$65.00", items: [bundle] });
+        const trigger = addTrigger();
+        mount(MiniCart, { props: PROPS, attachTo: document.body });
+        trigger.dispatchEvent(new Event("click", { bubbles: true, cancelable: true }));
+        await nextTick();
+
+        const text = document.body.textContent;
+        expect(text).toContain("1 x Sprite Stasis Ball $27.00");
+        expect(text).not.toContain("<span");
+        expect(text).not.toContain('["');
+        expect(text).toContain("Episode 1, Episode 2");
+    });
+
     it("increments quantity via useCart with the sidebar update URL", async () => {
         __setSection("cart", { summary_count: 2, subtotal: "$104.00", items: [ITEM] });
         const trigger = addTrigger();

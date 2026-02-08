@@ -9,6 +9,14 @@ import { useCart } from "MageObsidian_Storefront::js/useCart";
 // and quantity/removal delegate to useCart's native sidebar endpoints. The trigger
 // is the header's [data-minicart-trigger] link: with no JS it navigates to the
 // cart page; here we intercept it to open the drawer instead.
+interface CartItemOption {
+    label: string;
+    // Magento's cart section emits a plain string for configurable/custom options
+    // but an array (one entry per selection) for bundle/downloadable, and bundle
+    // values carry trusted price markup.
+    value: string | string[];
+}
+
 interface CartItem {
     item_id: number | string;
     qty: number | string;
@@ -16,7 +24,7 @@ interface CartItem {
     product_url?: string;
     product_price?: string;
     product_image?: { src?: string; alt?: string };
-    options?: Array<{ label: string; value: string }>;
+    options?: CartItemOption[];
 }
 
 interface CartSection {
@@ -51,6 +59,13 @@ const open = ref(false);
 const busyId = ref<number | string | null>(null);
 
 const drawerId = `minicart-${useId()}`;
+
+// Flatten the option value (array for bundle/downloadable) and drop any price
+// markup to a plain, escaped string — same as the bag page does server-side.
+function optionText(value: string | string[]): string {
+    const joined = Array.isArray(value) ? value.join(", ") : String(value ?? "");
+    return joined.replace(/<[^>]*>/g, "");
+}
 
 async function setQty(item: CartItem, qty: number | string): Promise<void> {
     const next = Math.max(1, Math.trunc(Number(qty) || 0));
@@ -155,7 +170,7 @@ watch(open, (isOpen) => {
                         </a>
                         <ul v-if="item.options && item.options.length" class="text-xs text-ink-soft">
                             <li v-for="option in item.options" :key="option.label">
-                                <span class="text-ash-500">{{ option.label }}:</span> {{ option.value }}
+                                <span class="text-ash-500">{{ option.label }}:</span> {{ optionText(option.value) }}
                             </li>
                         </ul>
 
