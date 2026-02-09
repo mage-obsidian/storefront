@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+  Recent orders on the account dashboard. Adds the core Order\Recent block as the
+  dashboard's `recent_orders` slot (rendered by dashboard.twig's child_html),
+  keeping the widget owned by Sales while the Customer dashboard stays generic.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="account.dashboard">
+            <block class="Magento\Sales\Block\Order\Recent" name="sales.order.recent" as="recent_orders"
+                   template="Magento_Sales::account/dashboard-orders.twig"/>
+        </referenceBlock>
+    </body>
+</page>
