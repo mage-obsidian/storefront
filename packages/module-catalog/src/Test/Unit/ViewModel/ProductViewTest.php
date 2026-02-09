@@ -6,6 +6,7 @@ namespace MageObsidian\Catalog\Test\Unit\ViewModel;
 use Magento\Catalog\Helper\Output as OutputHelper;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Type\AbstractType;
+use Magento\Framework\App\Request\Http as Request;
 use Magento\Framework\Pricing\Amount\AmountInterface;
 use Magento\Framework\Pricing\Price\PriceInterface;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
@@ -37,13 +38,16 @@ class ProductViewTest extends TestCase
     private function viewModel(
         ?Product $product,
         ?OutputHelper $output = null,
-        ?LayoutInterface $layout = null
+        ?LayoutInterface $layout = null,
+        ?Request $request = null
     ): ProductView {
         $registry = $this->createMock(Registry::class);
         $registry->method('registry')->with('current_product')->willReturn($product);
 
         $url = $this->createMock(UrlInterface::class);
-        $url->method('getUrl')->willReturn('https://shop.test/checkout/cart/add');
+        $url->method('getUrl')->willReturnCallback(
+            static fn (string $route): string => "https://shop.test/$route"
+        );
 
         $urlHelper = $this->createMock(UrlHelper::class);
         $urlHelper->method('getEncodedUrl')->willReturn('ENC');
@@ -51,13 +55,19 @@ class ProductViewTest extends TestCase
         $priceCurrency = $this->createMock(PriceCurrencyInterface::class);
         $priceCurrency->method('format')->willReturn('$10.00');
 
+        if ($request === null) {
+            $request = $this->createMock(Request::class);
+            $request->method('getFullActionName')->willReturn('catalog_product_view');
+        }
+
         return new ProductView(
             $registry,
             $output ?? $this->createMock(OutputHelper::class),
             $url,
             $urlHelper,
             $priceCurrency,
-            $layout ?? $this->createMock(LayoutInterface::class)
+            $layout ?? $this->createMock(LayoutInterface::class),
+            $request
         );
     }
 
@@ -192,10 +202,34 @@ class ProductViewTest extends TestCase
             $this->createMock(UrlInterface::class),
             $this->createMock(UrlHelper::class),
             $priceCurrency,
-            $this->createMock(LayoutInterface::class)
+            $this->createMock(LayoutInterface::class),
+            $this->createMock(Request::class)
         );
 
         $this->assertSame('$%s', $view->getCurrencyFormat());
+    }
+
+    public function testConfigureModeSwitchesActionAndLabel(): void
+    {
+        $request = $this->createMock(Request::class);
+        $request->method('getFullActionName')->willReturn('checkout_cart_configure');
+        $request->method('getParam')->with('id')->willReturn('15');
+
+        $view = $this->viewModel($this->product('configurable', true), null, null, $request);
+
+        $this->assertTrue($view->isConfigureMode());
+        $this->assertSame(15, $view->getConfiguredItemId());
+        $this->assertStringContainsString('checkout/cart/updateItemOptions', $view->getAddToCartAction());
+        $this->assertSame('Update Cart', $view->getSubmitLabel());
+    }
+
+    public function testNormalModeUsesAddAction(): void
+    {
+        $view = $this->viewModel($this->product('simple', false));
+
+        $this->assertFalse($view->isConfigureMode());
+        $this->assertStringContainsString('checkout/cart/add', $view->getAddToCartAction());
+        $this->assertSame('Add to cart', $view->getSubmitLabel());
     }
 
     public function testPriceHtmlRendersFinalPriceThroughTheRenderBlock(): void

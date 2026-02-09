@@ -14,6 +14,10 @@ const props = defineProps({
     uenc: { type: String, default: "" },
     initialPrice: { type: String, default: "" },
     initialPriceAmount: { type: [Number, String], default: null },
+    // Saved super-attribute selection (attributeId -> optionId) + qty when the
+    // PDP is opened to reconfigure a cart item; empty on a normal product view.
+    preconfigured: { type: [Object, Array], default: () => ({}) },
+    initialQty: { type: [Number, String], default: 1 },
     labels: { type: Object, default: () => ({}) },
 });
 
@@ -36,8 +40,10 @@ const attributes = valid
     ? Object.values(config.attributes).sort((a, b) => Number(a.position) - Number(b.position))
     : [];
 
-const selected = ref({});
-const qty = ref(1);
+const preselected =
+    props.preconfigured && typeof props.preconfigured === "object" ? { ...props.preconfigured } : {};
+const selected = ref(preselected);
+const qty = ref(Number(props.initialQty) > 0 ? Number(props.initialQty) : 1);
 const adding = ref(false);
 
 const cart = useCart();

@@ -12,6 +12,7 @@ namespace MageObsidian\Catalog\ViewModel;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Helper\Output as OutputHelper;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
+use Magento\Framework\App\Request\Http as Request;
 use Magento\Framework\Pricing\Render as PriceRender;
 use Magento\Framework\Registry;
 use Magento\Framework\Url\Helper\Data as UrlHelper;
@@ -42,6 +43,7 @@ class ProductView implements ArgumentInterface
      * @param UrlHelper $urlHelper
      * @param PriceCurrencyInterface $priceCurrency
      * @param LayoutInterface $layout
+     * @param Request $request
      */
     public function __construct(
         private readonly Registry $registry,
@@ -49,7 +51,8 @@ class ProductView implements ArgumentInterface
         private readonly UrlInterface $url,
         private readonly UrlHelper $urlHelper,
         private readonly PriceCurrencyInterface $priceCurrency,
-        private readonly LayoutInterface $layout
+        private readonly LayoutInterface $layout,
+        private readonly Request $request
     ) {
     }
 
@@ -279,9 +282,84 @@ class ProductView implements ArgumentInterface
     public function getAddToCartAction(): string
     {
         $product = $this->getProduct();
+        if ($this->isConfigureMode()) {
+            return $this->url->getUrl('checkout/cart/updateItemOptions', [
+                'id' => $this->getConfiguredItemId(),
+                'product_id' => $product ? $product->getId() : 0,
+            ]);
+        }
         $params = $product ? ['product' => $product->getId()] : [];
 
         return $this->url->getUrl('checkout/cart/add', $params);
+    }
+
+    /**
+     * Whether the PDP is rendered to reconfigure an existing cart item.
+     *
+     * @return bool
+     */
+    public function isConfigureMode(): bool
+    {
+        return $this->request->getFullActionName() === 'checkout_cart_configure';
+    }
+
+    /**
+     * Quote item id being reconfigured (0 outside configure mode).
+     *
+     * @return int
+     */
+    public function getConfiguredItemId(): int
+    {
+        return (int)$this->request->getParam('id');
+    }
+
+    /**
+     * Submit-button label: "Update Cart" when reconfiguring, else "Add to cart".
+     *
+     * @return string
+     */
+    public function getSubmitLabel(): string
+    {
+        return (string)($this->isConfigureMode() ? __('Update Cart') : __('Add to cart'));
+    }
+
+    /**
+     * Preconfigured super-attribute selection (attributeId => optionId) for a
+     * configurable being reconfigured, so the island can preselect it. Empty on a
+     * normal product view.
+     *
+     * @return array<int|string, int|string>
+     */
+    public function getPreconfiguredSuperAttribute(): array
+    {
+        try {
+            $product = $this->getProduct();
+            if ($product === null) {
+                return [];
+            }
+            $superAttribute = $product->getPreconfiguredValues()->getSuperAttribute();
+
+            return is_array($superAttribute) ? $superAttribute : [];
+        } catch (Throwable) {
+            return [];
+        }
+    }
+
+    /**
+     * Preconfigured quantity for a reconfigured item (1 by default).
+     *
+     * @return float
+     */
+    public function getPreconfiguredQty(): float
+    {
+        try {
+            $product = $this->getProduct();
+            $qty = $product?->getPreconfiguredValues()->getQty();
+
+            return $qty > 0 ? (float)$qty : 1.0;
+        } catch (Throwable) {
+            return 1.0;
+        }
     }
 
     /**
