@@ -27,6 +27,9 @@
         <referenceContainer name="sidebar.main">
             <block class="Magento\LayeredNavigation\Block\Navigation\Search" name="catalogsearch.leftnav"
                    before="-" template="Magento_LayeredNavigation::layer/view.twig">
+                <arguments>
+                    <argument name="swatch_view_model" xsi:type="object">MageObsidian\Catalog\ViewModel\LayeredSwatch</argument>
+                </arguments>
                 <block class="Magento\LayeredNavigation\Block\Navigation\State" name="catalogsearch.navigation.state" as="state"/>
             </block>
         </referenceContainer>
