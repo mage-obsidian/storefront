@@ -41,7 +41,7 @@ class CartItemsTest extends TestCase
 
         $item = $this->getMockBuilder(QuoteItem::class)
             ->disableOriginalConstructor()
-            ->addMethods(['getRowTotalInclTax', 'getRowTotal'])
+            ->addMethods(['getRowTotalInclTax', 'getRowTotal', 'getWeeeTaxAppliedRowAmount'])
             ->onlyMethods(['getItemId', 'getName', 'getQty', 'getCalculationPrice', 'getProduct', 'getProductType'])
             ->getMock();
         $item->method('getItemId')->willReturn(15);
@@ -49,6 +49,7 @@ class CartItemsTest extends TestCase
         $item->method('getQty')->willReturn(2.0);
         $item->method('getCalculationPrice')->willReturn(52.0);
         $item->method('getRowTotalInclTax')->willReturn(104.0);
+        $item->method('getWeeeTaxAppliedRowAmount')->willReturn(0.0);
         $item->method('getProduct')->willReturn($product);
         $item->method('getProductType')->willReturn('configurable');
 
@@ -71,12 +72,37 @@ class CartItemsTest extends TestCase
             'qty' => 2.0,
             'price' => '$52.00',
             'rowTotal' => '$104.00',
+            'fpt' => '',
             'options' => [
                 ['label' => 'Size', 'value' => 'M'],
                 ['label' => 'Color', 'value' => 'Gray'],
             ],
             'configureUrl' => 'https://shop.test/checkout/cart/configure/id/15/product_id/42/',
         ], $rows[0]);
+    }
+
+    public function testExposesFixedProductTaxWhenTheLineCarriesWeee(): void
+    {
+        $product = $this->createMock(Product::class);
+        $product->method('getTypeInstance')->willReturn($this->createMock(AbstractType::class));
+
+        $item = $this->getMockBuilder(QuoteItem::class)
+            ->disableOriginalConstructor()
+            ->addMethods(['getRowTotalInclTax', 'getRowTotal', 'getWeeeTaxAppliedRowAmount'])
+            ->onlyMethods(['getItemId', 'getName', 'getQty', 'getCalculationPrice', 'getProduct', 'getProductType'])
+            ->getMock();
+        $item->method('getItemId')->willReturn(7);
+        $item->method('getName')->willReturn('Strive Shoulder Pack');
+        $item->method('getQty')->willReturn(1.0);
+        $item->method('getCalculationPrice')->willReturn(32.0);
+        $item->method('getRowTotalInclTax')->willReturn(37.0);
+        $item->method('getWeeeTaxAppliedRowAmount')->willReturn(5.0);
+        $item->method('getProduct')->willReturn($product);
+        $item->method('getProductType')->willReturn('simple');
+
+        $rows = $this->viewModel([$item])->getItems();
+
+        $this->assertSame('$5.00', $rows[0]['fpt']);
     }
 
     public function testReturnsEmptyListForAnEmptyCart(): void

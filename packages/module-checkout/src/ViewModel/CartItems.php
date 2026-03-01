@@ -91,6 +91,8 @@ class CartItems implements ArgumentInterface
         // Prefer incl-tax row total when the store collected it; both are already
         // store-currency floats, so PriceCurrency just formats them.
         $rowTotal = $item->getRowTotalInclTax() ?: $item->getRowTotal();
+        // Fixed Product Tax (WEEE) applied to the line, when the store collects it.
+        $fpt = (float)$item->getWeeeTaxAppliedRowAmount();
 
         return [
             'id' => (int)$item->getItemId(),
@@ -100,6 +102,7 @@ class CartItems implements ArgumentInterface
             'qty' => (float)$item->getQty(),
             'price' => (string)$this->priceCurrency->format((float)$item->getCalculationPrice(), false),
             'rowTotal' => (string)$this->priceCurrency->format((float)$rowTotal, false),
+            'fpt' => $fpt > 0 ? (string)$this->priceCurrency->format($fpt, false) : '',
             'options' => $this->options($item),
             'configureUrl' => $this->configureUrl($item),
         ];
