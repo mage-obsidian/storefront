@@ -13,6 +13,9 @@
         <referenceBlock name="account.shell">
             <block class="MageObsidian\ModernFrontend\Block\Template" name="account.order.view"
                    as="account_content" template="Magento_Sales::account/order-view.twig" cacheable="false">
+                <arguments>
+                    <argument name="cancellation" xsi:type="object">Magento\OrderCancellationUi\ViewModel\Config</argument>
+                </arguments>
                 <block class="MageObsidian\Sales\Block\OrderTitle" name="account.order.title"/>
                 <block class="Magento\Sales\Block\Order\View" name="sales.order.view" as="view"/>
                 <block class="Magento\Sales\Block\Order\Items" name="order_items" as="items"/>

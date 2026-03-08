@@ -8,8 +8,13 @@
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
         <referenceBlock name="account.dashboard">
-            <block class="Magento\Sales\Block\Order\Recent" name="sales.order.recent" as="recent_orders"
-                   template="Magento_Sales::account/dashboard-orders.twig"/>
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="sales.order.recent" as="recent_orders"
+                   template="Magento_Sales::account/dashboard-orders.twig">
+                <arguments>
+                    <argument name="cancellation" xsi:type="object">Magento\OrderCancellationUi\ViewModel\Config</argument>
+                </arguments>
+                <block class="Magento\Sales\Block\Order\Recent" name="sales.order.recent.source" as="recent"/>
+            </block>
         </referenceBlock>
     </body>
 </page>
