@@ -346,6 +346,29 @@ class ProductView implements ArgumentInterface
     }
 
     /**
+     * Preconfigured custom-option values (optionId => saved value) for an item
+     * being reconfigured, so the options template can pre-fill them. The value is
+     * a string (text/area), an option-value id or array of ids (select types), or
+     * a date-parts map. Empty on a normal product view.
+     *
+     * @return array<int|string, mixed>
+     */
+    public function getPreconfiguredOptions(): array
+    {
+        try {
+            $product = $this->getProduct();
+            if ($product === null) {
+                return [];
+            }
+            $options = $product->getPreconfiguredValues()->getData('options');
+
+            return is_array($options) ? $options : [];
+        } catch (Throwable) {
+            return [];
+        }
+    }
+
+    /**
      * Preconfigured quantity for a reconfigured item (1 by default).
      *
      * @return float

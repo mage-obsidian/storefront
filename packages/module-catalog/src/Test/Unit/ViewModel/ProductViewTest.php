@@ -7,6 +7,7 @@ use Magento\Catalog\Helper\Output as OutputHelper;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Type\AbstractType;
 use Magento\Framework\App\Request\Http as Request;
+use Magento\Framework\DataObject;
 use Magento\Framework\Pricing\Amount\AmountInterface;
 use Magento\Framework\Pricing\Price\PriceInterface;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
@@ -230,6 +231,27 @@ class ProductViewTest extends TestCase
         $this->assertFalse($view->isConfigureMode());
         $this->assertStringContainsString('checkout/cart/add', $view->getAddToCartAction());
         $this->assertSame('Add to cart', $view->getSubmitLabel());
+    }
+
+    public function testPreconfiguredOptionsReturnsTheSavedOptionMap(): void
+    {
+        $product = $this->product('simple', true);
+        $product->method('getPreconfiguredValues')
+            ->willReturn(new DataObject(['options' => [7 => 'Monogram', 9 => ['1', '2']]]));
+
+        $this->assertSame(
+            [7 => 'Monogram', 9 => ['1', '2']],
+            $this->viewModel($product)->getPreconfiguredOptions()
+        );
+    }
+
+    public function testPreconfiguredOptionsIsEmptyWithoutSavedValues(): void
+    {
+        $product = $this->product('simple', false);
+        $product->method('getPreconfiguredValues')->willReturn(new DataObject());
+
+        $this->assertSame([], $this->viewModel($product)->getPreconfiguredOptions());
+        $this->assertSame([], $this->viewModel(null)->getPreconfiguredOptions());
     }
 
     public function testPriceHtmlRendersFinalPriceThroughTheRenderBlock(): void
