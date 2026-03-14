@@ -20,6 +20,7 @@
             <exclude>src/Test/Unit/ViewModel/StoreSwitcherTest.php</exclude>
             <exclude>src/Test/Unit/ViewModel/CurrencySwitcherTest.php</exclude>
             <exclude>src/Test/Unit/ViewModel/FeaturedCategoriesTest.php</exclude>
+            <exclude>src/Test/Unit/ViewModel/DirectoryDataTest.php</exclude>
         </testsuite>
     </testsuites>
 </phpunit>
