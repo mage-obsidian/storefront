@@ -13,6 +13,7 @@ const CART_HTML = `
       <button type="button" data-cart-step="-1" aria-label="dec">-</button>
       <input type="number" data-cart-qty data-item-id="15" value="2">
       <button type="button" data-cart-step="1" aria-label="inc">+</button>
+      <button type="submit" data-cart-move data-item-id="15" data-move-url="/wishlist/index/fromcart">Move to wish list</button>
       <button type="submit" data-cart-remove data-item-id="15">Remove</button>
     </li>
     <button type="submit" data-cart-update>Update bag</button>
@@ -70,6 +71,19 @@ describe("cart-page enhancer", () => {
             itemId: "15",
             action: "/checkout/sidebar/removeItem",
         });
+    });
+
+    it("moves a line to the wish list via fromcart and reloads cart + wishlist", async () => {
+        const button = document.querySelector("[data-cart-move]");
+        button.dispatchEvent(new Event("click", { bubbles: true, cancelable: true }));
+
+        await vi.waitFor(() => expect(reload.calls.length).toBeGreaterThan(0));
+        const postCall = fetch.mock.calls.find(([url]) => String(url).endsWith("/wishlist/index/fromcart"));
+        expect(postCall).toBeDefined();
+        expect(postCall[1].method).toBe("POST");
+        expect(postCall[1].body.get("item")).toBe("15");
+        expect(postCall[1].body.get("form_key")).toBe("test-form-key");
+        expect(reload.calls.at(-1)).toEqual([["cart", "wishlist"]]);
     });
 
     it("submits the coupon form in place and reloads the cart section", async () => {

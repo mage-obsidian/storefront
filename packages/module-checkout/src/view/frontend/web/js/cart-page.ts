@@ -9,7 +9,7 @@
  * cart region — totals/tax/discount are never recomputed client-side. Delegation
  * on the document means the swapped-in DOM keeps working without re-binding.
  */
-import { useCart } from "MageObsidian_Storefront::js/useCart";
+import { useCart, getFormKey } from "MageObsidian_Storefront::js/useCart";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 import { ensureFormKey } from "MageObsidian_Storefront::js/form-key-provider";
 
@@ -97,8 +97,40 @@ document.addEventListener("click", (event) => {
     if (within(remove)) {
         event.preventDefault();
         run(() => cart.removeItem(remove!.dataset.itemId, endpoints().remove));
+        return;
+    }
+
+    const move = (event.target as HTMLElement | null)?.closest?.<HTMLElement>("[data-cart-move]");
+    if (within(move)) {
+        event.preventDefault();
+        run(() => moveToWishlist(move!.dataset.moveUrl, move!.dataset.itemId));
     }
 });
+
+/**
+ * Move a line to the wish list via the native wishlist/index/fromcart controller
+ * (it removes the cart line and adds the product to the wish list server-side),
+ * then reload both customer-data sections so the cart and the header wish-list
+ * badge stay in sync. The form key is backfilled from the cookie (FPC-safe).
+ */
+async function moveToWishlist(action: string | undefined, itemId: string | undefined): Promise<void> {
+    if (!action || !itemId) {
+        return;
+    }
+    const body = new FormData();
+    body.set("item", itemId);
+    body.set("form_key", getFormKey());
+    try {
+        await fetch(action, {
+            method: "POST",
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+            body,
+            credentials: "same-origin",
+        });
+    } finally {
+        await customerData.reload(["cart", "wishlist"]);
+    }
+}
 
 document.addEventListener("change", (event) => {
     const input = (event.target as HTMLElement | null)?.closest?.<HTMLInputElement>("[data-cart-qty]");

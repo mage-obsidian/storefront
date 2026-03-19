@@ -23,6 +23,10 @@ export function __setResult(value: boolean): void {
     result = value;
 }
 
+export function getFormKey(): string {
+    return "test-form-key";
+}
+
 export function useCart() {
     return {
         count: ref(0),
