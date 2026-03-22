@@ -27,6 +27,12 @@ export default defineConfig({
             "MageObsidian_Storefront::js/address": fileURLToPath(
                 new URL("./src/view/frontend/web/js/address.ts", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/useCart": fileURLToPath(
+                new URL("./src/view/frontend/web/js/useCart.ts", import.meta.url),
+            ),
+            "MageObsidian_Storefront::js/useWishlist": fileURLToPath(
+                new URL("./src/view/frontend/web/js/useWishlist.ts", import.meta.url),
+            ),
         },
     },
     test: {
