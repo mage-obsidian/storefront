@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import GiftMessageForm from "MageObsidian_GiftMessage::components/gift/GiftMessageForm.vue";
+import GiftMessageForm from "MageObsidian_GiftMessage::components/gift/GiftMessageForm";
 import { useGiftMessage, type GiftMessageData, type GiftMessageEndpoint } from "MageObsidian_GiftMessage::js/useGiftMessage";
 
 interface GiftItem {
