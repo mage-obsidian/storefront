@@ -13,4 +13,6 @@
             </argument>
         </arguments>
     </type>
+    <preference for="MageObsidian\Checkout\Api\VaultTokenProviderInterface"
+                type="MageObsidian\Vault\Model\CheckoutVaultTokenProvider"/>
 </config>
