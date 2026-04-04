@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!--
+  All reviews for a product (review/product/list/id/X). Our PDP already renders
+  the full approved-review list plus the submit form inline, so this route simply
+  loads the product-view layout — the reviews section is the same authoritative
+  content (the PDP rating summary links here for a direct/SEO-friendly URL).
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="catalog_product_view"/>
+</page>

@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+  Single review detail (review/product/view/id/X). Standalone (1column, no account
+  shell). Reuses the core Block\View as the data source — product, the review and
+  its per-rating breakdown — rendered by our Twig.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Review Details</title>
+    </head>
+    <body>
+        <referenceContainer name="content">
+            <block class="Magento\Review\Block\View" name="review_view"
+                   template="Magento_Review::review/product-view.twig" ifconfig="catalog/review/active"/>
+        </referenceContainer>
+    </body>
+</page>

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!--
+  Recent reviews on the account dashboard. Adds the core Customer\Recent block as
+  the dashboard's `recent_reviews` slot (rendered by dashboard.twig's child_html),
+  keeping the widget owned by Review while the Customer dashboard stays generic.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="account.dashboard">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="review.customer.recent" as="recent_reviews"
+                   template="Magento_Review::customer/dashboard-reviews.twig" cacheable="false">
+                <block class="Magento\Review\Block\Customer\Recent" name="review.customer.recent.source" as="recent"/>
+            </block>
+        </referenceBlock>
+    </body>
+</page>
