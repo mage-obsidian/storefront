@@ -33,6 +33,9 @@ export default defineConfig({
             "MageObsidian_Storefront::js/useWishlist": fileURLToPath(
                 new URL("./src/view/frontend/web/js/useWishlist.ts", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/useCompare": fileURLToPath(
+                new URL("./src/view/frontend/web/js/useCompare.ts", import.meta.url),
+            ),
         },
     },
     test: {
