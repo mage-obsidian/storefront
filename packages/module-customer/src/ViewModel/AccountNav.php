@@ -15,51 +15,57 @@ use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
 
 /**
- * The account sidebar links. Magento's native Account\Navigation sources its
- * links from other modules' layout contributions, which the engine suppresses —
- * so this rebuilds the canonical set from native routes and flags the active one
- * by the current full action name.
+ * Account sidebar links, injected via di.xml so domain modules (reviews, wishlist)
+ * can contribute an entry without this module knowing about them — the engine
+ * suppresses Magento's native Account\Navigation, their usual layout channel.
  */
 class AccountNav implements ArgumentInterface
 {
-    /** @var array<int, array{id: string, route: string, match: string}> */
-    private const LINKS = [
-        ['id' => 'dashboard', 'route' => 'customer/account', 'match' => 'customer_account_index'],
-        ['id' => 'orders', 'route' => 'sales/order/history', 'match' => 'sales_order'],
-        ['id' => 'address', 'route' => 'customer/address', 'match' => 'customer_address'],
-        ['id' => 'edit', 'route' => 'customer/account/edit', 'match' => 'customer_account_edit'],
-        ['id' => 'newsletter', 'route' => 'newsletter/manage', 'match' => 'newsletter_manage'],
-    ];
-
     /**
      * @param UrlInterface $url
      * @param Http $request
+     * @param array $links Account-nav link defs keyed by id (route/match/label/sortOrder)
      */
     public function __construct(
         private readonly UrlInterface $url,
-        private readonly Http $request
+        private readonly Http $request,
+        private readonly array $links = []
     ) {
     }
 
     /**
-     * The sidebar links, each flagged active when it matches the current page.
+     * The sidebar links, sorted and each flagged active for the current page.
      *
-     * @return array<int, array{id: string, url: string, active: bool}>
+     * @return array<int, array<string, mixed>>
      */
     public function getLinks(): array
     {
         $current = (string)$this->request->getFullActionName();
 
-        $links = [];
-        foreach (self::LINKS as $link) {
-            $links[] = [
-                'id' => $link['id'],
+        $items = [];
+        foreach ($this->links as $id => $link) {
+            if (empty($link['route'])) {
+                continue;
+            }
+            $items[] = [
+                'id' => (string)$id,
                 'url' => $this->url->getUrl($link['route']),
-                'active' => str_starts_with($current, $link['match']),
+                'active' => str_starts_with($current, (string)($link['match'] ?? '')),
+                'label' => (string)($link['label'] ?? $id),
+                'sortOrder' => (int)($link['sortOrder'] ?? 0),
             ];
         }
+        usort($items, static fn (array $a, array $b): int => $a['sortOrder'] <=> $b['sortOrder']);
 
-        return $links;
+        return array_map(
+            static fn (array $item): array => [
+                'id' => $item['id'],
+                'url' => $item['url'],
+                'active' => $item['active'],
+                'label' => $item['label'],
+            ],
+            $items
+        );
     }
 
     /**

@@ -9,11 +9,18 @@ use MageObsidian\Customer\ViewModel\AccountNav;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The account sidebar links. We assert the canonical set and that the link
- * matching the current full action name is flagged active.
+ * The account sidebar links come from di.xml; we assert injected links are sorted,
+ * carry their label/url, and that the one matching the current full action name is
+ * flagged active.
  */
 class AccountNavTest extends TestCase
 {
+    private const LINKS = [
+        'dashboard' => ['route' => 'customer/account', 'match' => 'customer_account_index', 'label' => 'Dashboard', 'sortOrder' => 10],
+        'orders' => ['route' => 'sales/order/history', 'match' => 'sales_order', 'label' => 'My Orders', 'sortOrder' => 20],
+        'edit' => ['route' => 'customer/account/edit', 'match' => 'customer_account_edit', 'label' => 'Account Information', 'sortOrder' => 40],
+    ];
+
     protected function setUp(): void
     {
         if (!class_exists(Http::class)) {
@@ -21,7 +28,7 @@ class AccountNavTest extends TestCase
         }
     }
 
-    private function buildViewModel(string $fullActionName): AccountNav
+    private function buildViewModel(string $fullActionName, ?array $links = null): AccountNav
     {
         $url = $this->createMock(UrlInterface::class);
         $url->method('getUrl')->willReturnCallback(static fn (string $route): string => '/' . $route);
@@ -29,16 +36,37 @@ class AccountNavTest extends TestCase
         $request = $this->createMock(Http::class);
         $request->method('getFullActionName')->willReturn($fullActionName);
 
-        return new AccountNav($url, $request);
+        return new AccountNav($url, $request, $links ?? self::LINKS);
     }
 
-    public function testReturnsCanonicalLinkSet(): void
+    public function testReturnsInjectedLinksWithUrlAndLabel(): void
     {
         $links = $this->buildViewModel('customer_account_index')->getLinks();
         $ids = array_column($links, 'id');
 
-        $this->assertSame(['dashboard', 'orders', 'address', 'edit', 'newsletter'], $ids);
+        $this->assertSame(['dashboard', 'orders', 'edit'], $ids);
         $this->assertSame('/customer/account', $links[0]['url']);
+        $this->assertSame('Dashboard', $links[0]['label']);
+    }
+
+    public function testSortsLinksBySortOrder(): void
+    {
+        $links = $this->buildViewModel('cms_index_index', [
+            'edit' => ['route' => 'customer/account/edit', 'match' => 'customer_account_edit', 'label' => 'Edit', 'sortOrder' => 40],
+            'dashboard' => ['route' => 'customer/account', 'match' => 'customer_account_index', 'label' => 'Dashboard', 'sortOrder' => 10],
+        ])->getLinks();
+
+        $this->assertSame(['dashboard', 'edit'], array_column($links, 'id'));
+    }
+
+    public function testSkipsLinksWithoutARoute(): void
+    {
+        $links = $this->buildViewModel('cms_index_index', [
+            'broken' => ['match' => 'x', 'label' => 'Broken'],
+            'dashboard' => ['route' => 'customer/account', 'match' => 'customer_account_index', 'label' => 'Dashboard'],
+        ])->getLinks();
+
+        $this->assertSame(['dashboard'], array_column($links, 'id'));
     }
 
     public function testFlagsTheActiveLinkByFullActionName(): void
