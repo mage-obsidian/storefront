@@ -79,7 +79,7 @@ describe("createCheckoutApi — auth-mode URL resolution", () => {
             "https://shop.test/rest/default/V1/guest-carts/m/totals-information"
         );
         expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({
-            totalsInformation: { address: {}, shipping_method_code: "flatrate" },
+            addressInformation: { address: {}, shipping_method_code: "flatrate" },
         });
     });
 });

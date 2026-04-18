@@ -84,9 +84,14 @@ export function createCheckoutApi(config: CheckoutApiConfig) {
             }
             return rootRequest('POST', 'customers/isEmailAvailable', body) as Promise<boolean>;
         },
-        /** Recalculate totals for a shipping address + method selection. */
-        setTotalsInformation(totalsInformation: unknown) {
-            return request('POST', 'totals-information', { totalsInformation });
+        /**
+         * Recalculate totals for a shipping address + method selection. The REST
+         * envelope key is `addressInformation` (the name of the
+         * TotalsInformationManagementInterface::calculate param), NOT
+         * `totalsInformation` — a mismatch yields a 400.
+         */
+        setTotalsInformation(addressInformation: unknown) {
+            return request('POST', 'totals-information', { addressInformation });
         },
         /** Available shipping methods (rates) for an address. */
         estimateShippingMethods(address: unknown) {
