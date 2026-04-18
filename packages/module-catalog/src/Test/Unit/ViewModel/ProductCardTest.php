@@ -35,7 +35,7 @@ class ProductCardTest extends TestCase
         );
     }
 
-    private function product(bool $saleable, bool $canConfigure): Product
+    private function product(bool $saleable, bool $canConfigure, string $requiredOptions = '0'): Product
     {
         $type = $this->createMock(AbstractType::class);
         $type->method('canConfigure')->willReturn($canConfigure);
@@ -43,6 +43,7 @@ class ProductCardTest extends TestCase
         $product = $this->createMock(Product::class);
         $product->method('isSaleable')->willReturn($saleable);
         $product->method('getTypeInstance')->willReturn($type);
+        $product->method('getData')->with('required_options')->willReturn($requiredOptions);
 
         return $product;
     }
@@ -64,6 +65,14 @@ class ProductCardTest extends TestCase
     public function testOutOfStockProductIsNotQuickAdd(): void
     {
         $this->assertFalse($this->card()->isQuickAdd($this->product(false, false)));
+    }
+
+    public function testSimpleWithRequiredOptionsIsNotQuickAddOnListing(): void
+    {
+        // On a listing the collection has no options loaded, so canConfigure() is
+        // false; the required_options flag (in the default listing select) is what
+        // keeps the broken quick-add off the card.
+        $this->assertFalse($this->card()->isQuickAdd($this->product(true, false, '1')));
     }
 
     public function testAddToCartPostParamsBuildActionAndData(): void

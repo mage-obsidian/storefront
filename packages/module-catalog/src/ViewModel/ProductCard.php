@@ -78,6 +78,13 @@ class ProductCard implements ArgumentInterface
      * true for composite types and options-bearing products, false for plain
      * simple/virtual.
      *
+     * canConfigure() alone is not enough on a LISTING: collection products don't
+     * have their custom options loaded, so a simple product with required options
+     * reports canConfigure() === false there and would render a quick-add whose
+     * POST fails (required options missing) and bounces to the PDP. The
+     * required_options flag is part of the default listing attribute set, so we
+     * also exclude it.
+     *
      * @param ProductInterface $product
      * @return bool
      */
@@ -85,7 +92,8 @@ class ProductCard implements ArgumentInterface
     {
         try {
             return $product->isSaleable()
-                && !$product->getTypeInstance()->canConfigure($product);
+                && !$product->getTypeInstance()->canConfigure($product)
+                && !$product->getData('required_options');
         } catch (Throwable) {
             return false;
         }
