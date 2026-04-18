@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+  "Advanced Search" footer link. Magento_CatalogSearch's native layout (which adds
+  it) is suppressed, so it is re-added here to give the advanced search form an
+  entry point in the footer — the same pattern as the Orders and Returns link.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="footer_links">
+            <block class="Magento\Framework\View\Element\Html\Link\Current" name="advanced-search-link">
+                <arguments>
+                    <argument name="label" xsi:type="string" translate="true">Advanced Search</argument>
+                    <argument name="path" xsi:type="string">catalogsearch/advanced</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+    </body>
+</page>

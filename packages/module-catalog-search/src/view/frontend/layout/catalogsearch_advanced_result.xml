@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!--
+  Advanced search results. Re-declares the Advanced\Result block (data source for
+  the match count and the human-readable search criteria) plus the search product
+  list, reusing the same ListProduct + toolbar + ProductCard wiring as the normal
+  search results so the grid and pagination work unchanged.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Catalog Advanced Search</title>
+    </head>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="Magento\CatalogSearch\Block\Advanced\Result" name="catalogsearch_advanced_result"
+                   template="Magento_CatalogSearch::advanced/result.twig">
+                <block class="Magento\CatalogSearch\Block\SearchResult\ListProduct" name="search_result_list"
+                       template="Magento_Catalog::product/list.twig">
+                    <arguments>
+                        <argument name="card" xsi:type="object">MageObsidian\Catalog\ViewModel\ProductCard</argument>
+                    </arguments>
+                    <block class="MageObsidian\ModernFrontend\Block\Template" name="advanced.search.item_list"
+                           as="item_list" template="Magento_Catalog::product/item-list.twig"/>
+                    <block class="Magento\Catalog\Block\Product\ProductList\Toolbar" name="product_list_toolbar"
+                           as="toolbar" template="Magento_Catalog::product/list/toolbar.twig">
+                        <block class="Magento\Theme\Block\Html\Pager" name="product_list_toolbar_pager"
+                               template="Magento_Theme::html/pager.twig"/>
+                    </block>
+                    <action method="setToolbarBlockName">
+                        <argument name="name" xsi:type="string">product_list_toolbar</argument>
+                    </action>
+                </block>
+                <action method="setListOrders"/>
+                <action method="setListModes"/>
+                <action method="setListCollection"/>
+            </block>
+        </referenceContainer>
+        <referenceContainer name="before.body.end">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.cart_actions"
+                   template="Magento_Catalog::cart-actions.twig"/>
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.compare_actions"
+                   template="Magento_Catalog::compare-actions.twig"/>
+        </referenceContainer>
+    </body>
+</page>

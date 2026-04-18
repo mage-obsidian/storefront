@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!--
+  Advanced search form. MageObsidian suppresses the core CatalogSearch frontend
+  layout, so we re-declare the Advanced\Form block (kept as the data source for
+  the searchable attributes, labels, input types and the GET post URL) with our
+  Twig. The catalogSearchHelper argument supplies the max query length the form
+  inputs cap at. Native HTML inputs — works with no JS (the legacy form needed a
+  calendar widget + jQuery validation; ours uses native date/number inputs).
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Advanced Search</title>
+    </head>
+    <body>
+        <referenceContainer name="content">
+            <block class="Magento\CatalogSearch\Block\Advanced\Form" name="catalogsearch.advanced.form"
+                   template="Magento_CatalogSearch::advanced/form.twig"/>
+        </referenceContainer>
+    </body>
+</page>
