@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!-- Credit memo email item renderer (default) rendered through Twig. -->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd"
+      design_abstraction="custom">
+    <body>
+        <referenceBlock name="sales.email.order.creditmemo.renderers.default"
+                        template="Magento_Sales::email/items/creditmemo/default.twig"/>
+    </body>
+</page>

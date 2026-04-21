@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!--
+  Render the order confirmation email items through our Twig (the engine is
+  registered by .twig extension, so it works in the email area too). The block
+  classes stay core; only the template changes.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd"
+      design_abstraction="custom">
+    <body>
+        <referenceBlock name="items" template="Magento_Sales::email/items.twig"/>
+    </body>
+</page>

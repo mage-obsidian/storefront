@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!-- Invoice email items rendered through Twig. -->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd"
+      design_abstraction="custom">
+    <body>
+        <referenceBlock name="items" template="Magento_Sales::email/invoice/items.twig"/>
+    </body>
+</page>
