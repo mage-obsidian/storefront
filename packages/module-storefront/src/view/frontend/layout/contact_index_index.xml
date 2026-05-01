@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+  Contact Us page. Magento_Contact's frontend layout is suppressed (module not
+  opted-in), so this storefront module re-declares the form, reusing the native
+  ContactForm block (form action + UserDataProvider prefill) with our Twig. The
+  form POSTs to contact/index/post natively — it works with no JS.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Contact Us</title>
+    </head>
+    <body>
+        <referenceContainer name="content">
+            <block class="Magento\Contact\Block\ContactForm" name="contactForm"
+                   template="Magento_Contact::form.twig"/>
+        </referenceContainer>
+    </body>
+</page>
