@@ -15,6 +15,18 @@
         <!-- Critical-CSS-path loading spinner: superseded by the Vite asset pipeline. -->
         <referenceBlock name="main_css_preloader" remove="true"/>
 
+        <!-- Contact Us footer link. Magento_Contact's layout (which adds it) is
+             suppressed, so it is re-added here to give the contact page an entry
+             point in the footer. -->
+        <referenceBlock name="footer_links">
+            <block class="Magento\Framework\View\Element\Html\Link\Current" name="contact-us-link">
+                <arguments>
+                    <argument name="label" xsi:type="string" translate="true">Contact Us</argument>
+                    <argument name="path" xsi:type="string">contact</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+
         <!-- Header quick-search island. Foundation chrome (present on every page),
              so it mounts from the storefront layout — the same way the customer
              domain adds its account menu child. MageObsidian Template child so
