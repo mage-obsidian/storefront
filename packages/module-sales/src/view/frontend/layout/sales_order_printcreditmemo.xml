@@ -11,6 +11,9 @@
         <referenceContainer name="content">
             <block class="MageObsidian\ModernFrontend\Block\Template" name="sales.order.print.creditmemo"
                    template="Magento_Sales::account/print-creditmemo.twig" cacheable="false">
+                <arguments>
+                    <argument name="item_options" xsi:type="object">MageObsidian\Sales\ViewModel\ItemOptions</argument>
+                </arguments>
                 <block class="MageObsidian\Sales\Block\OrderTitle" name="print.creditmemo.title"/>
                 <block class="Magento\Sales\Block\Order\PrintOrder\Creditmemo"
                        name="sales.order.print.creditmemo.source" as="print"/>

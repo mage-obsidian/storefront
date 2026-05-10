@@ -13,6 +13,7 @@
                 <arguments>
                     <argument name="route_prefix" xsi:type="string">sales/guest</argument>
                     <argument name="is_guest" xsi:type="boolean">true</argument>
+                    <argument name="item_options" xsi:type="object">MageObsidian\Sales\ViewModel\ItemOptions</argument>
                 </arguments>
                 <block class="MageObsidian\Sales\Block\OrderTitle" name="guest.creditmemo.title"/>
                 <block class="Magento\Sales\Block\Order\Creditmemo" name="sales.order.creditmemo" as="creditmemo"/>

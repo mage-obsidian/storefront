@@ -11,6 +11,9 @@
         <referenceContainer name="content">
             <block class="MageObsidian\ModernFrontend\Block\Template" name="sales.order.print.shipment"
                    template="Magento_Sales::account/print-shipment.twig" cacheable="false">
+                <arguments>
+                    <argument name="item_options" xsi:type="object">MageObsidian\Sales\ViewModel\ItemOptions</argument>
+                </arguments>
                 <block class="MageObsidian\Sales\Block\OrderTitle" name="print.shipment.title"/>
                 <block class="Magento\Sales\Block\Order\PrintOrder\Shipment"
                        name="sales.order.print.shipment.source" as="print"/>

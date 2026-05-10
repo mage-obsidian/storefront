@@ -13,6 +13,9 @@
         <referenceContainer name="content">
             <block class="MageObsidian\ModernFrontend\Block\Template" name="sales.order.print"
                    template="Magento_Sales::account/order-view.twig" cacheable="false">
+                <arguments>
+                    <argument name="item_options" xsi:type="object">MageObsidian\Sales\ViewModel\ItemOptions</argument>
+                </arguments>
                 <block class="MageObsidian\Sales\Block\OrderTitle" name="print.order.title"/>
                 <block class="Magento\Sales\Block\Order\View" name="sales.order.view" as="view"/>
                 <block class="Magento\Sales\Block\Order\Items" name="order_items" as="items"/>

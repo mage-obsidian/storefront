@@ -15,6 +15,7 @@
                    as="account_content" template="Magento_Sales::account/order-view.twig" cacheable="false">
                 <arguments>
                     <argument name="cancellation" xsi:type="object">Magento\OrderCancellationUi\ViewModel\Config</argument>
+                    <argument name="item_options" xsi:type="object">MageObsidian\Sales\ViewModel\ItemOptions</argument>
                 </arguments>
                 <block class="MageObsidian\Sales\Block\OrderTitle" name="account.order.title"/>
                 <block class="Magento\Sales\Block\Order\View" name="sales.order.view" as="view"/>

@@ -12,6 +12,9 @@
         <referenceBlock name="account.shell">
             <block class="MageObsidian\ModernFrontend\Block\Template" name="account.order.creditmemo"
                    as="account_content" template="Magento_Sales::account/order-creditmemo.twig" cacheable="false">
+                <arguments>
+                    <argument name="item_options" xsi:type="object">MageObsidian\Sales\ViewModel\ItemOptions</argument>
+                </arguments>
                 <block class="MageObsidian\Sales\Block\OrderTitle" name="account.creditmemo.title"/>
                 <block class="Magento\Sales\Block\Order\Creditmemo" name="sales.order.creditmemo" as="creditmemo"/>
                 <block class="Magento\Sales\Block\Order\Info" name="sales.order.info" as="info"/>

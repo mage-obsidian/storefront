@@ -13,6 +13,9 @@
         <referenceBlock name="account.shell">
             <block class="MageObsidian\ModernFrontend\Block\Template" name="account.order.invoice"
                    as="account_content" template="Magento_Sales::account/order-invoice.twig" cacheable="false">
+                <arguments>
+                    <argument name="item_options" xsi:type="object">MageObsidian\Sales\ViewModel\ItemOptions</argument>
+                </arguments>
                 <block class="MageObsidian\Sales\Block\OrderTitle" name="account.invoice.title"/>
                 <block class="Magento\Sales\Block\Order\Invoice" name="sales.order.invoice" as="invoice"/>
                 <block class="Magento\Sales\Block\Order\Info" name="sales.order.info" as="info"/>
