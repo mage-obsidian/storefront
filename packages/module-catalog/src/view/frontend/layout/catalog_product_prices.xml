@@ -26,6 +26,14 @@
                         <item name="render_class" xsi:type="string">Magento\Catalog\Pricing\Render\FinalPriceBox</item>
                         <item name="render_template" xsi:type="string">Magento_Catalog::product/price/final_price.phtml</item>
                     </item>
+                    <!-- MAP (Minimum Advertised Price). The core Magento_Msrp render is
+                         suppressed with its module; re-declare it so MAP products hide
+                         the price behind "Click for price". The native popup JS
+                         (RequireJS) does not run here — msrp.ts reveals the real price. -->
+                    <item name="msrp_price" xsi:type="array">
+                        <item name="render_class" xsi:type="string">Magento\Msrp\Pricing\Render\PriceBox</item>
+                        <item name="render_template" xsi:type="string">Magento_Msrp::product/price/msrp.phtml</item>
+                    </item>
                     <item name="custom_option_price" xsi:type="array">
                         <item name="amount_render_template" xsi:type="string">Magento_Catalog::product/price/amount/default.phtml</item>
                     </item>
