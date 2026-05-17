@@ -10,8 +10,8 @@
   the structure instead, reusing the core block CLASSES (Totals, Coupon,
   Crosssell) as data sources behind our Twig, with a CartItems ViewModel for the
   lines. Mutations are progressive: native forms POST to the core controllers,
-  enhanced to AJAX by cart-page.js. The shipping estimator (Knockout-heavy) is
-  intentionally deferred to the checkout wave.
+  enhanced to AJAX by cart-page.js. The "Estimate Shipping and Tax" block is a Vue
+  island (ShippingEstimator) seeded from CheckoutConfig + DirectoryData.
 -->
 <page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
@@ -24,6 +24,10 @@
                    template="Magento_Checkout::cart/page.twig" cacheable="false">
                 <arguments>
                     <argument name="cart_items" xsi:type="object">MageObsidian\Checkout\ViewModel\CartItems</argument>
+                    <!-- Server-primed config + directory data for the "Estimate
+                         Shipping and Tax" island (reuses the checkout REST wiring). -->
+                    <argument name="checkout_config" xsi:type="object">MageObsidian\Checkout\ViewModel\CheckoutConfig</argument>
+                    <argument name="directory_data" xsi:type="object">MageObsidian\Storefront\ViewModel\DirectoryData</argument>
                 </arguments>
                 <!-- Cart <h1> + document <title> (the native title wiring is
                      suppressed along with the core module layout). -->
