@@ -42,6 +42,22 @@
                         <item name="render_template" xsi:type="string">Magento_Catalog::product/price/configured_price.phtml</item>
                     </item>
                 </item>
+                <!-- Price adjustment renderers (tax + WEEE/FPT). Magento_Tax and
+                     Magento_Weee contribute these to the suppressed core pool, so
+                     re-declare them here; the WEEE variant routes the tax render
+                     through Weee\Render\TaxAdjustment so both stack correctly. -->
+                <item name="adjustments" xsi:type="array">
+                    <item name="default" xsi:type="array">
+                        <item name="tax" xsi:type="array">
+                            <item name="adjustment_render_class" xsi:type="string">Magento\Weee\Pricing\Render\TaxAdjustment</item>
+                            <item name="adjustment_render_template" xsi:type="string">Magento_Tax::pricing/adjustment.phtml</item>
+                        </item>
+                        <item name="weee" xsi:type="array">
+                            <item name="adjustment_render_class" xsi:type="string">Magento\Weee\Pricing\Render\Adjustment</item>
+                            <item name="adjustment_render_template" xsi:type="string">Magento_Weee::pricing/adjustment.phtml</item>
+                        </item>
+                    </item>
+                </item>
             </argument>
             <!-- Bundle pricing: the From/To range box and the per-selection
                  amounts. Mirrors Magento_Bundle's catalog_product_prices.xml, which
