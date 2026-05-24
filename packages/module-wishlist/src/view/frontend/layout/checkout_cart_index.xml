@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!--
+  Adds the "Move to wish list" action to the cart lines without coupling
+  Magento_Checkout to wish lists: the CartMove ViewModel is attached to the cart
+  block as an argument, read from the shared cart Twig as block.getWishlist().
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="obsidian.cart">
+            <arguments>
+                <argument name="wishlist" xsi:type="object">MageObsidian\Wishlist\ViewModel\CartMove</argument>
+            </arguments>
+        </referenceBlock>
+    </body>
+</page>

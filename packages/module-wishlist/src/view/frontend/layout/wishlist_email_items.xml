@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!--
+  Item list for the "Share Wish List" email. The engine suppresses the core
+  module's own wishlist_email_items handle (Magento_Wishlist ships no
+  compatibility.xml), so we re-declare the wishlist.email.items block the Send
+  controller renders, reusing the core Share\Email\Items class as the data source
+  (item collection, product image, descriptions) behind our Twig. The Twig engine
+  renders in the email flow too, so this drives the {{var items}} of the email.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <block class="Magento\Wishlist\Block\Share\Email\Items" name="wishlist.email.items"
+               template="Magento_Wishlist::email/items.twig" cacheable="false"/>
+    </body>
+</page>
