@@ -14,6 +14,7 @@
                     <argument name="route_prefix" xsi:type="string">sales/guest</argument>
                     <argument name="is_guest" xsi:type="boolean">true</argument>
                     <argument name="item_options" xsi:type="object">MageObsidian\Sales\ViewModel\ItemOptions</argument>
+                    <argument name="tax_breakdown" xsi:type="object">MageObsidian\Sales\ViewModel\TaxBreakdown</argument>
                 </arguments>
                 <block class="MageObsidian\Sales\Block\OrderTitle" name="guest.invoice.title"/>
                 <block class="Magento\Sales\Block\Order\Invoice" name="sales.order.invoice" as="invoice"/>

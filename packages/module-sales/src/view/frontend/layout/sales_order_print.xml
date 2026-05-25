@@ -20,7 +20,11 @@
                 <block class="Magento\Sales\Block\Order\View" name="sales.order.view" as="view"/>
                 <block class="Magento\Sales\Block\Order\Items" name="order_items" as="items"/>
                 <block class="Magento\Sales\Block\Order\Totals" name="order_totals" as="totals"
-                       template="Magento_Sales::account/order-totals.twig"/>
+                       template="Magento_Sales::account/order-totals.twig">
+                    <arguments>
+                        <argument name="tax_breakdown" xsi:type="object">MageObsidian\Sales\ViewModel\TaxBreakdown</argument>
+                    </arguments>
+                </block>
                 <block class="Magento\Sales\Block\Order\Info" name="sales.order.info" as="info"/>
             </block>
         </referenceContainer>

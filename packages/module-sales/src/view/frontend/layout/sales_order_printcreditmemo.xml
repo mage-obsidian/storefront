@@ -13,6 +13,7 @@
                    template="Magento_Sales::account/print-creditmemo.twig" cacheable="false">
                 <arguments>
                     <argument name="item_options" xsi:type="object">MageObsidian\Sales\ViewModel\ItemOptions</argument>
+                    <argument name="tax_breakdown" xsi:type="object">MageObsidian\Sales\ViewModel\TaxBreakdown</argument>
                 </arguments>
                 <block class="MageObsidian\Sales\Block\OrderTitle" name="print.creditmemo.title"/>
                 <block class="Magento\Sales\Block\Order\PrintOrder\Creditmemo"
