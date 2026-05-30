@@ -40,5 +40,20 @@
                 </arguments>
             </block>
         </referenceBlock>
+
+        <!-- Cookie-restriction (e-Privacy) consent banner. Magento_Cookie's own
+             default.xml (after.body.start) is suppressed, so it is re-declared
+             here as a MageObsidian Template; the CookieNotice ViewModel self-gates
+             on the restriction-mode flag and the cookie-notice enhancer shows it
+             only when consent is missing. Foundation chrome, present on every
+             page — same home as the header search island. -->
+        <referenceContainer name="after.body.start">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.cookie.notice"
+                   template="Magento_Cookie::html/notices.twig">
+                <arguments>
+                    <argument name="cookie_notice" xsi:type="object">MageObsidian\Storefront\ViewModel\CookieNotice</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
     </body>
 </page>
