@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!--
+  Price-drop and back-in-stock notify links on the PDP. The Alerts ViewModel is
+  injected into the product-view block (read as block.getProductAlert()); it
+  self-gates each link on the native enable flags and product applicability, so
+  Magento_Catalog stays unaware of the feature.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="product.info.main">
+            <arguments>
+                <argument name="product_alert" xsi:type="object">MageObsidian\ProductAlert\ViewModel\Alerts</argument>
+            </arguments>
+        </referenceBlock>
+    </body>
+</page>

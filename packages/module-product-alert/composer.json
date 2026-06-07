@@ -1,0 +1,13 @@
+{
+    "name": "mage-obsidian/module-product-alert",
+    "description": "Product alert compatibility for MageObsidian: price-drop and back-in-stock notify links on the product detail page.",
+    "require": {
+        "mage-obsidian/module-modern-frontend": "^1"
+    },
+    "type": "magento2-module",
+    "license": ["MIT"],
+    "autoload": {
+        "files": ["src/registration.php"],
+        "psr-4": {"MageObsidian\\ProductAlert\\": "src/"}
+    }
+}
