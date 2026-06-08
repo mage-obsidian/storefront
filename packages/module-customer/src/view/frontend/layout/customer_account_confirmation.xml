@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+  Resend account-confirmation email form. The core layout is suppressed; we
+  re-declare the block on the MageObsidian Template and render our Twig. The form
+  POSTs natively to customer/account/confirmation (the controller resends the
+  link).
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Send confirmation link</title>
+    </head>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="accountConfirmation"
+                   template="Magento_Customer::form/confirmation.twig"/>
+        </referenceContainer>
+    </body>
+</page>

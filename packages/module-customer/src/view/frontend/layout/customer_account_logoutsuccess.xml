@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+  Sign-out confirmation page. The core layout is suppressed; we re-declare the
+  block on the MageObsidian Template so the Twig can build the homepage URL. The
+  native JS redirect is replaced with a no-JS <meta refresh> plus a link.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>You are signed out</title>
+    </head>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="customer_logout"
+                   template="Magento_Customer::logout.twig"/>
+        </referenceContainer>
+    </body>
+</page>
