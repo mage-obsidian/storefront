@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
+import { digitNudge } from "MageObsidian_Storefront::js/digitNudge";
 
 withDefaults(defineProps<{ label?: string }>(), { label: "in your wish list" });
 
@@ -18,9 +19,9 @@ const count = computed(() => {
         </svg>
         <span
             v-if="count > 0"
-            class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 font-mono text-[0.6rem] leading-none text-alabaster"
+            class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 font-body text-[0.65rem] font-medium leading-none text-alabaster"
             aria-hidden="true"
-        ><span class="translate-y-px">{{ count }}</span></span>
+        ><span :style="{ translate: digitNudge(count) }">{{ count }}</span></span>
         <span class="sr-only" role="status" aria-live="polite">{{ count }} {{ label }}</span>
     </span>
 </template>

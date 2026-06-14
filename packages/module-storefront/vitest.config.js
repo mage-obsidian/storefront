@@ -36,6 +36,9 @@ export default defineConfig({
             "MageObsidian_Storefront::js/useCompare": fileURLToPath(
                 new URL("./src/view/frontend/web/js/useCompare.ts", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/digitNudge": fileURLToPath(
+                new URL("./src/view/frontend/web/js/digitNudge.ts", import.meta.url),
+            ),
         },
     },
     test: {
