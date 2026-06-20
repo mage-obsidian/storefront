@@ -14,6 +14,9 @@ interface DirectoryData {
 
 interface PaymentLabels {
     methodsHeading?: string;
+    savedCardsHeading?: string;
+    otherMethodsHeading?: string;
+    endingIn?: string;
     billingHeading?: string;
     sameAsShipping?: string;
     noMethods?: string;
@@ -47,9 +50,36 @@ function toReview(): void {
 
 <template>
     <div class="flex flex-col gap-10">
+        <section v-if="checkout.vaultTokens.length > 0" aria-labelledby="saved-cards-heading">
+            <h3 id="saved-cards-heading" class="mb-4 font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">
+                {{ t("savedCardsHeading", "Saved cards") }}
+            </h3>
+            <div class="flex flex-col gap-3" role="radiogroup" :aria-label="t('savedCardsHeading', 'Saved cards')">
+                <label
+                    v-for="token in checkout.vaultTokens"
+                    :key="token.publicHash"
+                    class="flex cursor-pointer items-center justify-between gap-3 rounded-edge border px-4 py-3 transition-colors"
+                    :class="checkout.selectedTokenHash === token.publicHash ? 'border-ink bg-alabaster-raised' : 'border-ash-300 hover:border-ink'"
+                >
+                    <span class="flex items-center gap-3 text-sm text-ink">
+                        <input
+                            type="radio"
+                            name="payment-method"
+                            class="h-4 w-4 accent-ink"
+                            :value="`vault:${token.publicHash}`"
+                            :checked="checkout.selectedTokenHash === token.publicHash"
+                            @change="checkout.selectVaultToken(token.publicHash)"
+                        >
+                        {{ token.typeLabel }} {{ t("endingIn", "ending") }} {{ token.last4 }}
+                    </span>
+                    <span class="font-mono text-xs text-ink-soft">{{ token.expiration }}</span>
+                </label>
+            </div>
+        </section>
+
         <section aria-labelledby="payment-methods-heading">
             <h3 id="payment-methods-heading" class="mb-4 font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">
-                {{ t("methodsHeading", "Payment method") }}
+                {{ checkout.vaultTokens.length > 0 ? t("otherMethodsHeading", "Or pay another way") : t("methodsHeading", "Payment method") }}
             </h3>
             <p v-if="checkout.paymentMethods.length === 0" class="font-mono text-sm text-ink-soft">
                 {{ t("noMethods", "No payment methods available.") }}
@@ -59,14 +89,14 @@ function toReview(): void {
                     v-for="method in checkout.paymentMethods"
                     :key="method.code"
                     class="flex cursor-pointer items-center gap-3 rounded-edge border px-4 py-3 transition-colors"
-                    :class="checkout.selectedPayment === method.code ? 'border-ink bg-alabaster-raised' : 'border-ash-300 hover:border-ink'"
+                    :class="checkout.selectedPayment === method.code && checkout.selectedTokenHash === '' ? 'border-ink bg-alabaster-raised' : 'border-ash-300 hover:border-ink'"
                 >
                     <input
                         type="radio"
                         name="payment-method"
                         class="h-4 w-4 accent-ink"
                         :value="method.code"
-                        :checked="checkout.selectedPayment === method.code"
+                        :checked="checkout.selectedPayment === method.code && checkout.selectedTokenHash === ''"
                         @change="checkout.selectPayment(method.code)"
                     >
                     <span class="text-sm text-ink">{{ method.title }}</span>

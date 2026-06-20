@@ -13,6 +13,7 @@ use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
+use MageObsidian\Checkout\Api\VaultTokenProviderInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteIdMaskFactory;
 use Magento\Quote\Model\QuoteIdToMaskedQuoteIdInterface;
@@ -49,6 +50,7 @@ class CheckoutConfig implements ArgumentInterface
      * @param QuoteIdMaskFactory $quoteIdMaskFactory
      * @param QuoteIdMaskResource $quoteIdMaskResource
      * @param CartItems $cartItems
+     * @param VaultTokenProviderInterface $vaultTokenProvider
      */
     public function __construct(
         private readonly CheckoutSession $checkoutSession,
@@ -58,7 +60,8 @@ class CheckoutConfig implements ArgumentInterface
         private readonly QuoteIdToMaskedQuoteIdInterface $quoteIdToMaskedQuoteId,
         private readonly QuoteIdMaskFactory $quoteIdMaskFactory,
         private readonly QuoteIdMaskResource $quoteIdMaskResource,
-        private readonly CartItems $cartItems
+        private readonly CartItems $cartItems,
+        private readonly VaultTokenProviderInterface $vaultTokenProvider
     ) {
     }
 
@@ -115,7 +118,23 @@ class CheckoutConfig implements ArgumentInterface
             'customerEmail' => $isLoggedIn ? $this->customerEmail() : '',
             'currencyFormat' => $this->currencyFormat(),
             'quote' => $this->quoteSummary($quote),
+            'vault' => $this->vaultTokens(),
         ];
+    }
+
+    /**
+     * The customer's saved cards for the payment step (empty without a configured
+     * tokenizing gateway). Never blocks the checkout: failures degrade to none.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function vaultTokens(): array
+    {
+        try {
+            return $this->vaultTokenProvider->getTokens();
+        } catch (Throwable) {
+            return [];
+        }
     }
 
     /**
@@ -214,6 +233,7 @@ class CheckoutConfig implements ArgumentInterface
             'successUrl' => '',
             'customerEmail' => '',
             'quote' => ['items' => [], 'itemCount' => 0, 'subtotal' => '', 'grandTotal' => ''],
+            'vault' => [],
         ];
     }
 }

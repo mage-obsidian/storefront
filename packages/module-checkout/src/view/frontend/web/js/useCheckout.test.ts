@@ -244,6 +244,53 @@ describe("useCheckout — payment, coupon and order", () => {
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
+    const VAULT_TOKEN = {
+        publicHash: "hash-visa",
+        methodCode: "braintree_cc_vault",
+        last4: "1111",
+        type: "VI",
+        typeLabel: "Visa",
+        expiration: "12/2030",
+    };
+
+    it("seeds saved cards from the config and stays empty when none are present", () => {
+        expect(useCheckout().vaultTokens).toEqual([]);
+        setActivePinia(createPinia());
+        const withVault = useCheckout();
+        withVault.init({ ...GUEST_CONFIG, vault: [VAULT_TOKEN] });
+        expect(withVault.vaultTokens).toEqual([VAULT_TOKEN]);
+    });
+
+    it("places the order through the vault method with the token public hash", async () => {
+        Object.defineProperty(window, "location", { value: { assign: vi.fn() }, writable: true });
+        const fetchMock = mockFetch(990099);
+        const checkout = ready();
+        checkout.vaultTokens = [VAULT_TOKEN];
+        checkout.selectVaultToken("hash-visa");
+
+        const orderId = await checkout.placeOrder();
+
+        expect(orderId).toBe(990099);
+        const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+        expect(body.paymentMethod).toEqual({
+            method: "braintree_cc_vault",
+            additional_data: { public_hash: "hash-visa" },
+        });
+    });
+
+    it("falls back to the plain method when the saved card is cleared", async () => {
+        Object.defineProperty(window, "location", { value: { assign: vi.fn() }, writable: true });
+        const fetchMock = mockFetch(1);
+        const checkout = ready();
+        checkout.vaultTokens = [VAULT_TOKEN];
+        checkout.selectVaultToken("hash-visa");
+        checkout.selectPayment("checkmo");
+
+        await checkout.placeOrder();
+
+        expect(JSON.parse(fetchMock.mock.calls[0][1].body).paymentMethod).toEqual({ method: "checkmo" });
+    });
+
     it("surfaces a place-order failure without redirecting", async () => {
         const assign = vi.fn();
         Object.defineProperty(window, "location", { value: { assign }, writable: true });

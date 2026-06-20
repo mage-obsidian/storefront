@@ -36,6 +36,15 @@ export interface PaymentMethod {
     title: string;
 }
 
+export interface VaultToken {
+    publicHash: string;
+    methodCode: string;
+    last4: string;
+    type: string;
+    typeLabel: string;
+    expiration: string;
+}
+
 export interface TotalSegment {
     code: string;
     title: string;
@@ -70,6 +79,8 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const shippingMethods = ref<ShippingMethod[]>([]);
     const selectedMethod = ref<ShippingMethod | null>(null);
     const paymentMethods = ref<PaymentMethod[]>([]);
+    const vaultTokens = ref<VaultToken[]>([]);
+    const selectedTokenHash = ref('');
     const loadingRates = ref(false);
     const savingShipping = ref(false);
     const error = ref('');
@@ -108,6 +119,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         successUrl.value = cfg.successUrl || '';
         shippingAddress.value = emptyAddress(cfg.defaultCountry || '');
         billingAddress.value = emptyAddress(cfg.defaultCountry || '');
+        vaultTokens.value = Array.isArray(cfg.vault) ? (cfg.vault as VaultToken[]) : [];
         api = createCheckoutApi({
             restBaseUrl: cfg.restBaseUrl || '',
             isLoggedIn: isLoggedIn.value,
@@ -218,6 +230,20 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
 
     function selectPayment(code: string): void {
         selectedPayment.value = code;
+        selectedTokenHash.value = '';
+    }
+
+    /**
+     * Pick a saved card. Selecting one routes payment through its vault method and
+     * carries the token's public hash into the order; passing '' clears it back to
+     * the plain method selection.
+     */
+    function selectVaultToken(publicHash: string): void {
+        const token = vaultTokens.value.find((t) => t.publicHash === publicHash);
+        selectedTokenHash.value = token ? publicHash : '';
+        if (token) {
+            selectedPayment.value = token.methodCode;
+        }
     }
 
     async function applyCoupon(code: string): Promise<boolean> {
@@ -273,8 +299,12 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         try {
             const source = sameAsShipping.value ? shippingAddress.value : billingAddress.value;
             const billing = toRestAddress(source, isLoggedIn.value ? {} : { email: email.value });
+            const token = vaultTokens.value.find((t) => t.publicHash === selectedTokenHash.value);
+            const paymentMethod: Record<string, unknown> = token
+                ? { method: token.methodCode, additional_data: { public_hash: token.publicHash } }
+                : { method: selectedPayment.value };
             const payload: Record<string, unknown> = {
-                paymentMethod: { method: selectedPayment.value },
+                paymentMethod,
                 billingAddress: billing,
             };
             if (!isLoggedIn.value) {
@@ -344,6 +374,8 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         selectedMethod,
         selectedMethodKey,
         paymentMethods,
+        vaultTokens,
+        selectedTokenHash,
         loadingRates,
         savingShipping,
         error,
@@ -365,6 +397,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         selectMethod,
         saveShipping,
         selectPayment,
+        selectVaultToken,
         applyCoupon,
         removeCoupon,
         refreshTotals,

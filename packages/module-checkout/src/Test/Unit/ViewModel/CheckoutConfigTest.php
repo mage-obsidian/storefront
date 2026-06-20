@@ -13,6 +13,7 @@ use Magento\Quote\Model\QuoteIdToMaskedQuoteIdInterface;
 use Magento\Quote\Model\ResourceModel\Quote\QuoteIdMask as QuoteIdMaskResource;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
+use MageObsidian\Checkout\Api\VaultTokenProviderInterface;
 use MageObsidian\Checkout\ViewModel\CartItems;
 use MageObsidian\Checkout\ViewModel\CheckoutConfig;
 use PHPUnit\Framework\TestCase;
@@ -44,6 +45,7 @@ class CheckoutConfigTest extends TestCase
         $this->assertSame('$80.00', $config['quote']['subtotal']);
         $this->assertSame('$88.00', $config['quote']['grandTotal']);
         $this->assertSame('$%s', $config['currencyFormat']);
+        $this->assertSame('braintree_cc_vault', $config['vault'][0]['methodCode']);
     }
 
     public function testLoggedInConfigOmitsTheMaskAndCarriesEmail(): void
@@ -101,6 +103,11 @@ class CheckoutConfigTest extends TestCase
             ['id' => 2, 'name' => 'B'],
         ]);
 
+        $vaultTokenProvider = $this->createMock(VaultTokenProviderInterface::class);
+        $vaultTokenProvider->method('getTokens')->willReturn([
+            ['publicHash' => 'h1', 'methodCode' => 'braintree_cc_vault', 'last4' => '1111', 'type' => 'VI', 'typeLabel' => 'Visa', 'expiration' => '12/2030'],
+        ]);
+
         return new CheckoutConfig(
             $checkoutSession,
             $customerSession,
@@ -109,7 +116,8 @@ class CheckoutConfigTest extends TestCase
             $quoteIdToMaskedQuoteId,
             $this->createMock(QuoteIdMaskFactory::class),
             $this->createMock(QuoteIdMaskResource::class),
-            $cartItems
+            $cartItems,
+            $vaultTokenProvider
         );
     }
 }
