@@ -233,6 +233,21 @@ class ProductViewTest extends TestCase
         $this->assertSame('Add to cart', $view->getSubmitLabel());
     }
 
+    public function testWishlistConfigureModeSwitchesActionAndLabel(): void
+    {
+        $request = $this->createMock(Request::class);
+        $request->method('getFullActionName')->willReturn('wishlist_index_configure');
+        $request->method('getParam')->with('id')->willReturn('22');
+
+        $view = $this->viewModel($this->product('configurable', true), null, null, $request);
+
+        $this->assertTrue($view->isConfigureMode());
+        $this->assertTrue($view->isWishlistConfigureMode());
+        $this->assertSame(22, $view->getConfiguredItemId());
+        $this->assertStringContainsString('wishlist/index/updateItemOptions', $view->getAddToCartAction());
+        $this->assertSame('Update Wish List', $view->getSubmitLabel());
+    }
+
     public function testPreconfiguredOptionsReturnsTheSavedOptionMap(): void
     {
         $product = $this->product('simple', true);

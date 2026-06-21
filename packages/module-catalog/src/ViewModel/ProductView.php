@@ -282,6 +282,12 @@ class ProductView implements ArgumentInterface
     public function getAddToCartAction(): string
     {
         $product = $this->getProduct();
+        if ($this->isWishlistConfigureMode()) {
+            return $this->url->getUrl('wishlist/index/updateItemOptions', [
+                'id' => $this->getConfiguredItemId(),
+                'product' => $product ? $product->getId() : 0,
+            ]);
+        }
         if ($this->isConfigureMode()) {
             return $this->url->getUrl('checkout/cart/updateItemOptions', [
                 'id' => $this->getConfiguredItemId(),
@@ -294,17 +300,28 @@ class ProductView implements ArgumentInterface
     }
 
     /**
-     * Whether the PDP is rendered to reconfigure an existing cart item.
+     * Whether the PDP is rendered to reconfigure an existing cart or wish-list item.
      *
      * @return bool
      */
     public function isConfigureMode(): bool
     {
-        return $this->request->getFullActionName() === 'checkout_cart_configure';
+        return $this->request->getFullActionName() === 'checkout_cart_configure'
+            || $this->isWishlistConfigureMode();
     }
 
     /**
-     * Quote item id being reconfigured (0 outside configure mode).
+     * Whether the PDP is rendered to reconfigure a saved wish-list item.
+     *
+     * @return bool
+     */
+    public function isWishlistConfigureMode(): bool
+    {
+        return $this->request->getFullActionName() === 'wishlist_index_configure';
+    }
+
+    /**
+     * Cart/wish-list item id being reconfigured (0 outside configure mode).
      *
      * @return int
      */
@@ -314,12 +331,16 @@ class ProductView implements ArgumentInterface
     }
 
     /**
-     * Submit-button label: "Update Cart" when reconfiguring, else "Add to cart".
+     * Submit-button label for the current mode (update cart / wish list / add).
      *
      * @return string
      */
     public function getSubmitLabel(): string
     {
+        if ($this->isWishlistConfigureMode()) {
+            return (string)__('Update Wish List');
+        }
+
         return (string)($this->isConfigureMode() ? __('Update Cart') : __('Add to cart'));
     }
 
