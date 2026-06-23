@@ -8,9 +8,12 @@
 }
 
 /* Layered navigation: two-column (sidebar + grid) on desktop, a collapsible
-   "Filters" disclosure on mobile. Filters are plain links (server-first). */
+   "Filters" disclosure on mobile. Filters are plain links (server-first).
+   Scoped to :has(.sidebar-main): static / subcategory-landing categories render
+   no sidebar, so without this guard their lone .content collapses into the
+   16rem track while the 1fr track sits empty. */
 @media (min-width: 1024px) {
-    .page-with-filter .columns {
+    .page-with-filter .columns:has(.sidebar-main) {
         display: grid;
         grid-template-columns: 16rem 1fr;
         gap: 2.5rem;
