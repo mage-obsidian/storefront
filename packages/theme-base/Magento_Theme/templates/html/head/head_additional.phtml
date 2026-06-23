@@ -9,6 +9,11 @@ $configViewModel = $block->getConfigProvider();
 ?>
 
 <?= $block->getBlockHtml('critical_css_block'); ?>
+<?php $i18nDictionaryUrl = $block->getI18nRuntimeConfig()['dictionaryUrl'] ?? ''; ?>
+<?php if ($i18nDictionaryUrl): ?>
+    <?php // Starts the i18n dictionary fetch during head parse, off the island bootstrap's import chain. ?>
+    <link rel="preload" as="fetch" href="<?= $block->escapeUrl($i18nDictionaryUrl) ?>" crossorigin="anonymous"/>
+<?php endif; ?>
     <script type="importmap">
         {
             "imports": {
