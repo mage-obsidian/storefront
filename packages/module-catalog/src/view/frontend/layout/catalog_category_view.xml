@@ -38,6 +38,17 @@
             </block>
         </referenceContainer>
         <referenceContainer name="content">
+            <!-- Framework showcase: for a couple of PAGE slots (What's New / Sale)
+                 the CategoryShowcase ViewModel returns a template id and this block
+                 renders marketing sections; for every other category it returns
+                 null and the block renders nothing. MageObsidian Template so the
+                 image()/hero_icon helpers are available in the sections. -->
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.category.showcase"
+                   before="category.title" template="Magento_Catalog::category/showcase.twig">
+                <arguments>
+                    <argument name="showcase" xsi:type="object">MageObsidian\Catalog\ViewModel\CategoryShowcase</argument>
+                </arguments>
+            </block>
             <!-- Category <h1> + document <title> (the native title wiring is
                  suppressed along with the core module layout). Always present so
                  the title is set regardless of display mode. -->

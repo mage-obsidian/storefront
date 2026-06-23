@@ -20,6 +20,7 @@
             <exclude>src/Test/Unit/ViewModel/LayeredSwatchTest.php</exclude>
             <exclude>src/Test/Unit/ViewModel/ProductGalleryTest.php</exclude>
             <exclude>src/Test/Unit/ViewModel/CategoryLandingTest.php</exclude>
+            <exclude>src/Test/Unit/ViewModel/CategoryShowcaseTest.php</exclude>
             <exclude>src/Test/Unit/Block/CategoryTitleTest.php</exclude>
         </testsuite>
     </testsuites>
