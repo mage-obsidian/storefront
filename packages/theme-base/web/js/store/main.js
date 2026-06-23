@@ -1,6 +1,6 @@
 import {defineStore, createPinia} from 'pinia';
 
-const pinia = createPinia(); // Crea la instancia de Pinia
+const pinia = createPinia();
 
 const useMainStore = defineStore('main', {
     state: () => ({
