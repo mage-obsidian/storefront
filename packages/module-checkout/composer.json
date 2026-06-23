@@ -2,7 +2,7 @@
     "name": "mage-obsidian/module-checkout",
     "description": "Checkout domain compatibility for MageObsidian: mini-cart drawer and shopping bag page (Vue islands, layout and ViewModels) built on the storefront foundation.",
     "require": {
-        "mage-obsidian/module-modern-frontend": "^1"
+        "mage-obsidian/module-modern-frontend": "^2.0"
     },
     "type": "magento2-module",
     "license": [
