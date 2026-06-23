@@ -1,0 +1,32 @@
+{
+    "name": "mage-obsidian/theme-base",
+    "description": "MageObsidian base storefront theme: pulls the modern-frontend engine and the full storefront module stack for Luma-level parity.",
+    "type": "magento2-theme",
+    "license": [
+        "MIT"
+    ],
+    "require": {
+        "mage-obsidian/component-modern-frontend": "^2.0",
+        "mage-obsidian/module-catalog": "^2.0",
+        "mage-obsidian/module-catalog-search": "^2.0",
+        "mage-obsidian/module-checkout": "^2.0",
+        "mage-obsidian/module-customer": "^2.0",
+        "mage-obsidian/module-downloadable": "^2.0",
+        "mage-obsidian/module-gift-message": "^2.0",
+        "mage-obsidian/module-instant-purchase": "^2.0",
+        "mage-obsidian/module-multishipping": "^2.0",
+        "mage-obsidian/module-persistent": "^2.0",
+        "mage-obsidian/module-product-alert": "^2.0",
+        "mage-obsidian/module-review": "^2.0",
+        "mage-obsidian/module-sales": "^2.0",
+        "mage-obsidian/module-send-friend": "^2.0",
+        "mage-obsidian/module-storefront": "^2.0",
+        "mage-obsidian/module-vault": "^2.0",
+        "mage-obsidian/module-wishlist": "^2.0"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ]
+    }
+}
