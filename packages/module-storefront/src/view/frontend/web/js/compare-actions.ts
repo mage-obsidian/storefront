@@ -7,12 +7,7 @@
 import { watchEffect } from 'vue';
 import { useCompare } from 'MageObsidian_Storefront::js/useCompare';
 import { ensureFormKey } from 'MageObsidian_Storefront::js/form-key-provider';
-
-declare global {
-    interface Window {
-        __OBSIDIAN_COMPARE_I18N__?: { added?: string; removed?: string; failed?: string };
-    }
-}
+import { i18n } from 'mage-obsidian/runtime/i18nCore.ts';
 
 const TOAST_EVENT = 'obsidian:toast';
 
@@ -47,11 +42,10 @@ function init(): void {
         button?.setAttribute('aria-busy', 'true');
 
         const ok = removing ? await compare.remove(id) : await compare.add(form);
-        const i18n = window.__OBSIDIAN_COMPARE_I18N__ ?? {};
         announce(
             ok
-                ? (removing ? i18n.removed ?? 'Removed from compare' : i18n.added ?? 'Added to compare')
-                : i18n.failed ?? 'Could not update compare',
+                ? (removing ? i18n.$t('Removed from compare') : i18n.$t('Added to compare'))
+                : i18n.$t('Could not update compare'),
             ok ? 'success' : 'error',
         );
         button?.removeAttribute('aria-busy');

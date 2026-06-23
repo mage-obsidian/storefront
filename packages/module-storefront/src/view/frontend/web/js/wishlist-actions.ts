@@ -8,12 +8,7 @@
 import { watchEffect } from 'vue';
 import { useWishlist } from 'MageObsidian_Storefront::js/useWishlist';
 import { ensureFormKey } from 'MageObsidian_Storefront::js/form-key-provider';
-
-declare global {
-    interface Window {
-        __OBSIDIAN_WISHLIST_I18N__?: { added?: string; removed?: string; failed?: string };
-    }
-}
+import { i18n } from 'mage-obsidian/runtime/i18nCore.ts';
 
 const TOAST_EVENT = 'obsidian:toast';
 
@@ -50,11 +45,10 @@ function init(): void {
         button?.setAttribute('aria-busy', 'true');
 
         const ok = removing ? await wishlist.remove(id) : await wishlist.add(form);
-        const i18n = window.__OBSIDIAN_WISHLIST_I18N__ ?? {};
         announce(
             ok
-                ? (removing ? i18n.removed ?? 'Removed from wish list' : i18n.added ?? 'Added to wish list')
-                : i18n.failed ?? 'Could not update wish list',
+                ? (removing ? i18n.$t('Removed from wish list') : i18n.$t('Added to wish list'))
+                : i18n.$t('Could not update wish list'),
             ok ? 'success' : 'error',
         );
         button?.removeAttribute('aria-busy');

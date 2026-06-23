@@ -7,12 +7,7 @@
  */
 import { useCart } from 'MageObsidian_Storefront::js/useCart';
 import { ensureFormKey } from 'MageObsidian_Storefront::js/form-key-provider';
-
-declare global {
-    interface Window {
-        __OBSIDIAN_CART_I18N__?: { added?: string; failed?: string };
-    }
-}
+import { i18n } from 'mage-obsidian/runtime/i18nCore.ts';
 
 const TOAST_EVENT = 'obsidian:toast';
 
@@ -41,8 +36,7 @@ function init(): void {
 
         const ok = await cart.addFromForm(form);
         announce(
-            ok ? window.__OBSIDIAN_CART_I18N__?.added ?? 'Added to cart'
-               : window.__OBSIDIAN_CART_I18N__?.failed ?? 'Could not add to cart',
+            ok ? i18n.$t('Added to cart') : i18n.$t('Could not add to cart'),
             ok ? 'success' : 'error',
         );
 
