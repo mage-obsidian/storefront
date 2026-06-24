@@ -10,11 +10,18 @@
                 class="MageObsidian\ModernFrontend\Block\Template"
                 template="Magento_Theme::html/head/head_additional.phtml"
         >
+            <arguments>
+                <!-- Same ViewModel the critical block uses, so head_additional can
+                     couple the style.css defer to whether critical was inlined. -->
+                <argument name="critical_css" xsi:type="object">
+                    MageObsidian\ModernFrontend\ViewModel\CriticalCss
+                </argument>
+            </arguments>
             <block name="critical_css_block" as="critical_css" template="Magento_Theme::html/head/criticalCss.phtml"
                    ifconfig="dev/css/use_css_critical_path">
                 <arguments>
                     <argument name="criticalCssViewModel" xsi:type="object">
-                        Magento\Theme\Block\Html\Header\CriticalCss
+                        MageObsidian\ModernFrontend\ViewModel\CriticalCss
                     </argument>
                 </arguments>
             </block>

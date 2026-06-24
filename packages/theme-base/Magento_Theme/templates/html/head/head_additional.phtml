@@ -27,9 +27,17 @@ $configViewModel = $block->getConfigProvider();
 <?php
 if ($configViewModel->isHmrEnabled()): ?>
     <script type="module" src="/@vite/client"></script>
-<?php else: ?>
-    <link href="<?= $block->getViewFileUrl($configViewModel->getViteGeneratedPath() . '/css/style.css') ?>"
-          rel="stylesheet"/>
+<?php else:
+    $styleHref = $block->escapeUrl($block->getViewFileUrl($configViewModel->getViteGeneratedPath() . '/css/style.css'));
+    $criticalCss = $block->getCriticalCss();
+    // Defer the sheet only when critical was inlined this request; pages with no
+    // critical keep it render-blocking so there is never a FOUC.
+    if ($criticalCss && $criticalCss->hasCriticalCss()): ?>
+        <link rel="preload" as="style" href="<?= $styleHref ?>" onload="this.onload=null;this.rel='stylesheet'"/>
+        <noscript><link rel="stylesheet" href="<?= $styleHref ?>"/></noscript>
+    <?php else: ?>
+        <link href="<?= $styleHref ?>" rel="stylesheet"/>
+    <?php endif; ?>
 <?php endif; ?>
 
 <?= $block->getChildHtmlWithExclusions(excludedBlocks: ['critical_css_block']); ?>
