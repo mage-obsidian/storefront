@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onBeforeUnmount, nextTick, useId, watch } from "vue";
+import { MagnifyingGlassIcon } from "@heroicons/vue/24/outline";
 
 // Header quick-search. An icon button toggles a panel holding a real
 // <form method="get"> that submits to the native search results URL — so search
@@ -175,9 +176,7 @@ defineExpose({ suggestions, activeIndex, open, fetchSuggestions });
             :aria-expanded="open ? 'true' : 'false'"
             @click="toggle"
         >
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-            </svg>
+            <MagnifyingGlassIcon class="h-5 w-5" />
         </button>
 
         <div
@@ -209,9 +208,7 @@ defineExpose({ suggestions, activeIndex, open, fetchSuggestions });
                     :aria-label="text.submit"
                     class="inline-flex shrink-0 items-center justify-center rounded-edge border border-ink bg-ink p-2 text-alabaster transition-colors hover:bg-transparent hover:text-ink"
                 >
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                    </svg>
+                    <MagnifyingGlassIcon class="h-4 w-4" />
                 </button>
             </form>
 

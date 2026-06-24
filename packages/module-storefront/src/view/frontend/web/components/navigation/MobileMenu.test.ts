@@ -72,6 +72,45 @@ describe("MobileMenu", () => {
         wrapper.unmount();
     });
 
+    it("renders the utility links (wishlist/compare) with their count islands in the drawer", async () => {
+        const wrapper = mount(MobileMenu, {
+            props: {
+                links,
+                label: "Menu",
+                utilities: [
+                    { url: "/wishlist", label: "My Wish List", kind: "wishlist" },
+                    { url: "/catalog/product_compare", label: "Compare Products", kind: "compare" },
+                ],
+            },
+            attachTo: document.body,
+        });
+
+        await wrapper.get("button[aria-haspopup='dialog']").trigger("click");
+
+        const dialog = document.querySelector('[role="dialog"]');
+        const wishlist = dialog.querySelector("a[href='/wishlist']");
+        const compare = dialog.querySelector("a[href='/catalog/product_compare']");
+        expect(wishlist).not.toBeNull();
+        expect(compare).not.toBeNull();
+        expect(wishlist.textContent).toContain("My Wish List");
+        // The reactive count island mounts alongside the label.
+        expect(wishlist.querySelector("svg")).not.toBeNull();
+        expect(compare.querySelector("svg")).not.toBeNull();
+
+        wrapper.unmount();
+    });
+
+    it("omits the utility section when no utilities are provided", async () => {
+        const wrapper = mountMenu();
+
+        await wrapper.get("button[aria-haspopup='dialog']").trigger("click");
+
+        const dialog = document.querySelector('[role="dialog"]');
+        expect(dialog.querySelector("a[href='/wishlist']")).toBeNull();
+
+        wrapper.unmount();
+    });
+
     it("renders the store/currency switchers inline inside the drawer when provided", async () => {
         const wrapper = mount(MobileMenu, {
             props: {

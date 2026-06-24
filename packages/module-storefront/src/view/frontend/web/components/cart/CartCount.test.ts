@@ -18,6 +18,11 @@ describe("CartCount", () => {
         expect(live.text()).toContain("2");
     });
 
+    it("always renders the shopping-bag icon", () => {
+        const wrapper = mount(CartCount);
+        expect(wrapper.find("svg").exists()).toBe(true);
+    });
+
     it("reacts when the cart section updates", async () => {
         const wrapper = mount(CartCount);
 
