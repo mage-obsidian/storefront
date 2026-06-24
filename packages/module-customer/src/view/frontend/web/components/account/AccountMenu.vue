@@ -98,7 +98,7 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, tru
     <a
         v-if="!isLoggedIn"
         :href="loginUrl"
-        class="hidden transition-colors hover:text-ink sm:inline"
+        class="hidden whitespace-nowrap transition-colors hover:text-ink sm:inline"
     >{{ signInLabel }}</a>
 
     <!-- max-sm:hidden (not `hidden sm:block`): in Tailwind v4 the display-utility
