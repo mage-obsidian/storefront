@@ -138,6 +138,35 @@ describe("MobileMenu", () => {
         wrapper.unmount();
     });
 
+    it("defaults the drawer wordmark to OBSIDIAN and renders it as plain text", async () => {
+        const wrapper = mountMenu();
+        await wrapper.get("button[aria-haspopup='dialog']").trigger("click");
+
+        const dialog = document.querySelector('[role="dialog"]');
+        expect(dialog.textContent).toContain("OBSIDIAN");
+        // No homeUrl → the wordmark is a span, not a link.
+        expect(dialog.querySelector("span.font-display").textContent).toBe("OBSIDIAN");
+
+        wrapper.unmount();
+    });
+
+    it("lets a child theme override the brand and links it to homeUrl", async () => {
+        const wrapper = mount(MobileMenu, {
+            props: { links, label: "Menu", brand: "MOTO", homeUrl: "/" },
+            attachTo: document.body,
+        });
+        await wrapper.get("button[aria-haspopup='dialog']").trigger("click");
+
+        const dialog = document.querySelector('[role="dialog"]');
+        const wordmark = dialog.querySelector("a.font-display");
+        expect(wordmark).not.toBeNull();
+        expect(wordmark.getAttribute("href")).toBe("/");
+        expect(wordmark.textContent).toBe("MOTO");
+        expect(dialog.textContent).not.toContain("OBSIDIAN");
+
+        wrapper.unmount();
+    });
+
     it("omits the switcher section when there is only one option", async () => {
         const wrapper = mount(MobileMenu, {
             props: {

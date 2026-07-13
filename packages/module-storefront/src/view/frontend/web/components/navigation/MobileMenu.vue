@@ -39,6 +39,10 @@ withDefaults(
         // Distinct from `label`: the dialog is labelled "Menu", so the inner nav
         // uses its own label to avoid a screen reader announcing "Menu, Menu".
         navLabel?: string;
+        // Wordmark + home link for the drawer header, so a child theme rebrands
+        // by passing props from the twig instead of overriding this component.
+        brand?: string;
+        homeUrl?: string;
         stores?: SwitcherGroup | null;
         currencies?: SwitcherGroup | null;
     }>(),
@@ -47,6 +51,8 @@ withDefaults(
         utilities: () => [],
         label: "Menu",
         navLabel: "Browse",
+        brand: "OBSIDIAN",
+        homeUrl: "",
         stores: null,
         currencies: null,
     },
@@ -77,7 +83,8 @@ const hasSwitcher = (group: SwitcherGroup | null) =>
 
         <Drawer :id="drawerId" :open="open" side="left" :label="label" @close="open = false">
             <div class="flex items-center justify-between border-b border-ash-200 px-5 py-4">
-                <span class="font-display text-xl tracking-[0.16em] text-ink">OBSIDIAN</span>
+                <a v-if="homeUrl" :href="homeUrl" class="font-display text-xl tracking-[0.16em] text-ink">{{ brand }}</a>
+                <span v-else class="font-display text-xl tracking-[0.16em] text-ink">{{ brand }}</span>
                 <button
                     type="button"
                     class="inline-flex h-9 w-9 items-center justify-center text-ink-soft transition-colors hover:text-ink"
