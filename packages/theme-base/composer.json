@@ -20,7 +20,7 @@
         "mage-obsidian/module-review": "^2.0",
         "mage-obsidian/module-sales": "^2.0",
         "mage-obsidian/module-send-friend": "^2.0",
-        "mage-obsidian/module-storefront": "^2.0",
+        "mage-obsidian/module-storefront": "^2.1",
         "mage-obsidian/module-vault": "^2.0",
         "mage-obsidian/module-wishlist": "^2.0"
     },
