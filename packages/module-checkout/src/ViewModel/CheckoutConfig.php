@@ -14,6 +14,8 @@ use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
 use MageObsidian\Checkout\Api\VaultTokenProviderInterface;
+use MageObsidian\ModernFrontend\Model\Config\ConfigProvider;
+use MageObsidian\ModernFrontend\Model\Config\Source\CheckoutLayout;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteIdMaskFactory;
 use Magento\Quote\Model\QuoteIdToMaskedQuoteIdInterface;
@@ -51,6 +53,7 @@ class CheckoutConfig implements ArgumentInterface
      * @param QuoteIdMaskResource $quoteIdMaskResource
      * @param CartItems $cartItems
      * @param VaultTokenProviderInterface $vaultTokenProvider
+     * @param ConfigProvider $configProvider
      */
     public function __construct(
         private readonly CheckoutSession $checkoutSession,
@@ -61,7 +64,8 @@ class CheckoutConfig implements ArgumentInterface
         private readonly QuoteIdMaskFactory $quoteIdMaskFactory,
         private readonly QuoteIdMaskResource $quoteIdMaskResource,
         private readonly CartItems $cartItems,
-        private readonly VaultTokenProviderInterface $vaultTokenProvider
+        private readonly VaultTokenProviderInterface $vaultTokenProvider,
+        private readonly ConfigProvider $configProvider
     ) {
     }
 
@@ -119,6 +123,7 @@ class CheckoutConfig implements ArgumentInterface
             'currencyFormat' => $this->currencyFormat(),
             'quote' => $this->quoteSummary($quote),
             'vault' => $this->vaultTokens(),
+            'layoutMode' => $this->configProvider->getCheckoutLayoutMode(),
         ];
     }
 
@@ -234,6 +239,7 @@ class CheckoutConfig implements ArgumentInterface
             'customerEmail' => '',
             'quote' => ['items' => [], 'itemCount' => 0, 'subtotal' => '', 'grandTotal' => ''],
             'vault' => [],
+            'layoutMode' => CheckoutLayout::STEPPED,
         ];
     }
 }

@@ -68,6 +68,9 @@ ensureSharedPinia();
 
 export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const step = ref('identification');
+    // Presentation layout the island renders with: 'stepped' (the wizard) or
+    // 'onepage'. Domain logic is layout-agnostic; only the components read this.
+    const layout = ref('stepped');
     const isLoggedIn = ref(false);
     const email = ref('');
     const items = ref<CheckoutItem[]>([]);
@@ -110,6 +113,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         seeded = true;
         const cfg = config || {};
         const quote = cfg.quote || {};
+        layout.value = cfg.layoutMode === 'onepage' ? 'onepage' : 'stepped';
         isLoggedIn.value = !!cfg.isLoggedIn;
         email.value = cfg.customerEmail || '';
         items.value = Array.isArray(quote.items) ? quote.items : [];
@@ -361,6 +365,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
 
     return {
         step,
+        layout,
         stepIndex,
         isLoggedIn,
         email,

@@ -28,11 +28,15 @@ const props = withDefaults(
         directory?: DirectoryData;
         labels?: PaymentLabels;
         addressLabels?: Record<string, string>;
+        // One-page mode has a single place-order action, so the per-step
+        // "Review order" advance button is hidden.
+        hideAdvance?: boolean;
     }>(),
     {
         directory: () => ({ countries: [], regions: {}, statesRequired: [], displayAllRegions: false, defaultCountry: "" }),
         labels: () => ({}),
         addressLabels: () => ({}),
+        hideAdvance: false,
     },
 );
 
@@ -125,6 +129,7 @@ function toReview(): void {
         </section>
 
         <button
+            v-if="!hideAdvance"
             type="button"
             :disabled="!checkout.selectedPayment"
             class="inline-flex w-fit items-center justify-center rounded-edge border border-ink bg-ink px-8 py-3 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-alabaster transition-colors hover:bg-transparent hover:text-ink disabled:opacity-50"

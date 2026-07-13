@@ -60,6 +60,9 @@ export default defineConfig({
             "MageObsidian_Checkout::checkout/ReviewStep": fileURLToPath(
                 new URL("./src/view/frontend/web/components/checkout/ReviewStep.vue", import.meta.url),
             ),
+            "MageObsidian_Checkout::checkout/OnePageCheckout": fileURLToPath(
+                new URL("./src/view/frontend/web/components/checkout/OnePageCheckout.vue", import.meta.url),
+            ),
         },
     },
     test: {

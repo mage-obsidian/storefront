@@ -16,6 +16,7 @@ use Magento\Store\Model\StoreManagerInterface;
 use MageObsidian\Checkout\Api\VaultTokenProviderInterface;
 use MageObsidian\Checkout\ViewModel\CartItems;
 use MageObsidian\Checkout\ViewModel\CheckoutConfig;
+use MageObsidian\ModernFrontend\Model\Config\ConfigProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -46,6 +47,14 @@ class CheckoutConfigTest extends TestCase
         $this->assertSame('$88.00', $config['quote']['grandTotal']);
         $this->assertSame('$%s', $config['currencyFormat']);
         $this->assertSame('braintree_cc_vault', $config['vault'][0]['methodCode']);
+        $this->assertSame('stepped', $config['layoutMode']);
+    }
+
+    public function testConfigCarriesTheConfiguredCheckoutLayout(): void
+    {
+        $config = $this->viewModel(isLoggedIn: false, maskedId: 'guestmask123', layoutMode: 'onepage')->getConfig();
+
+        $this->assertSame('onepage', $config['layoutMode']);
     }
 
     public function testLoggedInConfigOmitsTheMaskAndCarriesEmail(): void
@@ -57,7 +66,7 @@ class CheckoutConfigTest extends TestCase
         $this->assertSame('ada@shop.test', $config['customerEmail']);
     }
 
-    private function viewModel(bool $isLoggedIn, string $maskedId): CheckoutConfig
+    private function viewModel(bool $isLoggedIn, string $maskedId, string $layoutMode = 'stepped'): CheckoutConfig
     {
         $quote = $this->getMockBuilder(Quote::class)
             ->disableOriginalConstructor()
@@ -108,6 +117,9 @@ class CheckoutConfigTest extends TestCase
             ['publicHash' => 'h1', 'methodCode' => 'braintree_cc_vault', 'last4' => '1111', 'type' => 'VI', 'typeLabel' => 'Visa', 'expiration' => '12/2030'],
         ]);
 
+        $configProvider = $this->createMock(ConfigProvider::class);
+        $configProvider->method('getCheckoutLayoutMode')->willReturn($layoutMode);
+
         return new CheckoutConfig(
             $checkoutSession,
             $customerSession,
@@ -117,7 +129,8 @@ class CheckoutConfigTest extends TestCase
             $this->createMock(QuoteIdMaskFactory::class),
             $this->createMock(QuoteIdMaskResource::class),
             $cartItems,
-            $vaultTokenProvider
+            $vaultTokenProvider,
+            $configProvider
         );
     }
 }

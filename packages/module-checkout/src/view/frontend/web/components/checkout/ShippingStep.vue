@@ -32,11 +32,15 @@ const props = withDefaults(
         directory?: DirectoryData;
         labels?: ShippingLabels;
         addressLabels?: Record<string, string>;
+        // One-page mode drives rate estimation + shipping-information reactively,
+        // so the manual "show rates" / "continue" buttons are hidden.
+        hideAdvance?: boolean;
     }>(),
     {
         directory: () => ({ countries: [], regions: {}, statesRequired: [], displayAllRegions: false, defaultCountry: "" }),
         labels: () => ({}),
         addressLabels: () => ({}),
+        hideAdvance: false,
     },
 );
 
@@ -82,6 +86,7 @@ async function toPayment(): Promise<void> {
                 :labels="addressLabels"
             />
             <button
+                v-if="!hideAdvance"
                 type="button"
                 :disabled="checkout.loadingRates"
                 class="mt-6 inline-flex w-fit items-center justify-center rounded-edge border border-ink px-6 py-2.5 font-mono text-[0.7rem] uppercase tracking-[0.16em] text-ink transition-colors hover:bg-ink hover:text-alabaster disabled:opacity-50"
@@ -120,6 +125,7 @@ async function toPayment(): Promise<void> {
             </div>
 
             <button
+                v-if="!hideAdvance"
                 type="button"
                 :disabled="checkout.savingShipping || !checkout.selectedMethod"
                 class="mt-8 inline-flex w-fit items-center justify-center rounded-edge border border-ink bg-ink px-8 py-3 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-alabaster transition-colors hover:bg-transparent hover:text-ink disabled:opacity-50"

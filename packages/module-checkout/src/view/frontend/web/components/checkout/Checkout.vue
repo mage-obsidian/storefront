@@ -48,9 +48,12 @@ const IdentificationStep = defineAsyncComponent(
 const ShippingStep = defineAsyncComponent(() => import("MageObsidian_Checkout::checkout/ShippingStep"));
 const PaymentStep = defineAsyncComponent(() => import("MageObsidian_Checkout::checkout/PaymentStep"));
 const ReviewStep = defineAsyncComponent(() => import("MageObsidian_Checkout::checkout/ReviewStep"));
+const OnePageCheckout = defineAsyncComponent(() => import("MageObsidian_Checkout::checkout/OnePageCheckout"));
 
 const checkout = useCheckout();
 checkout.init({ ...props.config, defaultCountry: props.directory.defaultCountry });
+
+const isOnePage = computed(() => checkout.layout === "onepage");
 
 // The checkout server-primes the authoritative quote, so it is the strongest
 // "the cart is exactly this right now" signal there is. Reconcile the shared cart
@@ -78,7 +81,7 @@ const isEmpty = computed(() => checkout.itemCount === 0);
 
 <template>
     <div class="mx-auto w-full max-w-[1320px] px-4 py-10 md:px-8">
-        <ol class="mb-10 flex flex-wrap items-center gap-x-6 gap-y-2" :aria-label="t('steps', 'Checkout steps')">
+        <ol v-if="!isOnePage" class="mb-10 flex flex-wrap items-center gap-x-6 gap-y-2" :aria-label="t('steps', 'Checkout steps')">
             <li
                 v-for="(s, i) in steps"
                 :key="s.key"
@@ -96,7 +99,19 @@ const isEmpty = computed(() => checkout.itemCount === 0);
         </ol>
 
         <div class="grid gap-10 lg:grid-cols-[1fr_360px]">
+            <OnePageCheckout
+                v-if="isOnePage"
+                :directory="directory"
+                :login-url="loginUrl"
+                :labels="labels"
+                :identification-labels="identificationLabels"
+                :shipping-labels="shippingLabels"
+                :payment-labels="paymentLabels"
+                :review-labels="reviewLabels"
+                :address-labels="addressLabels"
+            />
             <section
+                v-else
                 aria-labelledby="checkout-step-heading"
                 class="rounded-edge border border-ash-200 bg-alabaster-raised p-6 md:p-8"
             >

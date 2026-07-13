@@ -45,6 +45,17 @@ describe("useCheckout", () => {
         expect(checkout.step).toBe("identification");
     });
 
+    it("defaults the layout to stepped and reads 'onepage' from config", () => {
+        const stepped = useCheckout();
+        stepped.init(GUEST_CONFIG);
+        expect(stepped.layout).toBe("stepped");
+
+        setActivePinia(createPinia());
+        const onepage = useCheckout();
+        onepage.init({ ...GUEST_CONFIG, layoutMode: "onepage" });
+        expect(onepage.layout).toBe("onepage");
+    });
+
     it("skips the identity step for a known logged-in customer", () => {
         const checkout = useCheckout();
         checkout.init({ ...GUEST_CONFIG, isLoggedIn: true, customerEmail: "ada@shop.test" });

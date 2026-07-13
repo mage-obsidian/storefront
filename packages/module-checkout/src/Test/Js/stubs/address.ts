@@ -45,6 +45,35 @@ export function emptyAddress(countryId = ''): AddressData {
     };
 }
 
+export function missingFields(address: AddressData, regionRequired: boolean): string[] {
+    const missing: string[] = [];
+    if (!address.firstname.trim()) {
+        missing.push('firstname');
+    }
+    if (!address.lastname.trim()) {
+        missing.push('lastname');
+    }
+    if (!(address.street[0] ?? '').trim()) {
+        missing.push('street0');
+    }
+    if (!address.city.trim()) {
+        missing.push('city');
+    }
+    if (!address.postcode.trim()) {
+        missing.push('postcode');
+    }
+    if (!address.countryId.trim()) {
+        missing.push('countryId');
+    }
+    if (regionRequired && !address.region.trim() && !address.regionId) {
+        missing.push('region');
+    }
+    if (!address.telephone.trim()) {
+        missing.push('telephone');
+    }
+    return missing;
+}
+
 export function toRestAddress(address: AddressData, extra: { email?: string } = {}): RestAddress {
     const street = address.street.map((line) => line.trim()).filter((line) => line !== '');
     const rest: RestAddress = {

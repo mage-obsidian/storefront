@@ -21,8 +21,11 @@ const props = withDefaults(
     defineProps<{
         loginUrl?: string;
         labels?: IdentificationLabels;
+        // In one-page mode there is no "Continue" button; the email is committed
+        // on blur so the reactive shipping/payment orchestration can proceed.
+        hideAdvance?: boolean;
     }>(),
-    { loginUrl: "", labels: () => ({}) },
+    { loginUrl: "", labels: () => ({}), hideAdvance: false },
 );
 
 const checkout = useCheckout();
@@ -57,6 +60,19 @@ async function submit(): Promise<void> {
     }
 }
 
+// One-page commit: silently sync a valid email into the store on blur (no error
+// nag mid-typing). Invalid/empty is left for the shopper to finish.
+async function syncEmail(): Promise<void> {
+    const value = email.value.trim();
+    if (!EMAIL_RE.test(value)) {
+        return;
+    }
+    accountExists.value = !(await checkout.checkEmailAvailable(value));
+    if (!accountExists.value) {
+        checkout.setEmail(value);
+    }
+}
+
 defineExpose({ submit });
 </script>
 
@@ -76,6 +92,7 @@ defineExpose({ submit });
                 :aria-invalid="emailError ? 'true' : undefined"
                 :aria-describedby="emailError ? 'checkout-email-error' : undefined"
                 class="rounded-edge border border-ash-300 bg-transparent px-3 py-2.5 font-mono text-sm text-ink focus:border-ink focus:outline-none"
+                @blur="hideAdvance ? syncEmail() : undefined"
             >
             <p v-if="emailError" id="checkout-email-error" role="alert" class="font-mono text-[0.66rem] text-sale">{{ emailError }}</p>
         </div>
@@ -86,6 +103,7 @@ defineExpose({ submit });
         </p>
 
         <button
+            v-if="!hideAdvance"
             type="submit"
             :disabled="checking"
             class="inline-flex w-fit items-center justify-center rounded-edge border border-ink bg-ink px-8 py-3 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-alabaster transition-colors hover:bg-transparent hover:text-ink disabled:opacity-50"
