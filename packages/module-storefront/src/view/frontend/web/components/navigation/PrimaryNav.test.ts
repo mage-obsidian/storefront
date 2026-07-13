@@ -35,6 +35,13 @@ describe("PrimaryNav — everything fits", () => {
         // Layout sizes are 0 in happy-dom → all fit → More stays hidden.
         expect(wrapper.get("button").isVisible()).toBe(false);
 
+        // Steady state must not clip the x axis, or absolute dropdowns/flyouts
+        // wider than the bar would be cut off; the clip only guards the measuring
+        // pass. (BUG 2)
+        const navClass = wrapper.get("nav").classes();
+        expect(navClass).toContain("overflow-x-visible");
+        expect(navClass).not.toContain("overflow-x-clip");
+
         wrapper.unmount();
     });
 });
@@ -90,6 +97,55 @@ describe("PrimaryNav — overflow into the More disclosure", () => {
         await trigger.trigger("keydown", { key: "Escape" });
         expect(trigger.attributes("aria-expanded")).toBe("false");
         expect(document.activeElement).toBe(trigger.element);
+
+        wrapper.unmount();
+    });
+});
+
+describe("PrimaryNav — subcategory flyouts", () => {
+    const withChildren = [
+        {
+            label: "MOTOR",
+            url: "/motor",
+            children: [
+                { label: "OIL", url: "/motor/oil" },
+                { label: "BELTS", url: "/motor/belts" },
+            ],
+        },
+        { label: "FRENOS", url: "/frenos" },
+    ];
+
+    it("renders a parent with a submenu affordance and reveals its children on hover", async () => {
+        const wrapper = mount(PrimaryNav, { props: { links: withChildren }, attachTo: document.body });
+        await flushPromises();
+
+        const parent = wrapper.get("a[href='/motor']");
+        expect(parent.attributes("aria-haspopup")).toBe("true");
+        expect(parent.attributes("aria-expanded")).toBe("false");
+        // A plain link stays a plain link.
+        expect(wrapper.get("a[href='/frenos']").attributes("aria-haspopup")).toBeUndefined();
+
+        const flyout = parent.element.closest("[data-nav-item]") as HTMLElement;
+        await wrapper.get("[data-nav-item]:first-child").trigger("mouseenter");
+        expect(parent.attributes("aria-expanded")).toBe("true");
+        expect(flyout.querySelector("a[href='/motor/oil']")).not.toBeNull();
+
+        await wrapper.get("[data-nav-item]:first-child").trigger("mouseleave");
+        expect(parent.attributes("aria-expanded")).toBe("false");
+
+        wrapper.unmount();
+    });
+
+    it("opens on keyboard focus and closes on Escape", async () => {
+        const wrapper = mount(PrimaryNav, { props: { links: withChildren }, attachTo: document.body });
+        await flushPromises();
+
+        const parentWrap = wrapper.get("[data-nav-item]:first-child");
+        await parentWrap.trigger("focusin");
+        expect(wrapper.get("a[href='/motor']").attributes("aria-expanded")).toBe("true");
+
+        await parentWrap.trigger("keydown", { key: "Escape" });
+        expect(wrapper.get("a[href='/motor']").attributes("aria-expanded")).toBe("false");
 
         wrapper.unmount();
     });

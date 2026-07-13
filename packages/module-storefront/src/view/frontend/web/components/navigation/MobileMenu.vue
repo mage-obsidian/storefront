@@ -3,6 +3,7 @@ import { ref, useId } from "vue";
 import { Bars3Icon, XMarkIcon } from "@heroicons/vue/24/outline";
 import Drawer from "MageObsidian_Storefront::elements/Drawer";
 import Switcher from "MageObsidian_Storefront::navigation/Switcher";
+import NavAccordion from "MageObsidian_Storefront::navigation/NavAccordion";
 import WishlistCount from "MageObsidian_Storefront::wishlist/WishlistCount";
 import CompareCount from "MageObsidian_Storefront::compare/CompareCount";
 
@@ -17,6 +18,7 @@ import CompareCount from "MageObsidian_Storefront::compare/CompareCount";
 interface NavLink {
     label: string;
     url: string;
+    children?: NavLink[];
 }
 
 interface UtilityLink {
@@ -95,15 +97,8 @@ const hasSwitcher = (group: SwitcherGroup | null) =>
                 </button>
             </div>
 
-            <nav class="flex flex-col px-2 py-4" :aria-label="navLabel">
-                <a
-                    v-for="link in links"
-                    :key="link.label"
-                    :href="link.url"
-                    class="rounded-edge px-3 py-3 font-mono text-[0.8rem] uppercase tracking-[0.16em] text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
-                >
-                    {{ link.label }}
-                </a>
+            <nav class="px-2 py-4" :aria-label="navLabel">
+                <NavAccordion :items="links" />
             </nav>
 
             <nav v-if="utilities.length" class="flex flex-col border-t border-ash-200 px-2 py-4" :aria-label="label">

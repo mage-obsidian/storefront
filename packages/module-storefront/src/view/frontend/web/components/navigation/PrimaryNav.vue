@@ -12,6 +12,7 @@ interface NavLink {
     label: string;
     url: string;
     active?: boolean;
+    children?: NavLink[];
 }
 
 const props = withDefaults(
@@ -99,6 +100,45 @@ const close = (returnFocus = true): void => {
 
 const toggle = (): void => (open.value ? close(false) : openPanel());
 
+// Subcategory flyouts (only for items that carry `children`). Hover and keyboard
+// focus open the panel; because the panel is a child of the wrapper, mouseleave
+// fires only when the pointer leaves both, so no close timer is needed. A plain
+// tap on the parent link (touch, no hover) still navigates to the category — the
+// progressive fallback.
+const flyoutIndex = ref<number | null>(null);
+// After Escape we refocus the parent link, which re-fires focusin; this guard
+// keeps that from reopening the panel until focus actually leaves the item.
+const flyoutSuppressed = ref(false);
+
+const openFlyout = (index: number): void => {
+    if (!measuring.value && !flyoutSuppressed.value) {
+        flyoutIndex.value = index;
+    }
+};
+
+const hoverFlyout = (index: number): void => {
+    flyoutSuppressed.value = false;
+    openFlyout(index);
+};
+
+const closeFlyout = (): void => {
+    flyoutIndex.value = null;
+};
+
+const onFlyoutFocusOut = (event: FocusEvent): void => {
+    const wrapper = event.currentTarget as HTMLElement;
+    if (!wrapper.contains(event.relatedTarget as Node | null)) {
+        closeFlyout();
+        flyoutSuppressed.value = false;
+    }
+};
+
+const onFlyoutEscape = (event: KeyboardEvent): void => {
+    closeFlyout();
+    flyoutSuppressed.value = true;
+    (event.currentTarget as HTMLElement).querySelector("a")?.focus();
+};
+
 onMounted(async () => {
     // Measure with the real (mono) font so widths are not read against a
     // fallback; `document.fonts` is absent in some test DOMs, hence optional.
@@ -129,20 +169,75 @@ onBeforeUnmount(() => {
 <template>
     <nav
         ref="navEl"
-        class="flex min-w-0 items-center gap-6 overflow-x-clip overflow-y-visible xl:gap-8"
+        class="flex min-w-0 items-center gap-6 overflow-y-visible xl:gap-8"
+        :class="measuring ? 'overflow-x-clip' : 'overflow-x-visible'"
         :aria-label="label"
     >
-        <a
-            v-for="(link, i) in links"
-            v-show="measuring || i < visibleCount"
-            :key="link.label"
-            data-nav-item
-            :href="link.url"
-            :aria-current="link.active ? 'page' : null"
-            class="whitespace-nowrap font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft transition-colors hover:text-ink"
-        >
-            {{ link.label }}
-        </a>
+        <template v-for="(link, i) in links" :key="link.label">
+            <a
+                v-if="!link.children || !link.children.length"
+                v-show="measuring || i < visibleCount"
+                data-nav-item
+                :href="link.url"
+                :aria-current="link.active ? 'page' : null"
+                class="whitespace-nowrap font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft transition-colors hover:text-ink"
+            >
+                {{ link.label }}
+            </a>
+
+            <div
+                v-else
+                v-show="measuring || i < visibleCount"
+                data-nav-item
+                class="relative"
+                @mouseenter="hoverFlyout(i)"
+                @mouseleave="closeFlyout()"
+                @focusin="openFlyout(i)"
+                @focusout="onFlyoutFocusOut($event)"
+                @keydown.escape="onFlyoutEscape($event)"
+            >
+                <a
+                    :href="link.url"
+                    :aria-current="link.active ? 'page' : null"
+                    aria-haspopup="true"
+                    :aria-expanded="flyoutIndex === i ? 'true' : 'false'"
+                    class="inline-flex items-center gap-1 whitespace-nowrap font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft transition-colors hover:text-ink"
+                >
+                    {{ link.label }}
+                    <ChevronDownIcon
+                        class="h-3 w-3 transition-transform"
+                        :class="flyoutIndex === i ? 'rotate-180' : ''"
+                        aria-hidden="true"
+                    />
+                </a>
+
+                <ul
+                    v-show="flyoutIndex === i"
+                    :aria-label="link.label"
+                    class="absolute left-0 z-40 mt-3 min-w-[12rem] rounded-edge border border-ash-200 bg-alabaster/95 py-1 shadow-xl backdrop-blur-md"
+                >
+                    <li v-for="child in link.children" :key="child.label">
+                        <a
+                            :href="child.url"
+                            :aria-current="child.active ? 'page' : null"
+                            class="block whitespace-nowrap px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.16em] text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
+                        >
+                            {{ child.label }}
+                        </a>
+                        <ul v-if="child.children && child.children.length" class="pb-1">
+                            <li v-for="grandchild in child.children" :key="grandchild.label">
+                                <a
+                                    :href="grandchild.url"
+                                    class="block whitespace-nowrap px-4 py-1.5 pl-7 font-mono text-[0.66rem] uppercase tracking-[0.14em] text-ash-500 transition-colors hover:bg-ash-100 hover:text-ink"
+                                >
+                                    {{ grandchild.label }}
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </template>
 
         <div
             v-show="measuring || hasOverflow"
@@ -183,6 +278,17 @@ onBeforeUnmount(() => {
                     >
                         {{ link.label }}
                     </a>
+                    <ul v-if="link.children && link.children.length" class="pb-1">
+                        <li v-for="child in link.children" :key="child.label">
+                            <a
+                                :href="child.url"
+                                class="block whitespace-nowrap px-4 py-1.5 pl-7 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-ash-500 transition-colors hover:bg-ash-100 hover:text-ink"
+                                @click="close(false)"
+                            >
+                                {{ child.label }}
+                            </a>
+                        </li>
+                    </ul>
                 </li>
             </ul>
         </div>

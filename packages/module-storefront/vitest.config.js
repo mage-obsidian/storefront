@@ -24,6 +24,9 @@ export default defineConfig({
             "MageObsidian_Storefront::navigation/Switcher": fileURLToPath(
                 new URL("./src/view/frontend/web/components/navigation/Switcher.vue", import.meta.url),
             ),
+            "MageObsidian_Storefront::navigation/NavAccordion": fileURLToPath(
+                new URL("./src/view/frontend/web/components/navigation/NavAccordion.vue", import.meta.url),
+            ),
             "MageObsidian_Storefront::js/address": fileURLToPath(
                 new URL("./src/view/frontend/web/js/address.ts", import.meta.url),
             ),

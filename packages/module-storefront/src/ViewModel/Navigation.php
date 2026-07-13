@@ -21,6 +21,8 @@ use Throwable;
  *
  * Maps the store's top-level menu categories; on a store with no menu categories
  * (or any failure) it falls back to a demo list so the header still renders.
+ *
+ * @phpstan-type NavItem array{label: string, url: string, active: bool, children?: array<int, mixed>}
  */
 class Navigation implements ArgumentInterface
 {
@@ -46,12 +48,17 @@ class Navigation implements ArgumentInterface
     /**
      * Main navigation items, from the store's menu categories or a demo fallback.
      *
-     * @return array<int, array{label: string, url: string, active: bool}>
+     * With $maxDepth > 1 each item may carry a nested `children` list (same shape,
+     * recursive) so a theme can build a mega menu; the default keeps the previous
+     * top-level-only output, so existing consumers (footer, mobile) are unchanged.
+     *
+     * @param int $maxDepth Levels of menu categories to load (1 = top level only).
+     * @return array<int, NavItem>
      */
-    public function getItems(): array
+    public function getItems(int $maxDepth = 1): array
     {
         try {
-            $items = $this->loadMenuCategories();
+            $items = $this->loadMenuTree(max(1, $maxDepth));
         } catch (Throwable) {
             $items = [];
         }
@@ -60,28 +67,60 @@ class Navigation implements ArgumentInterface
     }
 
     /**
-     * Load the store's top-level, in-menu categories as nav items.
+     * Load the store's in-menu categories under the root, down to $maxDepth, as a
+     * nested tree. One collection per level (BFS, bounded by $maxDepth) keyed by
+     * parent, so there is no per-category query and no full-catalog scan.
      *
-     * @return array<int, array{label: string, url: string, active: bool}>
+     * @param int $maxDepth
+     * @return array<int, NavItem>
      */
-    private function loadMenuCategories(): array
+    private function loadMenuTree(int $maxDepth): array
     {
         $rootCategoryId = (int)$this->storeManager->getStore()->getRootCategoryId();
 
-        $collection = $this->categoryCollectionFactory->create();
-        $collection->addAttributeToSelect(['name', 'url_key', 'url_path'])
-            ->addAttributeToFilter('parent_id', $rootCategoryId)
-            ->addAttributeToFilter('is_active', 1)
-            ->addAttributeToFilter('include_in_menu', 1)
-            ->setOrder('position', 'ASC');
+        $parentIds = [$rootCategoryId];
+        $nodesByParent = [];
+        for ($depth = 0; $depth < $maxDepth && $parentIds !== []; $depth++) {
+            $collection = $this->categoryCollectionFactory->create();
+            $collection->addAttributeToSelect(['name', 'url_key', 'url_path'])
+                ->addAttributeToFilter('parent_id', ['in' => $parentIds])
+                ->addAttributeToFilter('is_active', 1)
+                ->addAttributeToFilter('include_in_menu', 1)
+                ->setOrder('position', 'ASC');
 
+            $nextParentIds = [];
+            foreach ($collection as $category) {
+                $id = (int)$category->getId();
+                $nodesByParent[(int)$category->getParentId()][] = [
+                    'id' => $id,
+                    'label' => (string)$category->getName(),
+                    'url' => (string)$category->getUrl(),
+                ];
+                $nextParentIds[] = $id;
+            }
+            $parentIds = $nextParentIds;
+        }
+
+        return $this->assembleTree($rootCategoryId, $nodesByParent);
+    }
+
+    /**
+     * Turn the parent-keyed node buckets into a nested nav tree.
+     *
+     * @param int $parentId
+     * @param array<int, array<int, array{id: int, label: string, url: string}>> $nodesByParent
+     * @return array<int, NavItem>
+     */
+    private function assembleTree(int $parentId, array $nodesByParent): array
+    {
         $items = [];
-        foreach ($collection as $category) {
-            $items[] = [
-                'label' => (string)$category->getName(),
-                'url' => (string)$category->getUrl(),
-                'active' => false,
-            ];
+        foreach ($nodesByParent[$parentId] ?? [] as $node) {
+            $item = ['label' => $node['label'], 'url' => $node['url'], 'active' => false];
+            $children = $this->assembleTree($node['id'], $nodesByParent);
+            if ($children !== []) {
+                $item['children'] = $children;
+            }
+            $items[] = $item;
         }
 
         return $items;

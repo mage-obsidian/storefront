@@ -100,6 +100,40 @@ describe("MobileMenu", () => {
         wrapper.unmount();
     });
 
+    it("renders nested categories as an accordion inside the drawer", async () => {
+        const wrapper = mount(MobileMenu, {
+            props: {
+                links: [
+                    { label: "New in", url: "/new" },
+                    {
+                        label: "Outerwear",
+                        url: "/outerwear",
+                        children: [{ label: "Coats", url: "/outerwear/coats" }],
+                    },
+                ],
+                label: "Menu",
+            },
+            attachTo: document.body,
+        });
+
+        await wrapper.get("button[aria-haspopup='dialog']").trigger("click");
+        const dialog = document.querySelector('[role="dialog"]');
+
+        // Top-level categories are links; the branch also gets a toggle button.
+        expect(dialog.querySelector("a[href='/new']")).not.toBeNull();
+        expect(dialog.querySelector("a[href='/outerwear']")).not.toBeNull();
+        const toggle = dialog.querySelector("button[aria-label='Toggle Outerwear submenu']");
+        expect(toggle).not.toBeNull();
+        expect(toggle.getAttribute("aria-expanded")).toBe("false");
+
+        toggle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        await wrapper.vm.$nextTick();
+        expect(toggle.getAttribute("aria-expanded")).toBe("true");
+        expect(dialog.querySelector("a[href='/outerwear/coats']")).not.toBeNull();
+
+        wrapper.unmount();
+    });
+
     it("omits the utility section when no utilities are provided", async () => {
         const wrapper = mountMenu();
 
