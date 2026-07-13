@@ -30,6 +30,9 @@ export default defineConfig({
             "MageObsidian_Storefront::js/useCart": fileURLToPath(
                 new URL("./src/view/frontend/web/js/useCart.ts", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/overflowNav": fileURLToPath(
+                new URL("./src/view/frontend/web/js/overflowNav.ts", import.meta.url),
+            ),
             "MageObsidian_Storefront::wishlist/WishlistCount": fileURLToPath(
                 new URL("./src/view/frontend/web/components/wishlist/WishlistCount.vue", import.meta.url),
             ),
