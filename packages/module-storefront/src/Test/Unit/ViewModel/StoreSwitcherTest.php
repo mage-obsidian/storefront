@@ -31,11 +31,12 @@ class StoreSwitcherTest extends TestCase
         $this->urlProvider = $this->createMock(SwitcherUrlProvider::class);
     }
 
-    private function store(int $id, string $name): Store&MockObject
+    private function store(int $id, string $name, int $groupId = 1): Store&MockObject
     {
         $store = $this->createMock(Store::class);
         $store->method('getId')->willReturn($id);
         $store->method('getName')->willReturn($name);
+        $store->method('getGroupId')->willReturn($groupId);
         $store->method('isActive')->willReturn(true);
 
         return $store;
@@ -89,5 +90,19 @@ class StoreSwitcherTest extends TestCase
         $this->withStores([$this->store(1, 'English')], 1);
 
         $this->assertFalse($this->subject()->hasMultiple());
+    }
+
+    public function testExcludesStoreViewsFromOtherGroups(): void
+    {
+        $this->withStores([
+            $this->store(1, 'English', 1),
+            $this->store(2, 'Español', 1),
+            $this->store(3, 'Internal', 2),
+        ], 1);
+
+        $items = $this->subject()->getItems();
+
+        $this->assertCount(2, $items);
+        $this->assertSame(['English', 'Español'], array_column($items, 'label'));
     }
 }

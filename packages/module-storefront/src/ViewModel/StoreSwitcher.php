@@ -40,15 +40,22 @@ class StoreSwitcher implements ArgumentInterface
     /**
      * Active store views as switcher items, flagging the current one.
      *
+     * Scoped to the current store group, matching Magento's native switcher
+     * (Magento\Store\Block\Switcher::getStores()): a language/store-view switch
+     * stays within the current group, so views from other groups/websites are
+     * not offered.
+     *
      * @return array<int, array{label: string, url: string, current: bool}>
      */
     public function getItems(): array
     {
         try {
-            $currentId = (int)$this->storeManager->getStore()->getId();
+            $currentStore = $this->storeManager->getStore();
+            $currentId = (int)$currentStore->getId();
+            $currentGroupId = (int)$currentStore->getGroupId();
             $items = [];
             foreach ($this->storeManager->getStores() as $store) {
-                if (!$store->isActive()) {
+                if (!$store->isActive() || (int)$store->getGroupId() !== $currentGroupId) {
                     continue;
                 }
                 $items[] = [
