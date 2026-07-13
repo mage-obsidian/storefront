@@ -60,6 +60,29 @@ const close = (returnFocus = true) => {
 
 const toggle = () => (open.value ? close(false) : openPanel());
 
+// Native switch links are GET redirects back to a cacheable page. With built-in
+// FPC (no Varnish) the browser can serve that page from its own HTTP cache, so a
+// currency/language switch shows stale content until a manual reload. Apply the
+// switch, then force a revalidating navigation: reload when the target is the
+// current URL (currency/language return to the referrer), assign when it differs
+// (store view). Modified clicks and the missing-JS path keep the plain link.
+const onSelect = (item: SwitcherItem, event: MouseEvent): void => {
+    close(false);
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return;
+    }
+    event.preventDefault();
+    fetch(item.url, { credentials: "same-origin", redirect: "follow" })
+        .then((res) => {
+            if (res.url && res.url !== window.location.href) {
+                window.location.assign(res.url);
+            } else {
+                window.location.reload();
+            }
+        })
+        .catch(() => window.location.assign(item.url));
+};
+
 onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, true));
 </script>
 
@@ -74,6 +97,7 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, tru
                 :aria-current="item.current ? 'true' : null"
                 class="font-mono text-[0.78rem] uppercase tracking-[0.14em] transition-colors"
                 :class="item.current ? 'text-ink' : 'text-ink-soft hover:text-ink'"
+                @click="onSelect(item, $event)"
             >
                 {{ item.label }}
             </a>
@@ -110,7 +134,7 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, tru
                     :aria-current="item.current ? 'true' : null"
                     class="block px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.12em] transition-colors"
                     :class="item.current ? 'text-ink' : 'text-ink-soft hover:bg-ash-100 hover:text-ink'"
-                    @click="close(false)"
+                    @click="onSelect(item, $event)"
                 >
                     {{ item.label }}
                 </a>

@@ -1,5 +1,5 @@
-import { describe, it, expect, afterEach } from "vitest";
-import { mount } from "@vue/test-utils";
+import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
+import { mount, flushPromises } from "@vue/test-utils";
 import Switcher from "./Switcher.vue";
 
 // Reusable store/language/currency switcher. The dropdown is a DISCLOSURE (a
@@ -100,5 +100,88 @@ describe("Switcher (inline)", () => {
         expect(wrapper.find("button").exists()).toBe(false);
         expect(wrapper.findAll("a")).toHaveLength(2);
         expect(wrapper.get("[aria-current='true']").text()).toContain("USD");
+    });
+});
+
+// A native switch redirects back to a cacheable page; with built-in FPC the
+// browser can serve the stale page from its own HTTP cache, so the click is
+// intercepted to apply the switch and force a revalidating navigation.
+describe("Switcher (FPC-safe revalidation)", () => {
+    let reload: ReturnType<typeof vi.fn>;
+    let assign: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+        reload = vi.fn();
+        assign = vi.fn();
+        vi.spyOn(window.location, "reload").mockImplementation(reload);
+        vi.spyOn(window.location, "assign").mockImplementation(assign);
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+        vi.unstubAllGlobals();
+    });
+
+    const mountInline = () =>
+        mount(Switcher, {
+            props: { label: "USD", srLabel: "Change currency", items, variant: "inline" },
+            attachTo: document.body,
+        });
+
+    it("applies the switch via fetch and reloads when the target is the current page", async () => {
+        vi.stubGlobal("fetch", vi.fn(() => Promise.resolve({ url: window.location.href })));
+        const wrapper = mountInline();
+
+        await wrapper.get("a[href='/switch?currency=EUR']").trigger("click");
+        await flushPromises();
+
+        expect(fetch).toHaveBeenCalledWith("/switch?currency=EUR", {
+            credentials: "same-origin",
+            redirect: "follow",
+        });
+        expect(reload).toHaveBeenCalled();
+        expect(assign).not.toHaveBeenCalled();
+
+        wrapper.unmount();
+    });
+
+    it("navigates to the resolved URL when the switch redirects elsewhere", async () => {
+        vi.stubGlobal("fetch", vi.fn(() => Promise.resolve({ url: "https://shop.test/es/" })));
+        const wrapper = mountInline();
+
+        await wrapper.get("a[href='/switch?currency=EUR']").trigger("click");
+        await flushPromises();
+
+        expect(assign).toHaveBeenCalledWith("https://shop.test/es/");
+        expect(reload).not.toHaveBeenCalled();
+
+        wrapper.unmount();
+    });
+
+    it("falls back to native navigation when the fetch fails", async () => {
+        vi.stubGlobal("fetch", vi.fn(() => Promise.reject(new Error("network"))));
+        const wrapper = mountInline();
+
+        await wrapper.get("a[href='/switch?currency=EUR']").trigger("click");
+        await flushPromises();
+
+        expect(assign).toHaveBeenCalledWith("/switch?currency=EUR");
+
+        wrapper.unmount();
+    });
+
+    it("leaves modified clicks to the browser (open in a new tab)", async () => {
+        const fetchSpy = vi.fn(() => Promise.resolve({ url: window.location.href }));
+        vi.stubGlobal("fetch", fetchSpy);
+        const wrapper = mountInline();
+
+        await wrapper.get("a[href='/switch?currency=EUR']").trigger("click", { metaKey: true });
+        await flushPromises();
+
+        expect(fetchSpy).not.toHaveBeenCalled();
+        expect(reload).not.toHaveBeenCalled();
+        expect(assign).not.toHaveBeenCalled();
+
+        wrapper.unmount();
     });
 });
