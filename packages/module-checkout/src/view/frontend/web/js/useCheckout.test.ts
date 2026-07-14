@@ -146,7 +146,7 @@ describe("useCheckout — shipping actions", () => {
     it("reports an email as available (no existing account) from the native check", async () => {
         const fetchMock = mockFetch(true);
         const checkout = useCheckout();
-        checkout.init(GUEST_CONFIG);
+        checkout.init({ ...GUEST_CONFIG, guestCheckoutLogin: true });
 
         const available = await checkout.checkEmailAvailable("new@shop.test");
 
@@ -157,15 +157,24 @@ describe("useCheckout — shipping actions", () => {
     it("reports an email as taken when an account exists", async () => {
         mockFetch(false);
         const checkout = useCheckout();
-        checkout.init(GUEST_CONFIG);
+        checkout.init({ ...GUEST_CONFIG, guestCheckoutLogin: true });
 
         expect(await checkout.checkEmailAvailable("ada@shop.test")).toBe(false);
+    });
+
+    it("skips the availability check when guest-checkout-login is disabled (the native default)", async () => {
+        const fetchMock = mockFetch(false);
+        const checkout = useCheckout();
+        checkout.init(GUEST_CONFIG);
+
+        expect(await checkout.checkEmailAvailable("ada@shop.test")).toBe(true);
+        expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it("does not block the guest when the availability check errors", async () => {
         mockFetch({ message: "boom" }, false, 500);
         const checkout = useCheckout();
-        checkout.init(GUEST_CONFIG);
+        checkout.init({ ...GUEST_CONFIG, guestCheckoutLogin: true });
 
         expect(await checkout.checkEmailAvailable("x@shop.test")).toBe(true);
     });
@@ -312,5 +321,89 @@ describe("useCheckout — payment, coupon and order", () => {
         expect(await checkout.placeOrder()).toBeNull();
         expect(checkout.orderError).toBe("Transaction declined");
         expect(assign).not.toHaveBeenCalled();
+    });
+});
+
+describe("useCheckout — native config parity", () => {
+    beforeEach(() => {
+        setActivePinia(createPinia());
+        vi.restoreAllMocks();
+    });
+
+    it("seeds the native checkout options from config", () => {
+        const checkout = useCheckout();
+        checkout.init({
+            ...GUEST_CONFIG,
+            guestCheckout: false,
+            guestCheckoutLogin: true,
+            displayBillingOnPayment: false,
+            maxSummaryItems: 3,
+            agreements: { enabled: true, items: [{ agreementId: 7, mode: 1, content: "", checkboxText: "" }] },
+        });
+
+        expect(checkout.guestCheckout).toBe(false);
+        expect(checkout.guestCheckoutLogin).toBe(true);
+        expect(checkout.displayBillingOnPayment).toBe(false);
+        expect(checkout.maxSummaryItems).toBe(3);
+        expect(checkout.agreementsEnabled).toBe(true);
+        expect(checkout.agreements).toHaveLength(1);
+    });
+
+    it("caps the order summary to maxSummaryItems and reports the remainder", () => {
+        const checkout = useCheckout();
+        checkout.init({
+            ...GUEST_CONFIG,
+            maxSummaryItems: 2,
+            quote: { items: [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }], subtotal: "", grandTotal: "" },
+        });
+
+        expect(checkout.visibleItems).toHaveLength(2);
+        expect(checkout.hiddenItemCount).toBe(2);
+    });
+
+    it("treats only manual agreements as required and tracks acceptance", () => {
+        const checkout = useCheckout();
+        checkout.init({
+            ...GUEST_CONFIG,
+            agreements: {
+                enabled: true,
+                items: [
+                    { agreementId: 7, mode: 1, content: "", checkboxText: "" },
+                    { agreementId: 8, mode: 0, content: "", checkboxText: "" },
+                ],
+            },
+        });
+
+        expect(checkout.requiredAgreementIds).toEqual([7]);
+        expect(checkout.allRequiredAccepted).toBe(false);
+        checkout.toggleAgreement(7);
+        expect(checkout.allRequiredAccepted).toBe(true);
+        checkout.toggleAgreement(7);
+        expect(checkout.allRequiredAccepted).toBe(false);
+    });
+
+    it("blocks place-order until required agreements are accepted, then sends the ids", async () => {
+        Object.defineProperty(window, "location", { value: { assign: vi.fn() }, writable: true });
+        const fetchMock = mockFetch(555);
+        const checkout = useCheckout();
+        checkout.init({
+            ...GUEST_CONFIG,
+            agreements: { enabled: true, items: [{ agreementId: 7, mode: 1, content: "", checkboxText: "" }] },
+        });
+        Object.assign(checkout.shippingAddress, {
+            firstname: "Ada", lastname: "Lovelace", street: ["1 Analytical Way", ""],
+            city: "Los Angeles", region: "California", regionId: 12, postcode: "90001", countryId: "US", telephone: "5550100",
+        });
+        checkout.selectPayment("checkmo");
+
+        expect(await checkout.placeOrder()).toBeNull();
+        expect(fetchMock).not.toHaveBeenCalled();
+
+        checkout.toggleAgreement(7);
+        const orderId = await checkout.placeOrder();
+
+        expect(orderId).toBe(555);
+        const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+        expect(body.paymentMethod.extension_attributes.agreement_ids).toEqual(["7"]);
     });
 });

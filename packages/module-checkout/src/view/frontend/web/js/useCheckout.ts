@@ -51,6 +51,16 @@ export interface TotalSegment {
     value: number | null;
 }
 
+export interface Agreement {
+    agreementId: number | string;
+    content: string;
+    checkboxText: string;
+    mode: number;
+    contentHeight?: string;
+}
+
+export const AGREEMENT_MODE_MANUAL = 1;
+
 interface QuoteTotals {
     grand_total?: number;
     total_segments?: TotalSegment[];
@@ -99,6 +109,14 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const orderError = ref('');
     const successUrl = ref('');
 
+    const guestCheckout = ref(true);
+    const guestCheckoutLogin = ref(false);
+    const displayBillingOnPayment = ref(true);
+    const maxSummaryItems = ref(10);
+    const agreementsEnabled = ref(false);
+    const agreements = ref<Agreement[]>([]);
+    const acceptedAgreements = ref<Array<number | string>>([]);
+
     let seeded = false;
     let api: ReturnType<typeof createCheckoutApi> | null = null;
 
@@ -124,6 +142,15 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         shippingAddress.value = emptyAddress(cfg.defaultCountry || '');
         billingAddress.value = emptyAddress(cfg.defaultCountry || '');
         vaultTokens.value = Array.isArray(cfg.vault) ? (cfg.vault as VaultToken[]) : [];
+        guestCheckout.value = cfg.guestCheckout !== false;
+        guestCheckoutLogin.value = !!cfg.guestCheckoutLogin;
+        displayBillingOnPayment.value = cfg.displayBillingOnPayment !== false;
+        if (typeof cfg.maxSummaryItems === 'number' && cfg.maxSummaryItems > 0) {
+            maxSummaryItems.value = cfg.maxSummaryItems;
+        }
+        const agreementsCfg = cfg.agreements || {};
+        agreementsEnabled.value = !!agreementsCfg.enabled;
+        agreements.value = Array.isArray(agreementsCfg.items) ? (agreementsCfg.items as Agreement[]) : [];
         api = createCheckoutApi({
             restBaseUrl: cfg.restBaseUrl || '',
             isLoggedIn: isLoggedIn.value,
@@ -154,7 +181,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
      * it degrades to "available".
      */
     async function checkEmailAvailable(value: string): Promise<boolean> {
-        if (!api) {
+        if (!api || !guestCheckoutLogin.value) {
             return true;
         }
         try {
@@ -250,6 +277,15 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         }
     }
 
+    function toggleAgreement(agreementId: number | string): void {
+        const index = acceptedAgreements.value.indexOf(agreementId);
+        if (index === -1) {
+            acceptedAgreements.value = [...acceptedAgreements.value, agreementId];
+        } else {
+            acceptedAgreements.value = acceptedAgreements.value.filter((id) => id !== agreementId);
+        }
+    }
+
     async function applyCoupon(code: string): Promise<boolean> {
         if (!api || code.trim() === '') {
             return false;
@@ -295,7 +331,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     }
 
     async function placeOrder(): Promise<number | null> {
-        if (!api || selectedPayment.value === '') {
+        if (!api || selectedPayment.value === '' || !allRequiredAccepted.value) {
             return null;
         }
         placingOrder.value = true;
@@ -307,6 +343,11 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
             const paymentMethod: Record<string, unknown> = token
                 ? { method: token.methodCode, additional_data: { public_hash: token.publicHash } }
                 : { method: selectedPayment.value };
+            if (agreementsEnabled.value && acceptedAgreements.value.length > 0) {
+                paymentMethod.extension_attributes = {
+                    agreement_ids: acceptedAgreements.value.map((id) => String(id)),
+                };
+            }
             const payload: Record<string, unknown> = {
                 paymentMethod,
                 billingAddress: billing,
@@ -362,6 +403,14 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const selectedMethodKey = computed(() =>
         selectedMethod.value ? `${selectedMethod.value.carrier_code}_${selectedMethod.value.method_code}` : '',
     );
+    const requiredAgreementIds = computed(() =>
+        agreements.value.filter((a) => a.mode === AGREEMENT_MODE_MANUAL).map((a) => a.agreementId),
+    );
+    const allRequiredAccepted = computed(() =>
+        !agreementsEnabled.value || requiredAgreementIds.value.every((id) => acceptedAgreements.value.includes(id)),
+    );
+    const visibleItems = computed(() => items.value.slice(0, maxSummaryItems.value));
+    const hiddenItemCount = computed(() => Math.max(0, items.value.length - maxSummaryItems.value));
 
     return {
         step,
@@ -393,11 +442,23 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         couponError,
         placingOrder,
         orderError,
+        guestCheckout,
+        guestCheckoutLogin,
+        displayBillingOnPayment,
+        maxSummaryItems,
+        agreementsEnabled,
+        agreements,
+        acceptedAgreements,
+        requiredAgreementIds,
+        allRequiredAccepted,
+        visibleItems,
+        hiddenItemCount,
         formatTotal,
         init,
         goToStep,
         setEmail,
         checkEmailAvailable,
+        toggleAgreement,
         estimateShipping,
         selectMethod,
         saveShipping,

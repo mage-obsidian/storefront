@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
+import Agreements from "MageObsidian_Checkout::checkout/Agreements";
 
 interface ReviewLabels {
     couponHeading?: string;
@@ -92,9 +93,11 @@ const paymentTitle = (): string =>
             </dl>
         </section>
 
+        <Agreements />
+
         <button
             type="button"
-            :disabled="checkout.placingOrder || !checkout.selectedPayment"
+            :disabled="checkout.placingOrder || !checkout.selectedPayment || !checkout.allRequiredAccepted"
             class="inline-flex w-fit items-center justify-center rounded-edge border border-ink bg-ink px-10 py-3.5 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-alabaster transition-colors hover:bg-transparent hover:text-ink disabled:opacity-50"
             @click="checkout.placeOrder()"
         >

@@ -4,8 +4,10 @@ declare(strict_types=1);
 namespace MageObsidian\Checkout\Test\Unit\ViewModel;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\CheckoutAgreements\Model\AgreementsConfigProvider;
 use Magento\Customer\Model\Customer;
 use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteIdMaskFactory;
@@ -66,8 +68,30 @@ class CheckoutConfigTest extends TestCase
         $this->assertSame('ada@shop.test', $config['customerEmail']);
     }
 
-    private function viewModel(bool $isLoggedIn, string $maskedId, string $layoutMode = 'stepped'): CheckoutConfig
+    public function testConfigCarriesNativeCheckoutOptionsAndAgreements(): void
     {
+        $config = $this->viewModel(
+            isLoggedIn: false,
+            maskedId: 'guestmask123',
+            agreementsEnabled: true,
+            agreementItems: [['agreementId' => 7, 'mode' => 1, 'content' => 'Terms', 'checkboxText' => 'I agree', 'contentHeight' => '']]
+        )->getConfig();
+
+        $this->assertTrue($config['guestCheckout']);
+        $this->assertFalse($config['guestCheckoutLogin']);
+        $this->assertTrue($config['displayBillingOnPayment']);
+        $this->assertSame(25, $config['maxSummaryItems']);
+        $this->assertTrue($config['agreements']['enabled']);
+        $this->assertSame(7, $config['agreements']['items'][0]['agreementId']);
+    }
+
+    private function viewModel(
+        bool $isLoggedIn,
+        string $maskedId,
+        string $layoutMode = 'stepped',
+        bool $agreementsEnabled = false,
+        array $agreementItems = []
+    ): CheckoutConfig {
         $quote = $this->getMockBuilder(Quote::class)
             ->disableOriginalConstructor()
             ->addMethods(['getSubtotal', 'getGrandTotal'])
@@ -120,6 +144,19 @@ class CheckoutConfigTest extends TestCase
         $configProvider = $this->createMock(ConfigProvider::class);
         $configProvider->method('getCheckoutLayoutMode')->willReturn($layoutMode);
 
+        $scopeConfig = $this->createMock(ScopeConfigInterface::class);
+        $scopeConfig->method('isSetFlag')->willReturnCallback(
+            static fn (string $path): bool => $path === 'checkout/options/guest_checkout'
+        );
+        $scopeConfig->method('getValue')->willReturnCallback(
+            static fn (string $path): ?string => $path === 'checkout/options/max_items_display_count' ? '25' : '0'
+        );
+
+        $agreementsConfigProvider = $this->createMock(AgreementsConfigProvider::class);
+        $agreementsConfigProvider->method('getConfig')->willReturn([
+            'checkoutAgreements' => ['isEnabled' => $agreementsEnabled, 'agreements' => $agreementItems],
+        ]);
+
         return new CheckoutConfig(
             $checkoutSession,
             $customerSession,
@@ -130,7 +167,9 @@ class CheckoutConfigTest extends TestCase
             $this->createMock(QuoteIdMaskResource::class),
             $cartItems,
             $vaultTokenProvider,
-            $configProvider
+            $configProvider,
+            $scopeConfig,
+            $agreementsConfigProvider
         );
     }
 }

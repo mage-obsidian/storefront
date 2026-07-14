@@ -10,8 +10,11 @@ declare(strict_types=1);
 namespace MageObsidian\Checkout\ViewModel;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\CheckoutAgreements\Model\AgreementsConfigProvider;
 use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
+use Magento\Store\Model\ScopeInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
 use MageObsidian\Checkout\Api\VaultTokenProviderInterface;
 use MageObsidian\ModernFrontend\Model\Config\ConfigProvider;
@@ -54,6 +57,8 @@ class CheckoutConfig implements ArgumentInterface
      * @param CartItems $cartItems
      * @param VaultTokenProviderInterface $vaultTokenProvider
      * @param ConfigProvider $configProvider
+     * @param ScopeConfigInterface $scopeConfig
+     * @param AgreementsConfigProvider $agreementsConfigProvider
      */
     public function __construct(
         private readonly CheckoutSession $checkoutSession,
@@ -65,7 +70,9 @@ class CheckoutConfig implements ArgumentInterface
         private readonly QuoteIdMaskResource $quoteIdMaskResource,
         private readonly CartItems $cartItems,
         private readonly VaultTokenProviderInterface $vaultTokenProvider,
-        private readonly ConfigProvider $configProvider
+        private readonly ConfigProvider $configProvider,
+        private readonly ScopeConfigInterface $scopeConfig,
+        private readonly AgreementsConfigProvider $agreementsConfigProvider
     ) {
     }
 
@@ -124,7 +131,28 @@ class CheckoutConfig implements ArgumentInterface
             'quote' => $this->quoteSummary($quote),
             'vault' => $this->vaultTokens(),
             'layoutMode' => $this->configProvider->getCheckoutLayoutMode(),
+            'guestCheckout' => $this->scopeConfig->isSetFlag('checkout/options/guest_checkout', ScopeInterface::SCOPE_STORE),
+            'guestCheckoutLogin' => $this->scopeConfig->isSetFlag('checkout/options/enable_guest_checkout_login', ScopeInterface::SCOPE_STORE),
+            'displayBillingOnPayment' => (int)$this->scopeConfig->getValue('checkout/options/display_billing_address_on', ScopeInterface::SCOPE_STORE) === 0,
+            'maxSummaryItems' => (int)$this->scopeConfig->getValue('checkout/options/max_items_display_count', ScopeInterface::SCOPE_STORE) ?: 10,
+            'agreements' => $this->agreements(),
         ];
+    }
+
+    /**
+     * @return array{enabled: bool, items: array<int, array<string, mixed>>}
+     */
+    private function agreements(): array
+    {
+        try {
+            $data = $this->agreementsConfigProvider->getConfig()['checkoutAgreements'] ?? [];
+            return [
+                'enabled' => (bool)($data['isEnabled'] ?? false),
+                'items' => $data['agreements'] ?? [],
+            ];
+        } catch (Throwable) {
+            return ['enabled' => false, 'items' => []];
+        }
     }
 
     /**
@@ -240,6 +268,11 @@ class CheckoutConfig implements ArgumentInterface
             'quote' => ['items' => [], 'itemCount' => 0, 'subtotal' => '', 'grandTotal' => ''],
             'vault' => [],
             'layoutMode' => CheckoutLayout::STEPPED,
+            'guestCheckout' => true,
+            'guestCheckoutLogin' => false,
+            'displayBillingOnPayment' => true,
+            'maxSummaryItems' => 10,
+            'agreements' => ['enabled' => false, 'items' => []],
         ];
     }
 }

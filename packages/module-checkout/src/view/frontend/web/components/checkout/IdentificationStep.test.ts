@@ -22,7 +22,7 @@ describe("IdentificationStep", () => {
         pinia = createPinia();
         setActivePinia(pinia);
         vi.restoreAllMocks();
-        useCheckout().init(CONFIG);
+        useCheckout().init({ ...CONFIG, guestCheckoutLogin: true });
     });
 
     function render() {

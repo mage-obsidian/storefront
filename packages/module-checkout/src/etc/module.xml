@@ -13,6 +13,7 @@
             <module name="Magento_Checkout"/>
             <!-- The Vue checkout talks to the native quote REST endpoints. -->
             <module name="Magento_Quote"/>
+            <module name="Magento_CheckoutAgreements"/>
         </sequence>
     </module>
 </config>

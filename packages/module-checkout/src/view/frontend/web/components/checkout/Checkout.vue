@@ -153,7 +153,7 @@ const isEmpty = computed(() => checkout.itemCount === 0);
                 <p v-if="isEmpty" class="text-ink-soft">{{ t('empty', 'Your bag is empty.') }}</p>
 
                 <ul v-else class="divide-y divide-ash-200 border-y border-ash-200">
-                    <li v-for="item in checkout.items" :key="item.id" class="flex gap-3 py-4">
+                    <li v-for="item in checkout.visibleItems" :key="item.id" class="flex gap-3 py-4">
                         <span class="block h-16 w-14 shrink-0 overflow-hidden rounded-edge bg-ash-100">
                             <img
                                 v-if="item.image"
@@ -172,6 +172,10 @@ const isEmpty = computed(() => checkout.itemCount === 0);
                         <span class="shrink-0 font-mono text-sm text-ink">{{ item.rowTotal }}</span>
                     </li>
                 </ul>
+
+                <p v-if="checkout.hiddenItemCount > 0" class="font-mono text-xs text-ink-soft">
+                    {{ t('moreItems', '+ {count} more item(s)').replace('{count}', String(checkout.hiddenItemCount)) }}
+                </p>
 
                 <dl v-if="checkout.totalSegments.length > 0" class="flex flex-col gap-2 font-mono text-sm">
                     <div
