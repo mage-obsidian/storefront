@@ -12,9 +12,9 @@ import ReviewStep from "MageObsidian_Checkout::checkout/ReviewStep";
 // Magento's native one-step (1. Information = contact + address + shipping,
 // 2. Payment = payment + review + place order). The per-step "Continue" buttons
 // are gone; shipping rates and payment populate reactively as the address is
-// completed and a method is chosen. A sticky progress stepper reflects each
-// stage's state (done / current / pending) so the shopper always knows what is
-// left. Static imports on purpose — all sections mount together here.
+// completed and a method is chosen. A progress stepper reflects each stage's
+// state (done / current / pending) so the shopper always knows what is left.
+// Static imports on purpose — all sections mount together here.
 interface DirectoryData {
     countries: Array<{ value: string; label: string }>;
     regions: Record<string, RegionData[]>;
@@ -152,7 +152,7 @@ onBeforeUnmount(() => {
 <template>
     <div class="flex flex-col gap-8">
         <nav
-            class="sticky top-[68px] z-20 rounded-edge border border-ash-200 bg-alabaster/90 px-5 py-3.5 backdrop-blur-md"
+            class="rounded-edge border border-ash-200 bg-alabaster-raised px-5 py-3.5"
             :aria-label="t('steps', 'Checkout steps')"
         >
             <ol class="flex flex-wrap items-center gap-x-8 gap-y-3">
@@ -187,7 +187,7 @@ onBeforeUnmount(() => {
         <section
             id="onepage-information"
             aria-labelledby="onepage-information-heading"
-            class="scroll-mt-[136px] rounded-edge border bg-alabaster-raised p-6 transition-colors md:p-8"
+            class="scroll-mt-20 rounded-edge border bg-alabaster-raised p-6 transition-colors md:p-8"
             :class="activeKey === 'information' ? 'border-ink/40' : 'border-ash-200'"
         >
             <h2 id="onepage-information-heading" class="mb-6 font-display text-2xl text-ink">
@@ -208,7 +208,7 @@ onBeforeUnmount(() => {
             v-if="paymentReady"
             id="onepage-payment"
             aria-labelledby="onepage-payment-heading"
-            class="scroll-mt-[136px] rounded-edge border bg-alabaster-raised p-6 transition-colors md:p-8"
+            class="scroll-mt-20 rounded-edge border bg-alabaster-raised p-6 transition-colors md:p-8"
             :class="activeKey === 'payment' ? 'border-ink/40' : 'border-ash-200'"
         >
             <h2 id="onepage-payment-heading" class="mb-6 font-display text-2xl text-ink">
