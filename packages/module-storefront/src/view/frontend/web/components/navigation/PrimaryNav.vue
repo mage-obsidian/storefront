@@ -30,15 +30,18 @@ const trigger = ref<HTMLElement | null>(null);
 const panel = ref<HTMLElement | null>(null);
 const panelId = useId();
 
-// While measuring, every item and the More trigger render so their intrinsic
-// widths can be read; steady state hides the overflow behind the disclosure.
-const measuring = ref(true);
-const visibleCount = ref(props.links.length);
+// The first render must not paint the full list: onMounted runs after the
+// browser can paint, so a `measuring=true` initial state would flash the whole
+// (overflowing) bar before measure() clips the host. Start collapsed to nothing;
+// measure() then expands the list for one clipped tick to read widths.
+const measuring = ref(false);
+const visibleCount = ref(0);
 const open = ref(false);
 
 let widths: number[] = [];
 let gap = 0;
 let moreWidth = 0;
+let barWidth = 0;
 let observer: ResizeObserver | null = null;
 
 const hasOverflow = computed(() => visibleCount.value < props.links.length);
@@ -54,22 +57,37 @@ const readMetrics = (): void => {
     const styles = getComputedStyle(el);
     gap = parseFloat(styles.columnGap || styles.gap || "0") || 0;
     moreWidth = moreWrap.value?.offsetWidth ?? 0;
+    // Read the available bar width now, while measure() holds the host clipped to
+    // its flex track; reading it after collapse would see the shrunken bar and
+    // spiral every item into the dropdown.
+    barWidth = el.clientWidth;
 };
 
 const recompute = (): void => {
-    const el = navEl.value;
-    if (el) {
-        visibleCount.value = computeVisibleCount(widths, gap, moreWidth, el.clientWidth);
-    }
+    visibleCount.value = computeVisibleCount(widths, gap, moreWidth, barWidth);
 };
 
-// Show everything for one tick to read widths, then collapse. `overflow-x-clip`
-// on the bar keeps that transient full render from ever growing the page.
+// Show everything for one tick to read widths, then collapse. The island host
+// (`data-mage-island`) is a flex item without `min-w-0`, so the full render
+// would grow it past the header and scroll the page; clip+shrink the host for
+// the measuring tick only, then restore it so flyouts are never x-clipped.
 const measure = async (): Promise<void> => {
+    const host = navEl.value?.parentElement;
+    const prevMinWidth = host?.style.minWidth ?? "";
+    const prevOverflowX = host?.style.overflowX ?? "";
+    if (host) {
+        host.style.minWidth = "0";
+        host.style.overflowX = "clip";
+    }
     measuring.value = true;
     await nextTick();
     readMetrics();
     measuring.value = false;
+    await nextTick();
+    if (host) {
+        host.style.minWidth = prevMinWidth;
+        host.style.overflowX = prevOverflowX;
+    }
     recompute();
 };
 
