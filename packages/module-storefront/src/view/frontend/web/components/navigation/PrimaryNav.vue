@@ -140,14 +140,12 @@ const onFlyoutEscape = (event: KeyboardEvent): void => {
 };
 
 onMounted(async () => {
-    // Measure with the real (mono) font so widths are not read against a
-    // fallback; `document.fonts` is absent in some test DOMs, hence optional.
-    await document.fonts?.ready?.catch(() => {});
     await measure();
     if (typeof ResizeObserver !== "undefined" && navEl.value) {
         observer = new ResizeObserver(() => recompute());
         observer.observe(navEl.value);
     }
+    document.fonts?.ready?.then(() => void measure()).catch(() => {});
 });
 
 // Item widths only change when the links themselves change; a viewport resize

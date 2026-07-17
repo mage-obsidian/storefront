@@ -72,6 +72,34 @@ describe("PrimaryNav — overflow into the More disclosure", () => {
         }
     });
 
+    it("collapses without waiting for document.fonts.ready", async () => {
+        const original = Object.getOwnPropertyDescriptor(document, "fonts");
+        Object.defineProperty(document, "fonts", {
+            configurable: true,
+            get: () => ({ ready: new Promise<void>(() => {}) }),
+        });
+        try {
+            const wrapper = mount(PrimaryNav, {
+                props: { links, moreLabel: "Más" },
+                attachTo: document.body,
+            });
+            await flushPromises();
+
+            expect(wrapper.get("button").isVisible()).toBe(true);
+            const navClass = wrapper.get("nav").classes();
+            expect(navClass).toContain("overflow-x-visible");
+            expect(navClass).not.toContain("overflow-x-clip");
+
+            wrapper.unmount();
+        } finally {
+            if (original) {
+                Object.defineProperty(document, "fonts", original);
+            } else {
+                delete (document as unknown as Record<string, unknown>).fonts;
+            }
+        }
+    });
+
     it("shows the More trigger and lists the overflow links, with disclosure a11y", async () => {
         const wrapper = mount(PrimaryNav, {
             props: { links, moreLabel: "Más" },
