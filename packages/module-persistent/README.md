@@ -3,6 +3,8 @@
 [![Latest Version](https://img.shields.io/packagist/v/mage-obsidian/module-persistent.svg?style=flat-square)](https://packagist.org/packages/mage-obsidian/module-persistent)
 [![License](https://img.shields.io/packagist/l/mage-obsidian/module-persistent.svg?style=flat-square)](https://packagist.org/packages/mage-obsidian/module-persistent)
 
+[![Star MageObsidian](https://img.shields.io/github/stars/mage-obsidian/module-modern-frontend?style=flat-square&label=Star%20the%20core%20repo&logo=github)](https://github.com/mage-obsidian/module-modern-frontend)
+
 📚 [Documentation](https://mage-obsidian.jeanmarcos.dev/) · 🚀 [Live demo](https://mage-obsidian-demo.jeanmarcos.dev/) · 💬 [Discussions](https://github.com/mage-obsidian/module-modern-frontend/discussions)
 
 Persistent (Remember Me) compatibility for [MageObsidian](https://mage-obsidian.jeanmarcos.dev/): the remember-me checkbox on the sign-in and registration forms.
