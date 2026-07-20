@@ -3,6 +3,8 @@
 [![Latest Version](https://img.shields.io/packagist/v/mage-obsidian/module-downloadable.svg?style=flat-square)](https://packagist.org/packages/mage-obsidian/module-downloadable)
 [![License](https://img.shields.io/packagist/l/mage-obsidian/module-downloadable.svg?style=flat-square)](https://packagist.org/packages/mage-obsidian/module-downloadable)
 
+[![Star MageObsidian](https://img.shields.io/github/stars/mage-obsidian/module-modern-frontend?style=flat-square&label=Star%20the%20core%20repo&logo=github)](https://github.com/mage-obsidian/module-modern-frontend)
+
 📚 [Documentation](https://mage-obsidian.jeanmarcos.dev/) · 🚀 [Live demo](https://mage-obsidian-demo.jeanmarcos.dev/) · 💬 [Discussions](https://github.com/mage-obsidian/module-modern-frontend/discussions)
 
 Downloadable domain compatibility for [MageObsidian](https://mage-obsidian.jeanmarcos.dev/): the customer “My Downloadable Products” area and purchased-link rendering inside order documents, server-rendered on the account shell.
