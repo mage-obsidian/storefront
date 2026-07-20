@@ -3,6 +3,8 @@
 [![Latest Version](https://img.shields.io/packagist/v/mage-obsidian/module-storefront.svg?style=flat-square)](https://packagist.org/packages/mage-obsidian/module-storefront)
 [![License](https://img.shields.io/packagist/l/mage-obsidian/module-storefront.svg?style=flat-square)](https://packagist.org/packages/mage-obsidian/module-storefront)
 
+[![Star MageObsidian](https://img.shields.io/github/stars/mage-obsidian/module-modern-frontend?style=flat-square&label=Star%20the%20core%20repo&logo=github)](https://github.com/mage-obsidian/module-modern-frontend)
+
 📚 [Documentation](https://mage-obsidian.jeanmarcos.dev/) · 🚀 [Live demo](https://mage-obsidian-demo.jeanmarcos.dev/) · 💬 [Discussions](https://github.com/mage-obsidian/module-modern-frontend/discussions)
 
 Storefront logic for [MageObsidian](https://mage-obsidian.jeanmarcos.dev/). This module hosts the PHP layer that brings **Luma-level functionality** to the modern frontend, paired with the `MageObsidian/default` theme:
