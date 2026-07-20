@@ -164,6 +164,29 @@ describe("PrimaryNav — subcategory flyouts", () => {
         wrapper.unmount();
     });
 
+    it("anchors the flyout flush to its trigger, leaving no dead gap to cross", async () => {
+        const wrapper = mount(PrimaryNav, { props: { links: withChildren }, attachTo: document.body });
+        await flushPromises();
+
+        const item = wrapper.get("[data-nav-item]:first-child");
+        await item.trigger("mouseenter");
+
+        const child = item.element.querySelector("a[href='/motor/oil']") as HTMLElement;
+        const panel = child.closest(".absolute") as HTMLElement | null;
+        expect(panel).not.toBeNull();
+        expect(item.element.contains(panel)).toBe(true);
+
+        // The pointer travels from the trigger down into the panel. A top margin
+        // would sit outside both boxes, so crossing it fires mouseleave on the
+        // wrapper and closes the flyout before it can be clicked; top-full plus
+        // inner padding keeps the travel path inside the wrapper's subtree.
+        const classes = [...panel!.classList];
+        expect(classes).toContain("top-full");
+        expect(classes.filter((name) => name.startsWith("mt-"))).toEqual([]);
+
+        wrapper.unmount();
+    });
+
     it("opens on keyboard focus and closes on Escape", async () => {
         const wrapper = mount(PrimaryNav, { props: { links: withChildren }, attachTo: document.body });
         await flushPromises();

@@ -119,9 +119,11 @@ const close = (returnFocus = true): void => {
 const toggle = (): void => (open.value ? close(false) : openPanel());
 
 // Subcategory flyouts (only for items that carry `children`). Hover and keyboard
-// focus open the panel; because the panel is a child of the wrapper, mouseleave
-// fires only when the pointer leaves both, so no close timer is needed. A plain
-// tap on the parent link (touch, no hover) still navigates to the category — the
+// focus open the panel; no close timer is needed because the panel is a child of
+// the wrapper AND is laid out flush against it (top-full, with the visual gap as
+// the panel's own padding) — a margin there would leave a dead strip outside both
+// boxes that fires mouseleave while the pointer travels to the panel. A plain tap
+// on the parent link (touch, no hover) still navigates to the category — the
 // progressive fallback.
 const flyoutIndex = ref<number | null>(null);
 // After Escape we refocus the parent link, which re-fires focusin; this guard
@@ -227,31 +229,32 @@ onBeforeUnmount(() => {
                     />
                 </a>
 
-                <ul
-                    v-show="flyoutIndex === i"
-                    :aria-label="link.label"
-                    class="absolute left-0 z-40 mt-3 min-w-[12rem] rounded-edge border border-ash-200 bg-alabaster/95 py-1 shadow-xl backdrop-blur-md"
-                >
-                    <li v-for="child in link.children" :key="child.label">
-                        <a
-                            :href="child.url"
-                            :aria-current="child.active ? 'page' : null"
-                            class="block whitespace-nowrap px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.16em] text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
-                        >
-                            {{ child.label }}
-                        </a>
-                        <ul v-if="child.children && child.children.length" class="pb-1">
-                            <li v-for="grandchild in child.children" :key="grandchild.label">
-                                <a
-                                    :href="grandchild.url"
-                                    class="block whitespace-nowrap px-4 py-1.5 pl-7 font-mono text-[0.66rem] uppercase tracking-[0.14em] text-ash-500 transition-colors hover:bg-ash-100 hover:text-ink"
-                                >
-                                    {{ grandchild.label }}
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
+                <div v-show="flyoutIndex === i" class="absolute left-0 top-full z-40 pt-3">
+                    <ul
+                        :aria-label="link.label"
+                        class="min-w-[12rem] rounded-edge border border-ash-200 bg-alabaster/95 py-1 shadow-xl backdrop-blur-md"
+                    >
+                        <li v-for="child in link.children" :key="child.label">
+                            <a
+                                :href="child.url"
+                                :aria-current="child.active ? 'page' : null"
+                                class="block whitespace-nowrap px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.16em] text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
+                            >
+                                {{ child.label }}
+                            </a>
+                            <ul v-if="child.children && child.children.length" class="pb-1">
+                                <li v-for="grandchild in child.children" :key="grandchild.label">
+                                    <a
+                                        :href="grandchild.url"
+                                        class="block whitespace-nowrap px-4 py-1.5 pl-7 font-mono text-[0.66rem] uppercase tracking-[0.14em] text-ash-500 transition-colors hover:bg-ash-100 hover:text-ink"
+                                    >
+                                        {{ grandchild.label }}
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </template>
 
