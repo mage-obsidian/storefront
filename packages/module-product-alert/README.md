@@ -3,6 +3,8 @@
 [![Latest Version](https://img.shields.io/packagist/v/mage-obsidian/module-product-alert.svg?style=flat-square)](https://packagist.org/packages/mage-obsidian/module-product-alert)
 [![License](https://img.shields.io/packagist/l/mage-obsidian/module-product-alert.svg?style=flat-square)](https://packagist.org/packages/mage-obsidian/module-product-alert)
 
+[![Star MageObsidian](https://img.shields.io/github/stars/mage-obsidian/module-modern-frontend?style=flat-square&label=Star%20the%20core%20repo&logo=github)](https://github.com/mage-obsidian/module-modern-frontend)
+
 📚 [Documentation](https://mage-obsidian.jeanmarcos.dev/) · 🚀 [Live demo](https://mage-obsidian-demo.jeanmarcos.dev/) · 💬 [Discussions](https://github.com/mage-obsidian/module-modern-frontend/discussions)
 
 Product alert compatibility for [MageObsidian](https://mage-obsidian.jeanmarcos.dev/): price-drop and back-in-stock notify links on the product detail page.
