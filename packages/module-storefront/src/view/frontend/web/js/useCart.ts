@@ -10,6 +10,17 @@
 import { computed } from 'vue';
 import { useCustomerData } from 'MageObsidian_ModernFrontend::js/customer-data';
 
+/** Outcome of a cart mutation; `message` carries Magento's own wording. */
+export interface CartResult {
+    ok: boolean;
+    message?: string;
+}
+
+interface SectionMessage {
+    type?: string;
+    text?: string;
+}
+
 /** Read Magento's form key from its cookie (set by the page-cache layer). */
 export function getFormKey(): string {
     const match = typeof document !== 'undefined'
@@ -45,12 +56,46 @@ export function useCart() {
     const count = computed(() => Number(customerData.section('cart')?.summary_count ?? 0));
 
     /**
+     * Magento escapes messages for HTML output; a <textarea> resolves the
+     * entities without ever parsing them as markup, so the toast can render the
+     * result as plain text.
+     */
+    function decodeEntities(text: string): string {
+        const holder = document.createElement('textarea');
+        holder.innerHTML = text;
+        return holder.value || text;
+    }
+
+    /**
+     * First error Magento reported for the request we just made. The `messages`
+     * section is served with `getMessages(true)`, so reading it consumes them
+     * and they never pile up across requests.
+     */
+    function errorMessage(): string | undefined {
+        const items = customerData.section('messages')?.messages;
+        if (!Array.isArray(items)) {
+            return undefined;
+        }
+        const failure = (items as SectionMessage[]).find(
+            (item) => item?.type === 'error' && typeof item.text === 'string',
+        );
+        return failure ? decodeEntities(failure.text as string) : undefined;
+    }
+
+    /**
      * POST a prepared body to the add-to-cart endpoint and refresh the cart
      * section. Backfills the form key from the cookie if a cached page shipped
-     * without it. Always reloads the section afterwards so reactive state stays
+     * without it. Always reloads the sections afterwards so reactive state stays
      * consistent even on failure.
+     *
+     * The HTTP status alone cannot be trusted: Magento answers an AJAX cart
+     * mutation through `Cart::goBack()`, which returns 200 with a `{backUrl}`
+     * payload whether the mutation succeeded or threw — the reason is left in
+     * the message manager. So the verdict comes from the `messages` section,
+     * which we reload alongside `cart`, and its text is handed back to the
+     * caller so the toast can say what actually went wrong.
      */
-    async function post(action: string, body: FormData): Promise<boolean> {
+    async function post(action: string, body: FormData): Promise<CartResult> {
         if (!body.get('form_key')) {
             body.set('form_key', getFormKey());
         }
@@ -66,14 +111,15 @@ export function useCart() {
         } catch {
             ok = false;
         }
-        await customerData.reload(['cart']);
-        return ok;
+        await customerData.reload(['cart', 'messages']);
+        const message = errorMessage();
+        return message ? { ok: false, message } : { ok };
     }
 
     /**
      * Add from a server-rendered add-to-cart form (simple/virtual/downloadable).
      */
-    function addFromForm(form: HTMLFormElement): Promise<boolean> {
+    function addFromForm(form: HTMLFormElement): Promise<CartResult> {
         return post(form.action, new FormData(form));
     }
 
@@ -90,7 +136,7 @@ export function useCart() {
         qty?: number;
         uenc?: string;
         superAttribute?: Record<string, number | string>;
-    }): Promise<boolean> {
+    }): Promise<CartResult> {
         return post(action, toFormData({
             product,
             qty,
@@ -105,7 +151,7 @@ export function useCart() {
      * option fields (including file uploads, which need multipart) and posts the
      * lot. The form key is backfilled by post().
      */
-    function addRaw(action: string, body: FormData): Promise<boolean> {
+    function addRaw(action: string, body: FormData): Promise<CartResult> {
         return post(action, body);
     }
 
@@ -116,7 +162,7 @@ export function useCart() {
      * by the server (`checkout/sidebar/updateItemQty`) so store-code/secure-base
      * resolution stays correct.
      */
-    function updateItemQty(itemId: number | string, qty: number | string, action: string): Promise<boolean> {
+    function updateItemQty(itemId: number | string, qty: number | string, action: string): Promise<CartResult> {
         return post(action, toFormData({ item_id: itemId, item_qty: qty }));
     }
 
@@ -124,7 +170,7 @@ export function useCart() {
      * Remove a line item from the mini-cart, via Magento's native sidebar
      * endpoint (`checkout/sidebar/removeItem`). Reloads the `cart` section after.
      */
-    function removeItem(itemId: number | string, action: string): Promise<boolean> {
+    function removeItem(itemId: number | string, action: string): Promise<CartResult> {
         return post(action, toFormData({ item_id: itemId }));
     }
 

@@ -34,9 +34,9 @@ function init(): void {
             button.setAttribute('aria-busy', 'true');
         }
 
-        const ok = await cart.addFromForm(form);
+        const { ok, message } = await cart.addFromForm(form);
         announce(
-            ok ? i18n.$t('Added to cart') : i18n.$t('Could not add to cart'),
+            message ?? (ok ? i18n.$t('Added to cart') : i18n.$t('Could not add to cart')),
             ok ? 'success' : 'error',
         );
 
