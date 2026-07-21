@@ -26,7 +26,6 @@ export interface ProductOptions {
     validate: () => boolean;
     onChange: (cb: () => void) => void;
     appendTo: (form: FormData) => void;
-    hasFile: () => boolean;
 }
 
 function amountOf(node: PriceNode | undefined): number {
@@ -86,7 +85,9 @@ export function createProductOptions(root: HTMLElement): ProductOptions {
         }
         if (type === "file") {
             const file = fs.querySelector<HTMLInputElement>('input[type="file"]');
-            return !!file?.files && file.files.length > 0;
+            // A reconfigured line already holds an upload server-side, so the
+            // option counts as filled even with an empty input.
+            return (!!file?.files && file.files.length > 0) || fs.hasAttribute("data-option-uploaded");
         }
         if (type === "field" || type === "area") {
             const input = fs.querySelector<HTMLInputElement | HTMLTextAreaElement>("input, textarea");
@@ -144,10 +145,33 @@ export function createProductOptions(root: HTMLElement): ProductOptions {
         return firstInvalid === null;
     }
 
+    /**
+     * Keep Magento's `options_<id>_file_action` in step with the input: `save_old`
+     * restores the file already attached to the line being reconfigured, so it has
+     * to become `save_new` the moment a replacement is picked — otherwise the
+     * upload is accepted by the browser and then discarded by the server.
+     */
+    function syncFileAction(target: EventTarget | null): void {
+        if (!(target instanceof HTMLInputElement) || target.type !== "file") {
+            return;
+        }
+        const fs = target.closest<HTMLElement>("[data-option]");
+        const action = fs?.querySelector<HTMLInputElement>('input[name$="_file_action"]');
+        if (!action) {
+            return;
+        }
+        const chose = !!target.files && target.files.length > 0;
+        // Clearing the input only falls back to `save_old` where an old file
+        // exists; without one there is nothing to keep.
+        action.value = chose || !fs?.hasAttribute("data-option-uploaded") ? "save_new" : "save_old";
+    }
+
     function onChange(cb: () => void): void {
         root.addEventListener("change", cb);
         root.addEventListener("input", cb);
     }
+
+    root.addEventListener("change", (event) => syncFileAction(event.target));
 
     function appendTo(form: FormData): void {
         const inputs = root.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
@@ -180,9 +204,5 @@ export function createProductOptions(root: HTMLElement): ProductOptions {
         }
     }
 
-    function hasFile(): boolean {
-        return !!root.querySelector('input[type="file"]');
-    }
-
-    return { delta, validate, onChange, appendTo, hasFile };
+    return { delta, validate, onChange, appendTo };
 }
