@@ -12,15 +12,15 @@ interface CartCall {
 
 export const __calls: CartCall[] = [];
 
-let result = true;
+let result: { ok: boolean; message?: string } = { ok: true };
 
 export function __reset(): void {
     __calls.length = 0;
-    result = true;
+    result = { ok: true };
 }
 
-export function __setResult(value: boolean): void {
-    result = value;
+export function __setResult(value: boolean, message?: string): void {
+    result = { ok: value, message };
 }
 
 export function getFormKey(): string {
