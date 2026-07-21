@@ -206,8 +206,8 @@ async function add() {
         body.set(`super_attribute[${attr.id}]`, String(selected.value[attr.id]));
     });
     productOptions?.appendTo(body);
-    const ok = await cart.addRaw(props.action, body);
-    announce(ok ? props.labels.added : props.labels.failed, ok ? "success" : "error");
+    const { ok, message } = await cart.addRaw(props.action, body);
+    announce(message ?? (ok ? props.labels.added : props.labels.failed), ok ? "success" : "error");
     adding.value = false;
 }
 </script>

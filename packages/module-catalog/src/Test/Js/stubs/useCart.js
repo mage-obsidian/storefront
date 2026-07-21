@@ -10,17 +10,17 @@ export const __calls = [];
 export const __formCalls = [];
 export const __rawCalls = [];
 
-let result = true;
+let result = { ok: true };
 
 export function __reset() {
     __calls.length = 0;
     __formCalls.length = 0;
     __rawCalls.length = 0;
-    result = true;
+    result = { ok: true };
 }
 
-export function __setResult(value) {
-    result = value;
+export function __setResult(value, message) {
+    result = { ok: value, message };
 }
 
 export function useCart() {

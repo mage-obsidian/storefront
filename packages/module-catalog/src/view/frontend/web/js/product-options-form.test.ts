@@ -78,4 +78,23 @@ describe("product-options-form enhancer", () => {
         expect(toast.mock.calls.at(-1)?.[0].detail.message).toBe("Added");
         window.removeEventListener("obsidian:toast", toast);
     });
+
+    // A file option is the most common source of a server-side rejection, and
+    // Magento's AJAX cart answers 200 either way — so the toast has to relay the
+    // reason instead of the generic fallback copy.
+    it("announces the server's own error message when the add is rejected", async () => {
+        const toast = vi.fn();
+        window.addEventListener("obsidian:toast", toast);
+        __setResult(false, "The file you uploaded has an invalid extension.");
+        const form = buildForm();
+        setup(form);
+
+        await submit(form);
+        await Promise.resolve();
+
+        const detail = toast.mock.calls.at(-1)?.[0].detail;
+        expect(detail.message).toBe("The file you uploaded has an invalid extension.");
+        expect(detail.tone).toBe("error");
+        window.removeEventListener("obsidian:toast", toast);
+    });
 });
