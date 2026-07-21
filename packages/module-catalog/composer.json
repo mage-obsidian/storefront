@@ -2,7 +2,8 @@
     "name": "mage-obsidian/module-catalog",
     "description": "Catalog domain compatibility for MageObsidian: category listing and product detail page (ViewModels, layout and Vue islands) built on the storefront foundation.",
     "require": {
-        "mage-obsidian/module-modern-frontend": "^2.0"
+        "mage-obsidian/module-modern-frontend": "^2.0",
+        "mage-obsidian/module-storefront": "^3.0"
     },
     "type": "magento2-module",
     "license": [
