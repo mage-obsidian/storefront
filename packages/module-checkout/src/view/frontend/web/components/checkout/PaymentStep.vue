@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
 import AddressForm from "MageObsidian_Storefront::form/AddressForm";
 import type { RegionData } from "MageObsidian_Storefront::js/address";
@@ -18,6 +18,7 @@ interface PaymentLabels {
     otherMethodsHeading?: string;
     endingIn?: string;
     billingHeading?: string;
+    billingForMethod?: string;
     sameAsShipping?: string;
     noMethods?: string;
     continue?: string;
@@ -44,6 +45,15 @@ const checkout = useCheckout();
 const billingForm = ref<{ validate: () => boolean } | null>(null);
 
 const t = (key: keyof PaymentLabels, fallback: string): string => props.labels?.[key] ?? fallback;
+
+// Native parity for `checkout/options/display_billing_address_on`: value 0
+// ("Payment Method", the default) attaches billing to the chosen method, so it
+// only surfaces once a method is picked; value 1 ("Payment Page") shows one
+// shared form regardless. `displayBillingOnPayment` is true for the per-method case.
+const selectedMethodTitle = computed(
+    () => checkout.paymentMethods.find((m) => m.code === checkout.selectedPayment)?.title ?? "",
+);
+const billingVisible = computed(() => !checkout.displayBillingOnPayment || checkout.selectedPayment !== "");
 
 function toReview(): void {
     if (checkout.sameAsShipping || billingForm.value?.validate()) {
@@ -108,10 +118,16 @@ function toReview(): void {
             </div>
         </section>
 
-        <section aria-labelledby="billing-heading">
+        <section v-if="billingVisible" aria-labelledby="billing-heading">
             <h3 id="billing-heading" class="mb-4 font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">
                 {{ t("billingHeading", "Billing address") }}
             </h3>
+            <p
+                v-if="checkout.displayBillingOnPayment && selectedMethodTitle"
+                class="mb-4 font-mono text-xs text-ink-soft"
+            >
+                {{ t("billingForMethod", "For {method}").replace("{method}", selectedMethodTitle) }}
+            </p>
             <label class="mb-5 flex cursor-pointer items-center gap-3 text-sm text-ink">
                 <input v-model="checkout.sameAsShipping" type="checkbox" class="h-4 w-4 accent-ink">
                 {{ t("sameAsShipping", "Same as shipping address") }}

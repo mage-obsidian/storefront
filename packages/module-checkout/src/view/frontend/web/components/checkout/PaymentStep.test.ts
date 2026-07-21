@@ -68,4 +68,26 @@ describe("PaymentStep", () => {
         await wrapper.find("button").trigger("click");
         expect(checkout.step).toBe("review");
     });
+
+    it("in per-method mode keeps billing hidden until a method is selected", async () => {
+        checkout.displayBillingOnPayment = true;
+        checkout.selectedPayment = "";
+        const wrapper = render();
+        expect(wrapper.find('section[aria-labelledby="billing-heading"]').exists()).toBe(false);
+
+        checkout.selectedPayment = "checkmo";
+        await wrapper.vm.$nextTick();
+        const billing = wrapper.find('section[aria-labelledby="billing-heading"]');
+        expect(billing.exists()).toBe(true);
+        expect(billing.text()).toContain("Check / Money order");
+    });
+
+    it("in payment-page mode shows the shared billing form regardless of selection", () => {
+        checkout.displayBillingOnPayment = false;
+        checkout.selectedPayment = "";
+        const wrapper = render();
+        const billing = wrapper.find('section[aria-labelledby="billing-heading"]');
+        expect(billing.exists()).toBe(true);
+        expect(billing.text()).not.toContain("Check / Money order");
+    });
 });
