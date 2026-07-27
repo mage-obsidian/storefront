@@ -10,7 +10,6 @@ declare(strict_types=1);
 namespace MageObsidian\Storefront\ViewModel;
 
 use Magento\Framework\View\Element\Block\ArgumentInterface;
-use Magento\Store\Model\StoreManagerInterface;
 use MageObsidian\Storefront\Model\Navigation\MenuTree;
 use Throwable;
 
@@ -20,9 +19,9 @@ use Throwable;
  * header, the mobile drawer and the footer all read it, so the nav lives in one
  * place.
  *
- * The tree itself comes from MenuTree; what this adds is the presentation
- * contract: a per-request memo, and a demo list for a store with no menu
- * categories (or any failure) so the header still renders.
+ * The tree — and its per-request memo — comes from MenuTree; what this adds is
+ * the presentation contract: a demo list for a store with no menu categories (or
+ * any failure), so the header still renders.
  *
  * @phpstan-import-type NavItem from MenuTree
  */
@@ -38,23 +37,10 @@ class Navigation implements ArgumentInterface
     ];
 
     /**
-     * Resolved items, keyed by store and depth.
-     *
-     * Layout object arguments are shared by default, so the three blocks that ask
-     * for the nav get this same instance and the memo spans the whole request.
-     *
-     * @var array<string, array<int, NavItem>>
-     */
-    private array $resolved = [];
-
-    /**
      * @param MenuTree $menuTree
-     * @param StoreManagerInterface $storeManager
      */
-    public function __construct(
-        private readonly MenuTree $menuTree,
-        private readonly StoreManagerInterface $storeManager
-    ) {
+    public function __construct(private readonly MenuTree $menuTree)
+    {
     }
 
     /**
@@ -69,19 +55,12 @@ class Navigation implements ArgumentInterface
      */
     public function getItems(int $maxDepth = 1): array
     {
-        $depth = max(1, $maxDepth);
-
         try {
-            $memoKey = $this->storeManager->getStore()->getId() . ':' . $depth;
-            if (isset($this->resolved[$memoKey])) {
-                return $this->resolved[$memoKey];
-            }
-
-            $items = $this->menuTree->get($depth);
+            $items = $this->menuTree->get(max(1, $maxDepth));
         } catch (Throwable) {
             return self::DEMO_ITEMS;
         }
 
-        return $this->resolved[$memoKey] = $items !== [] ? $items : self::DEMO_ITEMS;
+        return $items !== [] ? $items : self::DEMO_ITEMS;
     }
 }

@@ -39,6 +39,13 @@ class MenuTree
     private const CACHE_PREFIX = 'mageobsidian_nav';
 
     /**
+     * Resolved trees for this request, keyed by cache key.
+     *
+     * @var array<string, array{items: array<int, mixed>, ids: array<int, int>}>
+     */
+    private array $resolved = [];
+
+    /**
      * @param CollectionFactory $categoryCollectionFactory
      * @param StoreManagerInterface $storeManager
      * @param RequestPathResolver $requestPathResolver
@@ -64,30 +71,64 @@ class MenuTree
      */
     public function get(int $depth): array
     {
+        return $this->load($depth)['items'];
+    }
+
+    /**
+     * Cache tags for the categories the tree is built from, for a block to hand to
+     * the page cache. Same set the tree itself is stored under, so an ESI fragment
+     * and the block_html entry behind it expire together.
+     *
+     * @param int $depth
+     * @return array<int, string>
+     */
+    public function getIdentities(int $depth): array
+    {
+        return $this->cacheTags($this->load($depth)['ids']);
+    }
+
+    /**
+     * Resolve the tree once per request, then out of block_html, then from the
+     * database. The memo lives here because both consumers — the templates asking
+     * for items and the block asking for identities — must share one resolution.
+     *
+     * @param int $depth
+     * @return array{items: array<int, NavItem>, ids: array<int, int>}
+     */
+    private function load(int $depth): array
+    {
         $store = $this->storeManager->getStore();
         $cacheKey = $this->cacheKey($store->getCode(), $store->getBaseUrl(), $depth);
 
+        if (isset($this->resolved[$cacheKey])) {
+            return $this->resolved[$cacheKey];
+        }
+
         $cached = $this->cache->load($cacheKey);
         if (is_string($cached) && $cached !== '') {
-            $items = $this->serializer->unserialize($cached);
-            if (is_array($items)) {
-                return $items;
+            $tree = $this->serializer->unserialize($cached);
+            if (is_array($tree) && isset($tree['items'], $tree['ids'])) {
+                return $this->resolved[$cacheKey] = $tree;
             }
         }
 
         $rootCategoryId = (int)$store->getRootCategoryId();
         [$categoriesByParent, $categoriesById] = $this->collect($rootCategoryId, $depth);
         $this->requestPathResolver->seed($categoriesById, (int)$store->getId());
-        $items = $this->assembleTree($rootCategoryId, $categoriesByParent);
+
+        $tree = [
+            'items' => $this->assembleTree($rootCategoryId, $categoriesByParent),
+            'ids' => array_keys($categoriesById),
+        ];
 
         $this->cache->save(
-            $this->serializer->serialize($items),
+            $this->serializer->serialize($tree),
             $cacheKey,
-            $this->cacheTags(array_keys($categoriesById)),
+            $this->cacheTags($tree['ids']),
             $this->cacheLifetime
         );
 
-        return $items;
+        return $this->resolved[$cacheKey] = $tree;
     }
 
     /**

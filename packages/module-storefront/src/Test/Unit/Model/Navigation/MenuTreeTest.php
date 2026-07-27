@@ -153,11 +153,43 @@ class MenuTreeTest extends TestCase
     {
         $this->collectionFactory->expects($this->never())->method('create');
         $this->cache->expects($this->never())->method('save');
-        $this->cache->method('load')->willReturn(
-            $this->serializer->serialize([['label' => 'Outerwear', 'url' => '/o.html', 'active' => false]])
-        );
+        $this->cache->method('load')->willReturn($this->serializer->serialize([
+            'items' => [['label' => 'Outerwear', 'url' => '/o.html', 'active' => false]],
+            'ids' => [10],
+        ]));
 
         $this->assertSame('Outerwear', $this->subject()->get(1)[0]['label']);
+    }
+
+    /**
+     * The block hands these to the page cache; they have to match the tags the tree
+     * itself is stored under, so an ESI fragment and its block_html entry expire
+     * together.
+     */
+    public function testExposesTheCategoryIdentities(): void
+    {
+        $this->collectionsReturning([
+            [$this->category('Outerwear', 'https://shop.test/outerwear', 10)],
+            [$this->category('Coats', 'https://shop.test/coats', 20, 10)],
+        ]);
+
+        $this->assertSame(['cat_c_10', 'cat_c_20', 'cat_c'], $this->subject()->getIdentities(2));
+    }
+
+    /**
+     * Items and identities are two consumers of one resolution: the templates and
+     * the block must not each pay for a cache read.
+     */
+    public function testResolvesEachDepthOnlyOncePerRequest(): void
+    {
+        $this->collectionsReturning([[$this->category('Outerwear', 'https://shop.test/o', 10)]]);
+        $this->cache->expects($this->once())->method('load');
+        $this->cache->expects($this->once())->method('save');
+
+        $subject = $this->subject();
+        $subject->get(1);
+        $subject->getIdentities(1);
+        $subject->get(1);
     }
 
     /**
@@ -203,7 +235,7 @@ class MenuTreeTest extends TestCase
     public function testKeyDependsOnStoreBaseUrlAndDepth(): void
     {
         $keys = [];
-        $this->cache->method('load')->willReturnCallback(function (string $key) use (&$keys): bool {
+        $this->cache->method('load')->willReturnCallback(static function (string $key) use (&$keys): bool {
             $keys[] = $key;
 
             return false;
@@ -227,13 +259,30 @@ class MenuTreeTest extends TestCase
         $this->assertSame($keys, array_unique($keys));
     }
 
-    public function testRebuildsWhenTheCachedPayloadIsNotATree(): void
+    /**
+     * Also covers the entries written before the payload carried `ids`: a plain list
+     * of items must be treated as a miss instead of fataling on the missing key.
+     *
+     * @dataProvider unusablePayloads
+     */
+    public function testRebuildsWhenTheCachedPayloadIsNotUsable(mixed $payload): void
     {
-        $this->cache->method('load')->willReturn($this->serializer->serialize('corrupto'));
+        $this->cache->method('load')->willReturn($this->serializer->serialize($payload));
         $this->collectionsReturning([[$this->category('Outerwear', 'https://shop.test/o', 10)]]);
         $this->cache->expects($this->once())->method('save');
 
         $this->assertSame('Outerwear', $this->subject()->get(1)[0]['label']);
+    }
+
+    /**
+     * @return array<string, array<int, mixed>>
+     */
+    public static function unusablePayloads(): array
+    {
+        return [
+            'not an array' => ['corrupto'],
+            'legacy shape without ids' => [[['label' => 'Viejo', 'url' => '/v.html', 'active' => false]]],
+        ];
     }
 
     public function testCachesTheEmptyTreeOfAStoreWithNoMenuCategories(): void
