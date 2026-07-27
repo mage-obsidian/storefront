@@ -8,6 +8,7 @@ use Magento\Catalog\Model\ResourceModel\Category\Collection;
 use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
+use MageObsidian\Storefront\Model\Category\RequestPathResolver;
 use MageObsidian\Storefront\ViewModel\FeaturedCategories;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -22,6 +23,7 @@ class FeaturedCategoriesTest extends TestCase
 {
     private CollectionFactory&MockObject $collectionFactory;
     private StoreManagerInterface&MockObject $storeManager;
+    private RequestPathResolver&MockObject $requestPathResolver;
 
     protected function setUp(): void
     {
@@ -30,8 +32,10 @@ class FeaturedCategoriesTest extends TestCase
         }
         $this->collectionFactory = $this->createMock(CollectionFactory::class);
         $this->storeManager = $this->createMock(StoreManagerInterface::class);
+        $this->requestPathResolver = $this->createMock(RequestPathResolver::class);
 
         $store = $this->createMock(Store::class);
+        $store->method('getId')->willReturn(1);
         $store->method('getRootCategoryId')->willReturn(2);
         $this->storeManager->method('getStore')->willReturn($store);
     }
@@ -50,9 +54,10 @@ class FeaturedCategoriesTest extends TestCase
         $this->collectionFactory->method('create')->willReturn($collection);
     }
 
-    private function category(string $name, string $url, string $image): Category&MockObject
+    private function category(string $name, string $url, string $image, int $id = 0): Category&MockObject
     {
         $category = $this->createMock(Category::class);
+        $category->method('getId')->willReturn($id);
         $category->method('getName')->willReturn($name);
         $category->method('getUrl')->willReturn($url);
         $category->method('getImageUrl')->willReturn($image);
@@ -62,14 +67,19 @@ class FeaturedCategoriesTest extends TestCase
 
     private function subject(int $limit = 4): FeaturedCategories
     {
-        return new FeaturedCategories($this->collectionFactory, $this->storeManager, $limit);
+        return new FeaturedCategories(
+            $this->collectionFactory,
+            $this->storeManager,
+            $this->requestPathResolver,
+            $limit
+        );
     }
 
     public function testMapsTopCategoriesWithImages(): void
     {
         $this->collectionReturning([
-            $this->category('Women', 'https://shop.test/women', 'https://shop.test/media/women.jpg'),
-            $this->category('Men', 'https://shop.test/men', ''),
+            $this->category('Women', 'https://shop.test/women', 'https://shop.test/media/women.jpg', 10),
+            $this->category('Men', 'https://shop.test/men', '', 11),
         ]);
 
         $items = $this->subject()->getItems();
@@ -86,5 +96,26 @@ class FeaturedCategoriesTest extends TestCase
         $this->collectionReturning([]);
 
         $this->assertSame([], $this->subject()->getItems());
+    }
+
+    /**
+     * Same regression as the nav: getUrl() falls through to a per-category
+     * url_rewrite lookup unless request_path is seeded for the whole set first.
+     */
+    public function testResolvesEveryTileUrlInOneLookup(): void
+    {
+        $this->collectionReturning([
+            $this->category('Women', 'https://shop.test/women', '', 10),
+            $this->category('Men', 'https://shop.test/men', '', 11),
+        ]);
+
+        $this->requestPathResolver->expects($this->once())
+            ->method('seed')
+            ->with(
+                $this->callback(static fn (array $byId): bool => array_keys($byId) === [10, 11]),
+                1
+            );
+
+        $this->subject()->getItems();
     }
 }
