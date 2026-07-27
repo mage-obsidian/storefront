@@ -9,20 +9,22 @@ declare(strict_types=1);
 
 namespace MageObsidian\Storefront\ViewModel;
 
-use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use MageObsidian\Storefront\Model\Navigation\MenuTree;
 use Throwable;
 
 /**
  * Single source of the main navigation, consumed from Twig as
  * `block.getNavigation().getItems()` (registered as a layout `<argument>`). The
- * header and the mobile menu both read it, so the nav lives in one place.
+ * header, the mobile drawer and the footer all read it, so the nav lives in one
+ * place.
  *
- * Maps the store's top-level menu categories; on a store with no menu categories
- * (or any failure) it falls back to a demo list so the header still renders.
+ * The tree itself comes from MenuTree; what this adds is the presentation
+ * contract: a per-request memo, and a demo list for a store with no menu
+ * categories (or any failure) so the header still renders.
  *
- * @phpstan-type NavItem array{label: string, url: string, active: bool, children?: array<int, mixed>}
+ * @phpstan-import-type NavItem from MenuTree
  */
 class Navigation implements ArgumentInterface
 {
@@ -36,11 +38,21 @@ class Navigation implements ArgumentInterface
     ];
 
     /**
-     * @param CollectionFactory $categoryCollectionFactory
+     * Resolved items, keyed by store and depth.
+     *
+     * Layout object arguments are shared by default, so the three blocks that ask
+     * for the nav get this same instance and the memo spans the whole request.
+     *
+     * @var array<string, array<int, NavItem>>
+     */
+    private array $resolved = [];
+
+    /**
+     * @param MenuTree $menuTree
      * @param StoreManagerInterface $storeManager
      */
     public function __construct(
-        private readonly CollectionFactory $categoryCollectionFactory,
+        private readonly MenuTree $menuTree,
         private readonly StoreManagerInterface $storeManager
     ) {
     }
@@ -57,72 +69,19 @@ class Navigation implements ArgumentInterface
      */
     public function getItems(int $maxDepth = 1): array
     {
+        $depth = max(1, $maxDepth);
+
         try {
-            $items = $this->loadMenuTree(max(1, $maxDepth));
+            $memoKey = $this->storeManager->getStore()->getId() . ':' . $depth;
+            if (isset($this->resolved[$memoKey])) {
+                return $this->resolved[$memoKey];
+            }
+
+            $items = $this->menuTree->get($depth);
         } catch (Throwable) {
-            $items = [];
+            return self::DEMO_ITEMS;
         }
 
-        return $items !== [] ? $items : self::DEMO_ITEMS;
-    }
-
-    /**
-     * Load the store's in-menu categories under the root, down to $maxDepth, as a
-     * nested tree. One collection per level (BFS, bounded by $maxDepth) keyed by
-     * parent, so there is no per-category query and no full-catalog scan.
-     *
-     * @param int $maxDepth
-     * @return array<int, NavItem>
-     */
-    private function loadMenuTree(int $maxDepth): array
-    {
-        $rootCategoryId = (int)$this->storeManager->getStore()->getRootCategoryId();
-
-        $parentIds = [$rootCategoryId];
-        $nodesByParent = [];
-        for ($depth = 0; $depth < $maxDepth && $parentIds !== []; $depth++) {
-            $collection = $this->categoryCollectionFactory->create();
-            $collection->addAttributeToSelect(['name', 'url_key', 'url_path'])
-                ->addAttributeToFilter('parent_id', ['in' => $parentIds])
-                ->addAttributeToFilter('is_active', 1)
-                ->addAttributeToFilter('include_in_menu', 1)
-                ->setOrder('position', 'ASC');
-
-            $nextParentIds = [];
-            foreach ($collection as $category) {
-                $id = (int)$category->getId();
-                $nodesByParent[(int)$category->getParentId()][] = [
-                    'id' => $id,
-                    'label' => (string)$category->getName(),
-                    'url' => (string)$category->getUrl(),
-                ];
-                $nextParentIds[] = $id;
-            }
-            $parentIds = $nextParentIds;
-        }
-
-        return $this->assembleTree($rootCategoryId, $nodesByParent);
-    }
-
-    /**
-     * Turn the parent-keyed node buckets into a nested nav tree.
-     *
-     * @param int $parentId
-     * @param array<int, array<int, array{id: int, label: string, url: string}>> $nodesByParent
-     * @return array<int, NavItem>
-     */
-    private function assembleTree(int $parentId, array $nodesByParent): array
-    {
-        $items = [];
-        foreach ($nodesByParent[$parentId] ?? [] as $node) {
-            $item = ['label' => $node['label'], 'url' => $node['url'], 'active' => false];
-            $children = $this->assembleTree($node['id'], $nodesByParent);
-            if ($children !== []) {
-                $item['children'] = $children;
-            }
-            $items[] = $item;
-        }
-
-        return $items;
+        return $this->resolved[$memoKey] = $items !== [] ? $items : self::DEMO_ITEMS;
     }
 }

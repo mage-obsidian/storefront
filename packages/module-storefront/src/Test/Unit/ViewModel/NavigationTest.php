@@ -4,24 +4,24 @@ declare(strict_types=1);
 namespace MageObsidian\Storefront\Test\Unit\ViewModel;
 
 use Magento\Catalog\Model\Category;
-use Magento\Catalog\Model\ResourceModel\Category\Collection;
-use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
+use MageObsidian\Storefront\Model\Navigation\MenuTree;
 use MageObsidian\Storefront\ViewModel\Navigation;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 /**
- * The first ViewModel: feeds the header and mobile menu the same nav items from
- * a single source (no more duplicated nav_links). Maps the store's top-level
- * menu categories, and falls back to a demo list when the catalog has none —
- * so a fresh store still renders a usable header. Needs Magento Catalog types,
- * so it runs in a Magento root (see phpunit.ci.xml).
+ * Feeds the header, the mobile drawer and the footer the same nav items from a
+ * single source (no more duplicated nav_links). The tree comes from MenuTree;
+ * what is tested here is the presentation contract around it — the per-request
+ * memo and the demo fallback that keeps a fresh store's header usable. Needs
+ * Magento Catalog types, so it runs in a Magento root (see phpunit.ci.xml).
  */
 class NavigationTest extends TestCase
 {
-    private CollectionFactory&MockObject $collectionFactory;
+    private MenuTree&MockObject $menuTree;
     private StoreManagerInterface&MockObject $storeManager;
 
     protected function setUp(): void
@@ -29,114 +29,98 @@ class NavigationTest extends TestCase
         if (!class_exists(Category::class)) {
             $this->markTestSkipped('Magento Catalog is not available in this runtime.');
         }
-        $this->collectionFactory = $this->createMock(CollectionFactory::class);
+        $this->menuTree = $this->createMock(MenuTree::class);
         $this->storeManager = $this->createMock(StoreManagerInterface::class);
 
         $store = $this->createMock(Store::class);
-        $store->method('getRootCategoryId')->willReturn(2);
+        $store->method('getId')->willReturn(1);
         $this->storeManager->method('getStore')->willReturn($store);
     }
 
     /**
-     * One collection per BFS level: each call to create() returns the next level's
-     * categories, so a maxDepth=N test supplies N category lists in order.
-     *
-     * @param array<int, array<int, Category&MockObject>> $levels
+     * @param array<int, array<string, mixed>> $items
      */
-    private function collectionsReturning(array $levels): void
+    private function treeReturning(array $items): void
     {
-        $collections = [];
-        foreach ($levels as $categories) {
-            $collection = $this->createMock(Collection::class);
-            $collection->method('addAttributeToSelect')->willReturnSelf();
-            $collection->method('addAttributeToFilter')->willReturnSelf();
-            $collection->method('setOrder')->willReturnSelf();
-            $collection->method('getIterator')->willReturn(new \ArrayIterator($categories));
-            $collections[] = $collection;
-        }
-        $this->collectionFactory->method('create')->willReturnOnConsecutiveCalls(...$collections);
-    }
-
-    /**
-     * @param array<int, Category&MockObject> $categories
-     */
-    private function collectionReturning(array $categories): void
-    {
-        $this->collectionsReturning([$categories]);
-    }
-
-    private function category(string $name, string $url, int $id = 0, int $parentId = 2): Category&MockObject
-    {
-        $category = $this->createMock(Category::class);
-        $category->method('getId')->willReturn($id);
-        $category->method('getParentId')->willReturn($parentId);
-        $category->method('getName')->willReturn($name);
-        $category->method('getUrl')->willReturn($url);
-
-        return $category;
+        $this->menuTree->method('get')->willReturn($items);
     }
 
     private function subject(): Navigation
     {
-        return new Navigation($this->collectionFactory, $this->storeManager);
+        return new Navigation($this->menuTree, $this->storeManager);
     }
 
-    public function testMapsTopCategoriesToNavItems(): void
+    public function testExposesTheMenuTreeAsNavItems(): void
     {
-        $this->collectionReturning([
-            $this->category('Outerwear', 'https://shop.test/outerwear'),
-            $this->category('Tailoring', 'https://shop.test/tailoring'),
-        ]);
-
-        $items = $this->subject()->getItems();
-
-        $this->assertCount(2, $items);
-        $this->assertSame('Outerwear', $items[0]['label']);
-        $this->assertSame('https://shop.test/outerwear', $items[0]['url']);
-        $this->assertArrayHasKey('active', $items[0]);
-    }
-
-    public function testBuildsNestedTreeUpToMaxDepth(): void
-    {
-        $this->collectionsReturning([
-            [
-                $this->category('Outerwear', 'https://shop.test/outerwear', 10, 2),
-                $this->category('Tailoring', 'https://shop.test/tailoring', 11, 2),
-            ],
-            [
-                $this->category('Coats', 'https://shop.test/coats', 20, 10),
-                $this->category('Jackets', 'https://shop.test/jackets', 21, 10),
-            ],
-        ]);
-
-        $items = $this->subject()->getItems(2);
-
-        $this->assertCount(2, $items);
-        $this->assertSame('Outerwear', $items[0]['label']);
-        $this->assertArrayHasKey('children', $items[0]);
-        $this->assertSame(['Coats', 'Jackets'], array_column($items[0]['children'], 'label'));
-        // A leaf category carries no children key.
-        $this->assertArrayNotHasKey('children', $items[1]);
-    }
-
-    public function testDefaultDepthKeepsTopLevelOnlyWithoutChildren(): void
-    {
-        $this->collectionReturning([
-            $this->category('Outerwear', 'https://shop.test/outerwear', 10, 2),
+        $this->treeReturning([
+            ['label' => 'Outerwear', 'url' => 'https://shop.test/outerwear', 'active' => false],
         ]);
 
         $items = $this->subject()->getItems();
 
         $this->assertCount(1, $items);
-        $this->assertArrayNotHasKey('children', $items[0]);
+        $this->assertSame('Outerwear', $items[0]['label']);
+        $this->assertSame('https://shop.test/outerwear', $items[0]['url']);
+        $this->assertArrayHasKey('active', $items[0]);
+    }
+
+    public function testAsksForTheRequestedDepth(): void
+    {
+        $this->menuTree->expects($this->once())
+            ->method('get')
+            ->with(2)
+            ->willReturn([]);
+
+        $this->subject()->getItems(2);
+    }
+
+    public function testTreatsAnyDepthBelowOneAsTopLevel(): void
+    {
+        $this->menuTree->expects($this->once())
+            ->method('get')
+            ->with(1)
+            ->willReturn([]);
+
+        $this->subject()->getItems(0);
+    }
+
+    /**
+     * The header, the mobile drawer and the footer each ask for the nav, and layout
+     * object arguments are shared, so they all land on this same instance. Without
+     * the memo the tree was resolved once per consumer.
+     */
+    public function testResolvesEachDepthOnlyOncePerRequest(): void
+    {
+        $this->menuTree->expects($this->exactly(2))
+            ->method('get')
+            ->willReturn([['label' => 'Outerwear', 'url' => '/o.html', 'active' => false]]);
+
+        $subject = $this->subject();
+        $subject->getItems(2);
+        $subject->getItems(2);
+        $subject->getItems(1);
+        $subject->getItems(1);
     }
 
     public function testFallsBackToDemoItemsWhenCatalogHasNoMenuCategories(): void
     {
-        $this->collectionReturning([]);
+        $this->treeReturning([]);
 
-        $items = $this->subject()->getItems();
+        $this->assertDemoItems($this->subject()->getItems());
+    }
 
+    public function testFallsBackToDemoItemsWhenTheTreeFails(): void
+    {
+        $this->menuTree->method('get')->willThrowException(new RuntimeException('cache down'));
+
+        $this->assertDemoItems($this->subject()->getItems());
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $items
+     */
+    private function assertDemoItems(array $items): void
+    {
         $this->assertNotEmpty($items);
         $this->assertContainsOnly('array', $items);
         foreach ($items as $item) {

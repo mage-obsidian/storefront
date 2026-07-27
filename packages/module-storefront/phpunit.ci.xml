@@ -16,6 +16,8 @@
         <testsuite name="MageObsidian Storefront Standalone Unit">
             <directory>src/Test/Unit</directory>
             <exclude>src/Test/Unit/Model/Template/Extension/PriceExtensionTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Category/RequestPathResolverTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Navigation/MenuTreeTest.php</exclude>
             <exclude>src/Test/Unit/ViewModel/NavigationTest.php</exclude>
             <exclude>src/Test/Unit/ViewModel/StoreSwitcherTest.php</exclude>
             <exclude>src/Test/Unit/ViewModel/CurrencySwitcherTest.php</exclude>
