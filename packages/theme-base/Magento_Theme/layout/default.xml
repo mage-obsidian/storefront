@@ -82,7 +82,10 @@
         </referenceContainer>
         <referenceContainer name="footer-container" htmlClass="shadow-inner bg-white mt-4">
             <container name="footer" as="footer" label="Page Footer">
+                <!-- MageObsidian Template for getChildHtmlWithExclusions: a child theme
+                     can place one child by alias and still render the rest. -->
                 <block
+                        class="MageObsidian\ModernFrontend\Block\Template"
                         template="Magento_Theme::html/footer.phtml"
                         name="footer.content" as="footer_content"
                 >
