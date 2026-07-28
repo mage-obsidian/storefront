@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { ChevronDownIcon } from "@heroicons/vue/24/outline";
+import Icon from "MageObsidian_ModernFrontend::elements/Icon";
 
 // Recursive accordion for the mobile drawer: a nav tree where every branch is a
 // category link (it still navigates) paired with a separate toggle button that
@@ -48,7 +48,7 @@ const toggle = (label: string): void => {
                     :aria-expanded="openLabels.has(item.label) ? 'true' : 'false'"
                     @click="toggle(item.label)"
                 >
-                    <ChevronDownIcon
+                    <Icon name="chevron-down" set="outline"
                         class="h-4 w-4 transition-transform"
                         :class="openLabels.has(item.label) ? 'rotate-180' : ''"
                         aria-hidden="true"

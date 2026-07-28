@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { ShoppingBagIcon } from "@heroicons/vue/24/outline";
+import Icon from "MageObsidian_ModernFrontend::elements/Icon";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 import { digitNudge } from "MageObsidian_Storefront::js/digitNudge";
 
@@ -22,7 +22,7 @@ const count = computed(() => Number(customerData.section("cart")?.summary_count 
 
 <template>
     <span class="cart-count relative inline-flex items-center gap-2">
-        <ShoppingBagIcon class="h-5 w-5" />
+        <Icon name="shopping-bag" set="outline" class="h-5 w-5" />
         <span
             v-if="count > 0"
             class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 font-body text-[0.65rem] font-medium leading-none text-alabaster"

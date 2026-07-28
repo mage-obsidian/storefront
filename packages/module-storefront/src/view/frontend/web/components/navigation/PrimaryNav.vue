@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, useId } from "vue";
-import { ChevronDownIcon } from "@heroicons/vue/24/outline";
+import Icon from "MageObsidian_ModernFrontend::elements/Icon";
 import { computeVisibleCount } from "MageObsidian_Storefront::js/overflowNav";
 
 // Desktop primary navigation island (priority+). The category bar is measured
@@ -30,12 +30,11 @@ const trigger = ref<HTMLElement | null>(null);
 const panel = ref<HTMLElement | null>(null);
 const panelId = useId();
 
-// The first render must not paint the full list: onMounted runs after the
-// browser can paint, so a `measuring=true` initial state would flash the whole
-// (overflowing) bar before measure() clips the host. Start collapsed to nothing;
-// measure() then expands the list for one clipped tick to read widths.
-const measuring = ref(false);
-const visibleCount = ref(0);
+// The server paints the full bar clipped to the header, which is exactly the
+// `measuring` state; hydration has to start there or the nav would either blank
+// out or overflow the logo until measure() runs.
+const measuring = ref(true);
+const visibleCount = ref(props.links.length);
 const open = ref(false);
 
 let widths: number[] = [];
@@ -222,7 +221,7 @@ onBeforeUnmount(() => {
                     class="inline-flex items-center gap-1 whitespace-nowrap font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft transition-colors hover:text-ink"
                 >
                     {{ link.label }}
-                    <ChevronDownIcon
+                    <Icon name="chevron-down" set="outline"
                         class="h-3 w-3 transition-transform"
                         :class="flyoutIndex === i ? 'rotate-180' : ''"
                         aria-hidden="true"
@@ -274,7 +273,7 @@ onBeforeUnmount(() => {
                 @click="toggle"
             >
                 {{ moreLabel }}
-                <ChevronDownIcon
+                <Icon name="chevron-down" set="outline"
                     class="h-3.5 w-3.5 transition-transform"
                     :class="open ? 'rotate-180' : ''"
                     aria-hidden="true"

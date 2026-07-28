@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, useId } from "vue";
-import { Bars3Icon, XMarkIcon } from "@heroicons/vue/24/outline";
+import Icon from "MageObsidian_ModernFrontend::elements/Icon";
 import Drawer from "MageObsidian_Storefront::elements/Drawer";
 import Switcher from "MageObsidian_Storefront::navigation/Switcher";
 import NavAccordion from "MageObsidian_Storefront::navigation/NavAccordion";
@@ -80,7 +80,7 @@ const hasSwitcher = (group: SwitcherGroup | null) =>
             :aria-expanded="open ? 'true' : 'false'"
             @click="open = true"
         >
-            <Bars3Icon class="h-6 w-6" />
+            <Icon name="bars-3" set="outline" class="h-6 w-6" />
         </button>
 
         <Drawer :id="drawerId" :open="open" side="left" :label="label" @close="open = false">
@@ -93,7 +93,7 @@ const hasSwitcher = (group: SwitcherGroup | null) =>
                     :aria-label="`Close ${label}`"
                     @click="open = false"
                 >
-                    <XMarkIcon class="h-5 w-5" />
+                    <Icon name="x-mark" set="outline" class="h-5 w-5" />
                 </button>
             </div>
 

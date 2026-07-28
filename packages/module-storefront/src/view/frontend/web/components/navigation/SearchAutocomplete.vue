@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onBeforeUnmount, nextTick, useId, watch } from "vue";
-import { MagnifyingGlassIcon } from "@heroicons/vue/24/outline";
+import Icon from "MageObsidian_ModernFrontend::elements/Icon";
 
 // Header quick-search. An icon button toggles a panel holding a real
 // <form method="get"> that submits to the native search results URL — so search
@@ -176,7 +176,7 @@ defineExpose({ suggestions, activeIndex, open, fetchSuggestions });
             :aria-expanded="open ? 'true' : 'false'"
             @click="toggle"
         >
-            <MagnifyingGlassIcon class="h-5 w-5" />
+            <Icon name="magnifying-glass" set="outline" class="h-5 w-5" />
         </button>
 
         <div
@@ -208,7 +208,7 @@ defineExpose({ suggestions, activeIndex, open, fetchSuggestions });
                     :aria-label="text.submit"
                     class="inline-flex shrink-0 items-center justify-center rounded-edge border border-ink bg-ink p-2 text-alabaster transition-colors hover:bg-transparent hover:text-ink"
                 >
-                    <MagnifyingGlassIcon class="h-4 w-4" />
+                    <Icon name="magnifying-glass" set="outline" class="h-4 w-4" />
                 </button>
             </form>
 
