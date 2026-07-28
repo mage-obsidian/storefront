@@ -25,9 +25,6 @@ function init() {
     }
     const strip = root.querySelector('[data-gallery-thumbs]');
 
-    // Stable name so the crossfade only animates this element.
-    main.style.viewTransitionName = 'pdp-hero';
-
     // Snapshot the base product's gallery so a variant reset can restore it.
     const base = {
         thumbs: strip ? strip.innerHTML : null,

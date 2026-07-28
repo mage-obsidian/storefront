@@ -177,7 +177,11 @@
 
 /* Destination of the card → hero morph across a listing → PDP navigation. Set in
    CSS, not by gallery.js, so the name is on the element from the first frame:
-   the browser captures the incoming snapshot before any island has mounted. */
-[data-gallery-main] {
+   the browser captures the incoming snapshot before any island has mounted.
+   The frame carries the name, not the <img> inside it: naming the image leaves
+   this box behind at its final size, so its own background shows through as a
+   grey mat for as long as the image is travelling. The card's media box is its
+   counterpart — same aspect ratio, same radius, same background. */
+.pdp__gallery-main {
     view-transition-name: pdp-hero;
 }
