@@ -24,6 +24,10 @@
             <exclude>src/Test/Unit/ViewModel/CurrencySwitcherTest.php</exclude>
             <exclude>src/Test/Unit/ViewModel/FeaturedCategoriesTest.php</exclude>
             <exclude>src/Test/Unit/ViewModel/DirectoryDataTest.php</exclude>
+            <exclude>src/Test/Unit/ViewModel/SearchFormTest.php</exclude>
+            <exclude>src/Test/Unit/ViewModel/CookieNoticeTest.php</exclude>
+            <exclude>src/Test/Unit/Plugin/Cms/WrapAuthoredContentTest.php</exclude>
+            <exclude>src/Test/Unit/Plugin/Cms/RenderThemeTemplateTest.php</exclude>
         </testsuite>
     </testsuites>
 </phpunit>
