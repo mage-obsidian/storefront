@@ -30,3 +30,17 @@ describe("computeVisibleCount", () => {
         expect(computeVisibleCount([], 10, 40, 500)).toBe(0);
     });
 });
+
+describe("subpixel widths", () => {
+    it("keeps a bar that fits by a fraction of a pixel", () => {
+        // Real measurement from the demo header: six items summing 529.47 in a
+        // 529.47 bar. Rounding each to offsetWidth read it as 530 in 529.
+        const items = [89.84, 60.92, 42.95, 51.94, 87.88, 35.94];
+        expect(computeVisibleCount(items, 32, 45, 529.47)).toBe(6);
+        expect(computeVisibleCount(items.map(Math.ceil), 32, 45, 529)).toBeLessThan(6);
+    });
+
+    it("still collapses on a real overflow, not just a rounding one", () => {
+        expect(computeVisibleCount([200.4, 200.4, 200.4], 10, 50, 529.47)).toBe(2);
+    });
+});

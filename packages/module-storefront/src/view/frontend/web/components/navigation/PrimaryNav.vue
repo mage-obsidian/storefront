@@ -52,14 +52,23 @@ const readMetrics = (): void => {
         return;
     }
     const items = Array.from(el.querySelectorAll<HTMLElement>("[data-nav-item]"));
-    widths = items.map((item) => item.offsetWidth);
+    // Fractional widths, not offsetWidth: rounding each item up while rounding the
+    // container down fabricates about a pixel of overflow, which is enough to
+    // collapse a bar that fits.
+    widths = items.map((item) => item.getBoundingClientRect().width);
     const styles = getComputedStyle(el);
     gap = parseFloat(styles.columnGap || styles.gap || "0") || 0;
-    moreWidth = moreWrap.value?.offsetWidth ?? 0;
+    moreWidth = moreWrap.value?.getBoundingClientRect().width ?? 0;
     // Read the available bar width now, while measure() holds the host clipped to
     // its flex track; reading it after collapse would see the shrunken bar and
     // spiral every item into the dropdown.
-    barWidth = el.clientWidth;
+    const px = (value: string): number => parseFloat(value) || 0;
+    const inset =
+        px(styles.paddingLeft) +
+        px(styles.paddingRight) +
+        px(styles.borderLeftWidth) +
+        px(styles.borderRightWidth);
+    barWidth = el.getBoundingClientRect().width - inset;
 };
 
 const recompute = (): void => {

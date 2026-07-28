@@ -7,6 +7,11 @@
  * Pure and DOM-free so the overflow math is unit-tested; the component owns the
  * measurement (offsetWidth / ResizeObserver).
  */
+// Widths arrive as fractions of a pixel. Summing a handful of them accumulates
+// enough error to read a bar that visibly fits as overflowing by a hair, which
+// collapses an item into the dropdown for no reason a user can see.
+const TOLERANCE = 0.5;
+
 export function computeVisibleCount(
     itemWidths: number[],
     gap: number,
@@ -18,18 +23,19 @@ export function computeVisibleCount(
         return 0;
     }
 
+    const available = containerWidth + TOLERANCE;
     const totalWithoutMore = itemWidths.reduce(
         (sum, width, i) => sum + width + (i > 0 ? gap : 0),
         0,
     );
-    if (totalWithoutMore <= containerWidth) {
+    if (totalWithoutMore <= available) {
         return n;
     }
 
     // Overflow: reserve the More trigger and the gap before it, then greedily
     // fit leading items. May return 0 (even one item + More does not fit), in
     // which case every item lives in the dropdown.
-    const budget = containerWidth - moreWidth - gap;
+    const budget = available - moreWidth - gap;
     let used = 0;
     let count = 0;
     for (let i = 0; i < n; i++) {

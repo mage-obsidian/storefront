@@ -47,28 +47,27 @@ describe("PrimaryNav — everything fits", () => {
 });
 
 describe("PrimaryNav — overflow into the More disclosure", () => {
-    let offsetWidthDesc: PropertyDescriptor | undefined;
-    let clientWidthDesc: PropertyDescriptor | undefined;
+    let rectDesc: PropertyDescriptor | undefined;
 
     beforeEach(() => {
-        offsetWidthDesc = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth");
-        clientWidthDesc = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "clientWidth");
+        rectDesc = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "getBoundingClientRect");
         // Every item (and the More trigger) is 120px wide; the bar is only 100px,
         // so not even one item + More fits → all links land in the dropdown.
-        Object.defineProperty(HTMLElement.prototype, "offsetWidth", { configurable: true, get: () => 120 });
-        Object.defineProperty(HTMLElement.prototype, "clientWidth", { configurable: true, get: () => 100 });
+        Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", {
+            configurable: true,
+            value(this: HTMLElement) {
+                const width = this.tagName === "NAV" ? 100 : 120;
+
+                return { width, height: 0, top: 0, left: 0, right: width, bottom: 0, x: 0, y: 0 };
+            },
+        });
     });
 
     afterEach(() => {
-        if (offsetWidthDesc) {
-            Object.defineProperty(HTMLElement.prototype, "offsetWidth", offsetWidthDesc);
+        if (rectDesc) {
+            Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", rectDesc);
         } else {
-            delete (HTMLElement.prototype as unknown as Record<string, unknown>).offsetWidth;
-        }
-        if (clientWidthDesc) {
-            Object.defineProperty(HTMLElement.prototype, "clientWidth", clientWidthDesc);
-        } else {
-            delete (HTMLElement.prototype as unknown as Record<string, unknown>).clientWidth;
+            delete (HTMLElement.prototype as unknown as Record<string, unknown>).getBoundingClientRect;
         }
     });
 
