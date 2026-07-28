@@ -15,8 +15,14 @@ export default defineConfig({
     plugins: [vue()],
     resolve: {
         alias: {
+            "MageObsidian_ModernFrontend::elements/Icon": fileURLToPath(
+                new URL("./src/Test/Js/stubs/Icon.vue", import.meta.url),
+            ),
             "MageObsidian_ModernFrontend::js/customer-data": fileURLToPath(
                 new URL("./src/Test/Js/stubs/customerData.ts", import.meta.url),
+            ),
+            "MageObsidian_ModernFrontend::js/events": fileURLToPath(
+                new URL("./src/Test/Js/stubs/events.ts", import.meta.url),
             ),
             "MageObsidian_Storefront::elements/Drawer": fileURLToPath(
                 new URL("./src/view/frontend/web/components/elements/Drawer.vue", import.meta.url),

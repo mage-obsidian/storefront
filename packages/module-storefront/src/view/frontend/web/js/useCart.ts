@@ -9,11 +9,29 @@
  */
 import { computed } from 'vue';
 import { useCustomerData } from 'MageObsidian_ModernFrontend::js/customer-data';
+import events from 'MageObsidian_ModernFrontend::js/events';
 
 /** Outcome of a cart mutation; `message` carries Magento's own wording. */
 export interface CartResult {
     ok: boolean;
     message?: string;
+}
+
+export type CartOperation = 'add' | 'update_qty' | 'remove_item';
+
+/**
+ * Payload of every `cart_<operation>_before|after|failed` event. A `_before`
+ * observer may rewrite `action`/`body`, or set `cancelled` to stop the request
+ * — the request is what it leaves behind, which is why it is dispatched after
+ * the form key is backfilled and before anything is sent.
+ */
+export interface CartEvent {
+    operation: CartOperation;
+    action: string;
+    body: FormData;
+    cancelled: boolean;
+    message?: string;
+    result?: CartResult;
 }
 
 interface SectionMessage {
@@ -95,16 +113,27 @@ export function useCart() {
      * which we reload alongside `cart`, and its text is handed back to the
      * caller so the toast can say what actually went wrong.
      */
-    async function post(action: string, body: FormData): Promise<CartResult> {
+    async function post(operation: CartOperation, action: string, body: FormData): Promise<CartResult> {
         if (!body.get('form_key')) {
             body.set('form_key', getFormKey());
         }
+
+        const request = await events.dispatch<CartEvent>(`cart_${operation}_before`, {
+            operation,
+            action,
+            body,
+            cancelled: false,
+        });
+        if (request.cancelled) {
+            return { ok: false, message: request.message };
+        }
+
         let ok = false;
         try {
-            const response = await fetch(action, {
+            const response = await fetch(request.action, {
                 method: 'POST',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                body,
+                body: request.body,
                 credentials: 'same-origin',
             });
             ok = response.ok;
@@ -113,14 +142,21 @@ export function useCart() {
         }
         await customerData.reload(['cart', 'messages']);
         const message = errorMessage();
-        return message ? { ok: false, message } : { ok };
+        const result: CartResult = message ? { ok: false, message } : { ok };
+
+        await events.dispatch<CartEvent>(`cart_${operation}_after`, { ...request, result });
+        if (!result.ok) {
+            await events.dispatch<CartEvent>(`cart_${operation}_failed`, { ...request, result });
+        }
+
+        return result;
     }
 
     /**
      * Add from a server-rendered add-to-cart form (simple/virtual/downloadable).
      */
     function addFromForm(form: HTMLFormElement): Promise<CartResult> {
-        return post(form.action, new FormData(form));
+        return post('add', form.action, new FormData(form));
     }
 
     /**
@@ -137,7 +173,7 @@ export function useCart() {
         uenc?: string;
         superAttribute?: Record<string, number | string>;
     }): Promise<CartResult> {
-        return post(action, toFormData({
+        return post('add', action, toFormData({
             product,
             qty,
             uenc,
@@ -152,7 +188,7 @@ export function useCart() {
      * lot. The form key is backfilled by post().
      */
     function addRaw(action: string, body: FormData): Promise<CartResult> {
-        return post(action, body);
+        return post('add', action, body);
     }
 
     /**
@@ -163,7 +199,7 @@ export function useCart() {
      * resolution stays correct.
      */
     function updateItemQty(itemId: number | string, qty: number | string, action: string): Promise<CartResult> {
-        return post(action, toFormData({ item_id: itemId, item_qty: qty }));
+        return post('update_qty', action, toFormData({ item_id: itemId, item_qty: qty }));
     }
 
     /**
@@ -171,7 +207,7 @@ export function useCart() {
      * endpoint (`checkout/sidebar/removeItem`). Reloads the `cart` section after.
      */
     function removeItem(itemId: number | string, action: string): Promise<CartResult> {
-        return post(action, toFormData({ item_id: itemId }));
+        return post('remove_item', action, toFormData({ item_id: itemId }));
     }
 
     return { count, addFromForm, addProduct, addRaw, updateItemQty, removeItem };

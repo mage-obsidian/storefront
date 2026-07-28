@@ -1,10 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { useCart, getFormKey } from "./useCart.ts";
 import { __setSection, __reset, reload } from "MageObsidian_ModernFrontend::js/customer-data";
+import events, { dispatched, __reset as __resetEvents } from "MageObsidian_ModernFrontend::js/events";
 
 // useCart reuses Magento's native session quote: POST to checkout/cart/add, then
 // reload the cart section so the reactive count updates everywhere.
-beforeEach(() => __reset());
+beforeEach(() => {
+    __reset();
+    __resetEvents();
+});
 afterEach(() => {
     vi.unstubAllGlobals();
     document.body.innerHTML = "";
@@ -158,5 +162,89 @@ describe("useCart", () => {
 
         expect(result.ok).toBe(false);
         expect(reload.calls.at(-1)).toEqual([["cart", "messages"]]);
+    });
+});
+
+// Every cart mutation funnels through post(), so the events are announced there
+// rather than at each call site — these lock in that a listener sees the whole
+// flow and can change it before it leaves.
+describe("cart events", () => {
+    function stubOk() {
+        vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
+        document.cookie = "form_key=ck";
+    }
+
+    it("announces before and after around a successful add", async () => {
+        stubOk();
+
+        await useCart().addProduct({ action: "/checkout/cart/add", product: 42 });
+
+        expect(dispatched.map((d) => d.event)).toEqual(["cart_add_before", "cart_add_after"]);
+        expect(dispatched.at(-1).data.result).toEqual({ ok: true });
+    });
+
+    it("names the operation for a sidebar mutation", async () => {
+        stubOk();
+
+        await useCart().updateItemQty(7, 3, "/checkout/sidebar/updateItemQty");
+
+        expect(dispatched.map((d) => d.event)).toEqual([
+            "cart_update_qty_before",
+            "cart_update_qty_after",
+        ]);
+        expect(dispatched[0].data.operation).toBe("update_qty");
+    });
+
+    it("adds a failed event when the mutation did not succeed", async () => {
+        vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
+        document.cookie = "form_key=ck";
+
+        await useCart().removeItem(9, "/checkout/sidebar/removeItem");
+
+        expect(dispatched.map((d) => d.event)).toEqual([
+            "cart_remove_item_before",
+            "cart_remove_item_after",
+            "cart_remove_item_failed",
+        ]);
+    });
+
+    it("lets a before observer rewrite the request", async () => {
+        const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+        vi.stubGlobal("fetch", fetchMock);
+        document.cookie = "form_key=ck";
+        events.observe("cart_add_before", (data) => {
+            data.action = "/custom/add";
+            data.body.set("qty", "9");
+        });
+
+        await useCart().addProduct({ action: "/checkout/cart/add", product: 42 });
+
+        const [action, init] = fetchMock.mock.calls.at(-1);
+        expect(action).toBe("/custom/add");
+        expect(init.body.get("qty")).toBe("9");
+    });
+
+    it("lets a before observer cancel without touching the network", async () => {
+        const fetchMock = vi.fn();
+        vi.stubGlobal("fetch", fetchMock);
+        document.cookie = "form_key=ck";
+        events.observe("cart_add_before", (data) => {
+            data.cancelled = true;
+            data.message = "Out of stock in your region";
+        });
+
+        const result = await useCart().addProduct({ action: "/checkout/cart/add", product: 42 });
+
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(result).toEqual({ ok: false, message: "Out of stock in your region" });
+        expect(dispatched.map((d) => d.event)).toEqual(["cart_add_before"]);
+    });
+
+    it("carries the form key it backfilled, so an observer sees the real body", async () => {
+        stubOk();
+
+        await useCart().addProduct({ action: "/checkout/cart/add", product: 42 });
+
+        expect(dispatched[0].data.body.get("form_key")).toBe("ck");
     });
 });
