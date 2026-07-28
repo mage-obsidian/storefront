@@ -19,6 +19,7 @@ use Magento\Framework\Url\Helper\Data as UrlHelper;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
 use Magento\Framework\View\LayoutInterface;
+use MageObsidian\Catalog\Service\Product\ConfigurableInitialState;
 use Throwable;
 
 /**
@@ -52,8 +53,22 @@ class ProductView implements ArgumentInterface
         private readonly UrlHelper $urlHelper,
         private readonly PriceCurrencyInterface $priceCurrency,
         private readonly LayoutInterface $layout,
-        private readonly Request $request
+        private readonly Request $request,
+        private readonly ConfigurableInitialState $configurableInitialState
     ) {
+    }
+
+    /**
+     * Swatch groups for the buy box's server-rendered initial state.
+     *
+     * @param string $configJson
+     * @param string $swatchJson
+     *
+     * @return array
+     */
+    public function getSwatchGroups(string $configJson, string $swatchJson = '{}'): array
+    {
+        return $this->configurableInitialState->build($configJson, $swatchJson);
     }
 
     /**

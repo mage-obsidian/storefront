@@ -17,6 +17,7 @@ use Magento\Framework\Registry;
 use Magento\Framework\Url\Helper\Data as UrlHelper;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\LayoutInterface;
+use MageObsidian\Catalog\Service\Product\ConfigurableInitialState;
 use MageObsidian\Catalog\ViewModel\ProductView;
 use PHPUnit\Framework\TestCase;
 
@@ -68,7 +69,8 @@ class ProductViewTest extends TestCase
             $urlHelper,
             $priceCurrency,
             $layout ?? $this->createMock(LayoutInterface::class),
-            $request
+            $request,
+            new ConfigurableInitialState()
         );
     }
 
@@ -204,7 +206,8 @@ class ProductViewTest extends TestCase
             $this->createMock(UrlHelper::class),
             $priceCurrency,
             $this->createMock(LayoutInterface::class),
-            $this->createMock(Request::class)
+            $this->createMock(Request::class),
+            new ConfigurableInitialState()
         );
 
         $this->assertSame('$%s', $view->getCurrencyFormat());
