@@ -21,4 +21,12 @@
             </argument>
         </arguments>
     </type>
+    <type name="Magento\Cms\Block\Page">
+        <plugin name="mage_obsidian_wrap_cms_page_content"
+                type="MageObsidian\Storefront\Plugin\Cms\WrapAuthoredContent"/>
+    </type>
+    <type name="Magento\Cms\Block\Block">
+        <plugin name="mage_obsidian_wrap_cms_block_content"
+                type="MageObsidian\Storefront\Plugin\Cms\WrapAuthoredContent"/>
+    </type>
 </config>
