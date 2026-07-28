@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import events from "MageObsidian_ModernFrontend::js/events";
 import { createBundlePrice, type BundleConfig } from "MageObsidian_Catalog::js/bundle-price";
 
 // Live selection total for a bundle. The option controls are server-rendered
@@ -34,6 +35,7 @@ onMounted(() => {
     const bundle = createBundlePrice(form, parse(props.config));
     const sync = () => {
         total.value = format(bundle.total());
+        events.dispatch("bundle_selection_change", { selections: bundle.selections() });
     };
     bundle.onChange(sync);
     sync();

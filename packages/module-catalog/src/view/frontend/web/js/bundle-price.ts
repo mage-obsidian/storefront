@@ -28,6 +28,7 @@ export interface BundleSelections {
 
 export interface BundlePrice {
     total: () => number;
+    selections: () => Record<string, number>;
     onChange: (cb: () => void) => void;
 }
 
@@ -110,12 +111,35 @@ export function computeTotal(config: BundleConfig, selections: BundleSelections)
 }
 
 /**
+ * Flatten a selection into the {selectionId: qty} map the stock endpoints take.
+ */
+export function selectionQuantities(
+    config: BundleConfig,
+    selections: BundleSelections,
+): Record<string, number> {
+    const quantities: Record<string, number> = {};
+
+    for (const [optionId, selectionIds] of Object.entries(selections.chosen)) {
+        const option = config.options?.[optionId];
+        for (const selectionId of selectionIds) {
+            const selection = option?.selections?.[selectionId];
+            const qty =
+                optionId in selections.qtys ? selections.qtys[optionId] : toNumber(selection?.qty);
+            quantities[selectionId] = qty > 0 ? qty : 1;
+        }
+    }
+
+    return quantities;
+}
+
+/**
  * Wire a bundle form to its config: total() recomputes on demand, onChange fires
  * on every control change.
  */
 export function createBundlePrice(form: HTMLElement, config: BundleConfig): BundlePrice {
     return {
         total: () => computeTotal(config, readSelections(form)),
+        selections: () => selectionQuantities(config, readSelections(form)),
         onChange: (cb: () => void) => {
             form.addEventListener("change", cb);
             form.addEventListener("input", cb);

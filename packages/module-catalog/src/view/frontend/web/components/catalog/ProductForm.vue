@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
+import events from "MageObsidian_ModernFrontend::js/events";
 import { useCart } from "MageObsidian_Storefront::js/useCart";
 import { createProductOptions } from "MageObsidian_Catalog::js/product-options";
 
@@ -114,6 +115,11 @@ const oldPrice = computed(() => {
         return formatAmount(Number(prices.oldPrice.amount) + optionsDelta.value);
     }
     return null;
+});
+
+// Fires with null when the selection stops resolving, which is a state of its own.
+watch(variantId, (id) => {
+    events.dispatch("product_variant_change", { productId: id ? Number(id) : null });
 });
 
 // Drive the gallery when a full variant resolves: rebuild the whole thumbnail

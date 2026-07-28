@@ -15,6 +15,9 @@ export default defineConfig({
             "MageObsidian_Storefront::js/useCart": fileURLToPath(
                 new URL("./src/Test/Js/stubs/useCart.js", import.meta.url),
             ),
+            "MageObsidian_ModernFrontend::js/events": fileURLToPath(
+                new URL("./src/Test/Js/stubs/events.js", import.meta.url),
+            ),
             // Intra-module specifier (kept as Vendor_Module::path so the resolver's
             // inheritance applies at build time) pointed at the real source here.
             "MageObsidian_Catalog::js/product-options": fileURLToPath(

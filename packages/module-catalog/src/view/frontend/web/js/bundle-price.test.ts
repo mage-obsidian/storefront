@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { computeTotal, readSelections, createBundlePrice, type BundleConfig } from "./bundle-price";
+import {
+    computeTotal,
+    readSelections,
+    selectionQuantities,
+    createBundlePrice,
+    type BundleConfig,
+} from "./bundle-price";
 
 const config: BundleConfig = {
     prices: { finalPrice: { amount: 0 } },
@@ -89,5 +95,40 @@ describe("createBundlePrice", () => {
 
         expect(fired).toBe(1);
         expect(bundle.total()).toBe(30);
+    });
+});
+
+describe("selectionQuantities", () => {
+    it("flattens the selection into the {selectionId: qty} map the endpoint takes", () => {
+        const selections = readSelections(
+            form(`
+            <select name="bundle_option[1]"><option value="10" selected>A</option></select>
+            <input type="checkbox" name="bundle_option[2][]" value="20" checked>
+        `),
+        );
+
+        expect(selectionQuantities(config, selections)).toEqual({ "10": 1, "20": 2 });
+    });
+
+    it("prefers the customer's edited quantity over the selection default", () => {
+        const selections = readSelections(
+            form(`
+            <select name="bundle_option[2]"><option value="20" selected>A</option></select>
+            <input name="bundle_option_qty[2]" value="7">
+        `),
+        );
+
+        expect(selectionQuantities(config, selections)).toEqual({ "20": 7 });
+    });
+
+    it("never reports a quantity below one", () => {
+        const selections = readSelections(
+            form(`
+            <select name="bundle_option[2]"><option value="20" selected>A</option></select>
+            <input name="bundle_option_qty[2]" value="0">
+        `),
+        );
+
+        expect(selectionQuantities(config, selections)).toEqual({ "20": 1 });
     });
 });

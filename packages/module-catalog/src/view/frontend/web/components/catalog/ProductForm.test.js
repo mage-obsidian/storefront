@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
 import ProductForm from "./ProductForm.vue";
 import { __rawCalls, __reset, __setResult } from "MageObsidian_Storefront::js/useCart";
+import events from "MageObsidian_ModernFrontend::js/events";
 
 // Configurable buy-box island. We assert the selection contract: a radiogroup per
 // attribute, impossible combinations greyed out, full selection drives price +
@@ -76,7 +77,10 @@ function build() {
     });
 }
 
-beforeEach(() => __reset());
+beforeEach(() => {
+    __reset();
+    events.reset();
+});
 
 describe("ProductForm", () => {
     it("renders a radiogroup per attribute", () => {
@@ -148,5 +152,18 @@ describe("ProductForm", () => {
         expect(toast.mock.calls.at(-1)[0].detail.message).toBe("Failed");
 
         window.removeEventListener("obsidian:toast", toast);
+    });
+});
+
+describe("variant announcements", () => {
+    it("announces the resolved child once the selection is complete", async () => {
+        const wrapper = build();
+
+        await wrapper.find('[data-option-id="5"]').trigger("click");
+        await wrapper.find('[data-option-id="7"]').trigger("click");
+        await flushPromises();
+
+        expect(events.recorded("product_variant_change")).toEqual([{ productId: 11 }]);
+        wrapper.unmount();
     });
 });
