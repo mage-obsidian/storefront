@@ -12,6 +12,7 @@ namespace MageObsidian\Storefront\Block;
 use Magento\Framework\DataObject\IdentityInterface;
 use Magento\Framework\View\Element\Template\Context;
 use MageObsidian\ModernFrontend\Block\Template;
+use MageObsidian\ModernFrontend\Service\Vue\IslandMarkup;
 use MageObsidian\ModernFrontend\ViewModel\Image;
 use MageObsidian\ModernFrontend\ViewModel\SchemaOrg;
 use MageObsidian\ModernFrontend\ViewModel\ViteResolver;
@@ -42,10 +43,11 @@ class Navigation extends Template implements IdentityInterface
         ViteResolver $viteResolver,
         SchemaOrg $schemaOrg,
         Image $image,
+        IslandMarkup $islandMarkup,
         private readonly MenuTree $menuTree,
         array $data = []
     ) {
-        parent::__construct($context, $viteResolver, $schemaOrg, $image, $data);
+        parent::__construct($context, $viteResolver, $schemaOrg, $image, $islandMarkup, $data);
     }
 
     /**

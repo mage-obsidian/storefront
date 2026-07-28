@@ -5,6 +5,7 @@ namespace MageObsidian\Storefront\Test\Unit\Block;
 
 use Magento\Catalog\Model\Category;
 use Magento\Framework\View\Element\Template\Context;
+use MageObsidian\ModernFrontend\Service\Vue\IslandMarkup;
 use MageObsidian\ModernFrontend\ViewModel\Image;
 use MageObsidian\ModernFrontend\ViewModel\SchemaOrg;
 use MageObsidian\ModernFrontend\ViewModel\ViteResolver;
@@ -44,6 +45,7 @@ class NavigationTest extends TestCase
             $this->createMock(ViteResolver::class),
             $this->createMock(SchemaOrg::class),
             $this->createMock(Image::class),
+            new IslandMarkup(),
             $this->menuTree,
             $data
         );
