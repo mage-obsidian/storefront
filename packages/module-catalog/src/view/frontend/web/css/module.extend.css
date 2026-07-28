@@ -174,3 +174,10 @@
 .ln__swatch:hover .ln__swatch-text {
     border-color: var(--color-ink);
 }
+
+/* Destination of the card → hero morph across a listing → PDP navigation. Set in
+   CSS, not by gallery.js, so the name is on the element from the first frame:
+   the browser captures the incoming snapshot before any island has mounted. */
+[data-gallery-main] {
+    view-transition-name: pdp-hero;
+}
