@@ -129,11 +129,14 @@ describe("markProductHero", () => {
         document.body.innerHTML = "";
     });
 
-    it("names the clicked card's image so the PDP hero morphs out of it", () => {
-        const image = markProductHero(document.getElementById("t") as Element, document);
+    it("names the clicked card's media box, not the image inside it", () => {
+        const media = markProductHero(document.getElementById("t") as Element, document);
 
-        expect(image).toBe(document.getElementById("card-img"));
-        expect(image!.style.viewTransitionName).toBe("pdp-hero");
+        // The frame travels: naming the <img> would leave the PDP gallery box
+        // behind at full size, showing its background as a grey mat.
+        expect(media).toBe(document.getElementById("t"));
+        expect(media!.style.viewTransitionName).toBe("pdp-hero");
+        expect(document.getElementById("card-img")!.style.viewTransitionName).toBeFalsy();
     });
 
     it("clears a name it left on a previous card", () => {
@@ -150,14 +153,14 @@ describe("markProductHero", () => {
     });
 
     it("releases the gallery's name, which the PDP stylesheet also sets", () => {
-        document.body.insertAdjacentHTML("beforeend", `<img data-gallery-main id="hero">`);
+        document.body.insertAdjacentHTML("beforeend", `<figure class="pdp__gallery-main" id="hero"><img></figure>`);
 
         markProductHero(document.getElementById("t") as Element, document);
 
         expect(document.getElementById("hero")!.style.viewTransitionName).toBe("none");
     });
 
-    it("returns null for a card with no image", () => {
+    it("returns null for a card with no media box", () => {
         document.body.innerHTML = `<article class="product-card"><a id="t" href="${PRODUCT}"></a></article>`;
 
         expect(markProductHero(document.getElementById("t") as Element, document)).toBeNull();
@@ -202,7 +205,7 @@ describe("bindViewTransitions", () => {
         const transition = dispatchSwap("https://shop.test/");
 
         expect(transition.skipTransition).toHaveBeenCalledOnce();
-        expect(document.getElementById("card-img")!.style.viewTransitionName).toBeFalsy();
+        expect(document.getElementById("card")!.style.viewTransitionName).toBeFalsy();
     });
 
     it("lets a card click through and names its image", () => {
@@ -210,7 +213,7 @@ describe("bindViewTransitions", () => {
         const transition = dispatchSwap(PRODUCT);
 
         expect(transition.skipTransition).not.toHaveBeenCalled();
-        expect(document.getElementById("card-img")!.style.viewTransitionName).toBe("pdp-hero");
+        expect(document.getElementById("card")!.style.viewTransitionName).toBe("pdp-hero");
     });
 
     it("skips a navigation with no click behind it (back button) that leaves the catalog", () => {

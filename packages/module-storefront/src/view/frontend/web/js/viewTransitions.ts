@@ -74,14 +74,16 @@ export function classifyNavigation(facts: NavigationFacts): NavigationKind {
 }
 
 /**
- * Moves the hero name onto the clicked card's image. Returns it so the caller can
- * assert the morph is wired; null when the card has no image to morph from.
+ * Moves the hero name onto the clicked card's media box. Returns it so the caller
+ * can assert the morph is wired; null when the card has no media box.
+ *
+ * The box travels, not the <img> inside it: both ends share the aspect ratio,
+ * radius and background, so the frame morphs as one piece instead of leaving the
+ * PDP gallery's own background showing behind a travelling image.
  */
 export function markProductHero(trigger: Element, doc: Document): HTMLElement | null {
-    const image = trigger
-        .closest(".product-card")
-        ?.querySelector<HTMLElement>(".product-card__media img");
-    if (!image) {
+    const media = trigger.closest(".product-card")?.querySelector<HTMLElement>(".product-card__media");
+    if (!media) {
         return null;
     }
 
@@ -91,15 +93,15 @@ export function markProductHero(trigger: Element, doc: Document): HTMLElement | 
         marked.removeAttribute(HERO_MARKER);
         marked.style.viewTransitionName = "";
     });
-    const gallery = doc.querySelector<HTMLElement>("[data-gallery-main]");
+    const gallery = doc.querySelector<HTMLElement>(".pdp__gallery-main");
     if (gallery) {
         gallery.style.viewTransitionName = "none";
     }
 
-    image.setAttribute(HERO_MARKER, "");
-    image.style.viewTransitionName = HERO_NAME;
+    media.setAttribute(HERO_MARKER, "");
+    media.style.viewTransitionName = HERO_NAME;
 
-    return image;
+    return media;
 }
 
 export function bindViewTransitions(win: Window & typeof globalThis): () => void {
