@@ -7,7 +7,7 @@
     ],
     "require": {
         "mage-obsidian/component-modern-frontend": "^2.2",
-        "mage-obsidian/module-catalog": "^3.0",
+        "mage-obsidian/module-catalog": "^3.2",
         "mage-obsidian/module-catalog-search": "^2.0",
         "mage-obsidian/module-checkout": "^3.0",
         "mage-obsidian/module-customer": "^2.0",
@@ -20,7 +20,7 @@
         "mage-obsidian/module-review": "^2.0",
         "mage-obsidian/module-sales": "^2.0",
         "mage-obsidian/module-send-friend": "^2.0",
-        "mage-obsidian/module-storefront": "^3.1",
+        "mage-obsidian/module-storefront": "^3.3",
         "mage-obsidian/module-vault": "^2.0",
         "mage-obsidian/module-wishlist": "^2.0"
     },
