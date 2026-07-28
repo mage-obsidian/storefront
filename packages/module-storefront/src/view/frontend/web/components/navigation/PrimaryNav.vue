@@ -266,10 +266,14 @@ onBeforeUnmount(() => {
             </div>
         </template>
 
+        <!-- While measuring, the trigger is laid out for its width but taken out of
+             flow and hidden: the server cannot know whether the bar overflows, so
+             painting it there would show a "More" that vanishes once the island
+             mounts and finds everything fits. -->
         <div
             v-show="measuring || hasOverflow"
             ref="moreWrap"
-            class="relative"
+            :class="measuring && !hasOverflow ? 'invisible absolute' : 'relative'"
             @keydown.escape="close()"
         >
             <button

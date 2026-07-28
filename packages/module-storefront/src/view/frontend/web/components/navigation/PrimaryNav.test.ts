@@ -200,3 +200,40 @@ describe("PrimaryNav — subcategory flyouts", () => {
         wrapper.unmount();
     });
 });
+
+describe("PrimaryNav — the More trigger never paints before it is needed", () => {
+    it("keeps the trigger out of flow and hidden while it measures a bar that fits", async () => {
+        const rectDesc = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "getBoundingClientRect");
+        // Roomy bar: everything fits, so no trigger should ever be painted.
+        Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", {
+            configurable: true,
+            value(this: HTMLElement) {
+                const width = this.tagName === "NAV" ? 5000 : 20;
+
+                return { width, height: 0, top: 0, left: 0, right: width, bottom: 0, x: 0, y: 0 };
+            },
+        });
+        try {
+            const wrapper = mount(PrimaryNav, {
+                props: { links, moreLabel: "Más" },
+                attachTo: document.body,
+            });
+
+            // Before measure() resolves the island is in its measuring state, which
+            // is what the server paints too.
+            const beforeClasses = wrapper.get("nav > div:last-child").classes();
+            expect(beforeClasses).toContain("invisible");
+            expect(beforeClasses).toContain("absolute");
+
+            await flushPromises();
+
+            expect(wrapper.get("nav > div:last-child").isVisible()).toBe(false);
+
+            wrapper.unmount();
+        } finally {
+            if (rectDesc) {
+                Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", rectDesc);
+            }
+        }
+    });
+});
