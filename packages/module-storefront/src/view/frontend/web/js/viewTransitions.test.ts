@@ -1,0 +1,238 @@
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import {
+    classifyNavigation,
+    markProductHero,
+    bindViewTransitions,
+} from "MageObsidian_Storefront::js/viewTransitions";
+
+const LISTING = "https://shop.test/women/tops.html";
+const PRODUCT = "https://shop.test/blue-shirt.html";
+
+const facts = (over: Partial<Parameters<typeof classifyNavigation>[0]> = {}) => ({
+    trigger: null,
+    from: LISTING,
+    to: PRODUCT,
+    isProductPage: false,
+    isListingPage: false,
+    cameFrom: null,
+    ...over,
+});
+
+describe("classifyNavigation", () => {
+    it("animates a click on a product card", () => {
+        document.body.innerHTML = `<article class="product-card"><a id="t" href="${PRODUCT}"></a></article>`;
+        const trigger = document.getElementById("t") as Element;
+
+        expect(classifyNavigation(facts({ trigger }))).toBe("product");
+    });
+
+    it("animates pagination, sort and filters — same path, different query", () => {
+        expect(classifyNavigation(facts({ to: `${LISTING}?p=2` }))).toBe("listing");
+        expect(classifyNavigation(facts({ to: `${LISTING}?product_list_order=price` }))).toBe(
+            "listing",
+        );
+        // Back to page one: the query goes away instead of changing.
+        expect(classifyNavigation(facts({ from: `${LISTING}?p=2`, to: LISTING }))).toBe("listing");
+    });
+
+    it("animates a search toolbar link, which moves the path to .../result/index/", () => {
+        document.body.innerHTML = `<div id="maincontent"><div class="toolbar"><a id="t" href="#"></a></div></div>`;
+
+        expect(
+            classifyNavigation(
+                facts({
+                    trigger: document.getElementById("t") as Element,
+                    from: "https://shop.test/catalogsearch/result/?q=bag",
+                    to: "https://shop.test/catalogsearch/result/index/?product_list_dir=desc&q=bag",
+                    isListingPage: true,
+                }),
+            ),
+        ).toBe("listing");
+    });
+
+    it("leaves the listing alone when the link sits outside its content well", () => {
+        document.body.innerHTML = `<header><a id="t" href="/"></a></header><div id="maincontent"></div>`;
+
+        expect(
+            classifyNavigation(
+                facts({
+                    trigger: document.getElementById("t") as Element,
+                    to: "https://shop.test/",
+                    isListingPage: true,
+                }),
+            ),
+        ).toBeNull();
+    });
+
+    it("animates a subcategory tile", () => {
+        document.body.innerHTML = `<a id="t" class="subcategory-card" href="https://shop.test/women/skirts.html"></a>`;
+        const trigger = document.getElementById("t") as Element;
+
+        expect(
+            classifyNavigation(facts({ trigger, to: "https://shop.test/women/skirts.html" })),
+        ).toBe("listing");
+    });
+
+    it("skips the navigation that washed the page grey: listing to home", () => {
+        document.body.innerHTML = `<a id="t" href="https://shop.test/"></a>`;
+        const trigger = document.getElementById("t") as Element;
+
+        expect(classifyNavigation(facts({ trigger, to: "https://shop.test/" }))).toBeNull();
+    });
+
+    it("skips header nav, cart and any other cross-section move", () => {
+        expect(classifyNavigation(facts({ to: "https://shop.test/checkout/cart/" }))).toBeNull();
+        expect(classifyNavigation(facts({ to: "https://shop.test/customer/account/" }))).toBeNull();
+    });
+
+    it("skips a different origin and a reload", () => {
+        expect(classifyNavigation(facts({ to: "https://other.test/x.html" }))).toBeNull();
+        expect(classifyNavigation(facts({ to: LISTING, from: LISTING }))).toBeNull();
+    });
+
+    it("plays the morph in reverse when a product page goes back to its listing", () => {
+        expect(
+            classifyNavigation(
+                facts({ from: PRODUCT, to: LISTING, isProductPage: true, cameFrom: LISTING }),
+            ),
+        ).toBe("product");
+    });
+
+    it("does not claim a reverse morph towards some other page", () => {
+        expect(
+            classifyNavigation(
+                facts({
+                    from: PRODUCT,
+                    to: "https://shop.test/",
+                    isProductPage: true,
+                    cameFrom: LISTING,
+                }),
+            ),
+        ).toBeNull();
+    });
+
+    it("survives a malformed destination", () => {
+        expect(classifyNavigation(facts({ to: "" }))).toBeNull();
+        expect(classifyNavigation(facts({ to: ":::" }))).toBeNull();
+    });
+});
+
+describe("markProductHero", () => {
+    beforeEach(() => {
+        document.body.innerHTML = `
+            <article class="product-card">
+                <a id="t" class="product-card__media" href="${PRODUCT}"><img id="card-img"></a>
+            </article>`;
+    });
+
+    afterEach(() => {
+        document.body.innerHTML = "";
+    });
+
+    it("names the clicked card's image so the PDP hero morphs out of it", () => {
+        const image = markProductHero(document.getElementById("t") as Element, document);
+
+        expect(image).toBe(document.getElementById("card-img"));
+        expect(image!.style.viewTransitionName).toBe("pdp-hero");
+    });
+
+    it("clears a name it left on a previous card", () => {
+        const first = markProductHero(document.getElementById("t") as Element, document);
+        document.body.insertAdjacentHTML(
+            "beforeend",
+            `<article class="product-card"><a id="t2" class="product-card__media" href="${PRODUCT}"><img id="img2"></a></article>`,
+        );
+
+        const second = markProductHero(document.getElementById("t2") as Element, document);
+
+        expect(second!.style.viewTransitionName).toBe("pdp-hero");
+        expect(first!.style.viewTransitionName).toBe("");
+    });
+
+    it("releases the gallery's name, which the PDP stylesheet also sets", () => {
+        document.body.insertAdjacentHTML("beforeend", `<img data-gallery-main id="hero">`);
+
+        markProductHero(document.getElementById("t") as Element, document);
+
+        expect(document.getElementById("hero")!.style.viewTransitionName).toBe("none");
+    });
+
+    it("returns null for a card with no image", () => {
+        document.body.innerHTML = `<article class="product-card"><a id="t" href="${PRODUCT}"></a></article>`;
+
+        expect(markProductHero(document.getElementById("t") as Element, document)).toBeNull();
+    });
+});
+
+describe("bindViewTransitions", () => {
+    const dispatchSwap = (url: string) => {
+        const transition = { skipTransition: vi.fn() };
+        const event = Object.assign(new Event("pageswap"), {
+            viewTransition: transition,
+            activation: { entry: { url } },
+        });
+        window.dispatchEvent(event);
+
+        return transition;
+    };
+
+    let stop: () => void;
+
+    beforeEach(() => {
+        // The binder reads the current location as the origin of the navigation,
+        // so the document has to actually sit on the listing.
+        (window as unknown as { happyDOM: { setURL: (url: string) => void } }).happyDOM.setURL(
+            LISTING,
+        );
+        document.body.innerHTML = `
+            <article class="product-card">
+                <a id="card" class="product-card__media" href="${PRODUCT}"><img id="card-img"></a>
+            </article>
+            <a id="home" href="https://shop.test/">Home</a>`;
+        stop = bindViewTransitions(window);
+    });
+
+    afterEach(() => {
+        stop();
+        document.body.innerHTML = "";
+    });
+
+    it("skips the transition and leaves no name behind on an unrelated navigation", () => {
+        (document.getElementById("home") as HTMLElement).click();
+        const transition = dispatchSwap("https://shop.test/");
+
+        expect(transition.skipTransition).toHaveBeenCalledOnce();
+        expect(document.getElementById("card-img")!.style.viewTransitionName).toBeFalsy();
+    });
+
+    it("lets a card click through and names its image", () => {
+        (document.getElementById("card-img") as HTMLElement).click();
+        const transition = dispatchSwap(PRODUCT);
+
+        expect(transition.skipTransition).not.toHaveBeenCalled();
+        expect(document.getElementById("card-img")!.style.viewTransitionName).toBe("pdp-hero");
+    });
+
+    it("skips a navigation with no click behind it (back button) that leaves the catalog", () => {
+        const transition = dispatchSwap("https://shop.test/customer/account/");
+
+        expect(transition.skipTransition).toHaveBeenCalledOnce();
+    });
+
+    it("does nothing when the browser started no transition", () => {
+        const event = Object.assign(new Event("pageswap"), {
+            viewTransition: null,
+            activation: { entry: { url: PRODUCT } },
+        });
+
+        expect(() => window.dispatchEvent(event)).not.toThrow();
+    });
+
+    it("stops listening once released", () => {
+        stop();
+        (document.getElementById("home") as HTMLElement).click();
+        const transition = dispatchSwap("https://shop.test/");
+
+        expect(transition.skipTransition).not.toHaveBeenCalled();
+    });
+});

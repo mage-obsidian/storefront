@@ -57,6 +57,9 @@ export default defineConfig({
             "MageObsidian_Storefront::js/digitNudge": fileURLToPath(
                 new URL("./src/view/frontend/web/js/digitNudge.ts", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/viewTransitions": fileURLToPath(
+                new URL("./src/view/frontend/web/js/viewTransitions.ts", import.meta.url),
+            ),
         },
     },
     test: {
