@@ -37,7 +37,16 @@ describe("CartCount", () => {
 
         const wrapper = mount(CartCount);
 
-        // The decorative number badge is absent; the live region still reports 0.
-        expect(wrapper.find("span[aria-hidden='true']").classes()).not.toContain("bg-accent");
+        expect(wrapper.find("span[aria-hidden='true']").exists()).toBe(false);
+        expect(wrapper.get("[role='status']").text()).toBe("0 in your bag");
+    });
+
+    it("floats the badge over the icon so the header never reflows", () => {
+        __setSection("cart", { summary_count: 3 });
+
+        const badge = mount(CartCount).get("span[aria-hidden='true']");
+
+        expect(badge.classes()).toContain("absolute");
+        expect(mount(CartCount).get(".cart-count").classes()).not.toContain("gap-2");
     });
 });
