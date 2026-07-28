@@ -22,8 +22,12 @@
         </arguments>
     </type>
     <type name="Magento\Cms\Block\Page">
+        <plugin name="mage_obsidian_render_cms_page_template"
+                type="MageObsidian\Storefront\Plugin\Cms\RenderThemeTemplate"
+                sortOrder="10"/>
         <plugin name="mage_obsidian_wrap_cms_page_content"
-                type="MageObsidian\Storefront\Plugin\Cms\WrapAuthoredContent"/>
+                type="MageObsidian\Storefront\Plugin\Cms\WrapAuthoredContent"
+                sortOrder="20"/>
     </type>
     <type name="Magento\Cms\Block\Block">
         <plugin name="mage_obsidian_wrap_cms_block_content"
