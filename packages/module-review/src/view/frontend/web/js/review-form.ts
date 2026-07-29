@@ -1,60 +1,64 @@
 /**
  * Progressive enhancement for the PDP review form. The form is a real POST to
- * review/product/post and works without JS (the star inputs are CSS-only). With
- * JS we replace native constraint validation — `required` on visually-hidden
- * (sr-only) rating radios can't reliably host the browser's validation bubble —
- * with an accessible inline check: the first unfilled field (or a rating group
- * with no selection) gets focus and aria-invalid, and submission is blocked.
+ * review/product/post and works without JS (the star inputs are CSS-only). The
+ * text fields go through the shared validation engine so they get the same
+ * inline messages as every other form; the rating groups stay here because
+ * `required` on visually-hidden (sr-only) radios cannot host the browser's
+ * validation bubble, and a radio group has no `.field__error` node of its own.
  */
 
-/** First invalid control: an empty required text field, or a ratingless group. */
-export function findInvalid(form: HTMLFormElement): HTMLElement | null {
-    const fields = form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
-        "input[required], textarea[required]",
-    );
-    for (const field of fields) {
-        if (field instanceof HTMLInputElement && field.type === "radio") {
-            continue;
-        }
-        if (field.value.trim() === "") {
-            return field;
-        }
-    }
-    for (const group of form.querySelectorAll<HTMLElement>('[role="radiogroup"]')) {
-        const chosen = Array.from(group.querySelectorAll<HTMLInputElement>('input[type="radio"]')).some(
-            (radio) => radio.checked,
-        );
-        if (!chosen) {
+import { enhanceValidation, required } from "MageObsidian_Storefront::js/form-validation";
+
+const RATING_GROUP = '[role="radiogroup"]';
+const FORM_SELECTOR = "[data-review-form]";
+const REQUIRED_MESSAGE_ATTR = "data-err-required";
+
+/** First rating group with nothing selected, or null when they are all answered. */
+export function findUnratedGroup(form: HTMLFormElement): HTMLElement | null {
+    for (const group of form.querySelectorAll<HTMLElement>(RATING_GROUP)) {
+        const radios = group.querySelectorAll<HTMLInputElement>('input[type="radio"]');
+        if (!Array.from(radios).some((radio) => radio.checked)) {
             return group;
         }
     }
     return null;
 }
 
-function clearInvalid(form: HTMLFormElement): void {
-    form.querySelectorAll("[aria-invalid]").forEach((el) => el.removeAttribute("aria-invalid"));
-}
-
 export function setup(form: HTMLFormElement): void {
-    form.noValidate = true;
-    form.addEventListener("submit", (event) => {
-        clearInvalid(form);
-        const invalid = findInvalid(form);
-        if (!invalid) {
-            return;
+    const message = form.getAttribute(REQUIRED_MESSAGE_ATTR);
+    const isRequired = message === null ? required() : required(message);
+
+    enhanceValidation(
+        form,
+        {
+            nickname: [isRequired],
+            title: [isRequired],
+            detail: [isRequired],
+        },
+        {
+            onValidSubmit: () => {
+                const unrated = findUnratedGroup(form);
+                if (!unrated) {
+                    // Bypasses the listeners that just cleared the form, which is
+                    // what lets the native POST through after our own checks.
+                    form.submit();
+                    return;
+                }
+                unrated.setAttribute("aria-invalid", "true");
+                unrated.querySelector<HTMLInputElement>('input[type="radio"]')?.focus();
+            },
+        },
+    );
+
+    form.addEventListener("change", (event) => {
+        if (event.target instanceof HTMLInputElement && event.target.type === "radio") {
+            event.target.closest(RATING_GROUP)?.removeAttribute("aria-invalid");
         }
-        event.preventDefault();
-        invalid.setAttribute("aria-invalid", "true");
-        const focusTarget =
-            invalid.matches("input, textarea")
-                ? invalid
-                : invalid.querySelector<HTMLElement>('input[type="radio"]');
-        focusTarget?.focus();
     });
 }
 
 export function init(): void {
-    document.querySelectorAll<HTMLFormElement>("[data-review-form]").forEach(setup);
+    document.querySelectorAll<HTMLFormElement>(FORM_SELECTOR).forEach(setup);
 }
 
 if (document.readyState === "loading") {
