@@ -128,9 +128,9 @@ function toReview(): void {
             >
                 {{ t("billingForMethod", "For {method}").replace("{method}", selectedMethodTitle) }}
             </p>
-            <label class="mb-5 flex cursor-pointer items-center gap-3 text-sm text-ink">
-                <input v-model="checkout.sameAsShipping" type="checkbox" class="h-4 w-4 accent-ink">
-                {{ t("sameAsShipping", "Same as shipping address") }}
+            <label class="field-check mb-5">
+                <input v-model="checkout.sameAsShipping" type="checkbox" class="field-check__input">
+                <span class="field-check__label">{{ t("sameAsShipping", "Same as shipping address") }}</span>
             </label>
             <AddressForm
                 v-if="!checkout.sameAsShipping"

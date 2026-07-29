@@ -27,15 +27,15 @@ const t = (key: keyof AgreementLabels, fallback: string): string => props.labels
                 ></div>
                 <label
                     v-if="agreement.mode === AGREEMENT_MODE_MANUAL"
-                    class="flex cursor-pointer items-start gap-3 text-sm text-ink"
+                    class="field-check items-start"
                 >
                     <input
                         type="checkbox"
-                        class="mt-0.5 h-4 w-4 accent-ink"
+                        class="field-check__input mt-0.5"
                         :checked="checkout.acceptedAgreements.includes(agreement.agreementId)"
                         @change="checkout.toggleAgreement(agreement.agreementId)"
                     >
-                    <span v-html="agreement.checkboxText"></span>
+                    <span class="field-check__label normal-case tracking-normal" v-html="agreement.checkboxText"></span>
                 </label>
                 <p v-else class="text-sm text-ink-soft" v-html="agreement.checkboxText"></p>
             </div>
