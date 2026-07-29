@@ -115,9 +115,6 @@
   color: var(--color-danger);
 }
 
-/* `.field-slot` carries the same chrome down onto markup a core block emits
-   itself (a native <select> from an HTML-select helper), which cannot be given
-   the class directly. */
 .field__control,
 .field-slot :is(input, select, textarea) {
   height: 2.75rem;
