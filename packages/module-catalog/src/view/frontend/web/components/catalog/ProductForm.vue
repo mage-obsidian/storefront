@@ -233,7 +233,7 @@ async function add() {
             :key="attr.id"
             class="pdp__swatch-group mb-6 border-0 p-0"
         >
-            <legend class="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-ink-soft">
+            <legend class="field__label">
                 {{ attr.label }}
             </legend>
             <div
@@ -279,7 +279,7 @@ async function add() {
 
         <div class="pdp__buy-row flex flex-wrap items-end gap-4">
             <div class="pdp__qty">
-                <label for="pdp-cfg-qty" class="block font-mono text-[0.68rem] uppercase tracking-[0.16em] text-ink-soft">
+                <label for="pdp-cfg-qty" class="field__label block">
                     {{ props.labels.qty ?? "Qty" }}
                 </label>
                 <input
@@ -289,7 +289,7 @@ async function add() {
                     inputmode="numeric"
                     min="1"
                     step="1"
-                    class="mt-2 w-20 rounded-edge border border-ash-300 bg-transparent px-3 py-2.5 text-center font-mono text-sm text-ink focus:border-ink focus:outline-none"
+                    class="field__control mt-2 w-20 text-center font-mono"
                 >
             </div>
             <button
