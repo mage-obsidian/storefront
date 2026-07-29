@@ -4,6 +4,7 @@ import {
     markProductHero,
     dedupeCardNames,
     clearCardNames,
+    clearHeroName,
     bindViewTransitions,
 } from "MageObsidian_Storefront::js/viewTransitions";
 
@@ -212,6 +213,26 @@ describe("card names", () => {
     });
 });
 
+describe("clearHeroName", () => {
+    afterEach(() => {
+        document.body.innerHTML = "";
+    });
+
+    it("releases the gallery so it travels inside the root snapshot", () => {
+        document.body.innerHTML = `<figure class="pdp__gallery-main" id="hero"><img></figure>`;
+
+        clearHeroName(document);
+
+        expect(nameOf(document.getElementById("hero") as HTMLElement)).toBe("none");
+    });
+
+    it("does nothing on a document with no gallery", () => {
+        document.body.innerHTML = `<ol><li class="product-item"></li></ol>`;
+
+        expect(() => clearHeroName(document)).not.toThrow();
+    });
+});
+
 describe("bindViewTransitions", () => {
     const dispatchSwap = (url: string) => {
         const transition = { skipTransition: vi.fn() };
@@ -289,6 +310,21 @@ describe("bindViewTransitions", () => {
         const transition = dispatchSwap("https://shop.test/customer/account/");
 
         expect(transition.skipTransition).toHaveBeenCalledOnce();
+    });
+
+    it("releases the hero going back to the listing, where no card can receive it", () => {
+        (window as unknown as { happyDOM: { setURL: (url: string) => void } }).happyDOM.setURL(
+            PRODUCT,
+        );
+        document.body.innerHTML = `
+            <div data-pdp></div>
+            <figure class="pdp__gallery-main" id="hero" style="view-transition-name:pdp-hero"><img></figure>`;
+        Object.defineProperty(document, "referrer", { value: LISTING, configurable: true });
+
+        const transition = dispatchSwap(LISTING);
+
+        expect(transition.skipTransition).not.toHaveBeenCalled();
+        expect(nameOf(document.getElementById("hero") as HTMLElement)).toBe("none");
     });
 
     it("does nothing when the browser started no transition", () => {

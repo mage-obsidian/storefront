@@ -49,7 +49,9 @@ export interface NavigationFacts {
 const HERO_NAME = "pdp-hero";
 const HERO_MARKER = "data-vt-hero";
 const CARD_SELECTOR = ".product-item";
+const GALLERY_SELECTOR = ".pdp__gallery-main";
 const NAME_PROPERTY = "view-transition-name";
+const NAME_NONE = "none";
 
 const parse = (url: string, base?: string): URL | null => {
     try {
@@ -124,6 +126,21 @@ export function clearCardNames(doc: Document): void {
 }
 
 /**
+ * Releases the hero name the PDP stylesheet sets on the gallery, so it stays in
+ * the root snapshot.
+ *
+ * A back navigation has no clicked card to morph towards, so the name would be
+ * alone on the outgoing side: its opaque image lands on top of the listing that
+ * already painted and only then fades, which reads as the page flashing back.
+ */
+export function clearHeroName(doc: Document): void {
+    const gallery = doc.querySelector<HTMLElement>(GALLERY_SELECTOR);
+    if (gallery) {
+        gallery.style.setProperty(NAME_PROPERTY, NAME_NONE);
+    }
+}
+
+/**
  * Moves the hero name onto the clicked card's media box. Returns it so the caller
  * can assert the morph is wired; null when the card has no media box.
  *
@@ -143,9 +160,9 @@ export function markProductHero(trigger: Element, doc: Document): HTMLElement | 
         marked.removeAttribute(HERO_MARKER);
         marked.style.viewTransitionName = "";
     });
-    const gallery = doc.querySelector<HTMLElement>(".pdp__gallery-main");
+    const gallery = doc.querySelector<HTMLElement>(GALLERY_SELECTOR);
     if (gallery) {
-        gallery.style.viewTransitionName = "none";
+        gallery.style.viewTransitionName = NAME_NONE;
     }
 
     media.setAttribute(HERO_MARKER, "");
@@ -197,6 +214,8 @@ export function bindViewTransitions(win: Window & typeof globalThis): () => void
             clearCardNames(doc);
             if (trigger) {
                 markProductHero(trigger, doc);
+            } else {
+                clearHeroName(doc);
             }
             return;
         }
