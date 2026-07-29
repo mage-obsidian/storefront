@@ -47,7 +47,7 @@ describe("CartCount", () => {
 
         const badge = mount(CartCount).get("span[aria-hidden='true']");
 
-        expect(badge.classes()).toContain("absolute");
+        expect(badge.classes()).toContain("mo-badge");
         expect(mount(CartCount).get(".cart-count").classes()).not.toContain("gap-2");
     });
 });

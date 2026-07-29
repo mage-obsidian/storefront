@@ -32,7 +32,7 @@ const syncing = computed(() => activity.isBusy(CART_DOMAIN));
         <span v-if="syncing" class="cart-count__ring" aria-hidden="true"></span>
         <span
             v-if="count > 0"
-            class="cart-count__badge pointer-events-none absolute -right-2 -top-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 font-body text-[0.65rem] font-medium leading-none text-alabaster"
+            class="cart-count__badge mo-badge"
             aria-hidden="true"
         ><span :style="{ translate: digitNudge(count) }">{{ count }}</span></span>
         <span class="sr-only" role="status" aria-live="polite">
