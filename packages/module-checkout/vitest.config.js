@@ -13,6 +13,27 @@ export default defineConfig({
     plugins: [vue()],
     resolve: {
         alias: {
+            "mage-obsidian/runtime": fileURLToPath(
+                new URL("../js-package-utils/src/runtime", import.meta.url),
+            ),
+            "MageObsidian_Checkout::js/checkout-events": fileURLToPath(
+                new URL("./src/view/frontend/web/js/checkout-events.ts", import.meta.url),
+            ),
+            "MageObsidian_ModernFrontend::elements/Icon": fileURLToPath(
+                new URL("./src/Test/Js/stubs/Icon.vue", import.meta.url),
+            ),
+            "MageObsidian_Storefront::js/useValueFlash": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/js/useValueFlash.ts", import.meta.url),
+            ),
+            "MageObsidian_Storefront::js/notifications": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/js/notifications.ts", import.meta.url),
+            ),
+            "MageObsidian_ModernFrontend::js/events": fileURLToPath(
+                new URL("./src/Test/Js/stubs/events.ts", import.meta.url),
+            ),
+            "MageObsidian_ModernFrontend::js/activity": fileURLToPath(
+                new URL("../module-modern-frontend/src/view/frontend/web/js/activity.ts", import.meta.url),
+            ),
             "MageObsidian_ModernFrontend::js/customer-data": fileURLToPath(
                 new URL("./src/Test/Js/stubs/customerData.ts", import.meta.url),
             ),

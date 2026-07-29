@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, watch, onBeforeUnmount } from "vue";
-import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
+import { useCheckout, CheckoutStep } from "MageObsidian_Checkout::js/useCheckout";
 import { missingFields } from "MageObsidian_Storefront::js/address";
 import type { RegionData } from "MageObsidian_Storefront::js/address";
 import IdentificationStep from "MageObsidian_Checkout::checkout/IdentificationStep";
@@ -81,7 +81,7 @@ interface StepState {
 const steps = computed<StepState[]>(() => {
     const raw = [
         { key: "information", label: t("stepInformation", "Information"), target: "onepage-information", done: shippingDone.value, reachable: true },
-        { key: "payment", label: t("stepPayment", "Payment"), target: "onepage-payment", done: false, reachable: shippingDone.value },
+        { key: CheckoutStep.Payment, label: t("stepPayment", "Payment"), target: "onepage-payment", done: false, reachable: shippingDone.value },
     ];
     const activeIndex = raw.findIndex((s) => !s.done);
     return raw.map((s, index) => ({ ...s, index, active: index === activeIndex }));
@@ -209,7 +209,7 @@ onBeforeUnmount(() => {
             id="onepage-payment"
             aria-labelledby="onepage-payment-heading"
             class="scroll-mt-20 rounded-edge border bg-alabaster-raised p-6 transition-colors md:p-8"
-            :class="activeKey === 'payment' ? 'border-ink/40' : 'border-ash-200'"
+            :class="activeKey === CheckoutStep.Payment ? 'border-ink/40' : 'border-ash-200'"
         >
             <h2 id="onepage-payment-heading" class="mb-6 font-display text-2xl text-ink">
                 {{ t("stepPayment", "Payment") }}

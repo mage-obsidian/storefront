@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
-import { useCheckout } from "./useCheckout.ts";
+import { useCheckout, CheckoutStep } from "./useCheckout.ts";
+import { CheckoutOperation } from "./checkout-events.ts";
+import events, { dispatched, __reset as __resetEvents } from "MageObsidian_ModernFrontend::js/events";
 
 const GUEST_CONFIG = {
     isLoggedIn: false,
@@ -405,5 +407,77 @@ describe("useCheckout — native config parity", () => {
         expect(orderId).toBe(555);
         const body = JSON.parse(fetchMock.mock.calls[0][1].body);
         expect(body.paymentMethod.extension_attributes.agreement_ids).toEqual(["7"]);
+    });
+});
+
+describe("checkout events", () => {
+    beforeEach(() => {
+        setActivePinia(createPinia());
+        __resetEvents();
+    });
+
+    it("announces the step change with where it came from", () => {
+        const checkout = useCheckout();
+        checkout.init(GUEST_CONFIG);
+
+        checkout.goToStep(CheckoutStep.Shipping);
+
+        expect(dispatched.map((d) => d.event)).toEqual(["checkout_step_change"]);
+        expect(dispatched[0].data).toEqual({
+            from: CheckoutStep.Identification,
+            to: CheckoutStep.Shipping,
+        });
+    });
+
+    it("says nothing when the step does not actually move", () => {
+        const checkout = useCheckout();
+        checkout.init(GUEST_CONFIG);
+
+        checkout.goToStep(CheckoutStep.Identification);
+        checkout.goToStep("nowhere");
+
+        expect(dispatched).toHaveLength(0);
+    });
+
+    it("brackets a rate estimate with before and after", async () => {
+        mockFetch([FLATRATE]);
+        const checkout = useCheckout();
+        checkout.init(GUEST_CONFIG);
+
+        await checkout.estimateShipping();
+
+        expect(dispatched.map((d) => d.event)).toEqual([
+            "checkout_estimate_shipping_before",
+            "checkout_estimate_shipping_after",
+        ]);
+        expect(dispatched[0].data.operation).toBe(CheckoutOperation.EstimateShipping);
+    });
+
+    it("adds a failed phase when the estimate is rejected", async () => {
+        mockFetch({ message: "no" }, false, 400);
+        const checkout = useCheckout();
+        checkout.init(GUEST_CONFIG);
+
+        await checkout.estimateShipping();
+
+        expect(dispatched.map((d) => d.event)).toEqual([
+            "checkout_estimate_shipping_before",
+            "checkout_estimate_shipping_after",
+            "checkout_estimate_shipping_failed",
+        ]);
+    });
+
+    it("lets a before observer cancel without touching the network", async () => {
+        const fetchMock = mockFetch([FLATRATE]);
+        const checkout = useCheckout();
+        checkout.init(GUEST_CONFIG);
+        events.observe("checkout_estimate_shipping_before", (data) => {
+            data.cancelled = true;
+        });
+
+        await expect(checkout.estimateShipping()).resolves.toBe(false);
+
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(dispatched.map((d) => d.event)).toEqual(["checkout_estimate_shipping_before"]);
     });
 });

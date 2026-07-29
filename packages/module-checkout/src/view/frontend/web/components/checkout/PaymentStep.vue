@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
+import { useCheckout, CheckoutStep } from "MageObsidian_Checkout::js/useCheckout";
 import AddressForm from "MageObsidian_Storefront::form/AddressForm";
 import type { RegionData } from "MageObsidian_Storefront::js/address";
 
@@ -57,7 +57,7 @@ const billingVisible = computed(() => !checkout.displayBillingOnPayment || check
 
 function toReview(): void {
     if (checkout.sameAsShipping || billingForm.value?.validate()) {
-        checkout.goToStep("review");
+        checkout.goToStep(CheckoutStep.Review);
     }
 }
 </script>

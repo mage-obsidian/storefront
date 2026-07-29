@@ -12,6 +12,14 @@ import { ensureSharedPinia } from 'MageObsidian_ModernFrontend::js/store';
 import { createCheckoutApi } from 'MageObsidian_Checkout::js/useCheckoutApi';
 import { useCustomerData } from 'MageObsidian_ModernFrontend::js/customer-data';
 import { emptyAddress, toRestAddress, type AddressData } from 'MageObsidian_Storefront::js/address';
+import events from 'MageObsidian_ModernFrontend::js/events';
+import { MutationPhase } from 'mage-obsidian/runtime/mutationEvent.ts';
+import {
+    CHECKOUT_STEP_CHANGE_EVENT,
+    CheckoutOperation,
+    checkoutEvent,
+    type CheckoutEvent,
+} from 'MageObsidian_Checkout::js/checkout-events';
 
 export interface CheckoutItem {
     id: number | string;
@@ -71,16 +79,55 @@ interface ShippingInformationResult {
     totals?: QuoteTotals;
 }
 
+export const CheckoutStep = {
+    Identification: 'identification',
+    Shipping: 'shipping',
+    Payment: 'payment',
+    Review: 'review',
+} as const;
+
+export type CheckoutStep = (typeof CheckoutStep)[keyof typeof CheckoutStep];
+
 // The fixed step order of the one-page flow.
-export const STEPS = ['identification', 'shipping', 'payment', 'review'];
+export const STEPS: readonly CheckoutStep[] = Object.values(CheckoutStep);
+
+export const CheckoutLayout = {
+    Stepped: 'stepped',
+    OnePage: 'onepage',
+} as const;
+
+export type CheckoutLayout = (typeof CheckoutLayout)[keyof typeof CheckoutLayout];
+
+async function runFlow<Result>(
+    operation: CheckoutOperation,
+    payload: Record<string, unknown>,
+    run: () => Promise<Result>,
+    failed: (result: Result) => boolean,
+): Promise<Result | null> {
+    const request = await events.dispatch(checkoutEvent(operation, MutationPhase.Before), {
+        operation,
+        cancelled: false,
+        payload,
+    } satisfies CheckoutEvent);
+    if (request.cancelled) {
+        return null;
+    }
+
+    const result = await run();
+    await events.dispatch(checkoutEvent(operation, MutationPhase.After), { ...request, result });
+    if (failed(result)) {
+        await events.dispatch(checkoutEvent(operation, MutationPhase.Failed), { ...request, result });
+    }
+    return result;
+}
 
 ensureSharedPinia();
 
 export const useCheckout = defineStore('mageObsidianCheckout', () => {
-    const step = ref('identification');
+    const step = ref<CheckoutStep>(CheckoutStep.Identification);
     // Presentation layout the island renders with: 'stepped' (the wizard) or
     // 'onepage'. Domain logic is layout-agnostic; only the components read this.
-    const layout = ref('stepped');
+    const layout = ref<CheckoutLayout>(CheckoutLayout.Stepped);
     const isLoggedIn = ref(false);
     const email = ref('');
     const items = ref<CheckoutItem[]>([]);
@@ -158,21 +205,24 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         });
         // Skip the identity step entirely for known customers.
         if (isLoggedIn.value && email.value) {
-            step.value = 'shipping';
+            step.value = CheckoutStep.Shipping;
         }
     }
 
     /** Move to a known step. */
     function goToStep(key: string): void {
-        if (STEPS.includes(key)) {
-            step.value = key;
+        if (!STEPS.includes(key as CheckoutStep) || key === step.value) {
+            return;
         }
+        const from = step.value;
+        step.value = key as CheckoutStep;
+        void events.dispatch(CHECKOUT_STEP_CHANGE_EVENT, { from, to: step.value });
     }
 
     /** Record the guest email and advance to the shipping step. */
     function setEmail(value: string): void {
         email.value = value;
-        goToStep('shipping');
+        goToStep(CheckoutStep.Shipping);
     }
 
     /**
@@ -200,6 +250,17 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         if (!api) {
             return false;
         }
+        return (
+            (await runFlow(
+                CheckoutOperation.EstimateShipping,
+                { address: shippingAddress.value },
+                doEstimateShipping,
+                (ok) => !ok,
+            )) ?? false
+        );
+    }
+
+    async function doEstimateShipping(): Promise<boolean> {
         loadingRates.value = true;
         error.value = '';
         try {
@@ -234,6 +295,17 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         if (!api || !selectedMethod.value) {
             return false;
         }
+        return (
+            (await runFlow(
+                CheckoutOperation.SaveShipping,
+                { address: shippingAddress.value, method: selectedMethod.value },
+                doSaveShipping,
+                (ok) => !ok,
+            )) ?? false
+        );
+    }
+
+    async function doSaveShipping(): Promise<boolean> {
         savingShipping.value = true;
         error.value = '';
         try {
@@ -249,7 +321,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
                 selectedPayment.value = paymentMethods.value[0].code;
             }
             captureTotals(result.totals);
-            goToStep('payment');
+            goToStep(CheckoutStep.Payment);
             return true;
         } catch (e) {
             error.value = e instanceof Error ? e.message : String(e);
@@ -290,6 +362,17 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         if (!api || code.trim() === '') {
             return false;
         }
+        return (
+            (await runFlow(
+                CheckoutOperation.ApplyCoupon,
+                { code: code.trim() },
+                () => doApplyCoupon(code),
+                (ok) => !ok,
+            )) ?? false
+        );
+    }
+
+    async function doApplyCoupon(code: string): Promise<boolean> {
         couponError.value = '';
         try {
             await api.applyCoupon(code.trim());
@@ -307,6 +390,12 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         if (!api) {
             return false;
         }
+        return (
+            (await runFlow(CheckoutOperation.RemoveCoupon, {}, doRemoveCoupon, (ok) => !ok)) ?? false
+        );
+    }
+
+    async function doRemoveCoupon(): Promise<boolean> {
         couponError.value = '';
         try {
             await api.removeCoupon();
@@ -334,6 +423,17 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         if (!api || selectedPayment.value === '' || !allRequiredAccepted.value) {
             return null;
         }
+        return (
+            (await runFlow(
+                CheckoutOperation.PlaceOrder,
+                { payment: selectedPayment.value },
+                doPlaceOrder,
+                (orderId) => orderId === null,
+            )) ?? null
+        );
+    }
+
+    async function doPlaceOrder(): Promise<number | null> {
         placingOrder.value = true;
         orderError.value = '';
         try {

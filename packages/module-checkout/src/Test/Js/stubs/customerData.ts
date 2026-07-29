@@ -34,6 +34,16 @@ export function useCustomerData() {
     return {
         section: (name: string): Section | null => sections.value[name] ?? null,
         reload,
+        patch: (name: string, partial: Section): void => {
+            sections.value = {
+                ...sections.value,
+                [name]: { ...(sections.value[name] ?? {}), ...partial },
+            };
+        },
+        snapshot: (): Record<string, Section> => ({ ...sections.value }),
+        restore: (previous: Record<string, Section>): void => {
+            sections.value = { ...previous };
+        },
     };
 }
 

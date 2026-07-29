@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, onMounted } from "vue";
-import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
+import { useCheckout, CheckoutStep } from "MageObsidian_Checkout::js/useCheckout";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 import type { RegionData } from "MageObsidian_Storefront::js/address";
 
@@ -67,10 +67,10 @@ onMounted(() => {
 const t = (key: string, fallback: string): string => props.labels?.[key] ?? fallback;
 
 const steps = computed(() => [
-    { key: "identification", label: t("stepIdentification", "Identification") },
-    { key: "shipping", label: t("stepShipping", "Shipping") },
-    { key: "payment", label: t("stepPayment", "Payment") },
-    { key: "review", label: t("stepReview", "Review") },
+    { key: CheckoutStep.Identification, label: t("stepIdentification", "Identification") },
+    { key: CheckoutStep.Shipping, label: t("stepShipping", "Shipping") },
+    { key: CheckoutStep.Payment, label: t("stepPayment", "Payment") },
+    { key: CheckoutStep.Review, label: t("stepReview", "Review") },
 ]);
 
 const currentStepLabel = computed(
@@ -120,24 +120,24 @@ const isEmpty = computed(() => checkout.itemCount === 0);
                 </h2>
 
                 <IdentificationStep
-                    v-if="checkout.step === 'identification'"
+                    v-if="checkout.step === CheckoutStep.Identification"
                     :login-url="loginUrl"
                     :labels="identificationLabels"
                 />
                 <ShippingStep
-                    v-else-if="checkout.step === 'shipping'"
+                    v-else-if="checkout.step === CheckoutStep.Shipping"
                     :directory="directory"
                     :labels="shippingLabels"
                     :address-labels="addressLabels"
                 />
                 <PaymentStep
-                    v-else-if="checkout.step === 'payment'"
+                    v-else-if="checkout.step === CheckoutStep.Payment"
                     :directory="directory"
                     :labels="paymentLabels"
                     :address-labels="addressLabels"
                 />
                 <ReviewStep
-                    v-else-if="checkout.step === 'review'"
+                    v-else-if="checkout.step === CheckoutStep.Review"
                     :labels="reviewLabels"
                 />
             </section>
