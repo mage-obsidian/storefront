@@ -1,0 +1,175 @@
+/* ============================================================
+   MageObsidian Checkout — mini-cart motion.
+   Plain selectors, not Tailwind utilities: nothing references these class
+   names statically, so the tree-shaker would drop them otherwise.
+   ============================================================ */
+
+/* The leaving row slides past the right edge, and a scroll container with
+   `overflow-y: auto` resolves the other axis to `auto` too — which is a
+   horizontal scrollbar for the length of the animation. */
+.minicart-list {
+    position: relative;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+}
+
+.minicart-item-move,
+.minicart-item-enter-active,
+.minicart-item-leave-active {
+    transition:
+        transform 0.32s var(--ease-obsidian),
+        opacity 0.24s var(--ease-obsidian);
+}
+
+.minicart-item-enter-from,
+.minicart-item-leave-to {
+    opacity: 0;
+    transform: translateX(1.5rem);
+}
+
+/* Out of flow, so the rows below glide up into the gap instead of jumping. */
+.minicart-item-leave-active {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.minicart-panel-enter-active,
+.minicart-panel-leave-active {
+    transition: opacity 0.25s var(--ease-obsidian);
+}
+
+.minicart-panel-enter-from,
+.minicart-panel-leave-to {
+    opacity: 0;
+}
+
+.minicart-value {
+    border-radius: var(--radius-edge);
+    transition: background-color 0.45s var(--ease-obsidian);
+}
+
+.minicart-value.is-flashing {
+    background-color: var(--color-accent-soft);
+    transition-duration: 0.1s;
+}
+
+.minicart-value.is-syncing {
+    opacity: 0.5;
+    animation: minicart-pulse 1.1s ease-in-out infinite;
+}
+
+.minicart-qty {
+    transition: transform 0.25s var(--ease-obsidian);
+}
+
+.minicart-qty.is-bumped {
+    transform: scale(1.08);
+}
+
+.minicart-remove {
+    color: var(--color-danger);
+    opacity: 0.72;
+    transition:
+        opacity 0.2s var(--ease-obsidian),
+        transform 0.2s var(--ease-obsidian);
+}
+
+.minicart-remove:hover:not(:disabled) {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+@keyframes minicart-pulse {
+    50% {
+        opacity: 0.85;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .minicart-item-move,
+    .minicart-item-enter-active,
+    .minicart-item-leave-active,
+    .minicart-panel-enter-active,
+    .minicart-panel-leave-active,
+    .minicart-value,
+    .minicart-qty,
+    .minicart-remove {
+        transition: none;
+    }
+
+    .minicart-value.is-syncing {
+        animation: none;
+    }
+}
+
+/* The sample catalogue (and most catalogues) ships product shots on white, so
+   the tile is white with a hairline instead of a grey fill, and the image is
+   contained rather than cropped — a cover crop cuts the garment in half. */
+.minicart-thumb {
+    display: block;
+    aspect-ratio: 4 / 5;
+    padding: 0.3rem;
+    background: var(--color-paper);
+    border: 1px solid var(--color-ash-200);
+    border-radius: var(--radius-edge);
+    overflow: hidden;
+    transition: border-color 0.2s var(--ease-obsidian);
+}
+
+.minicart-thumb:hover {
+    border-color: var(--color-ash-400);
+}
+
+/* `product_price` is Magento's own markup and can carry a second amount (fixed
+   product tax, tax breakdown) that would otherwise widen the row. Named
+   `minicart-line-price`, not `minicart-price`: that one is Magento's. */
+.minicart-line-price .price-excluding-tax,
+.minicart-line-price .price-including-tax {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.1rem;
+    line-height: 1.25;
+}
+
+.minicart-line-price .minicart-tax-info {
+    max-width: 6rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    line-height: 1.3;
+    text-align: right;
+    color: var(--color-ash-500);
+}
+
+.minicart-line-price .weee[data-label]::before {
+    content: attr(data-label) " ";
+}
+
+.minicart-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    line-height: 1.5;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ash-500);
+}
+
+.minicart-options li:not(:last-child)::after {
+    content: "·";
+    margin-left: 0.5rem;
+    color: var(--color-ash-300);
+}
+
+.minicart-qty:hover {
+    border-color: var(--color-ash-400);
+}
+
+.minicart-qty:focus-within {
+    border-color: var(--color-ink);
+}

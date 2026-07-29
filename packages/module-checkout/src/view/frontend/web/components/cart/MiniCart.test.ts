@@ -1,9 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mount } from "@vue/test-utils";
+import { mount, flushPromises } from "@vue/test-utils";
 import { nextTick } from "vue";
 import MiniCart from "./MiniCart.vue";
 import { __setSection, __reset } from "MageObsidian_ModernFrontend::js/customer-data";
-import { __calls, __reset as __resetCart } from "MageObsidian_Storefront::js/useCart";
+import { __calls, __reset as __resetCart, __setResult } from "MageObsidian_Storefront::js/useCart";
+import events, { __reset as __resetEvents } from "MageObsidian_ModernFrontend::js/events";
+import { NOTIFICATION_EVENT, NotificationTone } from "MageObsidian_Storefront::js/notifications";
 
 const LABELS = {
     title: "Your bag",
@@ -169,5 +171,109 @@ describe("MiniCart", () => {
         const hrefs = wrapper.findAll("a").map((a) => a.attributes("href"));
         expect(hrefs).toContain("/checkout");
         expect(hrefs).toContain("/checkout/cart");
+    });
+});
+
+describe("MiniCart optimistic mutations", () => {
+    const OTHER = { ...ITEM, item_id: 16, product_name: "Aero Pant", qty: 1 };
+
+    beforeEach(() => {
+        __reset();
+        __resetCart();
+        __resetEvents();
+        delete window.__MAGE_OBSIDIAN_UX__;
+    });
+
+    async function openBag(items = [ITEM, OTHER], summary = 3) {
+        __setSection("cart", { items, summary_count: summary, subtotal: "$104.00" });
+        const trigger = addTrigger();
+        const wrapper = mount(MiniCart, { props: PROPS, attachTo: document.body });
+        await nextTick();
+        trigger.click();
+        await nextTick();
+        return wrapper;
+    }
+
+    it("drops the row and the count before the server answers", async () => {
+        const wrapper = await openBag();
+
+        await wrapper.findAll(".minicart-remove")[0].trigger("click");
+        await nextTick();
+
+        expect(wrapper.findAll("li.minicart-item")).toHaveLength(1);
+        expect(wrapper.text()).not.toContain("Chaz Hoodie");
+        expect(wrapper.get("h2").text()).toContain("(1)");
+        expect(__calls).toEqual([
+            { type: "removeItem", itemId: 15, action: PROPS.removeUrl },
+        ]);
+    });
+
+    it("brings the row back with a warning when the server refuses", async () => {
+        const toasts = [];
+        events.observe(NOTIFICATION_EVENT, (data) => toasts.push(data));
+        __setResult(false, "Item could not be removed");
+        const wrapper = await openBag();
+
+        await wrapper.findAll(".minicart-remove")[0].trigger("click");
+        await flushPromises();
+
+        expect(wrapper.findAll("li.minicart-item")).toHaveLength(2);
+        expect(wrapper.text()).toContain("Chaz Hoodie");
+        expect(toasts).toEqual([
+            { message: "Item could not be removed", tone: NotificationTone.Warning },
+        ]);
+    });
+
+    it("waits for the server when the merchant turned optimistic UI off", async () => {
+        window.__MAGE_OBSIDIAN_UX__ = { optimistic: false, summaryCountsQty: true };
+        const wrapper = await openBag();
+
+        await wrapper.findAll(".minicart-remove")[0].trigger("click");
+        await nextTick();
+
+        expect(wrapper.findAll("li.minicart-item")).toHaveLength(2);
+        expect(__calls).toHaveLength(1);
+    });
+
+    it("moves the quantity and the count by the delta right away", async () => {
+        const wrapper = await openBag();
+
+        await wrapper.findAll('[aria-label^="Increase"]')[0].trigger("click");
+        await nextTick();
+
+        expect(wrapper.findAll("input")[0].element.value).toBe("3");
+        expect(wrapper.get("h2").text()).toContain("(4)");
+        expect(__calls).toEqual([
+            { type: "updateItemQty", itemId: 15, qty: 3, action: PROPS.updateUrl },
+        ]);
+    });
+
+    it("counts a removed line as one when the badge counts lines", async () => {
+        window.__MAGE_OBSIDIAN_UX__ = { optimistic: true, summaryCountsQty: false };
+        const wrapper = await openBag();
+
+        await wrapper.findAll(".minicart-remove")[0].trigger("click");
+        await nextTick();
+
+        expect(wrapper.get("h2").text()).toContain("(2)");
+    });
+
+    it("marks the subtotal as syncing while a mutation is in flight", async () => {
+        const wrapper = await openBag();
+
+        wrapper.findAll(".minicart-remove")[0].trigger("click");
+        await nextTick();
+
+        expect(wrapper.get("footer .minicart-value").classes()).toContain("is-syncing");
+
+        await flushPromises();
+        await nextTick();
+        expect(wrapper.get("footer .minicart-value").classes()).not.toContain("is-syncing");
+    });
+
+    it("removes with a trash icon rather than an inline svg path", async () => {
+        const wrapper = await openBag();
+
+        expect(wrapper.get(".minicart-remove svg").attributes("data-icon")).toBe("trash");
     });
 });
