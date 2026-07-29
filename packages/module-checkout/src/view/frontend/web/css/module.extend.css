@@ -173,3 +173,42 @@
 .minicart-qty:focus-within {
     border-color: var(--color-ink);
 }
+
+[data-cart-enhanced] [data-cart-update] {
+  display: none;
+}
+
+[data-cart-line] {
+  view-transition-class: obsidian-cart-line;
+}
+
+::view-transition-group(.obsidian-cart-line) {
+  animation-duration: 260ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+::view-transition-old(.obsidian-cart-line) {
+  animation: 140ms both obsidian-cart-line-out;
+}
+
+::view-transition-new(.obsidian-cart-line) {
+  animation: 200ms 60ms both obsidian-cart-line-in;
+  mix-blend-mode: normal;
+}
+
+::view-transition-group(cart-summary) {
+  animation-duration: 260ms;
+}
+
+@keyframes obsidian-cart-line-out {
+  to {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
+@keyframes obsidian-cart-line-in {
+  from {
+    opacity: 0;
+  }
+}
