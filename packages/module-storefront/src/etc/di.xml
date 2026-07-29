@@ -21,6 +21,29 @@
             </argument>
         </arguments>
     </type>
+    <type name="MageObsidian\ModernFrontend\ViewModel\PrePaintConfig">
+        <arguments>
+            <argument name="counters" xsi:type="array">
+                <item name="cart" xsi:type="array">
+                    <item name="island" xsi:type="string">MageObsidian_Storefront::cart/CartCount</item>
+                    <item name="section" xsi:type="string">cart</item>
+                    <item name="field" xsi:type="string">summary_count</item>
+                </item>
+                <item name="compare" xsi:type="array">
+                    <item name="island" xsi:type="string">MageObsidian_Storefront::compare/CompareCount</item>
+                    <item name="section" xsi:type="string">compare-products</item>
+                    <item name="field" xsi:type="string">items</item>
+                    <item name="kind" xsi:type="string">size</item>
+                </item>
+                <item name="wishlist" xsi:type="array">
+                    <item name="island" xsi:type="string">MageObsidian_Storefront::wishlist/WishlistCount</item>
+                    <item name="section" xsi:type="string">wishlist</item>
+                    <item name="field" xsi:type="string">saved</item>
+                    <item name="kind" xsi:type="string">size</item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
     <type name="Magento\Cms\Block\Page">
         <plugin name="mage_obsidian_render_cms_page_template"
                 type="MageObsidian\Storefront\Plugin\Cms\RenderThemeTemplate"
