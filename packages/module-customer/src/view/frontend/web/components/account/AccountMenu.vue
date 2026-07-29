@@ -126,19 +126,19 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, tru
             :id="panelId"
             ref="panel"
             :aria-label="menuLabel"
-            class="absolute right-0 z-40 mt-2 min-w-[10rem] rounded-edge border border-ash-200 bg-alabaster/95 py-1 shadow-xl backdrop-blur-md"
+            class="absolute right-0 z-40 mt-2 w-max min-w-[10rem] max-w-[18rem] rounded-edge border border-ash-200 bg-alabaster/95 py-1 shadow-xl backdrop-blur-md"
         >
             <li v-for="link in links" :key="link.label">
                 <a
                     :href="link.url"
-                    class="block px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.12em] text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
+                    class="block truncate px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.12em] text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
                     @click="close(false)"
                 >{{ link.label }}</a>
             </li>
             <li class="mt-1 border-t border-ash-200 pt-1">
                 <a
                     :href="logoutUrl"
-                    class="block px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.12em] text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
+                    class="block truncate px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.12em] text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
                     @click="close(false)"
                 >{{ signOutLabel }}</a>
             </li>
