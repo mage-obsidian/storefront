@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import Field from "MageObsidian_Storefront::form/Field";
 import {
     useShippingEstimator,
     type EstimatorAddress,
@@ -63,6 +64,10 @@ const t = (key: keyof EstimatorLabels, fallback: string): string => props.labels
 
 const countryRegions = computed<RegionOption[]>(() => props.directory.regions?.[countryId.value] ?? []);
 const hasRegions = computed<boolean>(() => countryRegions.value.length > 0);
+const regionOptions = computed(() => [
+    { value: "", label: t("regionPlaceholder", "Please select a region") },
+    ...countryRegions.value.map((region) => ({ value: String(region.id), label: region.name })),
+]);
 
 function formatPrice(amount: number | null): string {
     const value = amount ?? 0;
@@ -102,47 +107,35 @@ async function onSelect(rate: ShippingRate): Promise<void> {
         </summary>
 
         <div class="mt-5 flex flex-col gap-4">
-            <div class="flex flex-col gap-2">
-                <label for="estimator-country" class="font-mono text-xs uppercase tracking-[0.14em] text-ink-soft">{{ t("country", "Country") }}</label>
-                <select
-                    id="estimator-country"
-                    v-model="countryId"
-                    class="h-11 rounded-edge border border-ash-300 bg-transparent px-3 text-sm text-ink focus:border-ink focus:outline-none"
-                >
-                    <option v-for="country in directory.countries" :key="country.value" :value="country.value">{{ country.label }}</option>
-                </select>
-            </div>
+            <Field
+                id="estimator-country"
+                v-model="countryId"
+                :label="t('country', 'Country')"
+                type="select"
+                :options="directory.countries"
+            />
 
-            <div class="flex flex-col gap-2">
-                <label for="estimator-region" class="font-mono text-xs uppercase tracking-[0.14em] text-ink-soft">{{ t("region", "State / Province") }}</label>
-                <select
-                    v-if="hasRegions"
-                    id="estimator-region"
-                    v-model="regionId"
-                    class="h-11 rounded-edge border border-ash-300 bg-transparent px-3 text-sm text-ink focus:border-ink focus:outline-none"
-                >
-                    <option value="">{{ t("regionPlaceholder", "Please select a region") }}</option>
-                    <option v-for="region in countryRegions" :key="region.id" :value="String(region.id)">{{ region.name }}</option>
-                </select>
-                <input
-                    v-else
-                    id="estimator-region"
-                    v-model="regionText"
-                    type="text"
-                    class="h-11 rounded-edge border border-ash-300 bg-transparent px-3 text-sm text-ink focus:border-ink focus:outline-none"
-                >
-            </div>
+            <Field
+                v-if="hasRegions"
+                id="estimator-region"
+                v-model="regionId"
+                :label="t('region', 'State / Province')"
+                type="select"
+                :options="regionOptions"
+            />
+            <Field
+                v-else
+                id="estimator-region"
+                v-model="regionText"
+                :label="t('region', 'State / Province')"
+            />
 
-            <div class="flex flex-col gap-2">
-                <label for="estimator-postcode" class="font-mono text-xs uppercase tracking-[0.14em] text-ink-soft">{{ t("postcode", "ZIP / Postal code") }}</label>
-                <input
-                    id="estimator-postcode"
-                    v-model="postcode"
-                    type="text"
-                    autocomplete="postal-code"
-                    class="h-11 rounded-edge border border-ash-300 bg-transparent px-3 text-sm text-ink focus:border-ink focus:outline-none"
-                >
-            </div>
+            <Field
+                id="estimator-postcode"
+                v-model="postcode"
+                :label="t('postcode', 'ZIP / Postal code')"
+                autocomplete="postal-code"
+            />
 
             <button
                 type="button"
