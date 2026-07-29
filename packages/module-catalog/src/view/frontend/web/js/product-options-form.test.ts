@@ -21,7 +21,7 @@ function buildForm({ required = false } = {}): HTMLFormElement {
                         <option value="">--</option>
                         <option value="11">A</option>
                     </select>
-                    <p data-option-error hidden></p>
+                    <p data-option-error class="field__error"></p>
                 </fieldset>
             </div>
             <span data-options-total></span>
@@ -61,7 +61,7 @@ describe("product-options-form enhancer", () => {
 
         expect(__formCalls).toHaveLength(0);
         const error = form.querySelector("[data-option-error]") as HTMLElement;
-        expect(error.hidden).toBe(false);
+        expect(error.textContent).not.toBe("");
     });
 
     it("adds via the form and announces success once valid", async () => {

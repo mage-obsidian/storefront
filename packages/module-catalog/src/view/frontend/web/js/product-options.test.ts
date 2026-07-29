@@ -30,21 +30,21 @@ function setup(): HTMLElement {
                     <option value="11">A</option>
                     <option value="12">B</option>
                 </select>
-                <p data-option-error hidden></p>
+                <p data-option-error class="field__error"></p>
             </fieldset>
             <fieldset data-option data-option-id="2" data-option-type="checkbox">
                 <input type="checkbox" name="options[2][]" value="21">
                 <input type="checkbox" name="options[2][]" value="22">
-                <p data-option-error hidden></p>
+                <p data-option-error class="field__error"></p>
             </fieldset>
             <fieldset data-option data-option-id="3" data-option-type="field" data-required>
                 <input type="text" name="options[3]">
-                <p data-option-error hidden></p>
+                <p data-option-error class="field__error"></p>
             </fieldset>
             <fieldset data-option data-option-id="4" data-option-type="file" data-required>
                 <input type="file" name="options_4_file">
                 <input type="hidden" name="options_4_file_action" value="save_new">
-                <p data-option-error hidden></p>
+                <p data-option-error class="field__error"></p>
             </fieldset>
         </div>`;
     return document.querySelector("[data-product-options]") as HTMLElement;
@@ -77,15 +77,24 @@ describe("createProductOptions", () => {
         expect(opts.validate()).toBe(false);
         const dropdownError = root.querySelector('[data-option-id="1"] [data-option-error]') as HTMLElement;
         const textError = root.querySelector('[data-option-id="3"] [data-option-error]') as HTMLElement;
-        expect(dropdownError.hidden).toBe(false);
+        expect(dropdownError.textContent).not.toBe("");
         expect(dropdownError.textContent).toContain("required");
-        expect(textError.hidden).toBe(false);
+        expect(textError.textContent).not.toBe("");
 
         (root.querySelector("select") as HTMLSelectElement).value = "11";
         (root.querySelector('input[name="options[3]"]') as HTMLInputElement).value = "x";
         chooseFile(root.querySelector('input[type="file"]') as HTMLInputElement);
         expect(opts.validate()).toBe(true);
-        expect(dropdownError.hidden).toBe(true);
+        expect(dropdownError.textContent).toBe("");
+    });
+
+    it("uses the translated required message the template carries", () => {
+        const root = setup();
+        root.setAttribute("data-err-required", "Campo obligatorio.");
+        createProductOptions(root).validate();
+
+        const error = root.querySelector('[data-option-id="1"] [data-option-error]') as HTMLElement;
+        expect(error.textContent).toBe("Campo obligatorio.");
     });
 
     it("does not flag an optional unfilled option", () => {
@@ -93,7 +102,7 @@ describe("createProductOptions", () => {
         const opts = createProductOptions(root);
         opts.validate();
         const checkboxError = root.querySelector('[data-option-id="2"] [data-option-error]') as HTMLElement;
-        expect(checkboxError.hidden).toBe(true);
+        expect(checkboxError.textContent).toBe("");
     });
 
     it("collects selected option fields into a FormData with native names", () => {
@@ -132,11 +141,11 @@ describe("createProductOptions", () => {
 
             expect(opts.validate()).toBe(false);
             const error = root.querySelector('[data-option-id="4"] [data-option-error]') as HTMLElement;
-            expect(error.hidden).toBe(false);
+            expect(error.textContent).not.toBe("");
 
             chooseFile(root.querySelector('input[type="file"]') as HTMLInputElement);
             opts.validate();
-            expect(error.hidden).toBe(true);
+            expect(error.textContent).toBe("");
         });
 
         it("appends the chosen File under Magento's native field name", () => {
@@ -176,7 +185,7 @@ describe("createProductOptions", () => {
                     <fieldset data-option data-option-id="4" data-option-type="file" data-required data-option-uploaded>
                         <input type="file" name="options_4_file">
                         <input type="hidden" name="options_4_file_action" value="save_old">
-                        <p data-option-error hidden></p>
+                        <p data-option-error class="field__error"></p>
                     </fieldset>
                 </div>`;
             return document.querySelector("[data-product-options]") as HTMLElement;

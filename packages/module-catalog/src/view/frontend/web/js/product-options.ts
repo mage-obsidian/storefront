@@ -20,6 +20,8 @@ type OptionConfig = PriceNode & Record<string, PriceNode>;
 type OptionsConfig = Record<string, OptionConfig>;
 
 const SELECT_TYPES = new Set(["drop_down", "radio", "checkbox", "multiple"]);
+const REQUIRED_MESSAGE_ATTR = "data-err-required";
+const DEFAULT_REQUIRED_MESSAGE = "This is a required field.";
 
 export interface ProductOptions {
     delta: () => number;
@@ -118,13 +120,14 @@ export function createProductOptions(root: HTMLElement): ProductOptions {
         return sum;
     }
 
+    // `.field__error:empty` hides the node, so emptying it is enough — the same
+    // contract the shared field macro and form-validation.ts rely on.
     function setError(fs: HTMLElement, message: string): void {
         const node = fs.querySelector<HTMLElement>("[data-option-error]");
         if (!node) {
             return;
         }
         node.textContent = message;
-        node.hidden = message === "";
     }
 
     function validate(): boolean {
@@ -137,7 +140,7 @@ export function createProductOptions(root: HTMLElement): ProductOptions {
             if (isFilled(fs, type)) {
                 setError(fs, "");
             } else {
-                setError(fs, "This is a required field.");
+                setError(fs, root.getAttribute(REQUIRED_MESSAGE_ATTR) ?? DEFAULT_REQUIRED_MESSAGE);
                 firstInvalid ??= fs;
             }
         }
