@@ -8,12 +8,8 @@
 import { useCart } from 'MageObsidian_Storefront::js/useCart';
 import { ensureFormKey } from 'MageObsidian_Storefront::js/form-key-provider';
 import { i18n } from 'mage-obsidian/runtime/i18nCore.ts';
-
-const TOAST_EVENT = 'obsidian:toast';
-
-function announce(message: string, tone: string): void {
-    window.dispatchEvent(new CustomEvent(TOAST_EVENT, { detail: { message, tone } }));
-}
+import { notify, NotificationTone } from 'MageObsidian_Storefront::js/notifications';
+import { setButtonBusy } from 'MageObsidian_Storefront::js/button-state';
 
 function init(): void {
     // FPC-safe form key: the baked key may be stale on cached HTML.
@@ -28,25 +24,15 @@ function init(): void {
         event.preventDefault();
 
         const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
-        const label = button?.textContent;
-        if (button) {
-            button.disabled = true;
-            button.setAttribute('aria-busy', 'true');
-        }
+        setButtonBusy(button, true);
 
         const { ok, message } = await cart.addFromForm(form);
-        announce(
+        void notify(
             message ?? (ok ? i18n.$t('Added to cart') : i18n.$t('Could not add to cart')),
-            ok ? 'success' : 'error',
+            ok ? NotificationTone.Success : NotificationTone.Error,
         );
 
-        if (button) {
-            button.disabled = false;
-            button.removeAttribute('aria-busy');
-            if (label !== undefined) {
-                button.textContent = label;
-            }
-        }
+        setButtonBusy(button, false);
     });
 }
 

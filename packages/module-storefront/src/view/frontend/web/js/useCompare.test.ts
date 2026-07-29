@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { useCompare } from "./useCompare.ts";
+import { useCompare, CompareOperation } from "./useCompare.ts";
+import events, { dispatched, __reset as __resetEvents } from "MageObsidian_ModernFrontend::js/events";
 import { __setSection, __reset, reload } from "MageObsidian_ModernFrontend::js/customer-data";
 
 function mockFetch(ok = true) {
@@ -59,5 +60,49 @@ describe("useCompare", () => {
 
         expect(ok).toBe(false);
         expect(fetchMock).not.toHaveBeenCalled();
+    });
+});
+
+describe("compare events", () => {
+    beforeEach(() => {
+        __resetEvents();
+    });
+
+    it("announces before and after around an add", async () => {
+        mockFetch(true);
+        const form = document.createElement("form");
+        form.action = "https://shop.test/catalog/product_compare/add/";
+
+        await useCompare().add(form);
+
+        expect(dispatched.map((d) => d.event)).toEqual(["compare_add_before", "compare_add_after"]);
+        expect(dispatched[0].data.operation).toBe(CompareOperation.Add);
+    });
+
+    it("adds a failed phase when the server rejects a removal", async () => {
+        __setSection("compare-products", { items: [{ id: 12, remove_url: REMOVE }] });
+        mockFetch(false);
+
+        await useCompare().remove(12);
+
+        expect(dispatched.map((d) => d.event)).toEqual([
+            "compare_remove_before",
+            "compare_remove_after",
+            "compare_remove_failed",
+        ]);
+    });
+
+    it("lets a before observer cancel without touching the network", async () => {
+        const fetchMock = mockFetch(true);
+        const form = document.createElement("form");
+        form.action = "https://shop.test/catalog/product_compare/add/";
+        events.observe("compare_add_before", (data) => {
+            data.cancelled = true;
+        });
+
+        await expect(useCompare().add(form)).resolves.toBe(false);
+
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(dispatched.map((d) => d.event)).toEqual(["compare_add_before"]);
     });
 });

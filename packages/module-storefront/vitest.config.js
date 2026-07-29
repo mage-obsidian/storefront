@@ -15,8 +15,14 @@ export default defineConfig({
     plugins: [vue()],
     resolve: {
         alias: {
+            "mage-obsidian/runtime": fileURLToPath(
+                new URL("../js-package-utils/src/runtime", import.meta.url),
+            ),
             "MageObsidian_ModernFrontend::elements/Icon": fileURLToPath(
                 new URL("./src/Test/Js/stubs/Icon.vue", import.meta.url),
+            ),
+            "MageObsidian_ModernFrontend::js/activity": fileURLToPath(
+                new URL("../module-modern-frontend/src/view/frontend/web/js/activity.ts", import.meta.url),
             ),
             "MageObsidian_ModernFrontend::js/customer-data": fileURLToPath(
                 new URL("./src/Test/Js/stubs/customerData.ts", import.meta.url),
@@ -53,6 +59,12 @@ export default defineConfig({
             ),
             "MageObsidian_Storefront::js/useCompare": fileURLToPath(
                 new URL("./src/view/frontend/web/js/useCompare.ts", import.meta.url),
+            ),
+            "MageObsidian_Storefront::js/search-events": fileURLToPath(
+                new URL("./src/view/frontend/web/js/search-events.ts", import.meta.url),
+            ),
+            "MageObsidian_Storefront::js/notifications": fileURLToPath(
+                new URL("./src/view/frontend/web/js/notifications.ts", import.meta.url),
             ),
             "MageObsidian_Storefront::js/digitNudge": fileURLToPath(
                 new URL("./src/view/frontend/web/js/digitNudge.ts", import.meta.url),

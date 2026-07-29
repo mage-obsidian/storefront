@@ -10,6 +10,13 @@
 import { computed } from 'vue';
 import { useCustomerData } from 'MageObsidian_ModernFrontend::js/customer-data';
 import events from 'MageObsidian_ModernFrontend::js/events';
+import {
+    MutationPhase,
+    mutationEvent,
+    type MutationEvent,
+    type MutationEventName,
+} from 'mage-obsidian/runtime/mutationEvent.ts';
+import { readUxRuntimeConfig } from 'mage-obsidian/runtime/uxConfig.ts';
 
 /** Outcome of a cart mutation; `message` carries Magento's own wording. */
 export interface CartResult {
@@ -17,22 +24,29 @@ export interface CartResult {
     message?: string;
 }
 
-export type CartOperation = 'add' | 'update_qty' | 'remove_item';
+export const CART_DOMAIN = 'cart';
 
-/**
- * Payload of every `cart_<operation>_before|after|failed` event. A `_before`
- * observer may rewrite `action`/`body`, or set `cancelled` to stop the request
- * — the request is what it leaves behind, which is why it is dispatched after
- * the form key is backfilled and before anything is sent.
- */
-export interface CartEvent {
-    operation: CartOperation;
-    action: string;
-    body: FormData;
-    cancelled: boolean;
-    message?: string;
-    result?: CartResult;
+export const CartOperation = {
+    Add: 'add',
+    UpdateQty: 'update_qty',
+    RemoveItem: 'remove_item',
+} as const;
+
+export type CartOperation = (typeof CartOperation)[keyof typeof CartOperation];
+
+export type CartEvent = MutationEvent<CartOperation, CartResult>;
+
+export type CartEventName = MutationEventName<typeof CART_DOMAIN, CartOperation>;
+
+declare module 'mage-obsidian/runtime/eventManager.ts' {
+    interface StorefrontEventMap extends Record<CartEventName, CartEvent> {}
 }
+
+const CART_SECTION = 'cart';
+const SUMMARY_COUNT = 'summary_count';
+const QTY_FIELD = 'qty';
+const MESSAGES_SECTION = 'messages';
+const ERROR_TYPE = 'error';
 
 interface SectionMessage {
     type?: string;
@@ -70,8 +84,21 @@ function toFormData(fields: Record<string, unknown>): FormData {
 
 export function useCart() {
     const customerData = useCustomerData();
+    const ux = readUxRuntimeConfig();
 
-    const count = computed(() => Number(customerData.section('cart')?.summary_count ?? 0));
+    const count = computed(() => Number(customerData.section(CART_SECTION)?.[SUMMARY_COUNT] ?? 0));
+
+    /**
+     * Move the badge before the server answers. No rollback: `post` always
+     * reloads the `cart` section, and that authoritative value replaces this one
+     * whether the add succeeded or not.
+     */
+    function projectAdd(body: FormData): void {
+        const qty = Math.max(1, Number(body.get(QTY_FIELD)) || 1);
+        customerData.patch(CART_SECTION, {
+            [SUMMARY_COUNT]: count.value + (ux.summaryCountsQty ? qty : 1),
+        });
+    }
 
     /**
      * Magento escapes messages for HTML output; a <textarea> resolves the
@@ -90,12 +117,12 @@ export function useCart() {
      * and they never pile up across requests.
      */
     function errorMessage(): string | undefined {
-        const items = customerData.section('messages')?.messages;
+        const items = customerData.section(MESSAGES_SECTION)?.messages;
         if (!Array.isArray(items)) {
             return undefined;
         }
         const failure = (items as SectionMessage[]).find(
-            (item) => item?.type === 'error' && typeof item.text === 'string',
+            (item) => item?.type === ERROR_TYPE && typeof item.text === 'string',
         );
         return failure ? decodeEntities(failure.text as string) : undefined;
     }
@@ -118,14 +145,15 @@ export function useCart() {
             body.set('form_key', getFormKey());
         }
 
-        const request = await events.dispatch<CartEvent>(`cart_${operation}_before`, {
-            operation,
-            action,
-            body,
-            cancelled: false,
-        });
+        const request = await events.dispatch(
+            mutationEvent(CART_DOMAIN, operation, MutationPhase.Before),
+            { operation, action, body, cancelled: false },
+        );
         if (request.cancelled) {
             return { ok: false, message: request.message };
+        }
+        if (operation === CartOperation.Add) {
+            projectAdd(request.body);
         }
 
         let ok = false;
@@ -140,13 +168,19 @@ export function useCart() {
         } catch {
             ok = false;
         }
-        await customerData.reload(['cart', 'messages']);
+        await customerData.reload([CART_SECTION, MESSAGES_SECTION]);
         const message = errorMessage();
         const result: CartResult = message ? { ok: false, message } : { ok };
 
-        await events.dispatch<CartEvent>(`cart_${operation}_after`, { ...request, result });
+        await events.dispatch(mutationEvent(CART_DOMAIN, operation, MutationPhase.After), {
+            ...request,
+            result,
+        });
         if (!result.ok) {
-            await events.dispatch<CartEvent>(`cart_${operation}_failed`, { ...request, result });
+            await events.dispatch(mutationEvent(CART_DOMAIN, operation, MutationPhase.Failed), {
+                ...request,
+                result,
+            });
         }
 
         return result;
@@ -156,7 +190,7 @@ export function useCart() {
      * Add from a server-rendered add-to-cart form (simple/virtual/downloadable).
      */
     function addFromForm(form: HTMLFormElement): Promise<CartResult> {
-        return post('add', form.action, new FormData(form));
+        return post(CartOperation.Add, form.action, new FormData(form));
     }
 
     /**
@@ -173,7 +207,7 @@ export function useCart() {
         uenc?: string;
         superAttribute?: Record<string, number | string>;
     }): Promise<CartResult> {
-        return post('add', action, toFormData({
+        return post(CartOperation.Add, action, toFormData({
             product,
             qty,
             uenc,
@@ -188,7 +222,7 @@ export function useCart() {
      * lot. The form key is backfilled by post().
      */
     function addRaw(action: string, body: FormData): Promise<CartResult> {
-        return post('add', action, body);
+        return post(CartOperation.Add, action, body);
     }
 
     /**
@@ -199,7 +233,7 @@ export function useCart() {
      * resolution stays correct.
      */
     function updateItemQty(itemId: number | string, qty: number | string, action: string): Promise<CartResult> {
-        return post('update_qty', action, toFormData({ item_id: itemId, item_qty: qty }));
+        return post(CartOperation.UpdateQty, action, toFormData({ item_id: itemId, item_qty: qty }));
     }
 
     /**
@@ -207,7 +241,7 @@ export function useCart() {
      * endpoint (`checkout/sidebar/removeItem`). Reloads the `cart` section after.
      */
     function removeItem(itemId: number | string, action: string): Promise<CartResult> {
-        return post('remove_item', action, toFormData({ item_id: itemId }));
+        return post(CartOperation.RemoveItem, action, toFormData({ item_id: itemId }));
     }
 
     return { count, addFromForm, addProduct, addRaw, updateItemQty, removeItem };

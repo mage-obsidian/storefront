@@ -8,12 +8,7 @@ import { watchEffect } from 'vue';
 import { useCompare } from 'MageObsidian_Storefront::js/useCompare';
 import { ensureFormKey } from 'MageObsidian_Storefront::js/form-key-provider';
 import { i18n } from 'mage-obsidian/runtime/i18nCore.ts';
-
-const TOAST_EVENT = 'obsidian:toast';
-
-function announce(message: string, tone: string): void {
-    window.dispatchEvent(new CustomEvent(TOAST_EVENT, { detail: { message, tone } }));
-}
+import { notify, NotificationTone } from 'MageObsidian_Storefront::js/notifications';
 
 function init(): void {
     ensureFormKey();
@@ -42,11 +37,11 @@ function init(): void {
         button?.setAttribute('aria-busy', 'true');
 
         const ok = removing ? await compare.remove(id) : await compare.add(form);
-        announce(
+        void notify(
             ok
                 ? (removing ? i18n.$t('Removed from compare') : i18n.$t('Added to compare'))
                 : i18n.$t('Could not update compare'),
-            ok ? 'success' : 'error',
+            ok ? NotificationTone.Success : NotificationTone.Error,
         );
         button?.removeAttribute('aria-busy');
     });

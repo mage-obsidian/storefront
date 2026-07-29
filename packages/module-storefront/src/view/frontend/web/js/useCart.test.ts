@@ -248,3 +248,67 @@ describe("cart events", () => {
         expect(dispatched[0].data.body.get("form_key")).toBe("ck");
     });
 });
+
+describe("optimistic add", () => {
+    // The badge moves right after the `_before` observers ran, one microtask in.
+    const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    it("moves the badge before the server answers", async () => {
+        __setSection("cart", { summary_count: 2 });
+        let resolveFetch;
+        globalThis.fetch = vi.fn(() => new Promise((resolve) => { resolveFetch = resolve; }));
+
+        const cart = useCart();
+        const pending = cart.addProduct({ action: "/checkout/cart/add/", product: 7, qty: 3 });
+        await settled();
+
+        expect(cart.count.value).toBe(5);
+
+        resolveFetch({ ok: true, status: 200 });
+        await pending;
+    });
+
+    it("counts one line when the badge counts lines rather than units", async () => {
+        window.__MAGE_OBSIDIAN_UX__ = { optimistic: true, summaryCountsQty: false };
+        __setSection("cart", { summary_count: 2 });
+        let resolveFetch;
+        globalThis.fetch = vi.fn(() => new Promise((resolve) => { resolveFetch = resolve; }));
+
+        const cart = useCart();
+        const pending = cart.addProduct({ action: "/checkout/cart/add/", product: 7, qty: 3 });
+        await settled();
+
+        expect(cart.count.value).toBe(3);
+
+        resolveFetch({ ok: true, status: 200 });
+        await pending;
+        delete window.__MAGE_OBSIDIAN_UX__;
+    });
+
+    it("leaves the badge alone for a quantity change or a removal", async () => {
+        __setSection("cart", { summary_count: 4 });
+        let resolveFetch;
+        globalThis.fetch = vi.fn(() => new Promise((resolve) => { resolveFetch = resolve; }));
+
+        const cart = useCart();
+        const pending = cart.removeItem(9, "/checkout/sidebar/removeItem/");
+        await settled();
+
+        expect(cart.count.value).toBe(4);
+
+        resolveFetch({ ok: true, status: 200 });
+        await pending;
+    });
+
+    it("says nothing when a before observer cancelled the add", async () => {
+        __setSection("cart", { summary_count: 1 });
+        events.observe("cart_add_before", (data) => {
+            data.cancelled = true;
+        });
+
+        await useCart().addProduct({ action: "/checkout/cart/add/", product: 7, qty: 2 });
+        await settled();
+
+        expect(useCart().count.value).toBe(1);
+    });
+});

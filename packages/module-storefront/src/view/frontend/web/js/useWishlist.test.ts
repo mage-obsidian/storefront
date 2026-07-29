@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { useWishlist } from "./useWishlist.ts";
+import { useWishlist, WishlistOperation } from "./useWishlist.ts";
+import events, { dispatched, __reset as __resetEvents } from "MageObsidian_ModernFrontend::js/events";
 import { __setSection, __reset, reload } from "MageObsidian_ModernFrontend::js/customer-data";
+
+function form() {
+    const element = document.createElement("form");
+    element.action = "https://shop.test/wishlist/index/add/";
+    return element;
+}
 
 function mockFetch(ok = true) {
     globalThis.fetch = vi.fn().mockResolvedValue({ ok, status: ok ? 200 : 400 });
@@ -57,5 +64,44 @@ describe("useWishlist", () => {
 
         expect(ok).toBe(false);
         expect(fetchMock).not.toHaveBeenCalled();
+    });
+});
+
+describe("wishlist events", () => {
+    beforeEach(() => {
+        __resetEvents();
+    });
+
+    it("announces before and after around an add", async () => {
+        mockFetch(true);
+        await useWishlist().add(form());
+
+        expect(dispatched.map((d) => d.event)).toEqual(["wishlist_add_before", "wishlist_add_after"]);
+        expect(dispatched[0].data.operation).toBe(WishlistOperation.Add);
+        expect(dispatched.at(-1).data.result).toBe(true);
+    });
+
+    it("adds a failed phase when the server rejects a removal", async () => {
+        __setSection("wishlist", { saved: { "12": "/wishlist/index/remove/item/5/" } });
+        mockFetch(false);
+        await useWishlist().remove(12);
+
+        expect(dispatched.map((d) => d.event)).toEqual([
+            "wishlist_remove_before",
+            "wishlist_remove_after",
+            "wishlist_remove_failed",
+        ]);
+    });
+
+    it("lets a before observer cancel without touching the network", async () => {
+        const fetchMock = mockFetch(true);
+        events.observe("wishlist_add_before", (data) => {
+            data.cancelled = true;
+        });
+
+        await expect(useWishlist().add(form())).resolves.toBe(false);
+
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(dispatched.map((d) => d.event)).toEqual(["wishlist_add_before"]);
     });
 });
