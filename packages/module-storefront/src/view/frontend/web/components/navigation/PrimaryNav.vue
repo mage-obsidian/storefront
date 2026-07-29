@@ -1,13 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, useId } from "vue";
+import { ref, onBeforeUnmount, nextTick, useId } from "vue";
 import Icon from "MageObsidian_ModernFrontend::elements/Icon";
-import { computeVisibleCount } from "MageObsidian_Storefront::js/overflowNav";
 
-// Desktop primary navigation island (priority+). The category bar is measured
-// and the items that do not fit collapse into a "More" disclosure, so a store
-// with many top-level categories never overflows the page. The bar is
-// server-fed the same Navigation ViewModel as the mobile drawer and the footer.
-// Measurement lives here; the overflow math is the pure `computeVisibleCount`.
 interface NavLink {
     label: string;
     url: string;
@@ -15,7 +9,7 @@ interface NavLink {
     children?: NavLink[];
 }
 
-const props = withDefaults(
+withDefaults(
     defineProps<{
         links?: NavLink[];
         label?: string;
@@ -24,83 +18,12 @@ const props = withDefaults(
     { links: () => [], label: "Primary", moreLabel: "More" },
 );
 
-const navEl = ref<HTMLElement | null>(null);
 const moreWrap = ref<HTMLElement | null>(null);
 const trigger = ref<HTMLElement | null>(null);
 const panel = ref<HTMLElement | null>(null);
 const panelId = useId();
-
-// The server paints the full bar clipped to the header, which is exactly the
-// `measuring` state; hydration has to start there or the nav would either blank
-// out or overflow the logo until measure() runs.
-const measuring = ref(true);
-const visibleCount = ref(props.links.length);
 const open = ref(false);
 
-let widths: number[] = [];
-let gap = 0;
-let moreWidth = 0;
-let barWidth = 0;
-let observer: ResizeObserver | null = null;
-
-const hasOverflow = computed(() => visibleCount.value < props.links.length);
-const overflowLinks = computed(() => props.links.slice(visibleCount.value));
-
-const readMetrics = (): void => {
-    const el = navEl.value;
-    if (!el) {
-        return;
-    }
-    const items = Array.from(el.querySelectorAll<HTMLElement>("[data-nav-item]"));
-    // Fractional widths, not offsetWidth: rounding each item up while rounding the
-    // container down fabricates about a pixel of overflow, which is enough to
-    // collapse a bar that fits.
-    widths = items.map((item) => item.getBoundingClientRect().width);
-    const styles = getComputedStyle(el);
-    gap = parseFloat(styles.columnGap || styles.gap || "0") || 0;
-    moreWidth = moreWrap.value?.getBoundingClientRect().width ?? 0;
-    // Read the available bar width now, while measure() holds the host clipped to
-    // its flex track; reading it after collapse would see the shrunken bar and
-    // spiral every item into the dropdown.
-    const px = (value: string): number => parseFloat(value) || 0;
-    const inset =
-        px(styles.paddingLeft) +
-        px(styles.paddingRight) +
-        px(styles.borderLeftWidth) +
-        px(styles.borderRightWidth);
-    barWidth = el.getBoundingClientRect().width - inset;
-};
-
-const recompute = (): void => {
-    visibleCount.value = computeVisibleCount(widths, gap, moreWidth, barWidth);
-};
-
-// Show everything for one tick to read widths, then collapse. The island host
-// (`data-mage-island`) is a flex item without `min-w-0`, so the full render
-// would grow it past the header and scroll the page; clip+shrink the host for
-// the measuring tick only, then restore it so flyouts are never x-clipped.
-const measure = async (): Promise<void> => {
-    const host = navEl.value?.parentElement;
-    const prevMinWidth = host?.style.minWidth ?? "";
-    const prevOverflowX = host?.style.overflowX ?? "";
-    if (host) {
-        host.style.minWidth = "0";
-        host.style.overflowX = "clip";
-    }
-    measuring.value = true;
-    await nextTick();
-    readMetrics();
-    measuring.value = false;
-    await nextTick();
-    if (host) {
-        host.style.minWidth = prevMinWidth;
-        host.style.overflowX = prevOverflowX;
-    }
-    recompute();
-};
-
-// Disclosure wiring, mirroring Switcher.vue: the items are plain links, so this
-// is a disclosure (Tab moves through links) rather than an ARIA menu widget.
 const onDocumentClick = (event: Event): void => {
     if (moreWrap.value && !moreWrap.value.contains(event.target as Node | null)) {
         close(false);
@@ -126,20 +49,11 @@ const close = (returnFocus = true): void => {
 
 const toggle = (): void => (open.value ? close(false) : openPanel());
 
-// Subcategory flyouts (only for items that carry `children`). Hover and keyboard
-// focus open the panel; no close timer is needed because the panel is a child of
-// the wrapper AND is laid out flush against it (top-full, with the visual gap as
-// the panel's own padding) — a margin there would leave a dead strip outside both
-// boxes that fires mouseleave while the pointer travels to the panel. A plain tap
-// on the parent link (touch, no hover) still navigates to the category — the
-// progressive fallback.
 const flyoutIndex = ref<number | null>(null);
-// After Escape we refocus the parent link, which re-fires focusin; this guard
-// keeps that from reopening the panel until focus actually leaves the item.
 const flyoutSuppressed = ref(false);
 
 const openFlyout = (index: number): void => {
-    if (!measuring.value && !flyoutSuppressed.value) {
+    if (!flyoutSuppressed.value) {
         flyoutIndex.value = index;
     }
 };
@@ -167,43 +81,18 @@ const onFlyoutEscape = (event: KeyboardEvent): void => {
     (event.currentTarget as HTMLElement).querySelector("a")?.focus();
 };
 
-onMounted(async () => {
-    await measure();
-    if (typeof ResizeObserver !== "undefined" && navEl.value) {
-        observer = new ResizeObserver(() => recompute());
-        observer.observe(navEl.value);
-    }
-    document.fonts?.ready?.then(() => void measure()).catch(() => {});
-});
-
-// Item widths only change when the links themselves change; a viewport resize
-// just recomputes from the cached widths (no relayout read → no resize loop).
-watch(
-    () => props.links,
-    () => {
-        visibleCount.value = props.links.length;
-        void measure();
-    },
-);
-
 onBeforeUnmount(() => {
-    observer?.disconnect();
     document.removeEventListener("click", onDocumentClick, true);
 });
 </script>
 
 <template>
-    <nav
-        ref="navEl"
-        class="flex min-w-0 items-center gap-6 overflow-y-visible xl:gap-8"
-        :class="measuring ? 'overflow-x-clip' : 'overflow-x-visible'"
-        :aria-label="label"
-    >
+    <nav class="flex min-w-0 items-center gap-6 xl:gap-8" :aria-label="label">
         <template v-for="(link, i) in links" :key="link.label">
             <a
                 v-if="!link.children || !link.children.length"
-                v-show="measuring || i < visibleCount"
                 data-nav-item
+                :data-nav-index="i"
                 :href="link.url"
                 :aria-current="link.active ? 'page' : null"
                 class="whitespace-nowrap font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft transition-colors hover:text-ink"
@@ -213,8 +102,8 @@ onBeforeUnmount(() => {
 
             <div
                 v-else
-                v-show="measuring || i < visibleCount"
                 data-nav-item
+                :data-nav-index="i"
                 class="relative"
                 @mouseenter="hoverFlyout(i)"
                 @mouseleave="closeFlyout()"
@@ -266,16 +155,7 @@ onBeforeUnmount(() => {
             </div>
         </template>
 
-        <!-- While measuring, the trigger is laid out for its width but taken out of
-             flow and hidden: the server cannot know whether the bar overflows, so
-             painting it there would show a "More" that vanishes once the island
-             mounts and finds everything fits. -->
-        <div
-            v-show="measuring || hasOverflow"
-            ref="moreWrap"
-            :class="measuring && !hasOverflow ? 'invisible absolute' : 'relative'"
-            @keydown.escape="close()"
-        >
+        <div ref="moreWrap" data-nav-more class="relative" @keydown.escape="close()">
             <button
                 ref="trigger"
                 type="button"
@@ -300,7 +180,7 @@ onBeforeUnmount(() => {
                 :aria-label="moreLabel"
                 class="absolute right-0 z-40 mt-3 min-w-[11rem] rounded-edge border border-ash-200 bg-alabaster/95 py-1 shadow-xl backdrop-blur-md"
             >
-                <li v-for="link in overflowLinks" :key="link.label">
+                <li v-for="(link, i) in links" :key="link.label" :data-nav-overflow-index="i">
                     <a
                         :href="link.url"
                         :aria-current="link.active ? 'page' : null"

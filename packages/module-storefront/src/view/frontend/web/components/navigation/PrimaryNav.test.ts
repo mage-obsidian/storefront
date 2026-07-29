@@ -1,12 +1,7 @@
-import { describe, it, expect, afterEach, beforeEach } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
 import PrimaryNav from "./PrimaryNav.vue";
 
-// Desktop primary nav island: renders the category bar and collapses whatever
-// does not fit into a "More" disclosure. The overflow math is unit-tested in
-// overflowNav.test.ts; here we cover rendering, the a11y wiring, and the
-// disclosure — forcing overflow by stubbing element metrics (happy-dom reports
-// 0 for layout sizes, so nothing would overflow otherwise).
 const links = [
     { label: "MOTOR", url: "/motor" },
     { label: "FRENOS", url: "/frenos", active: true },
@@ -17,8 +12,8 @@ afterEach(() => {
     document.body.innerHTML = "";
 });
 
-describe("PrimaryNav — everything fits", () => {
-    it("renders every link, flags the active one, and hides the More trigger", async () => {
+describe("PrimaryNav — bar rendering", () => {
+    it("renders every link with the index the overflow rules address", async () => {
         const wrapper = mount(PrimaryNav, {
             props: { links, label: "Primary", moreLabel: "Más" },
             attachTo: document.body,
@@ -27,87 +22,43 @@ describe("PrimaryNav — everything fits", () => {
 
         const items = wrapper.findAll("[data-nav-item]");
         expect(items).toHaveLength(3);
+        expect(items.map((item) => item.attributes("data-nav-index"))).toEqual(["0", "1", "2"]);
         expect(items[0].attributes("href")).toBe("/motor");
         expect(items[0].text()).toBe("MOTOR");
         expect(wrapper.get("nav").attributes("aria-label")).toBe("Primary");
         expect(wrapper.get("a[href='/frenos']").attributes("aria-current")).toBe("page");
 
-        // Layout sizes are 0 in happy-dom → all fit → More stays hidden.
-        expect(wrapper.get("button").isVisible()).toBe(false);
+        wrapper.unmount();
+    });
 
-        // Steady state must not clip the x axis, or absolute dropdowns/flyouts
-        // wider than the bar would be cut off; the clip only guards the measuring
-        // pass. (BUG 2)
+    it("leaves the split entirely to CSS: no inline display, no clipping toggle", async () => {
+        const wrapper = mount(PrimaryNav, { props: { links, moreLabel: "Más" }, attachTo: document.body });
+        await flushPromises();
+
+        for (const item of wrapper.findAll("[data-nav-item]")) {
+            expect((item.element as HTMLElement).style.display).toBe("");
+        }
+
+        const trigger = wrapper.get("[data-nav-more]");
+        expect((trigger.element as HTMLElement).style.display).toBe("");
+        expect(trigger.classes()).toContain("relative");
+        expect(trigger.classes()).not.toContain("invisible");
+        expect(trigger.classes()).not.toContain("absolute");
+
         const navClass = wrapper.get("nav").classes();
-        expect(navClass).toContain("overflow-x-visible");
         expect(navClass).not.toContain("overflow-x-clip");
+        expect(navClass).not.toContain("overflow-x-visible");
 
         wrapper.unmount();
     });
 });
 
-describe("PrimaryNav — overflow into the More disclosure", () => {
-    let rectDesc: PropertyDescriptor | undefined;
-
-    beforeEach(() => {
-        rectDesc = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "getBoundingClientRect");
-        // Every item (and the More trigger) is 120px wide; the bar is only 100px,
-        // so not even one item + More fits → all links land in the dropdown.
-        Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", {
-            configurable: true,
-            value(this: HTMLElement) {
-                const width = this.tagName === "NAV" ? 100 : 120;
-
-                return { width, height: 0, top: 0, left: 0, right: width, bottom: 0, x: 0, y: 0 };
-            },
-        });
-    });
-
-    afterEach(() => {
-        if (rectDesc) {
-            Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", rectDesc);
-        } else {
-            delete (HTMLElement.prototype as unknown as Record<string, unknown>).getBoundingClientRect;
-        }
-    });
-
-    it("collapses without waiting for document.fonts.ready", async () => {
-        const original = Object.getOwnPropertyDescriptor(document, "fonts");
-        Object.defineProperty(document, "fonts", {
-            configurable: true,
-            get: () => ({ ready: new Promise<void>(() => {}) }),
-        });
-        try {
-            const wrapper = mount(PrimaryNav, {
-                props: { links, moreLabel: "Más" },
-                attachTo: document.body,
-            });
-            await flushPromises();
-
-            expect(wrapper.get("button").isVisible()).toBe(true);
-            const navClass = wrapper.get("nav").classes();
-            expect(navClass).toContain("overflow-x-visible");
-            expect(navClass).not.toContain("overflow-x-clip");
-
-            wrapper.unmount();
-        } finally {
-            if (original) {
-                Object.defineProperty(document, "fonts", original);
-            } else {
-                delete (document as unknown as Record<string, unknown>).fonts;
-            }
-        }
-    });
-
-    it("shows the More trigger and lists the overflow links, with disclosure a11y", async () => {
-        const wrapper = mount(PrimaryNav, {
-            props: { links, moreLabel: "Más" },
-            attachTo: document.body,
-        });
+describe("PrimaryNav — the More disclosure", () => {
+    it("lists every link in the panel so the rules can hide the ones already in the bar", async () => {
+        const wrapper = mount(PrimaryNav, { props: { links, moreLabel: "Más" }, attachTo: document.body });
         await flushPromises();
 
         const trigger = wrapper.get("button");
-        expect(trigger.isVisible()).toBe(true);
         expect(trigger.text()).toContain("Más");
         expect(trigger.attributes("aria-haspopup")).toBe("true");
         expect(trigger.attributes("aria-expanded")).toBe("false");
@@ -117,7 +68,8 @@ describe("PrimaryNav — overflow into the More disclosure", () => {
 
         const panel = document.getElementById(trigger.attributes("aria-controls") as string);
         expect(panel).not.toBeNull();
-        expect(panel!.querySelectorAll("a")).toHaveLength(3);
+        const entries = panel!.querySelectorAll("[data-nav-overflow-index]");
+        expect([...entries].map((entry) => entry.getAttribute("data-nav-overflow-index"))).toEqual(["0", "1", "2"]);
         // A disclosure, not an ARIA menu widget.
         expect(panel!.querySelector("[role='menuitem']")).toBeNull();
 
@@ -149,7 +101,6 @@ describe("PrimaryNav — subcategory flyouts", () => {
         const parent = wrapper.get("a[href='/motor']");
         expect(parent.attributes("aria-haspopup")).toBe("true");
         expect(parent.attributes("aria-expanded")).toBe("false");
-        // A plain link stays a plain link.
         expect(wrapper.get("a[href='/frenos']").attributes("aria-haspopup")).toBeUndefined();
 
         const flyout = parent.element.closest("[data-nav-item]") as HTMLElement;
@@ -198,42 +149,5 @@ describe("PrimaryNav — subcategory flyouts", () => {
         expect(wrapper.get("a[href='/motor']").attributes("aria-expanded")).toBe("false");
 
         wrapper.unmount();
-    });
-});
-
-describe("PrimaryNav — the More trigger never paints before it is needed", () => {
-    it("keeps the trigger out of flow and hidden while it measures a bar that fits", async () => {
-        const rectDesc = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "getBoundingClientRect");
-        // Roomy bar: everything fits, so no trigger should ever be painted.
-        Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", {
-            configurable: true,
-            value(this: HTMLElement) {
-                const width = this.tagName === "NAV" ? 5000 : 20;
-
-                return { width, height: 0, top: 0, left: 0, right: width, bottom: 0, x: 0, y: 0 };
-            },
-        });
-        try {
-            const wrapper = mount(PrimaryNav, {
-                props: { links, moreLabel: "Más" },
-                attachTo: document.body,
-            });
-
-            // Before measure() resolves the island is in its measuring state, which
-            // is what the server paints too.
-            const beforeClasses = wrapper.get("nav > div:last-child").classes();
-            expect(beforeClasses).toContain("invisible");
-            expect(beforeClasses).toContain("absolute");
-
-            await flushPromises();
-
-            expect(wrapper.get("nav > div:last-child").isVisible()).toBe(false);
-
-            wrapper.unmount();
-        } finally {
-            if (rectDesc) {
-                Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", rectDesc);
-            }
-        }
     });
 });
