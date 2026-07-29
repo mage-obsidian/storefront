@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, onBeforeUnmount, useId } from "vue";
+import { lockScroll, unlockScroll } from "MageObsidian_Storefront::js/scroll-lock";
 
 // Shared off-canvas drawer. Presentation-agnostic: the mobile menu fills it now,
 // the mini-cart will reuse it in the cart wave. Owns the dialog a11y semantics,
@@ -24,6 +25,21 @@ const emit = defineEmits<{ close: [] }>();
 
 const panel = ref<HTMLElement | null>(null);
 let previouslyFocused: HTMLElement | null = null;
+let holdsScroll = false;
+
+const hold = (): void => {
+    if (!holdsScroll) {
+        holdsScroll = true;
+        lockScroll();
+    }
+};
+
+const release = (): void => {
+    if (holdsScroll) {
+        holdsScroll = false;
+        unlockScroll();
+    }
+};
 
 const FOCUSABLE = [
     "a[href]",
@@ -72,11 +88,11 @@ watch(
     (isOpen) => {
         if (isOpen) {
             previouslyFocused = document.activeElement as HTMLElement | null;
-            document.body.style.overflow = "hidden";
+            hold();
             document.addEventListener("keydown", onKeydown);
             nextTick(() => (focusables()[0] ?? panel.value)?.focus());
         } else {
-            document.body.style.overflow = "";
+            release();
             document.removeEventListener("keydown", onKeydown);
             if (previouslyFocused && typeof previouslyFocused.focus === "function") {
                 previouslyFocused.focus();
@@ -90,7 +106,7 @@ watch(
 // A drawer can be torn down while open (route change, parent unmount); never
 // leave the page scroll-locked or a stray key listener behind.
 onBeforeUnmount(() => {
-    document.body.style.overflow = "";
+    release();
     document.removeEventListener("keydown", onKeydown);
 });
 </script>
