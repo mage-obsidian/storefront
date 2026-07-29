@@ -69,6 +69,6 @@ describe("CancelOrder", () => {
         await Promise.resolve();
         await Promise.resolve();
 
-        expect(wrapper.find('[role="alert"]').text()).toBe("Order cannot be canceled");
+        expect(wrapper.find(".form-banner").text()).toBe("Order cannot be canceled");
     });
 });

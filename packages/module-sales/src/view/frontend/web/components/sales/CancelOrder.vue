@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, useTemplateRef } from "vue";
+import Field from "MageObsidian_Storefront::form/Field";
 
 // Order cancellation island. Replaces Luma's RequireJS `cancelOrderModal`: a
 // "Cancel Order" action that opens an accessible <dialog>, collects a reason and
@@ -86,9 +87,7 @@ async function submit(): Promise<void> {
     }
 }
 
-const labelClass = "font-mono text-[0.68rem] uppercase tracking-[0.16em] text-ink-soft";
-const inputClass =
-    "rounded-edge border border-ash-300 bg-transparent px-3 py-2.5 font-mono text-sm text-ink focus:border-ink focus:outline-none";
+const reasonOptions = reasonList.map((r) => ({ value: r, label: r }));
 </script>
 
 <template>
@@ -109,14 +108,16 @@ const inputClass =
             {{ t.title }} <span class="text-ink-soft">#{{ props.realOrderId }}</span>
         </h2>
 
-        <div class="mt-4 flex flex-col gap-1">
-            <label :for="`cancel-reason-${props.orderId}`" :class="labelClass">{{ t.prompt }}</label>
-            <select :id="`cancel-reason-${props.orderId}`" v-model="reason" :class="inputClass">
-                <option v-for="r in reasonList" :key="r" :value="r">{{ r }}</option>
-            </select>
-        </div>
+        <Field
+            :id="`cancel-reason-${props.orderId}`"
+            v-model="reason"
+            class="mt-4"
+            :label="t.prompt"
+            type="select"
+            :options="reasonOptions"
+        />
 
-        <p v-if="error" role="alert" class="mt-3 font-mono text-[0.7rem] text-sale">{{ error }}</p>
+        <p v-if="error" role="alert" class="form-banner mt-3">{{ error }}</p>
 
         <div class="mt-6 flex justify-end gap-4">
             <button
