@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { ref, computed, onBeforeUnmount, nextTick, useId, watch } from "vue";
 import Icon from "MageObsidian_ModernFrontend::elements/Icon";
+import events from "MageObsidian_ModernFrontend::js/events";
+import { MutationPhase } from "mage-obsidian/runtime/mutationEvent.ts";
+import {
+    SEARCH_QUERY_CHANGE_EVENT,
+    SearchOperation,
+    searchEvent,
+    type SearchSuggestion,
+} from "MageObsidian_Storefront::js/search-events";
 
 // Header quick-search. An icon button toggles a panel holding a real
 // <form method="get"> that submits to the native search results URL — so search
@@ -10,11 +18,6 @@ import Icon from "MageObsidian_ModernFrontend::elements/Icon";
 // search/ajax/suggest endpoint (term suggestions: {title, num_results}) and
 // exposes them as a listbox with full keyboard support. Choosing a suggestion
 // runs that search; pressing Enter with no active option submits the form.
-interface Suggestion {
-    title: string;
-    num_results?: string | number;
-}
-
 interface SearchLabels {
     search?: string;
     placeholder?: string;
@@ -55,7 +58,7 @@ const text = computed(() => ({
 
 const open = ref(false);
 const term = ref(props.queryValue);
-const suggestions = ref<Suggestion[]>([]);
+const suggestions = ref<SearchSuggestion[]>([]);
 const activeIndex = ref(-1);
 
 const root = ref<HTMLElement | null>(null);
@@ -86,29 +89,51 @@ async function fetchSuggestions(query: string): Promise<void> {
         activeIndex.value = -1;
         return;
     }
+
+    const request = await events.dispatch(searchEvent(MutationPhase.Before), {
+        operation: SearchOperation.Suggest,
+        cancelled: false,
+        query,
+        url: suggestUrlFor(query),
+    });
+    if (request.cancelled) {
+        return;
+    }
+
     const token = ++requestToken;
+    let result: SearchSuggestion[] = [];
+    let failed = false;
     try {
-        const response = await fetch(suggestUrlFor(query), {
+        const response = await fetch(request.url, {
             headers: { "X-Requested-With": "XMLHttpRequest" },
         });
         if (!response.ok) {
-            return;
+            failed = true;
+        } else {
+            const data = (await response.json()) as SearchSuggestion[];
+            result = Array.isArray(data) ? data.filter((item) => item && item.title) : [];
         }
-        const data = (await response.json()) as Suggestion[];
-        // Ignore a stale response that resolved after a newer keystroke.
-        if (token !== requestToken) {
-            return;
-        }
-        suggestions.value = Array.isArray(data) ? data.filter((item) => item && item.title) : [];
-        activeIndex.value = -1;
     } catch {
-        suggestions.value = [];
+        failed = true;
+    }
+
+    // Ignore a stale response that resolved after a newer keystroke.
+    if (token === requestToken) {
+        suggestions.value = failed ? [] : result;
+        activeIndex.value = -1;
+    }
+
+    await events.dispatch(searchEvent(MutationPhase.After), { ...request, result });
+    if (failed) {
+        await events.dispatch(searchEvent(MutationPhase.Failed), { ...request, result });
     }
 }
 
 watch(term, (value) => {
+    const query = value.trim();
+    void events.dispatch(SEARCH_QUERY_CHANGE_EVENT, { query }, { mirror: false });
     clearTimeout(debounce);
-    debounce = setTimeout(() => fetchSuggestions(value.trim()), 200);
+    debounce = setTimeout(() => fetchSuggestions(query), 200);
 });
 
 const onDocumentClick = (event: Event): void => {
@@ -145,7 +170,7 @@ function move(step: number): void {
     activeIndex.value = (activeIndex.value + step + count) % count;
 }
 
-function selectSuggestion(suggestion: Suggestion): void {
+function selectSuggestion(suggestion: SearchSuggestion): void {
     window.location.href = resultUrlFor(suggestion.title);
 }
 
