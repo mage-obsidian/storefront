@@ -9,11 +9,38 @@
  * cart region — totals/tax/discount are never recomputed client-side. Delegation
  * on the document means the swapped-in DOM keeps working without re-binding.
  */
-import { useCart, getFormKey } from "MageObsidian_Storefront::js/useCart";
+import { useCart, getFormKey, CART_DOMAIN } from "MageObsidian_Storefront::js/useCart";
+import events from "MageObsidian_ModernFrontend::js/events";
+import {
+    MutationPhase,
+    mutationEvent,
+    type MutationEvent,
+    type MutationEventName,
+} from "mage-obsidian/runtime/mutationEvent.ts";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 import { ensureFormKey } from "MageObsidian_Storefront::js/form-key-provider";
 
 const ROOT = "[data-cart-root]";
+
+export const CartPageOperation = {
+    Coupon: "coupon",
+} as const;
+
+export type CartPageOperation = (typeof CartPageOperation)[keyof typeof CartPageOperation];
+
+export type CartCouponEvent = MutationEvent<CartPageOperation, boolean>;
+
+export type CartCouponEventName = MutationEventName<typeof CART_DOMAIN, CartPageOperation>;
+
+declare module "mage-obsidian/runtime/eventManager.ts" {
+    interface StorefrontEventMap extends Record<CartCouponEventName, CartCouponEvent> {}
+}
+
+const couponEvent = <Phase extends MutationPhase>(phase: Phase) =>
+    mutationEvent(CART_DOMAIN, CartPageOperation.Coupon, phase);
+
+const CART_SECTION = "cart";
+const WISHLIST_SECTION = "wishlist";
 
 const cart = useCart();
 const customerData = useCustomerData();
@@ -128,7 +155,7 @@ async function moveToWishlist(action: string | undefined, itemId: string | undef
             credentials: "same-origin",
         });
     } finally {
-        await customerData.reload(["cart", "wishlist"]);
+        await customerData.reload([CART_SECTION, WISHLIST_SECTION]);
     }
 }
 
@@ -139,19 +166,42 @@ document.addEventListener("change", (event) => {
     }
 });
 
+async function applyCoupon(form: HTMLFormElement): Promise<void> {
+    const request = await events.dispatch(couponEvent(MutationPhase.Before), {
+        operation: CartPageOperation.Coupon,
+        action: form.action,
+        body: new FormData(form),
+        cancelled: false,
+    });
+    if (request.cancelled) {
+        return;
+    }
+
+    let ok = false;
+    try {
+        const response = await fetch(request.action, {
+            method: "POST",
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+            body: request.body,
+            credentials: "same-origin",
+        });
+        ok = response.ok;
+    } catch {
+        ok = false;
+    }
+    await customerData.reload([CART_SECTION]);
+
+    await events.dispatch(couponEvent(MutationPhase.After), { ...request, result: ok });
+    if (!ok) {
+        await events.dispatch(couponEvent(MutationPhase.Failed), { ...request, result: ok });
+    }
+}
+
 document.addEventListener("submit", (event) => {
     const coupon = (event.target as HTMLElement | null)?.closest?.<HTMLFormElement>("[data-cart-coupon]");
     if (within(coupon)) {
         event.preventDefault();
-        run(async () => {
-            await fetch(coupon!.action, {
-                method: "POST",
-                headers: { "X-Requested-With": "XMLHttpRequest" },
-                body: new FormData(coupon!),
-                credentials: "same-origin",
-            });
-            await customerData.reload(["cart"]);
-        });
+        run(() => applyCoupon(coupon!));
         return;
     }
 
