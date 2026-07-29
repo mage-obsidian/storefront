@@ -1,4 +1,4 @@
-import { enhanceValidation, required, minLength, matches } from "MageObsidian_Customer::js/form-validation";
+import { enhanceValidation, required, minLength, matches } from "MageObsidian_Storefront::js/form-validation";
 
 // Reset-password page entry (reached from the emailed link). Inline length/match
 // validation only; the native POST to resetPasswordPost sets the new password.

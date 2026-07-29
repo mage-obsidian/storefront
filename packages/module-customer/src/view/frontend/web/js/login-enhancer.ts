@@ -1,4 +1,4 @@
-import { enhanceValidation, required, email } from "MageObsidian_Customer::js/form-validation";
+import { enhanceValidation, required, email } from "MageObsidian_Storefront::js/form-validation";
 import { useAuth } from "MageObsidian_Customer::js/useAuth";
 
 // Login page entry (loaded only here, so the customer-data/Pinia cost is paid

@@ -4,7 +4,7 @@
 // inline validation. The region requiredness is conditional, so it rides on a
 // closure flag the country handler keeps in sync.
 
-import { enhanceValidation, required, when, type FieldRules } from "MageObsidian_Customer::js/form-validation";
+import { enhanceValidation, required, when, type FieldRules } from "MageObsidian_Storefront::js/form-validation";
 
 interface RegionEntry {
     id: number | string;

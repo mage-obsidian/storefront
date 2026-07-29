@@ -1,4 +1,4 @@
-import { enhanceValidation, required, email, minLength, matches } from "MageObsidian_Customer::js/form-validation";
+import { enhanceValidation, required, email, minLength, matches } from "MageObsidian_Storefront::js/form-validation";
 
 // Registration page entry. Inline validation only — account creation runs the
 // native createPost flow (email confirmation, redirects) untouched. No Pinia /

@@ -1,4 +1,4 @@
-import { enhanceValidation, required, email } from "MageObsidian_Customer::js/form-validation";
+import { enhanceValidation, required, email } from "MageObsidian_Storefront::js/form-validation";
 
 // Forgot-password page entry. Inline email validation only; the native POST to
 // forgotPasswordPost sends the reset email.

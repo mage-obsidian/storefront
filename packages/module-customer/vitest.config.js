@@ -18,8 +18,8 @@ export default defineConfig({
             "MageObsidian_Storefront::js/form-key-provider": fileURLToPath(
                 new URL("./src/Test/Js/stubs/form-key-provider.ts", import.meta.url),
             ),
-            "MageObsidian_Customer::js/form-validation": fileURLToPath(
-                new URL("./src/view/frontend/web/js/form-validation.ts", import.meta.url),
+            "MageObsidian_Storefront::js/form-validation": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/js/form-validation.ts", import.meta.url),
             ),
             "MageObsidian_Customer::js/useAuth": fileURLToPath(
                 new URL("./src/view/frontend/web/js/useAuth.ts", import.meta.url),

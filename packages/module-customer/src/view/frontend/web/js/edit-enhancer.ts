@@ -1,4 +1,4 @@
-import { enhanceValidation, required, email, minLength, matches, when } from "MageObsidian_Customer::js/form-validation";
+import { enhanceValidation, required, email, minLength, matches, when } from "MageObsidian_Storefront::js/form-validation";
 
 // Edit-account page entry. Toggles the email / password fieldsets from their
 // checkboxes and validates conditionally (the password rules only fire when
