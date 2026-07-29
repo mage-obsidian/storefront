@@ -91,6 +91,39 @@ describe("Switcher (disclosure dropdown)", () => {
     });
 });
 
+// An absolute panel shrink-to-fits against its containing block, and here that is
+// only the trigger — so a store named "Default Store View" wrapped onto three
+// lines inside a 165px box. `w-max` is what releases it; the cap and the truncate
+// are what keep an unbounded name from running off the header.
+describe("Switcher (long option labels)", () => {
+    it("sizes the panel to its content instead of to the trigger", async () => {
+        const wrapper = mount(Switcher, {
+            props: {
+                label: "Default Store View",
+                srLabel: "Change language",
+                items: [
+                    { label: "Default Store View", url: "/switch?store=default", current: true },
+                    { label: "Español", url: "/switch?store=es", current: false },
+                ],
+            },
+            attachTo: document.body,
+        });
+
+        expect(wrapper.get("button").classes()).toContain("whitespace-nowrap");
+
+        await wrapper.get("button").trigger("click");
+        const panel = wrapper.get("ul").classes();
+        expect(panel).toContain("w-max");
+        expect(panel).toContain("max-w-[18rem]");
+
+        for (const link of wrapper.findAll("ul a")) {
+            expect(link.classes()).toContain("truncate");
+        }
+
+        wrapper.unmount();
+    });
+});
+
 describe("Switcher (inline)", () => {
     it("renders every option without a toggle and flags the current one", () => {
         const wrapper = mount(Switcher, {

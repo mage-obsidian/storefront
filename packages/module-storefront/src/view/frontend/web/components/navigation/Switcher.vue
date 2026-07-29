@@ -108,7 +108,7 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, tru
         <button
             ref="trigger"
             type="button"
-            class="inline-flex items-center gap-1 font-mono text-[0.72rem] uppercase tracking-[0.12em] text-ink-soft transition-colors hover:text-ink"
+            class="inline-flex items-center gap-1 whitespace-nowrap font-mono text-[0.72rem] uppercase tracking-[0.12em] text-ink-soft transition-colors hover:text-ink"
             aria-haspopup="true"
             :aria-controls="panelId"
             :aria-label="label ? `${label} — ${srLabel}` : srLabel"
@@ -126,13 +126,13 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, tru
             :id="panelId"
             ref="panel"
             :aria-label="srLabel"
-            class="absolute right-0 z-40 mt-2 min-w-[7rem] rounded-edge border border-ash-200 bg-alabaster/95 py-1 shadow-xl backdrop-blur-md"
+            class="absolute right-0 z-40 mt-2 w-max min-w-[7rem] max-w-[18rem] rounded-edge border border-ash-200 bg-alabaster/95 py-1 shadow-xl backdrop-blur-md"
         >
             <li v-for="item in items" :key="item.label">
                 <a
                     :href="item.url"
                     :aria-current="item.current ? 'true' : null"
-                    class="block px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.12em] transition-colors"
+                    class="block truncate px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.12em] transition-colors"
                     :class="item.current ? 'text-ink' : 'text-ink-soft hover:bg-ash-100 hover:text-ink'"
                     @click="onSelect(item, $event)"
                 >
