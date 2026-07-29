@@ -50,7 +50,9 @@ const props = withDefaults(
 );
 
 const customerData = useCustomerData();
-const customer = computed<CustomerSection>(() => (customerData.section("customer") ?? {}) as CustomerSection);
+const section = computed(() => customerData.section("customer"));
+const known = computed(() => Boolean(section.value));
+const customer = computed<CustomerSection>(() => (section.value ?? {}) as CustomerSection);
 const isLoggedIn = computed(() => Boolean(customer.value.firstname || customer.value.fullname));
 const displayName = computed(() => customer.value.firstname || props.menuLabel);
 
@@ -96,7 +98,7 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, tru
 
 <template>
     <a
-        v-if="!isLoggedIn"
+        v-if="known && !isLoggedIn"
         :href="loginUrl"
         class="hidden whitespace-nowrap transition-colors hover:text-ink sm:inline"
     >{{ signInLabel }}</a>
@@ -104,7 +106,7 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, tru
     <!-- max-sm:hidden (not `hidden sm:block`): in Tailwind v4 the display-utility
          sort order lets `hidden` win over `sm:block`, so the disclosure would stay
          hidden on desktop. A block-by-default div hidden below sm avoids that. -->
-    <div v-else ref="root" class="relative max-sm:hidden" @keydown.escape="close()">
+    <div v-else-if="known" ref="root" class="relative max-sm:hidden" @keydown.escape="close()">
         <button
             ref="trigger"
             type="button"

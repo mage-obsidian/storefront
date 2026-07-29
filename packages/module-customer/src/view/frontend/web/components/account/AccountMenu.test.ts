@@ -15,11 +15,20 @@ describe("AccountMenu.vue", () => {
     beforeEach(() => __reset());
 
     it("shows a Sign In link for guests", () => {
+        __setSection("customer", {});
         const wrapper = mount(AccountMenu, { props: { ...URLS, signInLabel: "Sign In" } });
         const link = wrapper.get("a");
         expect(link.text()).toBe("Sign In");
         expect(link.attributes("href")).toBe("/customer/account/login");
         expect(wrapper.find("button").exists()).toBe(false);
+    });
+
+    it("renders neither branch until the customer section says which one is true", () => {
+        const wrapper = mount(AccountMenu, { props: { ...URLS, signInLabel: "Sign In" } });
+
+        expect(wrapper.find("a").exists()).toBe(false);
+        expect(wrapper.find("button").exists()).toBe(false);
+        expect(wrapper.text()).not.toContain("Sign In");
     });
 
     it("shows a disclosure with the first name when logged in", async () => {
