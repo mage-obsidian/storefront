@@ -22,6 +22,10 @@ export const NavigationKind = {
 
 export type NavigationKind = (typeof NavigationKind)[keyof typeof NavigationKind] | null;
 
+export const NavigationType = {
+    Traverse: "traverse",
+} as const;
+
 export const NAVIGATION_EVENT = "navigation_start";
 
 export interface NavigationEvent {
@@ -41,9 +45,8 @@ export interface NavigationFacts {
     trigger: Element | null;
     from: string;
     to: string;
-    isProductPage: boolean;
     isListingPage: boolean;
-    cameFrom: string | null;
+    navigationType: string | null;
 }
 
 const HERO_NAME = "pdp-hero";
@@ -71,17 +74,15 @@ export function classifyNavigation(facts: NavigationFacts): NavigationKind {
         return null;
     }
 
-    if (facts.trigger?.closest?.(".product-card")) {
-        return NavigationKind.Product;
+    // The bfcache presents the destination before the transition starts, so the
+    // old snapshot lands on top of a page the user can already see and only then
+    // fades: the page visibly flashes back to where it came from.
+    if (facts.navigationType === NavigationType.Traverse) {
+        return null;
     }
 
-    // Going back to the listing the product page was opened from: the card still
-    // carries the hero name, so the morph plays in reverse.
-    if (facts.isProductPage && facts.cameFrom) {
-        const origin = parse(facts.cameFrom);
-        if (origin && origin.href === to.href) {
-            return NavigationKind.Product;
-        }
+    if (facts.trigger?.closest?.(".product-card")) {
+        return NavigationKind.Product;
     }
 
     if (facts.trigger?.closest?.(".subcategory-card")) {
@@ -123,21 +124,6 @@ export function clearCardNames(doc: Document): void {
     doc.querySelectorAll<HTMLElement>(CARD_SELECTOR).forEach((card) => {
         card.style.removeProperty(NAME_PROPERTY);
     });
-}
-
-/**
- * Releases the hero name the PDP stylesheet sets on the gallery, so it stays in
- * the root snapshot.
- *
- * A back navigation has no clicked card to morph towards, so the name would be
- * alone on the outgoing side: its opaque image lands on top of the listing that
- * already painted and only then fades, which reads as the page flashing back.
- */
-export function clearHeroName(doc: Document): void {
-    const gallery = doc.querySelector<HTMLElement>(GALLERY_SELECTOR);
-    if (gallery) {
-        gallery.style.setProperty(NAME_PROPERTY, NAME_NONE);
-    }
 }
 
 /**
@@ -183,24 +169,21 @@ export function bindViewTransitions(win: Window & typeof globalThis): () => void
     const onPageSwap = (event: Event): void => {
         const swap = event as Event & {
             viewTransition?: { skipTransition: () => void } | null;
-            activation?: { entry?: { url?: string } } | null;
+            activation?: { entry?: { url?: string }; navigationType?: string } | null;
         };
         const transition = swap.viewTransition;
         if (!transition) {
             return;
         }
 
-        const nav = (win as unknown as { navigation?: { activation?: { from?: { url?: string } } } })
-            .navigation;
         const from = doc.location.href;
         const to = swap.activation?.entry?.url ?? "";
         const kind = classifyNavigation({
             trigger,
             from,
             to,
-            isProductPage: doc.querySelector("[data-pdp]") !== null,
             isListingPage: doc.querySelector(".toolbar-products") !== null,
-            cameFrom: nav?.activation?.from?.url ?? doc.referrer ?? null,
+            navigationType: swap.activation?.navigationType ?? null,
         });
 
         void events.dispatch(NAVIGATION_EVENT, { from, to, kind, trigger });
@@ -210,13 +193,9 @@ export function bindViewTransitions(win: Window & typeof globalThis): () => void
             return;
         }
 
-        if (kind === NavigationKind.Product) {
+        if (kind === NavigationKind.Product && trigger) {
             clearCardNames(doc);
-            if (trigger) {
-                markProductHero(trigger, doc);
-            } else {
-                clearHeroName(doc);
-            }
+            markProductHero(trigger, doc);
             return;
         }
 

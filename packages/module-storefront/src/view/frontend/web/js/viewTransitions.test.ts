@@ -4,7 +4,6 @@ import {
     markProductHero,
     dedupeCardNames,
     clearCardNames,
-    clearHeroName,
     bindViewTransitions,
 } from "MageObsidian_Storefront::js/viewTransitions";
 
@@ -17,9 +16,8 @@ const facts = (over: Partial<Parameters<typeof classifyNavigation>[0]> = {}) => 
     trigger: null,
     from: LISTING,
     to: PRODUCT,
-    isProductPage: false,
     isListingPage: false,
-    cameFrom: null,
+    navigationType: "push",
     ...over,
 });
 
@@ -95,25 +93,18 @@ describe("classifyNavigation", () => {
         expect(classifyNavigation(facts({ to: LISTING, from: LISTING }))).toBeNull();
     });
 
-    it("plays the morph in reverse when a product page goes back to its listing", () => {
-        expect(
-            classifyNavigation(
-                facts({ from: PRODUCT, to: LISTING, isProductPage: true, cameFrom: LISTING }),
-            ),
-        ).toBe("product");
-    });
+    it("skips back and forward, which restore the destination before the transition runs", () => {
+        document.body.innerHTML = `<article class="product-card"><a id="t" href="${PRODUCT}"></a></article>`;
+        const trigger = document.getElementById("t") as Element;
 
-    it("does not claim a reverse morph towards some other page", () => {
         expect(
-            classifyNavigation(
-                facts({
-                    from: PRODUCT,
-                    to: "https://shop.test/",
-                    isProductPage: true,
-                    cameFrom: LISTING,
-                }),
-            ),
+            classifyNavigation(facts({ from: PRODUCT, to: LISTING, navigationType: "traverse" })),
         ).toBeNull();
+        expect(
+            classifyNavigation(facts({ to: `${LISTING}?p=2`, navigationType: "traverse" })),
+        ).toBeNull();
+        // Even a card click is skipped when the browser is traversing history.
+        expect(classifyNavigation(facts({ trigger, navigationType: "traverse" }))).toBeNull();
     });
 
     it("survives a malformed destination", () => {
@@ -213,32 +204,12 @@ describe("card names", () => {
     });
 });
 
-describe("clearHeroName", () => {
-    afterEach(() => {
-        document.body.innerHTML = "";
-    });
-
-    it("releases the gallery so it travels inside the root snapshot", () => {
-        document.body.innerHTML = `<figure class="pdp__gallery-main" id="hero"><img></figure>`;
-
-        clearHeroName(document);
-
-        expect(nameOf(document.getElementById("hero") as HTMLElement)).toBe("none");
-    });
-
-    it("does nothing on a document with no gallery", () => {
-        document.body.innerHTML = `<ol><li class="product-item"></li></ol>`;
-
-        expect(() => clearHeroName(document)).not.toThrow();
-    });
-});
-
 describe("bindViewTransitions", () => {
-    const dispatchSwap = (url: string) => {
+    const dispatchSwap = (url: string, navigationType = "push") => {
         const transition = { skipTransition: vi.fn() };
         const event = Object.assign(new Event("pageswap"), {
             viewTransition: transition,
-            activation: { entry: { url } },
+            activation: { entry: { url }, navigationType },
         });
         window.dispatchEvent(event);
 
@@ -306,25 +277,18 @@ describe("bindViewTransitions", () => {
         expect(nameOf(document.getElementById("kept") as HTMLElement)).toBe("product-9");
     });
 
-    it("skips a navigation with no click behind it (back button) that leaves the catalog", () => {
+    it("skips a navigation with no click behind it that leaves the catalog", () => {
         const transition = dispatchSwap("https://shop.test/customer/account/");
 
         expect(transition.skipTransition).toHaveBeenCalledOnce();
     });
 
-    it("releases the hero going back to the listing, where no card can receive it", () => {
-        (window as unknown as { happyDOM: { setURL: (url: string) => void } }).happyDOM.setURL(
-            PRODUCT,
-        );
-        document.body.innerHTML = `
-            <div data-pdp></div>
-            <figure class="pdp__gallery-main" id="hero" style="view-transition-name:pdp-hero"><img></figure>`;
-        Object.defineProperty(document, "referrer", { value: LISTING, configurable: true });
+    it("skips the back button and leaves no name on the card it would have morphed", () => {
+        (document.getElementById("card-img") as HTMLElement).click();
+        const transition = dispatchSwap(PRODUCT, "traverse");
 
-        const transition = dispatchSwap(LISTING);
-
-        expect(transition.skipTransition).not.toHaveBeenCalled();
-        expect(nameOf(document.getElementById("hero") as HTMLElement)).toBe("none");
+        expect(transition.skipTransition).toHaveBeenCalledOnce();
+        expect(document.getElementById("card")!.style.viewTransitionName).toBeFalsy();
     });
 
     it("does nothing when the browser started no transition", () => {
