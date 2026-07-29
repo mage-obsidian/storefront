@@ -45,8 +45,14 @@ export default defineConfig({
             "MageObsidian_Storefront::js/useCart": fileURLToPath(
                 new URL("./src/view/frontend/web/js/useCart.ts", import.meta.url),
             ),
-            "MageObsidian_Storefront::js/overflowNav": fileURLToPath(
-                new URL("./src/view/frontend/web/js/overflowNav.ts", import.meta.url),
+            "MageObsidian_Storefront::form/Field": fileURLToPath(
+                new URL("./src/view/frontend/web/components/form/Field.vue", import.meta.url),
+            ),
+            "MageObsidian_Storefront::js/form-validation": fileURLToPath(
+                new URL("./src/view/frontend/web/js/form-validation.ts", import.meta.url),
+            ),
+            "MageObsidian_Storefront::js/scroll-lock": fileURLToPath(
+                new URL("./src/view/frontend/web/js/scroll-lock.ts", import.meta.url),
             ),
             "MageObsidian_Storefront::wishlist/WishlistCount": fileURLToPath(
                 new URL("./src/view/frontend/web/components/wishlist/WishlistCount.vue", import.meta.url),

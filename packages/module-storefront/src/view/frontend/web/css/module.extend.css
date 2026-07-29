@@ -93,3 +93,100 @@
     animation: none;
   }
 }
+
+/* Shared form field. One definition for the label/control/error trio the Twig
+   macro and Field.vue both emit, so a change lands everywhere at once. */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field__label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-ink-soft);
+}
+
+.field__required {
+  margin-left: 0.3em;
+  color: var(--color-danger);
+}
+
+.field__control {
+  height: 2.75rem;
+  border: 1px solid var(--color-ash-300);
+  border-radius: var(--radius-edge);
+  background: transparent;
+  padding-inline: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-ink);
+  transition: border-color 0.15s var(--ease-obsidian);
+}
+
+textarea.field__control {
+  height: auto;
+  min-height: 6rem;
+  padding-block: 0.625rem;
+}
+
+.field__control:focus {
+  border-color: var(--color-ink);
+  outline: none;
+}
+
+/* Put the ring back for keyboard users: `outline: none` above is there to keep
+   the mouse-focus chrome off, not to strip the affordance. */
+.field__control:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.field__control[aria-invalid="true"] {
+  border-color: var(--color-danger);
+}
+
+.field__hint {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  color: var(--color-ash-500);
+}
+
+.field__error {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  color: var(--color-danger);
+}
+
+.field__error:empty {
+  display: none;
+}
+
+.field-note {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-ash-500);
+}
+
+.field-note__marker {
+  color: var(--color-danger);
+}
+
+.form-banner {
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-edge);
+  background: color-mix(in oklab, var(--color-danger) 8%, transparent);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--color-danger);
+}
+
+.form-banner:empty {
+  display: none;
+}
