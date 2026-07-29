@@ -41,3 +41,55 @@
     transition: none;
   }
 }
+
+.cart-count__ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  border: 1.5px solid transparent;
+  border-top-color: var(--color-accent);
+  animation: obsidian-spin 0.7s linear infinite;
+}
+
+.cart-count.is-syncing .cart-count__badge {
+  opacity: 0.45;
+  transition: opacity 0.2s var(--ease-obsidian);
+}
+
+.obsidian-button__spinner {
+  display: block;
+  width: 1em;
+  height: 1em;
+  border-radius: 9999px;
+  border: 1.5px solid currentColor;
+  border-top-color: transparent;
+  animation: obsidian-spin 0.7s linear infinite;
+}
+
+.is-loading {
+  position: relative;
+  cursor: progress;
+}
+
+.is-loading .obsidian-button__label {
+  visibility: hidden;
+}
+
+.is-loading .obsidian-button__spinner {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+
+@keyframes obsidian-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cart-count__ring,
+  .obsidian-button__spinner {
+    animation: none;
+  }
+}
