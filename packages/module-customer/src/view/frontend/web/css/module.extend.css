@@ -1,0 +1,9 @@
+.mo-prepaint-guest {
+  display: none;
+}
+
+@media (min-width: 40rem) {
+  :root[data-mo-auth="0"] .mo-prepaint-guest {
+    display: inline;
+  }
+}
