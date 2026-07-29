@@ -1,11 +1,20 @@
 import { defineConfig } from "vitest/config";
 import vue from "@vitejs/plugin-vue";
+import { fileURLToPath } from "node:url";
 
 // Unit tests for the guest orders & returns island. happy-dom drives the SFC's
-// reactive toggle; @vitejs/plugin-vue compiles it. The island imports only from
-// "vue" (no Vendor_Module:: specifiers), so no resolve aliases are needed.
+// reactive toggle; @vitejs/plugin-vue compiles it. The `Vendor_Module::path`
+// specifiers the engine resolves at build time are aliased here to the real
+// sources they name.
 export default defineConfig({
     plugins: [vue()],
+    resolve: {
+        alias: {
+            "MageObsidian_Storefront::form/Field": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/components/form/Field.vue", import.meta.url),
+            ),
+        },
+    },
     test: {
         environment: "happy-dom",
         globals: true,

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, useId } from "vue";
+import Field from "MageObsidian_Storefront::form/Field";
 
 // Guest "Orders and Returns" lookup island. Replaces Luma's RequireJS
 // `ordersReturns` widget: it toggles between the Email and ZIP identifier field
@@ -33,14 +34,14 @@ const props = withDefaults(
 );
 
 const t = props.labels;
-const findBy = ref<"email" | "zip">("email");
+const findBy = ref("email");
 const fieldId = useId();
 const id = (field: string): string => `${fieldId}-${field}`;
 
-const labelClass =
-    "font-mono text-[0.68rem] uppercase tracking-[0.16em] text-ink-soft";
-const inputClass =
-    "rounded-edge border border-ash-300 bg-transparent px-3 py-2.5 font-mono text-sm text-ink focus:border-ink focus:outline-none";
+const findByOptions = [
+    { value: "email", label: t.emailOption ?? "" },
+    { value: "zip", label: t.zipOption ?? "" },
+];
 </script>
 
 <template>
@@ -49,65 +50,48 @@ const inputClass =
         <fieldset class="flex flex-col gap-5">
             <legend class="mb-2 font-display text-lg text-ink">{{ t.legend }}</legend>
 
-            <div class="flex flex-col gap-1">
-                <label :for="id('order-id')" :class="labelClass">{{ t.orderId }}</label>
-                <input
-                    :id="id('order-id')"
-                    type="text"
-                    name="oar_order_id"
-                    required
-                    :class="inputClass"
-                >
-            </div>
+            <Field
+                :id="id('order-id')"
+                :label="t.orderId"
+                name="oar_order_id"
+                required
+            />
 
-            <div class="flex flex-col gap-1">
-                <label :for="id('lastname')" :class="labelClass">{{ t.lastName }}</label>
-                <input
-                    :id="id('lastname')"
-                    type="text"
-                    name="oar_billing_lastname"
-                    autocomplete="family-name"
-                    required
-                    :class="inputClass"
-                >
-            </div>
+            <Field
+                :id="id('lastname')"
+                :label="t.lastName"
+                name="oar_billing_lastname"
+                autocomplete="family-name"
+                required
+            />
 
-            <div class="flex flex-col gap-1">
-                <label :for="id('type')" :class="labelClass">{{ t.findBy }}</label>
-                <select
-                    :id="id('type')"
-                    v-model="findBy"
-                    name="oar_type"
-                    :class="inputClass"
-                >
-                    <option value="email">{{ t.emailOption }}</option>
-                    <option value="zip">{{ t.zipOption }}</option>
-                </select>
-            </div>
+            <Field
+                :id="id('type')"
+                v-model="findBy"
+                :label="t.findBy"
+                name="oar_type"
+                type="select"
+                :options="findByOptions"
+            />
 
-            <div v-show="findBy === 'email'" class="flex flex-col gap-1">
-                <label :for="id('email')" :class="labelClass">{{ t.email }}</label>
-                <input
-                    :id="id('email')"
-                    type="email"
-                    name="oar_email"
-                    autocomplete="email"
-                    :required="findBy === 'email'"
-                    :class="inputClass"
-                >
-            </div>
+            <Field
+                v-show="findBy === 'email'"
+                :id="id('email')"
+                :label="t.email"
+                name="oar_email"
+                type="email"
+                autocomplete="email"
+                :required="findBy === 'email'"
+            />
 
-            <div v-show="findBy === 'zip'" class="flex flex-col gap-1">
-                <label :for="id('zip')" :class="labelClass">{{ t.zip }}</label>
-                <input
-                    :id="id('zip')"
-                    type="text"
-                    name="oar_zip"
-                    autocomplete="postal-code"
-                    :required="findBy === 'zip'"
-                    :class="inputClass"
-                >
-            </div>
+            <Field
+                v-show="findBy === 'zip'"
+                :id="id('zip')"
+                :label="t.zip"
+                name="oar_zip"
+                autocomplete="postal-code"
+                :required="findBy === 'zip'"
+            />
 
             <div>
                 <button
