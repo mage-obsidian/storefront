@@ -19,6 +19,7 @@ import {
 } from "mage-obsidian/runtime/mutationEvent.ts";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 import { ensureFormKey } from "MageObsidian_Storefront::js/form-key-provider";
+import { createCartQueue } from "MageObsidian_Checkout::js/cart-queue";
 
 const ROOT = "[data-cart-root]";
 
@@ -45,8 +46,6 @@ const WISHLIST_SECTION = "wishlist";
 const cart = useCart();
 const customerData = useCustomerData();
 
-let busy = false;
-
 const root = (): HTMLElement | null => document.querySelector<HTMLElement>(ROOT);
 const within = (el: Element | null | undefined): boolean => !!el && !!root()?.contains(el);
 
@@ -61,47 +60,71 @@ function endpoints(): { update?: string; remove?: string } {
  * reload if anything is off.
  */
 async function refresh(): Promise<void> {
+    let fresh: Element | null = null;
     try {
         const response = await fetch(window.location.href, {
             headers: { "X-Requested-With": "XMLHttpRequest" },
             credentials: "same-origin",
         });
-        const fresh = new DOMParser()
+        fresh = new DOMParser()
             .parseFromString(await response.text(), "text/html")
             .querySelector(ROOT);
-        const current = root();
-        if (fresh && current) {
-            current.replaceWith(fresh);
-        } else {
-            window.location.reload();
-        }
     } catch {
-        window.location.reload();
+        fresh = null;
     }
-}
 
-/**
- * Run a single mutation, then refresh. Guards against overlapping operations so a
- * second click can't race the refresh.
- */
-async function run(mutate: () => Promise<unknown>): Promise<void> {
-    if (busy) {
+    const current = root();
+    if (!fresh || !current) {
+        window.location.reload();
+
         return;
     }
-    busy = true;
-    root()?.setAttribute("aria-busy", "true");
-    try {
-        await mutate();
-        await refresh();
-    } finally {
-        busy = false;
+
+    const swap = (): void => {
+        current.replaceWith(fresh as Element);
+    };
+
+    // Each line carries its own `view-transition-name`, so the browser fades out
+    // the row that went and slides the ones below into place; without this the
+    // replaced region snaps and everything under it jumps.
+    const start = document.startViewTransition?.bind(document);
+    if (!start) {
+        swap();
+
+        return;
     }
+    // `updateCallbackDone`, not `finished`: the DOM is ready once the callback
+    // ran, and the queue should not wait out the animation.
+    await start(swap).updateCallbackDone.catch(() => {});
 }
+
+const queue = createCartQueue({
+    updateQty: async (itemId, qty) => {
+        await cart.updateItemQty(itemId, qty, endpoints().update);
+    },
+    settle: refresh,
+    // Re-queried every time: `refresh` replaces the node this was set on.
+    onBusyChange: (busy) => {
+        const el = root();
+        if (busy) {
+            el?.setAttribute("aria-busy", "true");
+        } else {
+            el?.removeAttribute("aria-busy");
+        }
+    },
+});
+
+const run = (mutate: () => Promise<unknown>): Promise<void> =>
+    queue.mutate(async () => {
+        await mutate();
+    });
 
 function applyQty(input: HTMLInputElement): void {
     const qty = Math.max(1, parseInt(input.value, 10) || 1);
     input.value = String(qty);
-    run(() => cart.updateItemQty(input.dataset.itemId, qty, endpoints().update));
+    if (input.dataset.itemId) {
+        queue.setQty(input.dataset.itemId, qty);
+    }
 }
 
 document.addEventListener("click", (event) => {
@@ -210,15 +233,17 @@ document.addEventListener("submit", (event) => {
         // The "Update bag" button / Enter: apply any quantities edited without a
         // blur, then refresh once.
         event.preventDefault();
-        const inputs = [...form!.querySelectorAll<HTMLInputElement>("[data-cart-qty]")];
-        run(async () => {
-            for (const input of inputs) {
-                const qty = Math.max(1, parseInt(input.value, 10) || 1);
-                await cart.updateItemQty(input.dataset.itemId, qty, endpoints().update);
-            }
-        });
+        for (const input of form!.querySelectorAll<HTMLInputElement>("[data-cart-qty]")) {
+            applyQty(input);
+        }
+        void run(async () => {});
     }
 });
+
+// "Update bag" only exists for the no-JS path: with the enhancer running, every
+// quantity is already applied by the time the button could be pressed. The flag
+// goes on the document because `refresh` replaces the cart region wholesale.
+document.documentElement.setAttribute("data-cart-enhanced", "");
 
 // FPC-safe form key for the no-JS form fallbacks and useCart's cookie backfill.
 ensureFormKey();

@@ -40,9 +40,20 @@ export function useCustomerData() {
                 [name]: { ...(sections.value[name] ?? {}), ...partial },
             };
         },
-        snapshot: (): Record<string, Section> => ({ ...sections.value }),
+        snapshot: (names?: string[]): Record<string, Section> => {
+            if (!names) {
+                return { ...sections.value };
+            }
+            const picked: Record<string, Section> = {};
+            for (const name of names) {
+                if (name in sections.value) {
+                    picked[name] = sections.value[name];
+                }
+            }
+            return picked;
+        },
         restore: (previous: Record<string, Section>): void => {
-            sections.value = { ...previous };
+            sections.value = { ...sections.value, ...previous };
         },
     };
 }

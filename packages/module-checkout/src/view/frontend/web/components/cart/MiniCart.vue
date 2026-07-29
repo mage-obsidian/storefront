@@ -7,6 +7,7 @@ import { useCart } from "MageObsidian_Storefront::js/useCart";
 import { useValueFlash } from "MageObsidian_Storefront::js/useValueFlash";
 import { notify, NotificationTone } from "MageObsidian_Storefront::js/notifications";
 import { readUxRuntimeConfig } from "mage-obsidian/runtime/uxConfig.ts";
+import { createCartQueue } from "MageObsidian_Checkout::js/cart-queue";
 
 // Off-canvas mini-cart. Presentation reuses the foundation's shared Drawer; the
 // contents come from Magento's `cart` customer-data section (reactive, FPC-safe),
@@ -107,7 +108,7 @@ async function run(
         return;
     }
     pending.value = [...pending.value, item.item_id];
-    const rollback = customerData.snapshot();
+    const rollback = customerData.snapshot([CART_SECTION]);
     if (ux.optimistic) {
         optimistic();
     }
@@ -116,12 +117,31 @@ async function run(
         const { ok, message } = await mutate();
         if (!ok) {
             customerData.restore(rollback);
+            // The rollback is the instant part; the reload lands after it so the
+            // server has the last word — it may have clamped the quantity rather
+            // than rejected it outright.
+            void customerData.reload([CART_SECTION]);
             void notify(message ?? props.labels.updateFailed ?? "Could not update your bag", NotificationTone.Warning);
         }
     } finally {
         pending.value = pending.value.filter((id) => id !== item.item_id);
     }
 }
+
+// Quantity is coalesced, not gated: holding down (+) used to drop every click
+// after the first while the request was in flight.
+const qtyQueue = createCartQueue({
+    updateQty: async (key, qty) => {
+        // The queue keys by string; the section's own id type goes to the endpoint.
+        const itemId = items.value.find((entry) => String(entry.item_id) === key)?.item_id ?? key;
+        const { ok, message } = await cart.updateItemQty(itemId, qty, props.updateUrl);
+        if (!ok) {
+            void customerData.reload([CART_SECTION]);
+            void notify(message ?? props.labels.updateFailed ?? "Could not update your bag", NotificationTone.Warning);
+        }
+    },
+    settle: async () => {},
+});
 
 function setQty(item: CartItem, qty: number | string): void {
     const next = Math.max(1, Math.trunc(Number(qty) || 0));
@@ -130,17 +150,15 @@ function setQty(item: CartItem, qty: number | string): void {
     }
     const delta = ux.summaryCountsQty ? next - Number(item.qty) : 0;
     bump(item.item_id);
-    void run(
-        item,
-        () =>
-            project(
-                items.value.map((entry) =>
-                    entry.item_id === item.item_id ? { ...entry, qty: next } : entry,
-                ),
-                delta,
+    if (ux.optimistic) {
+        project(
+            items.value.map((entry) =>
+                entry.item_id === item.item_id ? { ...entry, qty: next } : entry,
             ),
-        () => cart.updateItemQty(item.item_id, next, props.updateUrl),
-    );
+            delta,
+        );
+    }
+    qtyQueue.setQty(String(item.item_id), next);
 }
 
 function onQtyInput(item: CartItem, event: Event): void {

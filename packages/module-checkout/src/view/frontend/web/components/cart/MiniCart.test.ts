@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
 import { nextTick } from "vue";
 import MiniCart from "./MiniCart.vue";
@@ -127,12 +127,32 @@ describe("MiniCart", () => {
 
         await wrapper.get(`[aria-label="${LABELS.increase}"]`).trigger("click");
 
-        expect(__calls.at(-1)).toEqual({
-            type: "updateItemQty",
-            itemId: 15,
-            qty: 3,
-            action: "/checkout/sidebar/updateItemQty",
-        });
+        // Coalesced: the request trails the click by the stepper's debounce.
+        await vi.waitFor(() =>
+            expect(__calls.at(-1)).toEqual({
+                type: "updateItemQty",
+                itemId: 15,
+                qty: 3,
+                action: "/checkout/sidebar/updateItemQty",
+            }),
+        );
+    });
+
+    it("sends one request carrying the last value when the stepper is hammered", async () => {
+        __setSection("cart", { summary_count: 2, subtotal: "$104.00", items: [ITEM] });
+        const trigger = addTrigger();
+        const wrapper = mount(MiniCart, { props: PROPS, attachTo: document.body });
+        trigger.dispatchEvent(new Event("click", { bubbles: true, cancelable: true }));
+        await nextTick();
+
+        const increase = wrapper.get(`[aria-label="${LABELS.increase}"]`);
+        for (let click = 0; click < 5; click += 1) {
+            await increase.trigger("click");
+        }
+
+        await vi.waitFor(() => expect(__calls).toHaveLength(1));
+        expect(__calls[0]).toMatchObject({ type: "updateItemQty", itemId: 15, qty: 7 });
+        expect(wrapper.findAll("input")[0].element.value).toBe("7");
     });
 
     it("disables the decrement control at quantity 1", async () => {
@@ -243,9 +263,11 @@ describe("MiniCart optimistic mutations", () => {
 
         expect(wrapper.findAll("input")[0].element.value).toBe("3");
         expect(wrapper.get("h2").text()).toContain("(4)");
-        expect(__calls).toEqual([
-            { type: "updateItemQty", itemId: 15, qty: 3, action: PROPS.updateUrl },
-        ]);
+        await vi.waitFor(() =>
+            expect(__calls).toEqual([
+                { type: "updateItemQty", itemId: 15, qty: 3, action: PROPS.updateUrl },
+            ]),
+        );
     });
 
     it("counts a removed line as one when the badge counts lines", async () => {

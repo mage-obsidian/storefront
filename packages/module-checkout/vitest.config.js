@@ -16,6 +16,15 @@ export default defineConfig({
             "mage-obsidian/runtime": fileURLToPath(
                 new URL("../js-package-utils/src/runtime", import.meta.url),
             ),
+            "MageObsidian_Storefront::form/Field": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/components/form/Field.vue", import.meta.url),
+            ),
+            "MageObsidian_Storefront::js/form-validation": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/js/form-validation.ts", import.meta.url),
+            ),
+            "MageObsidian_Checkout::js/cart-queue": fileURLToPath(
+                new URL("./src/view/frontend/web/js/cart-queue.ts", import.meta.url),
+            ),
             "MageObsidian_Checkout::js/checkout-events": fileURLToPath(
                 new URL("./src/view/frontend/web/js/checkout-events.ts", import.meta.url),
             ),
