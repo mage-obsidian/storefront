@@ -2,11 +2,15 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
     classifyNavigation,
     markProductHero,
+    dedupeCardNames,
+    clearCardNames,
     bindViewTransitions,
 } from "MageObsidian_Storefront::js/viewTransitions";
 
 const LISTING = "https://shop.test/women/tops.html";
 const PRODUCT = "https://shop.test/blue-shirt.html";
+
+const nameOf = (el: HTMLElement): string => el.style.getPropertyValue("view-transition-name");
 
 const facts = (over: Partial<Parameters<typeof classifyNavigation>[0]> = {}) => ({
     trigger: null,
@@ -167,6 +171,47 @@ describe("markProductHero", () => {
     });
 });
 
+describe("card names", () => {
+    const grid = (...names: string[]) => {
+        document.body.innerHTML = `<ol>${names
+            .map((name, at) => `<li class="product-item" id="c${at}" style="view-transition-name:${name}"></li>`)
+            .join("")}</ol>`;
+        return names.map((_, at) => document.getElementById(`c${at}`) as HTMLElement);
+    };
+
+    afterEach(() => {
+        document.body.innerHTML = "";
+    });
+
+    it("keeps the first of a repeated name and releases the rest", () => {
+        const [first, second, other] = grid("product-1", "product-1", "product-2");
+
+        expect(dedupeCardNames(document)).toBe(1);
+        expect(nameOf(first)).toBe("product-1");
+        expect(nameOf(second)).toBe("");
+        expect(nameOf(other)).toBe("product-2");
+    });
+
+    it("leaves a grid of unique names untouched", () => {
+        const cards = grid("product-1", "product-2", "product-3");
+
+        expect(dedupeCardNames(document)).toBe(0);
+        expect(cards.map(nameOf)).toEqual([
+            "product-1",
+            "product-2",
+            "product-3",
+        ]);
+    });
+
+    it("releases every card at once", () => {
+        const cards = grid("product-1", "product-2");
+
+        clearCardNames(document);
+
+        expect(cards.every((c) => nameOf(c) === "")).toBe(true);
+    });
+});
+
 describe("bindViewTransitions", () => {
     const dispatchSwap = (url: string) => {
         const transition = { skipTransition: vi.fn() };
@@ -214,6 +259,30 @@ describe("bindViewTransitions", () => {
 
         expect(transition.skipTransition).not.toHaveBeenCalled();
         expect(document.getElementById("card")!.style.viewTransitionName).toBe("pdp-hero");
+    });
+
+    it("strips the grid's card names on the way to a product page", () => {
+        document.body.insertAdjacentHTML(
+            "beforeend",
+            `<li class="product-item" id="sibling" style="view-transition-name:product-9"></li>`,
+        );
+
+        (document.getElementById("card-img") as HTMLElement).click();
+        dispatchSwap(PRODUCT);
+
+        expect(nameOf(document.getElementById("sibling") as HTMLElement)).toBe("");
+    });
+
+    it("keeps the card names of a listing move, which is what reorders them", () => {
+        document.body.insertAdjacentHTML(
+            "beforeend",
+            `<li class="product-item" id="kept" style="view-transition-name:product-9"></li>`,
+        );
+
+        const transition = dispatchSwap(`${LISTING}?product_list_order=name`);
+
+        expect(transition.skipTransition).not.toHaveBeenCalled();
+        expect(nameOf(document.getElementById("kept") as HTMLElement)).toBe("product-9");
     });
 
     it("skips a navigation with no click behind it (back button) that leaves the catalog", () => {

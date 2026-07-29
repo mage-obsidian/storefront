@@ -13,7 +13,29 @@
  * Deciding in the incoming document would mean a parser-blocking script in the
  * head on every page, which is what `pagereveal` requires.
  */
-export type NavigationKind = "product" | "listing" | null;
+import events from "MageObsidian_ModernFrontend::js/events";
+
+export const NavigationKind = {
+    Product: "product",
+    Listing: "listing",
+} as const;
+
+export type NavigationKind = (typeof NavigationKind)[keyof typeof NavigationKind] | null;
+
+export const NAVIGATION_EVENT = "navigation_start";
+
+export interface NavigationEvent {
+    from: string;
+    to: string;
+    kind: NavigationKind;
+    trigger: Element | null;
+}
+
+declare module "mage-obsidian/runtime/eventManager.ts" {
+    interface StorefrontEventMap {
+        [NAVIGATION_EVENT]: NavigationEvent;
+    }
+}
 
 export interface NavigationFacts {
     trigger: Element | null;
@@ -26,6 +48,8 @@ export interface NavigationFacts {
 
 const HERO_NAME = "pdp-hero";
 const HERO_MARKER = "data-vt-hero";
+const CARD_SELECTOR = ".product-item";
+const NAME_PROPERTY = "view-transition-name";
 
 const parse = (url: string, base?: string): URL | null => {
     try {
@@ -46,7 +70,7 @@ export function classifyNavigation(facts: NavigationFacts): NavigationKind {
     }
 
     if (facts.trigger?.closest?.(".product-card")) {
-        return "product";
+        return NavigationKind.Product;
     }
 
     // Going back to the listing the product page was opened from: the card still
@@ -54,12 +78,12 @@ export function classifyNavigation(facts: NavigationFacts): NavigationKind {
     if (facts.isProductPage && facts.cameFrom) {
         const origin = parse(facts.cameFrom);
         if (origin && origin.href === to.href) {
-            return "product";
+            return NavigationKind.Product;
         }
     }
 
     if (facts.trigger?.closest?.(".subcategory-card")) {
-        return "listing";
+        return NavigationKind.Listing;
     }
 
     // Pagination, sort and layered filters all live inside the listing's content
@@ -67,10 +91,36 @@ export function classifyNavigation(facts: NavigationFacts): NavigationKind {
     // path from `.../result/` to `.../result/index/` while staying on the very
     // same listing.
     if (facts.isListingPage && facts.trigger?.closest?.("#maincontent")) {
-        return "listing";
+        return NavigationKind.Listing;
     }
 
-    return samePage(from, to) ? "listing" : null;
+    return samePage(from, to) ? NavigationKind.Listing : null;
+}
+
+export function dedupeCardNames(doc: Document): number {
+    const seen = new Set<string>();
+    let dropped = 0;
+
+    doc.querySelectorAll<HTMLElement>(CARD_SELECTOR).forEach((card) => {
+        const name = card.style.getPropertyValue(NAME_PROPERTY);
+        if (!name) {
+            return;
+        }
+        if (seen.has(name)) {
+            card.style.removeProperty(NAME_PROPERTY);
+            dropped += 1;
+            return;
+        }
+        seen.add(name);
+    });
+
+    return dropped;
+}
+
+export function clearCardNames(doc: Document): void {
+    doc.querySelectorAll<HTMLElement>(CARD_SELECTOR).forEach((card) => {
+        card.style.removeProperty(NAME_PROPERTY);
+    });
 }
 
 /**
@@ -125,22 +175,33 @@ export function bindViewTransitions(win: Window & typeof globalThis): () => void
 
         const nav = (win as unknown as { navigation?: { activation?: { from?: { url?: string } } } })
             .navigation;
+        const from = doc.location.href;
+        const to = swap.activation?.entry?.url ?? "";
         const kind = classifyNavigation({
             trigger,
-            from: doc.location.href,
-            to: swap.activation?.entry?.url ?? "",
+            from,
+            to,
             isProductPage: doc.querySelector("[data-pdp]") !== null,
             isListingPage: doc.querySelector(".toolbar-products") !== null,
             cameFrom: nav?.activation?.from?.url ?? doc.referrer ?? null,
         });
 
+        void events.dispatch(NAVIGATION_EVENT, { from, to, kind, trigger });
+
         if (!kind) {
             transition.skipTransition();
             return;
         }
-        if (kind === "product" && trigger) {
-            markProductHero(trigger, doc);
+
+        if (kind === NavigationKind.Product) {
+            clearCardNames(doc);
+            if (trigger) {
+                markProductHero(trigger, doc);
+            }
+            return;
         }
+
+        dedupeCardNames(doc);
     };
 
     doc.addEventListener("click", onClick, true);
