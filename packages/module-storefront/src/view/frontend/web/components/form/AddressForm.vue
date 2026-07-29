@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, useId, watch } from "vue";
+import Field from "MageObsidian_Storefront::form/Field";
 import {
     type AddressData,
     type RegionData,
@@ -131,99 +132,91 @@ defineExpose({ validate });
 
 <template>
     <div class="grid gap-5 sm:grid-cols-2">
-        <div class="flex flex-col gap-1">
-            <label :for="id('firstname')" class="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-ink-soft">{{ t.firstname }}</label>
-            <input
-                :id="id('firstname')"
-                v-model="address.firstname"
-                type="text"
-                autocomplete="given-name"
-                :aria-invalid="hasError('firstname') ? 'true' : undefined"
-                :aria-describedby="hasError('firstname') ? errorId('firstname') : undefined"
-                class="rounded-edge border border-ash-300 bg-transparent px-3 py-2.5 font-mono text-sm text-ink focus:border-ink focus:outline-none"
-                @input="clearError('firstname')"
-            >
-            <p v-if="hasError('firstname')" :id="errorId('firstname')" role="alert" class="font-mono text-[0.66rem] text-sale">{{ t.required }}</p>
-        </div>
+        <Field
+            v-model="address.firstname"
+            :id="id('firstname')"
+            :label="t.firstname"
+            required
+            autocomplete="given-name"
+            :error="hasError('firstname') ? t.required : ''"
+            @update:model-value="clearError('firstname')"
+        />
 
-        <div class="flex flex-col gap-1">
-            <label :for="id('lastname')" class="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-ink-soft">{{ t.lastname }}</label>
-            <input
-                :id="id('lastname')"
-                v-model="address.lastname"
-                type="text"
-                autocomplete="family-name"
-                :aria-invalid="hasError('lastname') ? 'true' : undefined"
-                :aria-describedby="hasError('lastname') ? errorId('lastname') : undefined"
-                class="rounded-edge border border-ash-300 bg-transparent px-3 py-2.5 font-mono text-sm text-ink focus:border-ink focus:outline-none"
-                @input="clearError('lastname')"
-            >
-            <p v-if="hasError('lastname')" :id="errorId('lastname')" role="alert" class="font-mono text-[0.66rem] text-sale">{{ t.required }}</p>
-        </div>
+        <Field
+            v-model="address.lastname"
+            :id="id('lastname')"
+            :label="t.lastname"
+            required
+            autocomplete="family-name"
+            :error="hasError('lastname') ? t.required : ''"
+            @update:model-value="clearError('lastname')"
+        />
 
-        <div class="flex flex-col gap-1 sm:col-span-2">
-            <label :for="id('company')" class="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-ink-soft">
-                {{ t.company }} <span class="lowercase tracking-normal text-ink-soft">({{ t.optional }})</span>
-            </label>
-            <input
-                :id="id('company')"
+        <div class="sm:col-span-2">
+            <Field
                 v-model="address.company"
-                type="text"
+                :id="id('company')"
+                :label="t.company"
                 autocomplete="organization"
-                class="rounded-edge border border-ash-300 bg-transparent px-3 py-2.5 font-mono text-sm text-ink focus:border-ink focus:outline-none"
-            >
+            />
         </div>
 
-        <div class="flex flex-col gap-1 sm:col-span-2">
-            <label :for="id('street')" class="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-ink-soft">{{ t.street }}</label>
+        <!-- Two controls under one label, so it is assembled from the same
+             `.field*` classes Field emits rather than nesting two of them. -->
+        <div class="field sm:col-span-2">
+            <label :for="id('street')" class="field__label">
+                {{ t.street }}<span class="field__required" aria-hidden="true">*</span>
+            </label>
             <input
                 :id="id('street')"
                 v-model="address.street[0]"
                 type="text"
+                class="field__control"
                 autocomplete="address-line1"
+                required
+                aria-required="true"
                 :aria-invalid="hasError('street0') ? 'true' : undefined"
-                :aria-describedby="hasError('street0') ? errorId('street0') : undefined"
-                class="rounded-edge border border-ash-300 bg-transparent px-3 py-2.5 font-mono text-sm text-ink focus:border-ink focus:outline-none"
+                :aria-describedby="errorId('street0')"
                 @input="clearError('street0')"
             >
             <input
                 v-model="address.street[1]"
                 type="text"
+                class="field__control"
                 autocomplete="address-line2"
                 :aria-label="t.streetLine2"
                 :placeholder="t.streetLine2"
-                class="mt-2 rounded-edge border border-ash-300 bg-transparent px-3 py-2.5 font-mono text-sm text-ink focus:border-ink focus:outline-none"
             >
-            <p v-if="hasError('street0')" :id="errorId('street0')" role="alert" class="font-mono text-[0.66rem] text-sale">{{ t.required }}</p>
+            <p :id="errorId('street0')" class="field__error" role="alert">{{ hasError('street0') ? t.required : '' }}</p>
         </div>
 
-        <div class="flex flex-col gap-1">
-            <label :for="id('countryId')" class="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-ink-soft">{{ t.country }}</label>
-            <select
-                :id="id('countryId')"
-                v-model="address.countryId"
-                autocomplete="country"
-                :aria-invalid="hasError('countryId') ? 'true' : undefined"
-                :aria-describedby="hasError('countryId') ? errorId('countryId') : undefined"
-                class="rounded-edge border border-ash-300 bg-transparent px-3 py-2.5 font-mono text-sm text-ink focus:border-ink focus:outline-none"
-                @change="clearError('countryId')"
-            >
-                <option v-for="country in countries" :key="country.value" :value="country.value">{{ country.label }}</option>
-            </select>
-            <p v-if="hasError('countryId')" :id="errorId('countryId')" role="alert" class="font-mono text-[0.66rem] text-sale">{{ t.required }}</p>
-        </div>
+        <Field
+            v-model="address.countryId"
+            :id="id('countryId')"
+            :label="t.country"
+            type="select"
+            required
+            autocomplete="country"
+            :options="countries"
+            :error="hasError('countryId') ? t.required : ''"
+            @update:model-value="clearError('countryId')"
+        />
 
-        <div class="flex flex-col gap-1">
-            <label :for="id('region')" class="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-ink-soft">
-                {{ t.region }} <span v-if="!regionRequired" class="lowercase tracking-normal text-ink-soft">({{ t.optional }})</span>
+        <!-- Region is a select or a free-text input depending on the country, and
+             the selection carries both the id and the name. -->
+        <div class="field">
+            <label :for="id('region')" class="field__label">
+                {{ t.region }}<span v-if="regionRequired" class="field__required" aria-hidden="true">*</span>
             </label>
             <select
                 v-if="hasRegions"
                 :id="id('region')"
                 :value="address.regionId ?? ''"
+                class="field__control"
+                :required="regionRequired"
+                :aria-required="regionRequired ? 'true' : undefined"
                 :aria-invalid="hasError('region') ? 'true' : undefined"
-                :aria-describedby="hasError('region') ? errorId('region') : undefined"
-                class="rounded-edge border border-ash-300 bg-transparent px-3 py-2.5 font-mono text-sm text-ink focus:border-ink focus:outline-none"
+                :aria-describedby="errorId('region')"
                 @change="onRegionSelect"
             >
                 <option value="">{{ t.regionPlaceholder }}</option>
@@ -234,58 +227,48 @@ defineExpose({ validate });
                 :id="id('region')"
                 v-model="address.region"
                 type="text"
+                class="field__control"
                 autocomplete="address-level1"
+                :required="regionRequired"
+                :aria-required="regionRequired ? 'true' : undefined"
                 :aria-invalid="hasError('region') ? 'true' : undefined"
-                :aria-describedby="hasError('region') ? errorId('region') : undefined"
-                class="rounded-edge border border-ash-300 bg-transparent px-3 py-2.5 font-mono text-sm text-ink focus:border-ink focus:outline-none"
+                :aria-describedby="errorId('region')"
                 @input="clearError('region')"
             >
-            <p v-if="hasError('region')" :id="errorId('region')" role="alert" class="font-mono text-[0.66rem] text-sale">{{ t.required }}</p>
+            <p :id="errorId('region')" class="field__error" role="alert">{{ hasError('region') ? t.required : '' }}</p>
         </div>
 
-        <div class="flex flex-col gap-1">
-            <label :for="id('city')" class="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-ink-soft">{{ t.city }}</label>
-            <input
-                :id="id('city')"
-                v-model="address.city"
-                type="text"
-                autocomplete="address-level2"
-                :aria-invalid="hasError('city') ? 'true' : undefined"
-                :aria-describedby="hasError('city') ? errorId('city') : undefined"
-                class="rounded-edge border border-ash-300 bg-transparent px-3 py-2.5 font-mono text-sm text-ink focus:border-ink focus:outline-none"
-                @input="clearError('city')"
-            >
-            <p v-if="hasError('city')" :id="errorId('city')" role="alert" class="font-mono text-[0.66rem] text-sale">{{ t.required }}</p>
-        </div>
+        <Field
+            v-model="address.city"
+            :id="id('city')"
+            :label="t.city"
+            required
+            autocomplete="address-level2"
+            :error="hasError('city') ? t.required : ''"
+            @update:model-value="clearError('city')"
+        />
 
-        <div class="flex flex-col gap-1">
-            <label :for="id('postcode')" class="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-ink-soft">{{ t.postcode }}</label>
-            <input
-                :id="id('postcode')"
-                v-model="address.postcode"
-                type="text"
-                autocomplete="postal-code"
-                :aria-invalid="hasError('postcode') ? 'true' : undefined"
-                :aria-describedby="hasError('postcode') ? errorId('postcode') : undefined"
-                class="rounded-edge border border-ash-300 bg-transparent px-3 py-2.5 font-mono text-sm text-ink focus:border-ink focus:outline-none"
-                @input="clearError('postcode')"
-            >
-            <p v-if="hasError('postcode')" :id="errorId('postcode')" role="alert" class="font-mono text-[0.66rem] text-sale">{{ t.required }}</p>
-        </div>
+        <Field
+            v-model="address.postcode"
+            :id="id('postcode')"
+            :label="t.postcode"
+            required
+            autocomplete="postal-code"
+            :error="hasError('postcode') ? t.required : ''"
+            @update:model-value="clearError('postcode')"
+        />
 
-        <div class="flex flex-col gap-1 sm:col-span-2">
-            <label :for="id('telephone')" class="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-ink-soft">{{ t.telephone }}</label>
-            <input
-                :id="id('telephone')"
+        <div class="sm:col-span-2">
+            <Field
                 v-model="address.telephone"
+                :id="id('telephone')"
+                :label="t.telephone"
                 type="tel"
+                required
                 autocomplete="tel"
-                :aria-invalid="hasError('telephone') ? 'true' : undefined"
-                :aria-describedby="hasError('telephone') ? errorId('telephone') : undefined"
-                class="rounded-edge border border-ash-300 bg-transparent px-3 py-2.5 font-mono text-sm text-ink focus:border-ink focus:outline-none"
-                @input="clearError('telephone')"
-            >
-            <p v-if="hasError('telephone')" :id="errorId('telephone')" role="alert" class="font-mono text-[0.66rem] text-sale">{{ t.required }}</p>
+                :error="hasError('telephone') ? t.required : ''"
+                @update:model-value="clearError('telephone')"
+            />
         </div>
     </div>
 </template>
