@@ -3,6 +3,8 @@ import { mount, flushPromises } from "@vue/test-utils";
 import ProductForm from "./ProductForm.vue";
 import { __rawCalls, __reset, __setResult } from "MageObsidian_Storefront::js/useCart";
 import events from "MageObsidian_ModernFrontend::js/events";
+import { CatalogEvent } from "MageObsidian_Catalog::js/catalog-events";
+import { NOTIFICATION_EVENT } from "MageObsidian_Storefront::js/notifications";
 
 // Configurable buy-box island. We assert the selection contract: a radiogroup per
 // attribute, impossible combinations greyed out, full selection drives price +
@@ -107,9 +109,9 @@ describe("ProductForm", () => {
 
     it("updates price, swaps the gallery image and delegates super_attribute on full selection", async () => {
         const variantImage = vi.fn();
-        window.addEventListener("obsidian:variant-image", variantImage);
+        events.observe(CatalogEvent.ProductGalleryChange, variantImage);
         const toast = vi.fn();
-        window.addEventListener("obsidian:toast", toast);
+        events.observe(NOTIFICATION_EVENT, toast);
 
         const wrapper = build();
         await wrapper.find('[data-option-id="5"]').trigger("click"); // Red
@@ -118,7 +120,7 @@ describe("ProductForm", () => {
         expect(wrapper.text()).toContain("$25.00"); // old price struck through
         expect(wrapper.find("button[type=submit]").text()).toBe("Add to cart");
         expect(variantImage).toHaveBeenCalledTimes(1);
-        expect(variantImage.mock.calls[0][0].detail.large).toBe("/red.jpg");
+        expect(variantImage.mock.calls[0][0].large).toBe("/red.jpg");
 
         await wrapper.find("form").trigger("submit");
         await flushPromises();
@@ -131,16 +133,13 @@ describe("ProductForm", () => {
         expect(body.get("super_attribute[93]")).toBe("5");
         expect(body.get("super_attribute[144]")).toBe("7");
         expect(toast).toHaveBeenCalledTimes(1);
-        expect(toast.mock.calls[0][0].detail.message).toBe("Added");
-
-        window.removeEventListener("obsidian:variant-image", variantImage);
-        window.removeEventListener("obsidian:toast", toast);
+        expect(toast.mock.calls[0][0].message).toBe("Added");
     });
 
     it("announces the failure label when the cart rejects the add", async () => {
         __setResult(false);
         const toast = vi.fn();
-        window.addEventListener("obsidian:toast", toast);
+        events.observe(NOTIFICATION_EVENT, toast);
 
         const wrapper = build();
         await wrapper.find('[data-option-id="6"]').trigger("click"); // Blue
@@ -149,9 +148,7 @@ describe("ProductForm", () => {
         await flushPromises();
 
         expect(__rawCalls).toHaveLength(1);
-        expect(toast.mock.calls.at(-1)[0].detail.message).toBe("Failed");
-
-        window.removeEventListener("obsidian:toast", toast);
+        expect(toast.mock.calls.at(-1)[0].message).toBe("Failed");
     });
 });
 

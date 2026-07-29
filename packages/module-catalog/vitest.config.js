@@ -12,6 +12,18 @@ export default defineConfig({
     plugins: [vue()],
     resolve: {
         alias: {
+            "mage-obsidian/runtime": fileURLToPath(
+                new URL("../js-package-utils/src/runtime", import.meta.url),
+            ),
+            "MageObsidian_Storefront::js/button-state": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/js/button-state.ts", import.meta.url),
+            ),
+            "MageObsidian_Storefront::js/notifications": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/js/notifications.ts", import.meta.url),
+            ),
+            "MageObsidian_Catalog::js/catalog-events": fileURLToPath(
+                new URL("./src/view/frontend/web/js/catalog-events.ts", import.meta.url),
+            ),
             "MageObsidian_Storefront::js/useCart": fileURLToPath(
                 new URL("./src/Test/Js/stubs/useCart.js", import.meta.url),
             ),

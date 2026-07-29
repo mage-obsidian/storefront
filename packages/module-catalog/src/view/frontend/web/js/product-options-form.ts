@@ -11,12 +11,12 @@
  */
 import { useCart } from "MageObsidian_Storefront::js/useCart";
 import { createProductOptions } from "MageObsidian_Catalog::js/product-options";
+import { notify, NotificationTone } from "MageObsidian_Storefront::js/notifications";
+import { setButtonBusy } from "MageObsidian_Storefront::js/button-state";
 
-const TOAST_EVENT = "obsidian:toast";
-
-function announce(message: string, tone: string): void {
+function announce(message: string, tone: NotificationTone): void {
     if (message) {
-        window.dispatchEvent(new CustomEvent(TOAST_EVENT, { detail: { message, tone } }));
+        void notify(message, tone);
     }
 }
 
@@ -50,23 +50,17 @@ export function setup(form: HTMLFormElement): void {
             return;
         }
         const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
-        if (button) {
-            button.disabled = true;
-            button.setAttribute("aria-busy", "true");
-        }
+        setButtonBusy(button, true);
 
         // Magento's own wording wins when it explains the failure (bad file
         // extension, missing required option); the data-msg-* copy is the fallback.
         const { ok, message } = await cart.addFromForm(form);
         announce(
             message ?? (ok ? form.dataset.msgAdded ?? "Added to cart" : form.dataset.msgFailed ?? "Could not add to cart"),
-            ok ? "success" : "error",
+            ok ? NotificationTone.Success : NotificationTone.Error,
         );
 
-        if (button) {
-            button.disabled = false;
-            button.removeAttribute("aria-busy");
-        }
+        setButtonBusy(button, false);
     });
 }
 

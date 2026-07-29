@@ -1,14 +1,17 @@
 /**
  * Product gallery enhancer. The gallery is server-rendered (LCP-friendly,
  * crawlable); this only adds interactivity: clicking a thumb swaps the main
- * image, and the strip listens for `obsidian:variant-image` so the configurable
+ * image, and the strip listens for `product_gallery_change` so the configurable
  * island can drive it when a variant is chosen — swapping the hero, rebuilding
  * the whole thumbnail strip from the variant's media, or resetting back to the
  * base product. Image swaps use the View Transitions API for a crossfade,
  * disabled under prefers-reduced-motion. Listeners are delegated on the strip
  * container so rebuilt thumbs stay interactive without re-binding.
  */
-const VARIANT_EVENT = 'obsidian:variant-image';
+import events from 'MageObsidian_ModernFrontend::js/events';
+import { CatalogEvent, LEGACY_VARIANT_IMAGE_EVENT } from 'MageObsidian_Catalog::js/catalog-events';
+
+const SWAP_SCOPE_CLASS = 'pdp-gallery-swap';
 
 const prefersReducedMotion = () =>
     typeof window.matchMedia === 'function'
@@ -50,7 +53,12 @@ function init() {
             }
         };
         if (typeof document.startViewTransition === 'function' && !prefersReducedMotion()) {
-            document.startViewTransition(apply);
+            // Without the scope class the whole viewport is captured as `root` and
+            // cross-faded with itself, tinting the page for the length of the swap.
+            const root = document.documentElement;
+            root.classList.add(SWAP_SCOPE_CLASS);
+            const release = () => root.classList.remove(SWAP_SCOPE_CLASS);
+            document.startViewTransition(apply).finished.then(release, release);
         } else {
             apply();
         }
@@ -118,9 +126,7 @@ function init() {
         });
     }
 
-    window.addEventListener(VARIANT_EVENT, (event) => {
-        const detail = event.detail ?? {};
-
+    function onGalleryChange(detail) {
         if (detail.reset) {
             if (strip && base.thumbs != null) {
                 strip.innerHTML = base.thumbs;
@@ -145,7 +151,10 @@ function init() {
             swapMain(detail.large, detail.label);
             setActiveThumb(null);
         }
-    });
+    }
+
+    events.observe(CatalogEvent.ProductGalleryChange, onGalleryChange);
+    window.addEventListener(LEGACY_VARIANT_IMAGE_EVENT, (event) => onGalleryChange(event.detail ?? {}));
 }
 
 if (document.readyState === 'loading') {

@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { setup } from "./product-options-form";
 import { __formCalls, __reset, __setResult } from "MageObsidian_Storefront::js/useCart";
+import events from "MageObsidian_ModernFrontend::js/events";
+import { NOTIFICATION_EVENT, NotificationTone } from "MageObsidian_Storefront::js/notifications";
 
 // Simple-product host for custom options: live total (base + deltas), required
 // validation before the AJAX add, and toast feedback. The shared option logic is
@@ -64,7 +66,7 @@ describe("product-options-form enhancer", () => {
 
     it("adds via the form and announces success once valid", async () => {
         const toast = vi.fn();
-        window.addEventListener("obsidian:toast", toast);
+        events.observe(NOTIFICATION_EVENT, toast);
         __setResult(true);
         const form = buildForm({ required: true });
         setup(form);
@@ -75,8 +77,8 @@ describe("product-options-form enhancer", () => {
 
         expect(__formCalls).toHaveLength(1);
         expect(__formCalls[0]).toBe(form);
-        expect(toast.mock.calls.at(-1)?.[0].detail.message).toBe("Added");
-        window.removeEventListener("obsidian:toast", toast);
+        expect(toast.mock.calls.at(-1)?.[0].message).toBe("Added");
+        
     });
 
     // A file option is the most common source of a server-side rejection, and
@@ -84,7 +86,7 @@ describe("product-options-form enhancer", () => {
     // reason instead of the generic fallback copy.
     it("announces the server's own error message when the add is rejected", async () => {
         const toast = vi.fn();
-        window.addEventListener("obsidian:toast", toast);
+        events.observe(NOTIFICATION_EVENT, toast);
         __setResult(false, "The file you uploaded has an invalid extension.");
         const form = buildForm();
         setup(form);
@@ -92,9 +94,8 @@ describe("product-options-form enhancer", () => {
         await submit(form);
         await Promise.resolve();
 
-        const detail = toast.mock.calls.at(-1)?.[0].detail;
+        const detail = toast.mock.calls.at(-1)?.[0];
         expect(detail.message).toBe("The file you uploaded has an invalid extension.");
-        expect(detail.tone).toBe("error");
-        window.removeEventListener("obsidian:toast", toast);
+        expect(detail.tone).toBe(NotificationTone.Error);
     });
 });

@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
 import events from "MageObsidian_ModernFrontend::js/events";
+import { notify, NotificationTone } from "MageObsidian_Storefront::js/notifications";
+import { CatalogEvent } from "MageObsidian_Catalog::js/catalog-events";
 import { useCart } from "MageObsidian_Storefront::js/useCart";
 import { createProductOptions } from "MageObsidian_Catalog::js/product-options";
 
@@ -22,8 +24,6 @@ const props = defineProps({
     labels: { type: Object, default: () => ({}) },
 });
 
-const TOAST_EVENT = "obsidian:toast";
-const VARIANT_EVENT = "obsidian:variant-image";
 
 function parse(json, fallback) {
     try {
@@ -119,7 +119,7 @@ const oldPrice = computed(() => {
 
 // Fires with null when the selection stops resolving, which is a state of its own.
 watch(variantId, (id) => {
-    events.dispatch("product_variant_change", { productId: id ? Number(id) : null });
+    void events.dispatch(CatalogEvent.ProductVariantChange, { productId: id ? Number(id) : null });
 });
 
 // Drive the gallery when a full variant resolves: rebuild the whole thumbnail
@@ -127,7 +127,7 @@ watch(variantId, (id) => {
 // resolves to a variant, tell the gallery to restore the base product.
 watch(variantId, (id) => {
     if (!id) {
-        window.dispatchEvent(new CustomEvent(VARIANT_EVENT, { detail: { reset: true } }));
+        void events.dispatch(CatalogEvent.ProductGalleryChange, { reset: true });
         return;
     }
     const images = (config.images?.[id] ?? []).filter((image) => image && (image.full || image.img));
@@ -140,11 +140,11 @@ watch(variantId, (id) => {
         label: image.caption || "",
     }));
     const main = images.find((image) => image.isMain) ?? images[0];
-    window.dispatchEvent(
-        new CustomEvent(VARIANT_EVENT, {
-            detail: { large: main.full || main.img, label: main.caption || "", tiles },
-        }),
-    );
+    void events.dispatch(CatalogEvent.ProductGalleryChange, {
+        large: main.full || main.img,
+        label: main.caption || "",
+        tiles,
+    });
 });
 
 /** Classify a swatch by its value: hex → color, path → image, else text. */
@@ -187,13 +187,13 @@ function onKeydown(event, attr, index) {
 
 function announce(message, tone) {
     if (message) {
-        window.dispatchEvent(new CustomEvent(TOAST_EVENT, { detail: { message, tone } }));
+        void notify(message, tone);
     }
 }
 
 async function add() {
     if (!allSelected.value || !variantId.value) {
-        announce(props.labels.selectOptions, "error");
+        announce(props.labels.selectOptions, NotificationTone.Error);
         return;
     }
     if (productOptions && !productOptions.validate()) {
@@ -213,7 +213,10 @@ async function add() {
     });
     productOptions?.appendTo(body);
     const { ok, message } = await cart.addRaw(props.action, body);
-    announce(message ?? (ok ? props.labels.added : props.labels.failed), ok ? "success" : "error");
+    announce(
+        message ?? (ok ? props.labels.added : props.labels.failed),
+        ok ? NotificationTone.Success : NotificationTone.Error,
+    );
     adding.value = false;
 }
 </script>
@@ -295,8 +298,12 @@ async function add() {
                 :aria-disabled="!allSelected"
                 :aria-busy="adding ? 'true' : 'false'"
                 class="inline-flex flex-1 items-center justify-center rounded-edge border border-ink bg-ink px-8 py-3 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-alabaster transition-colors hover:bg-transparent hover:text-ink disabled:opacity-60"
+                :class="{ 'is-loading': adding }"
             >
-                {{ allSelected ? (props.labels.addToCart ?? "Add to cart") : (props.labels.selectOptions ?? "Select options") }}
+                <span class="obsidian-button__label">
+                    {{ allSelected ? (props.labels.addToCart ?? "Add to cart") : (props.labels.selectOptions ?? "Select options") }}
+                </span>
+                <span v-if="adding" class="obsidian-button__spinner"></span>
             </button>
         </div>
     </form>
