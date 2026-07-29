@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
+import Field from "MageObsidian_Storefront::form/Field";
 import type { GiftMessageData } from "MageObsidian_GiftMessage::js/useGiftMessage";
 
 const props = defineProps<{
@@ -60,19 +61,10 @@ defineExpose({ resolve });
     <form class="flex flex-col gap-3" @submit.prevent="submit">
         <p class="font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">{{ title }}</p>
         <div class="grid gap-3 sm:grid-cols-2">
-            <label class="flex flex-col gap-1">
-                <span class="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-ink-soft">{{ fromLabel }}</span>
-                <input v-model="sender" type="text" class="h-10 rounded-edge border border-ash-300 bg-transparent px-3 text-sm text-ink focus:border-ink focus:outline-none">
-            </label>
-            <label class="flex flex-col gap-1">
-                <span class="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-ink-soft">{{ toLabel }}</span>
-                <input v-model="recipient" type="text" class="h-10 rounded-edge border border-ash-300 bg-transparent px-3 text-sm text-ink focus:border-ink focus:outline-none">
-            </label>
+            <Field v-model="sender" :label="fromLabel" name="gift_message_sender" />
+            <Field v-model="recipient" :label="toLabel" name="gift_message_recipient" />
         </div>
-        <label class="flex flex-col gap-1">
-            <span class="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-ink-soft">{{ messageLabel }}</span>
-            <textarea v-model="message" rows="3" class="rounded-edge border border-ash-300 bg-transparent px-3 py-2 text-sm text-ink focus:border-ink focus:outline-none"></textarea>
-        </label>
+        <Field v-model="message" :label="messageLabel" name="gift_message_message" type="textarea" />
         <div class="flex items-center gap-3">
             <button type="submit" :disabled="busy" class="h-10 rounded-edge bg-ink px-5 font-mono text-[0.7rem] uppercase tracking-[0.16em] text-alabaster transition-colors hover:bg-obsidian-800 disabled:opacity-60">
                 {{ saveLabel }}

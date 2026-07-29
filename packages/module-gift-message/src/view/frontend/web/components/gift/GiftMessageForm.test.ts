@@ -44,6 +44,9 @@ describe("GiftMessageForm", () => {
         const wrapper = mountForm();
         wrapper.vm.resolve(false, "Could not save");
         await wrapper.vm.$nextTick();
-        expect(wrapper.find('[role="alert"]').text()).toBe("Could not save");
+        // Every Field renders an empty alert node of its own, so match on content.
+        const alerts = wrapper.findAll('[role="alert"]').filter((node) => node.text() !== "");
+        expect(alerts).toHaveLength(1);
+        expect(alerts[0].text()).toBe("Could not save");
     });
 });

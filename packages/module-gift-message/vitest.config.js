@@ -16,6 +16,9 @@ export default defineConfig({
             "MageObsidian_GiftMessage::js/useGiftMessage": fileURLToPath(
                 new URL("./src/view/frontend/web/js/useGiftMessage.ts", import.meta.url),
             ),
+            "MageObsidian_Storefront::form/Field": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/components/form/Field.vue", import.meta.url),
+            ),
             "MageObsidian_GiftMessage::components/gift/GiftMessageForm": fileURLToPath(
                 new URL("./src/view/frontend/web/components/gift/GiftMessageForm.vue", import.meta.url),
             ),
