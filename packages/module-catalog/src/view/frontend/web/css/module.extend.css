@@ -185,3 +185,25 @@
 .pdp__gallery-main {
     view-transition-name: pdp-hero;
 }
+
+.pdp-gallery-swap::view-transition-group(root) {
+    animation: none;
+}
+.pdp-gallery-swap::view-transition-image-pair(root) {
+    isolation: auto;
+}
+.pdp-gallery-swap::view-transition-old(root) {
+    display: none;
+}
+.pdp-gallery-swap::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+.products-grid .product-item {
+    view-transition-class: obsidian-card;
+}
+
+:root:active-view-transition .products-grid .product-item {
+    animation: none;
+}
