@@ -42,6 +42,8 @@ class CartItems implements ArgumentInterface
      */
     private ?array $rows = null;
 
+    private ?string $continueShoppingUrl = null;
+
     /**
      * @param CheckoutSession $checkoutSession
      * @param ConfigurationPool $configurationPool
@@ -182,5 +184,24 @@ class CartItems implements ArgumentInterface
         } catch (Throwable) {
             return '';
         }
+    }
+
+    /**
+     * Where "Continue shopping" goes: the last listing the shopper came from, as
+     * Magento's own cart block resolves it, falling back to the home page.
+     */
+    public function getContinueShoppingUrl(): string
+    {
+        if ($this->continueShoppingUrl !== null) {
+            return $this->continueShoppingUrl;
+        }
+
+        try {
+            $url = (string)$this->checkoutSession->getContinueShoppingUrl(true);
+        } catch (Throwable) {
+            $url = '';
+        }
+
+        return $this->continueShoppingUrl = $url !== '' ? $url : $this->url->getUrl('');
     }
 }
