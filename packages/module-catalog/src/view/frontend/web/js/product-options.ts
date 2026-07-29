@@ -120,8 +120,6 @@ export function createProductOptions(root: HTMLElement): ProductOptions {
         return sum;
     }
 
-    // `.field__error:empty` hides the node, so emptying it is enough — the same
-    // contract the shared field macro and form-validation.ts rely on.
     function setError(fs: HTMLElement, message: string): void {
         const node = fs.querySelector<HTMLElement>("[data-option-error]");
         if (!node) {
