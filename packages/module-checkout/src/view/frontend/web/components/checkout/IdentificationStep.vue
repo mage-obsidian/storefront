@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import Field from "MageObsidian_Storefront::form/Field";
+import { isValidEmail } from "MageObsidian_Storefront::js/form-validation";
 import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
 
 // First step of the guest flow: collect the email and continue. It runs Magento's
@@ -37,13 +39,12 @@ const emailError = ref("");
 const accountExists = ref(false);
 const checking = ref(false);
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function submit(): Promise<void> {
     emailError.value = "";
     accountExists.value = false;
     const value = email.value.trim();
-    if (!EMAIL_RE.test(value)) {
+    if (!isValidEmail(value)) {
         emailError.value = t("invalidEmail", "Please enter a valid email address.");
         return;
     }
@@ -64,7 +65,7 @@ async function submit(): Promise<void> {
 // nag mid-typing). Invalid/empty is left for the shopper to finish.
 async function syncEmail(): Promise<void> {
     const value = email.value.trim();
-    if (!EMAIL_RE.test(value)) {
+    if (!isValidEmail(value)) {
         return;
     }
     accountExists.value = !(await checkout.checkEmailAvailable(value));
@@ -80,22 +81,16 @@ defineExpose({ submit });
     <form class="flex max-w-lg flex-col gap-5" novalidate @submit.prevent="submit">
         <p class="text-ink-soft">{{ t("intro", "Enter your email to continue as a guest.") }}</p>
 
-        <div class="flex flex-col gap-1">
-            <label for="checkout-email" class="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-ink-soft">
-                {{ t("email", "Email address") }}
-            </label>
-            <input
-                id="checkout-email"
-                v-model="email"
-                type="email"
-                autocomplete="email"
-                :aria-invalid="emailError ? 'true' : undefined"
-                :aria-describedby="emailError ? 'checkout-email-error' : undefined"
-                class="rounded-edge border border-ash-300 bg-transparent px-3 py-2.5 font-mono text-sm text-ink focus:border-ink focus:outline-none"
-                @blur="hideAdvance ? syncEmail() : undefined"
-            >
-            <p v-if="emailError" id="checkout-email-error" role="alert" class="font-mono text-[0.66rem] text-sale">{{ emailError }}</p>
-        </div>
+        <Field
+            id="checkout-email"
+            v-model="email"
+            :label="t('email', 'Email address')"
+            type="email"
+            required
+            autocomplete="email"
+            :error="emailError"
+            @blur="hideAdvance ? syncEmail() : undefined"
+        />
 
         <p v-if="accountExists" role="alert" class="rounded-edge border border-ash-300 bg-alabaster p-4 text-sm text-ink-soft">
             {{ t("accountExists", "An account already exists with this email.") }}
