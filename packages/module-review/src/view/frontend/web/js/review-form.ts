@@ -1,11 +1,6 @@
-/**
- * Progressive enhancement for the PDP review form. The form is a real POST to
- * review/product/post and works without JS (the star inputs are CSS-only). The
- * text fields go through the shared validation engine so they get the same
- * inline messages as every other form; the rating groups stay here because
- * `required` on visually-hidden (sr-only) radios cannot host the browser's
- * validation bubble, and a radio group has no `.field__error` node of its own.
- */
+// The rating groups are validated here and not by the shared engine: a radio
+// group has no `.field__error` node of its own, and `required` on sr-only radios
+// cannot host the browser's validation bubble.
 
 import { enhanceValidation, required } from "MageObsidian_Storefront::js/form-validation";
 
@@ -13,7 +8,6 @@ const RATING_GROUP = '[role="radiogroup"]';
 const FORM_SELECTOR = "[data-review-form]";
 const REQUIRED_MESSAGE_ATTR = "data-err-required";
 
-/** First rating group with nothing selected, or null when they are all answered. */
 export function findUnratedGroup(form: HTMLFormElement): HTMLElement | null {
     for (const group of form.querySelectorAll<HTMLElement>(RATING_GROUP)) {
         const radios = group.querySelectorAll<HTMLInputElement>('input[type="radio"]');
@@ -39,8 +33,7 @@ export function setup(form: HTMLFormElement): void {
             onValidSubmit: () => {
                 const unrated = findUnratedGroup(form);
                 if (!unrated) {
-                    // Bypasses the listeners that just cleared the form, which is
-                    // what lets the native POST through after our own checks.
+                    // Bypasses the listeners, which is what lets the native POST through.
                     form.submit();
                     return;
                 }
