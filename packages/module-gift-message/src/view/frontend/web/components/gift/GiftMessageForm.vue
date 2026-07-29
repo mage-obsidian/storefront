@@ -78,7 +78,7 @@ defineExpose({ resolve });
                 {{ saveLabel }}
             </button>
             <span v-if="saved" class="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-accent">{{ savedLabel }}</span>
-            <span v-if="error" role="alert" class="text-sm text-red-700">{{ error }}</span>
+            <span v-if="error" role="alert" class="field__error">{{ error }}</span>
         </div>
     </form>
 </template>
