@@ -3,7 +3,7 @@
     "description": "Sales domain compatibility for MageObsidian: customer order history and order detail (reorder, totals, addresses), server-rendered on the account shell with native progressive-enhancement forms.",
     "require": {
         "mage-obsidian/module-modern-frontend": "^2.0",
-        "mage-obsidian/module-storefront": "^3.4"
+        "mage-obsidian/module-storefront": "^3.5"
     },
     "type": "magento2-module",
     "license": [
