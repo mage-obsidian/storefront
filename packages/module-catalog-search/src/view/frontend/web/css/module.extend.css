@@ -1,0 +1,31 @@
+/* Popular search terms cloud. `--term-weight` comes off each item (0 → 1, the
+   core's popularity ratio) and drives the type scale here rather than in the
+   markup, which is what the native phtml does with an inline font-size. */
+.search-terms__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.75rem 1.5rem;
+    list-style: none;
+}
+
+.search-terms__item {
+    font-size: calc(0.95rem + var(--term-weight, 0) * 1.1rem);
+}
+
+.search-terms__link {
+    display: inline-block;
+    font-family: var(--font-display);
+    line-height: 1.2;
+    color: var(--color-ink);
+    text-decoration-line: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 0.2em;
+    transition:
+        color 0.2s,
+        text-decoration-color 0.2s;
+}
+.search-terms__link:hover {
+    color: var(--color-accent);
+    text-decoration-color: currentColor;
+}

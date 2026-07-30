@@ -10,8 +10,12 @@
             <!-- Reuses the catalog ProductCard ViewModel and the grid/card/toolbar
                  Twig templates for the results listing. -->
             <module name="MageObsidian_Catalog"/>
-            <!-- Load after the core search module whose frontend this adapts. -->
+            <!-- Load after the core search modules whose frontend this adapts.
+                 Magento_Search owns the popular-search-terms page, whose layout is
+                 suppressed (that module ships no compatibility file) and is
+                 re-declared here. -->
             <module name="Magento_CatalogSearch"/>
+            <module name="Magento_Search"/>
             <module name="Magento_Catalog"/>
         </sequence>
     </module>
