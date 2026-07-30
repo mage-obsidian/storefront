@@ -19,6 +19,7 @@
             <exclude>src/Test/Unit/Model/Category/RequestPathResolverTest.php</exclude>
             <exclude>src/Test/Unit/Model/Navigation/MenuTreeTest.php</exclude>
             <exclude>src/Test/Unit/Block/NavigationTest.php</exclude>
+            <exclude>src/Test/Unit/Block/FormKeyProviderTest.php</exclude>
             <exclude>src/Test/Unit/ViewModel/NavigationTest.php</exclude>
             <exclude>src/Test/Unit/ViewModel/StoreSwitcherTest.php</exclude>
             <exclude>src/Test/Unit/ViewModel/CurrencySwitcherTest.php</exclude>

@@ -17,6 +17,7 @@ import {
     type MutationEventName,
 } from 'mage-obsidian/runtime/mutationEvent.ts';
 import { readUxRuntimeConfig } from 'mage-obsidian/runtime/uxConfig.ts';
+import { getFormKey } from 'MageObsidian_Storefront::js/form-key-provider';
 
 /** Outcome of a cart mutation; `message` carries Magento's own wording. */
 export interface CartResult {
@@ -53,13 +54,12 @@ interface SectionMessage {
     text?: string;
 }
 
-/** Read Magento's form key from its cookie (set by the page-cache layer). */
-export function getFormKey(): string {
-    const match = typeof document !== 'undefined'
-        ? document.cookie.match(/(?:^|;\s*)form_key=([^;]+)/)
-        : null;
-    return match ? decodeURIComponent(match[1]) : '';
-}
+/**
+ * Read Magento's form key. Re-exported from the provider rather than reading the
+ * cookie here, so a request never goes out with an empty key just because the
+ * provider had not run yet — it creates the cookie on demand.
+ */
+export { getFormKey };
 
 /**
  * Flatten a fields object into FormData, expanding one nested level into

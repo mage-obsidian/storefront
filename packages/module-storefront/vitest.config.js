@@ -45,6 +45,9 @@ export default defineConfig({
             "MageObsidian_Storefront::js/useCart": fileURLToPath(
                 new URL("./src/view/frontend/web/js/useCart.ts", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/form-key-provider": fileURLToPath(
+                new URL("./src/view/frontend/web/js/form-key-provider.ts", import.meta.url),
+            ),
             "MageObsidian_Storefront::form/Field": fileURLToPath(
                 new URL("./src/view/frontend/web/components/form/Field.vue", import.meta.url),
             ),

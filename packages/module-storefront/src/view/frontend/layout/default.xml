@@ -27,6 +27,14 @@
             </block>
         </referenceBlock>
 
+        <!-- Form-key provider. Same home Magento_PageCache gives its own: head,
+             on every page. The tag is type="module", so it is deferred and never
+             competes with the critical path. -->
+        <referenceBlock name="head.additional">
+            <block class="MageObsidian\Storefront\Block\FormKeyProvider"
+                   name="obsidian.form_key_provider"/>
+        </referenceBlock>
+
         <!-- Header quick-search island. Foundation chrome (present on every page),
              so it mounts from the storefront layout — the same way the customer
              domain adds its account menu child. MageObsidian Template child so

@@ -8,6 +8,9 @@ import events, { dispatched, __reset as __resetEvents } from "MageObsidian_Moder
 beforeEach(() => {
     __reset();
     __resetEvents();
+    // The provider seeds a form_key on import; clear it so a test that pins the
+    // value is not reading a second cookie left over from that.
+    document.cookie = "form_key=; max-age=0; path=/";
 });
 afterEach(() => {
     vi.unstubAllGlobals();
@@ -95,14 +98,14 @@ describe("useCart", () => {
     });
 
     it("reads the form key from the cookie as a fallback", () => {
-        document.cookie = "form_key=cookiekey";
+        document.cookie = "form_key=cookiekey; path=/";
         expect(getFormKey()).toBe("cookiekey");
     });
 
     it("adds a configurable product, expanding super_attribute into nested keys", async () => {
         const fetchMock = vi.fn().mockResolvedValue({ ok: true });
         vi.stubGlobal("fetch", fetchMock);
-        document.cookie = "form_key=ck";
+        document.cookie = "form_key=ck; path=/";
 
         const result = await useCart().addProduct({
             action: "/checkout/cart/add",
@@ -126,7 +129,7 @@ describe("useCart", () => {
     it("updates a line item quantity via the sidebar endpoint and reloads the cart", async () => {
         const fetchMock = vi.fn().mockResolvedValue({ ok: true });
         vi.stubGlobal("fetch", fetchMock);
-        document.cookie = "form_key=ck";
+        document.cookie = "form_key=ck; path=/";
 
         const result = await useCart().updateItemQty(15, 3, "/checkout/sidebar/updateItemQty");
 
@@ -143,7 +146,7 @@ describe("useCart", () => {
     it("removes a line item via the sidebar endpoint and reloads the cart", async () => {
         const fetchMock = vi.fn().mockResolvedValue({ ok: true });
         vi.stubGlobal("fetch", fetchMock);
-        document.cookie = "form_key=ck";
+        document.cookie = "form_key=ck; path=/";
 
         const result = await useCart().removeItem(15, "/checkout/sidebar/removeItem");
 
@@ -156,7 +159,7 @@ describe("useCart", () => {
 
     it("still reloads the cart when a sidebar mutation fails", async () => {
         vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
-        document.cookie = "form_key=ck";
+        document.cookie = "form_key=ck; path=/";
 
         const result = await useCart().removeItem(9, "/checkout/sidebar/removeItem");
 
@@ -171,7 +174,7 @@ describe("useCart", () => {
 describe("cart events", () => {
     function stubOk() {
         vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
-        document.cookie = "form_key=ck";
+        document.cookie = "form_key=ck; path=/";
     }
 
     it("announces before and after around a successful add", async () => {
@@ -197,7 +200,7 @@ describe("cart events", () => {
 
     it("adds a failed event when the mutation did not succeed", async () => {
         vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
-        document.cookie = "form_key=ck";
+        document.cookie = "form_key=ck; path=/";
 
         await useCart().removeItem(9, "/checkout/sidebar/removeItem");
 
@@ -211,7 +214,7 @@ describe("cart events", () => {
     it("lets a before observer rewrite the request", async () => {
         const fetchMock = vi.fn().mockResolvedValue({ ok: true });
         vi.stubGlobal("fetch", fetchMock);
-        document.cookie = "form_key=ck";
+        document.cookie = "form_key=ck; path=/";
         events.observe("cart_add_before", (data) => {
             data.action = "/custom/add";
             data.body.set("qty", "9");
@@ -227,7 +230,7 @@ describe("cart events", () => {
     it("lets a before observer cancel without touching the network", async () => {
         const fetchMock = vi.fn();
         vi.stubGlobal("fetch", fetchMock);
-        document.cookie = "form_key=ck";
+        document.cookie = "form_key=ck; path=/";
         events.observe("cart_add_before", (data) => {
             data.cancelled = true;
             data.message = "Out of stock in your region";
