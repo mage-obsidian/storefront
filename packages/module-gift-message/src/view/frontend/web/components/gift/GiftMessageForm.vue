@@ -66,7 +66,7 @@ defineExpose({ resolve });
         </div>
         <Field v-model="message" :label="messageLabel" name="gift_message_message" type="textarea" />
         <div class="flex items-center gap-3">
-            <button type="submit" :disabled="busy" class="h-10 rounded-edge bg-ink px-5 font-mono text-[0.7rem] uppercase tracking-[0.16em] text-alabaster transition-colors hover:bg-obsidian-800 disabled:opacity-60">
+            <button type="submit" :disabled="busy" class="btn btn--solid btn--sm">
                 {{ saveLabel }}
             </button>
             <span v-if="saved" class="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-accent">{{ savedLabel }}</span>
