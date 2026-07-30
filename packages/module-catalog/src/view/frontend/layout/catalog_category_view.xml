@@ -33,6 +33,11 @@
                    before="-" template="Magento_LayeredNavigation::layer/view.twig">
                 <arguments>
                     <argument name="swatch_view_model" xsi:type="object">MageObsidian\Catalog\ViewModel\LayeredSwatch</argument>
+                    <!-- Shares the dialog id with the toolbar's trigger. -->
+                    <argument name="filter_state" xsi:type="object">MageObsidian\Catalog\ViewModel\LayeredFilterState</argument>
+                    <!-- hero_icon() needs a MageObsidian Template block; this is a
+                         core Navigation block, so the icons come off the ViewModel. -->
+                    <argument name="vite" xsi:type="object">MageObsidian\ModernFrontend\ViewModel\ViteResolver</argument>
                 </arguments>
                 <block class="Magento\LayeredNavigation\Block\Navigation\State" name="category.navigation.state" as="state"/>
             </block>
@@ -71,6 +76,13 @@
                            as="item_list" template="Magento_Catalog::product/item-list.twig"/>
                     <block class="Magento\Catalog\Block\Product\ProductList\Toolbar" name="product_list_toolbar"
                            as="toolbar" template="Magento_Catalog::product/list/toolbar.twig">
+                        <arguments>
+                            <!-- Presence of this argument is what makes the toolbar
+                                 render the mobile filter trigger, so listings with
+                                 no sidebar get no dead button. -->
+                            <argument name="filter_state" xsi:type="object">MageObsidian\Catalog\ViewModel\LayeredFilterState</argument>
+                            <argument name="vite" xsi:type="object">MageObsidian\ModernFrontend\ViewModel\ViteResolver</argument>
+                        </arguments>
                         <block class="Magento\Theme\Block\Html\Pager" name="product_list_toolbar_pager"
                                template="Magento_Theme::html/pager.twig"/>
                     </block>

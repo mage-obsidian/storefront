@@ -21,6 +21,12 @@ export default defineConfig({
             "MageObsidian_Storefront::js/notifications": fileURLToPath(
                 new URL("../module-storefront/src/view/frontend/web/js/notifications.ts", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/scroll-lock": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/js/scroll-lock.ts", import.meta.url),
+            ),
+            "MageObsidian_Catalog::js/filter-drawer": fileURLToPath(
+                new URL("./src/view/frontend/web/js/filter-drawer.ts", import.meta.url),
+            ),
             "MageObsidian_Catalog::js/catalog-events": fileURLToPath(
                 new URL("./src/view/frontend/web/js/catalog-events.ts", import.meta.url),
             ),
