@@ -289,7 +289,7 @@ async function add() {
                     inputmode="numeric"
                     min="1"
                     step="1"
-                    class="field__control mt-2 w-20 text-center font-mono"
+                    class="field__control field-qty mt-2"
                 >
             </div>
             <button
@@ -297,13 +297,13 @@ async function add() {
                 :disabled="adding"
                 :aria-disabled="!allSelected"
                 :aria-busy="adding ? 'true' : 'false'"
-                class="inline-flex flex-1 items-center justify-center rounded-edge border border-ink bg-ink px-8 py-3 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-alabaster transition-colors hover:bg-transparent hover:text-ink disabled:opacity-60"
+                class="btn btn--solid btn--lg flex-1"
                 :class="{ 'is-loading': adding }"
             >
-                <span class="obsidian-button__label">
+                <span class="btn__label">
                     {{ allSelected ? (props.labels.addToCart ?? "Add to cart") : (props.labels.selectOptions ?? "Select options") }}
                 </span>
-                <span v-if="adding" class="obsidian-button__spinner"></span>
+                <span v-if="adding" class="btn__spinner"></span>
             </button>
         </div>
     </form>
