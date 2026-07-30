@@ -48,7 +48,7 @@ async function confirm(): Promise<void> {
         <button
             v-if="!confirming"
             type="button"
-            class="inline-flex w-full items-center justify-center rounded-edge border border-ink px-8 py-3 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink transition-colors hover:bg-ink hover:text-alabaster"
+            class="btn btn--outline btn--lg btn--block"
             @click="confirming = true"
         >
             {{ label }}
@@ -73,7 +73,7 @@ async function confirm(): Promise<void> {
                 <button
                     type="button"
                     :disabled="placing"
-                    class="inline-flex flex-1 items-center justify-center rounded-edge border border-ink bg-ink px-6 py-2.5 font-mono text-[0.7rem] uppercase tracking-[0.16em] text-alabaster transition-colors hover:bg-transparent hover:text-ink disabled:opacity-60"
+                    class="btn btn--solid btn--sm flex-1"
                     @click="confirm"
                 >
                     {{ placing ? t("paying", "Placing order…") : t("confirm", "Place order now") }}
