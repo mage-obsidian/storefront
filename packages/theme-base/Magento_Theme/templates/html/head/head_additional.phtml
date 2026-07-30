@@ -2,10 +2,24 @@
 
 use MageObsidian\ModernFrontend\Model\Config\ConfigProvider;
 use MageObsidian\ModernFrontend\Block\Template;
+use Magento\Framework\View\Helper\SecureHtmlRenderer;
 
 /** @var Template $block */
 /** @var ConfigProvider $configViewModel */
+/** @var SecureHtmlRenderer $secureRenderer */
 $configViewModel = $block->getConfigProvider();
+
+$importMap = json_encode(
+    [
+        'imports' => [
+            'vue' => $block->getViewLibFileUrl('vue'),
+            'mainStore' => $block->resolvePathByName('js/store/main.js'),
+            '@vueuse/core' => $block->getViewLibFileUrl('@vueuse/core'),
+            'mini-vueuse' => $block->resolvePathByName('js/lib/mini-vueuse'),
+        ],
+    ],
+    JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
+);
 ?>
 
 <?= $block->getBlockHtml('critical_css_block'); ?>
@@ -14,16 +28,9 @@ $configViewModel = $block->getConfigProvider();
     <?php // Starts the i18n dictionary fetch during head parse, off the island bootstrap's import chain. ?>
     <link rel="preload" as="fetch" href="<?= $block->escapeUrl($i18nDictionaryUrl) ?>" crossorigin="anonymous"/>
 <?php endif; ?>
-    <script type="importmap">
-        {
-            "imports": {
-                "vue": "<?= $block->getViewLibFileUrl('vue') ?>",
-                "mainStore": "<?= $block->resolvePathByName('js/store/main.js') ?>",
-                "@vueuse/core": "<?= $block->getViewLibFileUrl('@vueuse/core') ?>",
-                "mini-vueuse": "<?= $block->resolvePathByName('js/lib/mini-vueuse') ?>"
-        }
-    }
-    </script>
+<?php // Rendered through SecureHtmlRenderer so the tag carries the CSP nonce: without it
+      // every inline module on the page dies wherever the policy is enforced. ?>
+<?= /* @noEscape */ $secureRenderer->renderTag('script', ['type' => 'importmap'], $importMap, false) ?>
 <?php
 if ($configViewModel->isHmrEnabled()): ?>
     <script type="module" src="/@vite/client"></script>
