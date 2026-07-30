@@ -231,7 +231,7 @@ defineExpose({ suggestions, activeIndex, open, fetchSuggestions });
                 <button
                     type="submit"
                     :aria-label="text.submit"
-                    class="inline-flex shrink-0 items-center justify-center rounded-edge border border-ink bg-ink p-2 text-alabaster transition-colors hover:bg-transparent hover:text-ink"
+                    class="btn btn--solid btn--icon shrink-0"
                 >
                     <Icon name="magnifying-glass" set="outline" class="h-4 w-4" />
                 </button>

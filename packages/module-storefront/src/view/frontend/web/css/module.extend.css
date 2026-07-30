@@ -56,7 +56,7 @@
   transition: opacity 0.2s var(--ease-obsidian);
 }
 
-.obsidian-button__spinner {
+.btn__spinner {
   display: block;
   width: 1em;
   height: 1em;
@@ -71,11 +71,11 @@
   cursor: progress;
 }
 
-.is-loading .obsidian-button__label {
+.is-loading .btn__label {
   visibility: hidden;
 }
 
-.is-loading .obsidian-button__spinner {
+.is-loading .btn__spinner {
   position: absolute;
   inset: 0;
   margin: auto;
@@ -89,135 +89,381 @@
 
 @media (prefers-reduced-motion: reduce) {
   .cart-count__ring,
-  .obsidian-button__spinner {
+  .btn__spinner {
     animation: none;
   }
 }
 
-/* Shared form field. One definition for the label/control/error trio the Twig
-   macro and Field.vue both emit, so a change lands everywhere at once. */
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
+/* Design-system primitives. Layered so a call site can still override with a
+   Tailwind utility — unlayered rules beat every layer, which is why the states
+   above (drawer transitions, .is-loading, the pre-paint badge below) stay out:
+   those must win over whatever the component declares. */
+@layer components {
+  /* The border is always present, transparent at rest, because --solid inverts
+     to a ghost on hover: declaring it only on hover would shift the box by 1px. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.75rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-edge);
+    padding-inline: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    text-align: center;
+    transition:
+      color 0.15s var(--ease-obsidian),
+      background-color 0.15s var(--ease-obsidian),
+      border-color 0.15s var(--ease-obsidian);
+  }
 
-.field__label {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--color-ink-soft);
-}
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    opacity: 0.6;
+  }
 
-.field__required {
-  margin-left: 0.3em;
-  color: var(--color-danger);
-}
+  .btn--lg {
+    height: auto;
+    padding-block: 0.75rem;
+    padding-inline: 2rem;
+    font-size: 0.72rem;
+  }
 
-.field__control,
-.field-slot :is(input, select, textarea) {
-  height: 2.75rem;
-  border: 1px solid var(--color-ash-300);
-  border-radius: var(--radius-edge);
-  background: transparent;
-  padding-inline: 0.75rem;
-  font-size: 0.875rem;
-  color: var(--color-ink);
-  transition: border-color 0.15s var(--ease-obsidian);
-}
+  .btn--sm {
+    height: auto;
+    padding-block: 0.625rem;
+    padding-inline: 1.25rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+  }
 
-textarea.field__control,
-.field-slot textarea {
-  height: auto;
-  min-height: 6rem;
-  padding-block: 0.625rem;
-}
+  .btn--icon {
+    height: 2.25rem;
+    width: 2.25rem;
+    gap: 0;
+    padding-inline: 0;
+  }
 
-.field__control:focus,
-.field-slot :is(input, select, textarea):focus {
-  border-color: var(--color-ink);
-  outline: none;
-}
+  .btn--block {
+    width: 100%;
+  }
 
-/* Put the ring back for keyboard users: `outline: none` above is there to keep
-   the mouse-focus chrome off, not to strip the affordance. */
-.field__control:focus-visible,
-.field-slot :is(input, select, textarea):focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
+  .btn--solid {
+    border-color: var(--color-ink);
+    background-color: var(--color-ink);
+    color: var(--color-alabaster);
+  }
 
-.field__control[aria-invalid="true"],
-.field-slot :is(input, select, textarea)[aria-invalid="true"] {
-  border-color: var(--color-danger);
-}
+  .btn--solid:hover:not(:disabled, [aria-disabled="true"]) {
+    background-color: transparent;
+    color: var(--color-ink);
+  }
 
-.field__hint {
-  font-family: var(--font-mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.04em;
-  color: var(--color-ash-500);
-}
+  .btn--outline {
+    border-color: var(--color-ash-300);
+    color: var(--color-ink-soft);
+  }
 
-.field__error {
-  font-family: var(--font-mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.04em;
-  color: var(--color-danger);
-}
+  .btn--outline:hover:not(:disabled, [aria-disabled="true"]) {
+    border-color: var(--color-ink);
+    color: var(--color-ink);
+  }
 
-.field__error:empty {
-  display: none;
-}
+  /* The --solid/--outline pair transposed onto a dark surface (the footer, the
+     hero, the showcase sections). Same inversion on hover, same always-present
+     border. */
+  .btn--invert {
+    border-color: var(--color-on-obsidian);
+    background-color: var(--color-on-obsidian);
+    color: var(--color-obsidian-950);
+  }
 
-.field-check {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  cursor: pointer;
-}
+  .btn--invert:hover:not(:disabled, [aria-disabled="true"]) {
+    background-color: transparent;
+    color: var(--color-on-obsidian);
+  }
 
-.field-check__input {
-  height: 1rem;
-  width: 1rem;
-  flex-shrink: 0;
-  border: 1px solid var(--color-ash-300);
-  border-radius: var(--radius-edge);
-  accent-color: var(--color-accent);
-}
+  .btn--invert-outline {
+    border-color: color-mix(in oklab, var(--color-on-obsidian) 30%, transparent);
+    color: var(--color-on-obsidian);
+  }
 
-.field-check__label {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--color-ink-soft);
-}
+  .btn--invert-outline:hover:not(:disabled, [aria-disabled="true"]) {
+    border-color: var(--color-on-obsidian);
+    background-color: var(--color-on-obsidian);
+    color: var(--color-obsidian-950);
+  }
 
-.field-note {
-  font-family: var(--font-mono);
-  font-size: 0.66rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--color-ash-500);
-}
+  /* A text link, not a button: no box, so it inherits the size and colour of the
+     text it sits in unless a modifier or a utility says otherwise. */
+  .link {
+    text-underline-offset: 4px;
+    transition: color 0.15s var(--ease-obsidian);
+  }
 
-.field-note__marker {
-  color: var(--color-danger);
-}
+  .link:hover {
+    color: var(--color-accent);
+    text-decoration-line: underline;
+  }
 
-.form-banner {
-  border: 1px solid var(--color-danger);
-  border-radius: var(--radius-edge);
-  background: color-mix(in oklab, var(--color-danger) 8%, transparent);
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-  color: var(--color-danger);
-}
+  .link--meta {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-ink-soft);
+  }
 
-.form-banner:empty {
-  display: none;
+  /* Shared form field. One definition for the label/control/error trio the Twig
+     macro and Field.vue both emit, so a change lands everywhere at once. */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .field__label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-ink-soft);
+  }
+
+  .field__required {
+    margin-left: 0.3em;
+    color: var(--color-danger);
+  }
+
+  .field__control,
+  .field-slot :is(input, select, textarea) {
+    height: 2.75rem;
+    border: 1px solid var(--color-ash-300);
+    border-radius: var(--radius-edge);
+    background: transparent;
+    padding-inline: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-ink);
+    transition: border-color 0.15s var(--ease-obsidian);
+  }
+
+  .field__control--compact {
+    height: 2.25rem;
+    padding-inline: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+  }
+
+  textarea.field__control,
+  .field-slot textarea {
+    height: auto;
+    min-height: 6rem;
+    padding-block: 0.625rem;
+  }
+
+  .field__control:focus,
+  .field-slot :is(input, select, textarea):focus {
+    border-color: var(--color-ink);
+    outline: none;
+  }
+
+  /* Put the ring back for keyboard users: `outline: none` above is there to keep
+     the mouse-focus chrome off, not to strip the affordance. */
+  .field__control:focus-visible,
+  .field-slot :is(input, select, textarea):focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .field__control[aria-invalid="true"],
+  .field-slot :is(input, select, textarea)[aria-invalid="true"] {
+    border-color: var(--color-danger);
+  }
+
+  .field__hint {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.04em;
+    color: var(--color-ash-500);
+  }
+
+  .field__error {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.04em;
+    color: var(--color-danger);
+  }
+
+  .field__error:empty {
+    display: none;
+  }
+
+  .field-check {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+  }
+
+  .field-check__input {
+    height: 1rem;
+    width: 1rem;
+    flex-shrink: 0;
+    border: 1px solid var(--color-ash-300);
+    border-radius: var(--radius-edge);
+    accent-color: var(--color-accent);
+  }
+
+  .field-check__label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-ink-soft);
+  }
+
+  .field-qty {
+    width: 5rem;
+    text-align: center;
+    font-family: var(--font-mono);
+  }
+
+  /* The whole control reads as one box, so focus shows on the container rather
+     than on the input alone — otherwise the ring would sit inside the border. */
+  .field-stepper {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--color-ash-300);
+    border-radius: var(--radius-edge);
+    transition: border-color 0.15s var(--ease-obsidian);
+  }
+
+  .field-stepper:hover {
+    border-color: var(--color-ash-400);
+  }
+
+  .field-stepper:focus-within {
+    border-color: var(--color-ink);
+  }
+
+  .field-stepper__button {
+    display: flex;
+    height: 2.25rem;
+    width: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-ink-soft);
+    transition: color 0.15s var(--ease-obsidian);
+  }
+
+  .field-stepper__button:hover {
+    color: var(--color-ink);
+  }
+
+  .field-stepper__button:disabled {
+    opacity: 0.4;
+  }
+
+  .field-stepper__input {
+    height: 2.25rem;
+    width: 3rem;
+    border-inline: 1px solid var(--color-ash-300);
+    background: transparent;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: var(--color-ink);
+    appearance: textfield;
+  }
+
+  .field-stepper__input:focus {
+    outline: none;
+  }
+
+  .field-stepper__input::-webkit-inner-spin-button {
+    appearance: none;
+  }
+
+  .field-stepper--compact .field-stepper__button {
+    height: 1.75rem;
+    width: 1.75rem;
+  }
+
+  .field-stepper--compact .field-stepper__input {
+    height: 1.75rem;
+    width: 2rem;
+    font-size: 0.78rem;
+  }
+
+  .field-radio {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+  }
+
+  .field-radio__input {
+    height: 1rem;
+    width: 1rem;
+    flex-shrink: 0;
+    accent-color: var(--color-ink);
+  }
+
+  .field-radio__label {
+    font-size: 0.875rem;
+    color: var(--color-ink);
+  }
+
+  /* The selected chrome comes from :has() instead of a class the caller toggles,
+     so the card cannot disagree with the input it wraps. Layout is left to the
+     call site: some cards are a plain row, others space a price out to the end. */
+  .field-radio-card {
+    cursor: pointer;
+    border: 1px solid var(--color-ash-300);
+    border-radius: var(--radius-edge);
+    padding: 0.75rem 1rem;
+    transition:
+      border-color 0.15s var(--ease-obsidian),
+      background-color 0.15s var(--ease-obsidian);
+  }
+
+  .field-radio-card:hover {
+    border-color: var(--color-ink);
+  }
+
+  .field-radio-card:has(input:checked) {
+    border-color: var(--color-ink);
+    background: var(--color-alabaster-raised);
+  }
+
+  .field-note {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-ash-500);
+  }
+
+  .field-note__marker {
+    color: var(--color-danger);
+  }
+
+  .form-banner {
+    border: 1px solid var(--color-danger);
+    border-radius: var(--radius-edge);
+    background: color-mix(in oklab, var(--color-danger) 8%, transparent);
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: var(--color-danger);
+  }
+
+  .form-banner:empty {
+    display: none;
+  }
 }
 
 .mo-badge,

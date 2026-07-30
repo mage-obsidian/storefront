@@ -1,7 +1,7 @@
 const BUSY_ATTRIBUTE = 'data-obsidian-busy';
 const BUSY_CLASS = 'is-loading';
-const LABEL_CLASS = 'obsidian-button__label';
-const SPINNER_CLASS = 'obsidian-button__spinner';
+const LABEL_CLASS = 'btn__label';
+const SPINNER_CLASS = 'btn__spinner';
 
 export function setButtonBusy(button: HTMLButtonElement | null, busy: boolean): void {
     if (!button) {

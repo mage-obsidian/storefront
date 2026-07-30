@@ -16,7 +16,7 @@ describe("setButtonBusy", () => {
 
         setButtonBusy(element, true);
 
-        expect(element.querySelector(".obsidian-button__spinner")).not.toBeNull();
+        expect(element.querySelector(".btn__spinner")).not.toBeNull();
         expect(element.disabled).toBe(true);
         expect(element.getAttribute("aria-busy")).toBe("true");
     });
@@ -26,7 +26,7 @@ describe("setButtonBusy", () => {
 
         setButtonBusy(element, true);
 
-        const label = element.querySelector(".obsidian-button__label");
+        const label = element.querySelector(".btn__label");
         expect(label?.textContent?.trim()).toBe("Add to cart");
         expect(element.classList.contains("is-loading")).toBe(true);
     });
