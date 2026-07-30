@@ -157,6 +157,28 @@ export function markProductHero(trigger: Element, doc: Document): HTMLElement | 
     return media;
 }
 
+export const ViewTransitionEvent = {
+    Swap: "pageswap",
+    Reveal: "pagereveal",
+} as const;
+
+interface SkippableTransition {
+    skipTransition: () => void;
+    ready?: Promise<void>;
+    finished?: Promise<void>;
+}
+
+/**
+ * skipTransition() rejects `ready` and `finished`. Nothing observes them, so a
+ * traversal — where the destination comes back from the bfcache with this script
+ * already resident — reports an uncaught "Transition was skipped" every time.
+ * Settling a resolved promise is a no-op, so this is safe on transitions that run.
+ */
+export function silenceTransition(transition: SkippableTransition): void {
+    transition.ready?.catch(() => {});
+    transition.finished?.catch(() => {});
+}
+
 export function bindViewTransitions(win: Window & typeof globalThis): () => void {
     const doc = win.document;
     let trigger: Element | null = null;
@@ -168,7 +190,7 @@ export function bindViewTransitions(win: Window & typeof globalThis): () => void
 
     const onPageSwap = (event: Event): void => {
         const swap = event as Event & {
-            viewTransition?: { skipTransition: () => void } | null;
+            viewTransition?: SkippableTransition | null;
             activation?: { entry?: { url?: string }; navigationType?: string } | null;
         };
         const transition = swap.viewTransition;
@@ -190,6 +212,7 @@ export function bindViewTransitions(win: Window & typeof globalThis): () => void
 
         if (!kind) {
             transition.skipTransition();
+            silenceTransition(transition);
             return;
         }
 
@@ -202,12 +225,24 @@ export function bindViewTransitions(win: Window & typeof globalThis): () => void
         dedupeCardNames(doc);
     };
 
+    // Takes no decision — the incoming document deliberately has no say — it only
+    // settles the promises the outgoing skip leaves rejected. That matters solely
+    // on a bfcache restore, where this script is already resident to hear it.
+    const onPageReveal = (event: Event): void => {
+        const reveal = event as Event & { viewTransition?: SkippableTransition | null };
+        if (reveal.viewTransition) {
+            silenceTransition(reveal.viewTransition);
+        }
+    };
+
     doc.addEventListener("click", onClick, true);
-    win.addEventListener("pageswap", onPageSwap);
+    win.addEventListener(ViewTransitionEvent.Swap, onPageSwap);
+    win.addEventListener(ViewTransitionEvent.Reveal, onPageReveal);
 
     return () => {
         doc.removeEventListener("click", onClick, true);
-        win.removeEventListener("pageswap", onPageSwap);
+        win.removeEventListener(ViewTransitionEvent.Swap, onPageSwap);
+        win.removeEventListener(ViewTransitionEvent.Reveal, onPageReveal);
     };
 }
 

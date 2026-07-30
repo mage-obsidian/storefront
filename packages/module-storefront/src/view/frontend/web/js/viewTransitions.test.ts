@@ -5,6 +5,7 @@ import {
     dedupeCardNames,
     clearCardNames,
     bindViewTransitions,
+    silenceTransition,
 } from "MageObsidian_Storefront::js/viewTransitions";
 
 const LISTING = "https://shop.test/women/tops.html";
@@ -306,5 +307,86 @@ describe("bindViewTransitions", () => {
         const transition = dispatchSwap("https://shop.test/");
 
         expect(transition.skipTransition).not.toHaveBeenCalled();
+    });
+});
+
+describe("silenceTransition", () => {
+    it("settles both promises so a skip raises no unhandled rejection", async () => {
+        const transition = {
+            skipTransition: vi.fn(),
+            ready: Promise.reject(new Error("Transition was skipped")),
+            finished: Promise.reject(new Error("Transition was skipped")),
+        };
+
+        silenceTransition(transition);
+        await Promise.resolve();
+
+        await expect(transition.ready).rejects.toThrow("Transition was skipped");
+    });
+
+    it("leaves a transition that runs untouched", async () => {
+        const transition = { skipTransition: vi.fn(), ready: Promise.resolve() };
+
+        expect(() => silenceTransition(transition)).not.toThrow();
+        await expect(transition.ready).resolves.toBeUndefined();
+    });
+
+    it("tolerates a transition that exposes neither promise", () => {
+        expect(() => silenceTransition({ skipTransition: vi.fn() })).not.toThrow();
+    });
+});
+
+describe("bindViewTransitions rejection handling", () => {
+    let stop: () => void;
+
+    beforeEach(() => {
+        (window as unknown as { happyDOM: { setURL: (url: string) => void } }).happyDOM.setURL(
+            LISTING,
+        );
+        document.body.innerHTML = `<a id="home" href="https://shop.test/">Home</a>`;
+        stop = bindViewTransitions(window);
+    });
+
+    afterEach(() => {
+        stop();
+        document.body.innerHTML = "";
+    });
+
+    const spied = () => ({
+        skipTransition: vi.fn(),
+        ready: { catch: vi.fn() },
+        finished: { catch: vi.fn() },
+    });
+
+    it("attaches handlers when it skips an unrelated navigation", () => {
+        (document.getElementById("home") as HTMLElement).click();
+        const transition = spied();
+        window.dispatchEvent(
+            Object.assign(new Event("pageswap"), {
+                viewTransition: transition,
+                activation: { entry: { url: "https://shop.test/" }, navigationType: "push" },
+            }),
+        );
+
+        expect(transition.skipTransition).toHaveBeenCalledOnce();
+        expect(transition.ready.catch).toHaveBeenCalledOnce();
+        expect(transition.finished.catch).toHaveBeenCalledOnce();
+    });
+
+    it("settles the transition the incoming document is handed on a traversal", () => {
+        const transition = spied();
+        window.dispatchEvent(
+            Object.assign(new Event("pagereveal"), { viewTransition: transition }),
+        );
+
+        expect(transition.ready.catch).toHaveBeenCalledOnce();
+        expect(transition.finished.catch).toHaveBeenCalledOnce();
+        expect(transition.skipTransition).not.toHaveBeenCalled();
+    });
+
+    it("ignores a reveal that carries no transition", () => {
+        expect(() =>
+            window.dispatchEvent(Object.assign(new Event("pagereveal"), { viewTransition: null })),
+        ).not.toThrow();
     });
 });
