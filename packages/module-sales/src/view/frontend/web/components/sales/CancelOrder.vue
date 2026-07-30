@@ -93,7 +93,7 @@ const reasonOptions = reasonList.map((r) => ({ value: r, label: r }));
 <template>
     <button
         type="button"
-        class="inline-flex h-11 items-center rounded-edge border border-ash-300 px-5 font-mono text-xs uppercase tracking-[0.18em] text-ink-soft transition-colors hover:border-ink hover:text-ink"
+        class="btn btn--outline px-5"
         @click="open"
     >
         {{ t.cancel }}
@@ -122,7 +122,7 @@ const reasonOptions = reasonList.map((r) => ({ value: r, label: r }));
         <div class="mt-6 flex justify-end gap-4">
             <button
                 type="button"
-                class="inline-flex h-11 items-center rounded-edge border border-ash-300 px-5 font-mono text-xs uppercase tracking-[0.16em] text-ink-soft transition-colors hover:border-ink hover:text-ink"
+                class="btn btn--outline px-5"
                 @click="close"
             >
                 {{ t.close }}
@@ -130,7 +130,7 @@ const reasonOptions = reasonList.map((r) => ({ value: r, label: r }));
             <button
                 type="button"
                 :disabled="submitting"
-                class="inline-flex h-11 items-center rounded-edge bg-ink px-5 font-mono text-xs uppercase tracking-[0.18em] text-alabaster transition-colors hover:bg-ink-soft disabled:opacity-60"
+                class="btn btn--solid px-5"
                 @click="submit"
             >
                 {{ submitting ? t.submitting : t.confirm }}
