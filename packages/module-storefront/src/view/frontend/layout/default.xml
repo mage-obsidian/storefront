@@ -35,6 +35,14 @@
                    name="obsidian.form_key_provider"/>
         </referenceBlock>
 
+        <!-- Speculation rules. End of body on purpose: the ruleset is a hint for
+             the next navigation, so it must never compete with this page's own
+             critical path. -->
+        <referenceContainer name="before.body.end">
+            <block class="MageObsidian\Storefront\Block\SpeculationRules"
+                   name="obsidian.speculation_rules"/>
+        </referenceContainer>
+
         <!-- Header quick-search island. Foundation chrome (present on every page),
              so it mounts from the storefront layout — the same way the customer
              domain adds its account menu child. MageObsidian Template child so

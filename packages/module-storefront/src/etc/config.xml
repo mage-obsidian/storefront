@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * This file is part of the MageObsidian - ModernFrontend project.
+ *
+ * @license MIT License - See the LICENSE file in the root directory for details.
+ * © 2024 Jeanmarcos Juarez
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <mage_obsidian>
+            <speculation>
+                <enabled>1</enabled>
+                <mode>prefetch</mode>
+                <eagerness>moderate</eagerness>
+                <!--
+                    One token per line, each confined to a single path segment.
+                    `logout` is the one that must never go: it is a plain GET
+                    link, so preloading it would sign the visitor out. The rest
+                    are destinations that are private, uncacheable, or expensive
+                    to produce for a page nobody may open.
+                -->
+                <exclude_paths>customer
+checkout
+wishlist
+logout
+auth
+search
+download
+redirect
+rewrite
+stores
+productalert</exclude_paths>
+                <exclude_extensions>pdf,zip</exclude_extensions>
+                <exclude_selectors>.no-prefetch</exclude_selectors>
+            </speculation>
+        </mage_obsidian>
+    </default>
+</config>

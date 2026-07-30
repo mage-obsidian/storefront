@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * This file is part of the MageObsidian - ModernFrontend project.
+ *
+ * @license MIT License - See the LICENSE file in the root directory for details.
+ * © 2024 Jeanmarcos Juarez
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="mage_obsidian_frontend">
+            <group id="speculation" translate="label comment" type="text" sortOrder="40"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Speculative Loading</label>
+                <comment>Lets the browser start loading an internal link before it is clicked.</comment>
+                <field id="enabled" translate="label comment" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Enable Speculative Loading</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mage_obsidian/speculation/enabled</config_path>
+                </field>
+                <field id="mode" translate="label comment" type="select" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Mode</label>
+                    <comment>Prefetch downloads the document. Prerender also runs it — faster, but it
+                        spends a full page render on a destination the visitor may never open, and it
+                        executes analytics early unless they handle prerendering.</comment>
+                    <source_model>MageObsidian\Storefront\Model\Speculation\Source\ModeOptions</source_model>
+                    <config_path>mage_obsidian/speculation/mode</config_path>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="eagerness" translate="label comment" type="select" sortOrder="30"
+                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Eagerness</label>
+                    <comment>How early the browser acts on the hint. Higher levels preload sooner and
+                        load more pages nobody visits.</comment>
+                    <source_model>MageObsidian\Storefront\Model\Speculation\Source\EagernessOptions</source_model>
+                    <config_path>mage_obsidian/speculation/eagerness</config_path>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="exclude_paths" translate="label comment" type="textarea" sortOrder="40"
+                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Exclude URL Patterns</label>
+                    <comment>One per line. Each token must stay within a single path segment —
+                        anything containing a slash is dropped, because a URL pattern group cannot
+                        span one.</comment>
+                    <config_path>mage_obsidian/speculation/exclude_paths</config_path>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="exclude_extensions" translate="label comment" type="text" sortOrder="50"
+                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Exclude File Extensions</label>
+                    <comment>Comma-separated.</comment>
+                    <config_path>mage_obsidian/speculation/exclude_extensions</config_path>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="exclude_selectors" translate="label comment" type="textarea" sortOrder="60"
+                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Exclude Selectors</label>
+                    <comment>One CSS selector per line. Links matching them are never preloaded.</comment>
+                    <config_path>mage_obsidian/speculation/exclude_selectors</config_path>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>
