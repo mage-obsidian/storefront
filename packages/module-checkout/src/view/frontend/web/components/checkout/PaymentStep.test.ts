@@ -48,6 +48,17 @@ describe("PaymentStep", () => {
         expect(wrapper.text()).toContain("No Payment Information Required");
     });
 
+    it("leaves the selected chrome to CSS, so the card cannot disagree with the input", async () => {
+        const wrapper = render();
+        const card = wrapper.findAll(".field-radio-card")[0];
+
+        await wrapper.findAll('input[type="radio"]')[0].setValue();
+
+        expect(card.classes()).toContain("field-radio-card");
+        expect(card.classes()).not.toContain("border-ink");
+        expect(card.classes()).not.toContain("border-ash-300");
+    });
+
     it("selects a payment method on change", async () => {
         const wrapper = render();
         const radios = wrapper.findAll('input[type="radio"]');

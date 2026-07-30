@@ -192,6 +192,21 @@ describe("MiniCart", () => {
         expect(hrefs).toContain("/checkout");
         expect(hrefs).toContain("/checkout/cart");
     });
+
+    it("dresses the CTAs from the shared button contract, not a local recipe", async () => {
+        __setSection("cart", { summary_count: 2, subtotal: "$104.00", items: [ITEM] });
+        const trigger = addTrigger();
+        const wrapper = mount(MiniCart, { props: PROPS, attachTo: document.body });
+        trigger.dispatchEvent(new Event("click", { bubbles: true, cancelable: true }));
+        await nextTick();
+
+        const cta = wrapper.findAll("a").filter((a) => a.attributes("href") === "/checkout")[0];
+        const secondary = wrapper.findAll("a").filter((a) => a.attributes("href") === "/checkout/cart")[0];
+
+        expect(cta.classes()).toEqual(expect.arrayContaining(["btn", "btn--solid"]));
+        expect(secondary.classes()).toEqual(expect.arrayContaining(["btn", "btn--outline"]));
+        expect(cta.classes()).not.toContain("bg-ink");
+    });
 });
 
 describe("MiniCart optimistic mutations", () => {

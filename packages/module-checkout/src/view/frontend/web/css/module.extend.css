@@ -166,14 +166,6 @@
     color: var(--color-ash-300);
 }
 
-.minicart-qty:hover {
-    border-color: var(--color-ash-400);
-}
-
-.minicart-qty:focus-within {
-    border-color: var(--color-ink);
-}
-
 [data-cart-enhanced] [data-cart-update] {
   display: none;
 }

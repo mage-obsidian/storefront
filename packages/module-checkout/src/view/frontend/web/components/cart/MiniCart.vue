@@ -275,12 +275,12 @@ watch(open, (isOpen) => {
 
                             <div class="mt-1.5 flex items-end justify-between gap-3">
                                 <div
-                                    class="minicart-qty inline-flex items-center rounded-edge border border-ash-200"
+                                    class="minicart-qty field-stepper field-stepper--compact"
                                     :class="{ 'is-bumped': bumped === item.item_id }"
                                 >
                                     <button
                                         type="button"
-                                        class="flex h-7 w-7 items-center justify-center text-ash-500 transition-colors hover:text-ink disabled:opacity-30"
+                                        class="field-stepper__button"
                                         :aria-label="labels.decrease"
                                         :disabled="Number(item.qty) <= 1"
                                         @click="setQty(item, Number(item.qty) - 1)"
@@ -291,14 +291,14 @@ watch(open, (isOpen) => {
                                         type="number"
                                         min="1"
                                         inputmode="numeric"
-                                        class="h-7 w-8 border-x border-ash-200 bg-transparent text-center font-mono text-[0.78rem] text-ink [appearance:textfield] focus:outline-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        class="field-stepper__input"
                                         :value="item.qty"
                                         :aria-label="`${labels.quantity} — ${item.product_name}`"
                                         @change="onQtyInput(item, $event)"
                                     />
                                     <button
                                         type="button"
-                                        class="flex h-7 w-7 items-center justify-center text-ash-500 transition-colors hover:text-ink disabled:opacity-30"
+                                        class="field-stepper__button"
                                         :aria-label="labels.increase"
                                         @click="setQty(item, Number(item.qty) + 1)"
                                     >
@@ -328,13 +328,13 @@ watch(open, (isOpen) => {
                     <div class="flex flex-col gap-2">
                         <a
                             :href="checkoutUrl"
-                            class="inline-flex items-center justify-center rounded-edge bg-ink px-4 py-3 font-mono text-xs uppercase tracking-[0.16em] text-alabaster transition-colors hover:bg-obsidian-800"
+                            class="btn btn--solid"
                         >
                             {{ labels.checkout }}
                         </a>
                         <a
                             :href="cartUrl"
-                            class="inline-flex items-center justify-center rounded-edge border border-ash-300 px-4 py-3 font-mono text-xs uppercase tracking-[0.16em] text-ink-soft transition-colors hover:border-ink hover:text-ink"
+                            class="btn btn--outline"
                         >
                             {{ labels.viewBag }}
                         </a>

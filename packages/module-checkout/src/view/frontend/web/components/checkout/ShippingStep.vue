@@ -89,7 +89,7 @@ async function toPayment(): Promise<void> {
                 v-if="!hideAdvance"
                 type="button"
                 :disabled="checkout.loadingRates"
-                class="mt-6 inline-flex w-fit items-center justify-center rounded-edge border border-ink px-6 py-2.5 font-mono text-[0.7rem] uppercase tracking-[0.16em] text-ink transition-colors hover:bg-ink hover:text-alabaster disabled:opacity-50"
+                class="btn btn--outline btn--sm mt-6 w-fit"
                 @click="getRates"
             >
                 {{ checkout.loadingRates ? t("loading", "Loading…") : t("getRates", "Show shipping methods") }}
@@ -103,19 +103,18 @@ async function toPayment(): Promise<void> {
             <div class="flex flex-col gap-3" role="radiogroup" :aria-label="t('methodsHeading', 'Shipping method')">
                 <div v-for="method in checkout.shippingMethods" :key="`${method.carrier_code}_${method.method_code}`">
                     <label
-                        class="flex cursor-pointer items-center justify-between gap-4 rounded-edge border px-4 py-3 transition-colors"
-                        :class="checkout.selectedMethodKey === `${method.carrier_code}_${method.method_code}` ? 'border-ink bg-alabaster-raised' : 'border-ash-300 hover:border-ink'"
+                        class="field-radio-card flex items-center justify-between gap-4"
                     >
-                        <span class="flex items-center gap-3">
+                        <span class="field-radio">
                             <input
                                 type="radio"
                                 name="shipping-method"
-                                class="h-4 w-4 accent-ink"
+                                class="field-radio__input"
                                 :value="`${method.carrier_code}_${method.method_code}`"
                                 :checked="checkout.selectedMethodKey === `${method.carrier_code}_${method.method_code}`"
                                 @change="checkout.selectMethod(method)"
                             >
-                            <span class="text-sm text-ink">
+                            <span class="field-radio__label">
                                 {{ method.carrier_title }}<span v-if="method.method_title"> — {{ method.method_title }}</span>
                             </span>
                         </span>
@@ -128,7 +127,7 @@ async function toPayment(): Promise<void> {
                 v-if="!hideAdvance"
                 type="button"
                 :disabled="checkout.savingShipping || !checkout.selectedMethod"
-                class="mt-8 inline-flex w-fit items-center justify-center rounded-edge border border-ink bg-ink px-8 py-3 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-alabaster transition-colors hover:bg-transparent hover:text-ink disabled:opacity-50"
+                class="btn btn--solid btn--lg mt-8 w-fit"
                 @click="toPayment"
             >
                 {{ checkout.savingShipping ? t("loading", "Loading…") : t("continue", "Continue to payment") }}

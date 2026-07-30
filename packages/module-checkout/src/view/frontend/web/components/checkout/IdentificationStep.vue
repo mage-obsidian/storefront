@@ -101,7 +101,7 @@ defineExpose({ submit });
             v-if="!hideAdvance"
             type="submit"
             :disabled="checking"
-            class="inline-flex w-fit items-center justify-center rounded-edge border border-ink bg-ink px-8 py-3 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-alabaster transition-colors hover:bg-transparent hover:text-ink disabled:opacity-50"
+            class="btn btn--solid btn--lg w-fit"
         >
             {{ t("continue", "Continue") }}
         </button>

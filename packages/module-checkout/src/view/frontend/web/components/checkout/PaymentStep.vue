@@ -72,19 +72,20 @@ function toReview(): void {
                 <label
                     v-for="token in checkout.vaultTokens"
                     :key="token.publicHash"
-                    class="flex cursor-pointer items-center justify-between gap-3 rounded-edge border px-4 py-3 transition-colors"
-                    :class="checkout.selectedTokenHash === token.publicHash ? 'border-ink bg-alabaster-raised' : 'border-ash-300 hover:border-ink'"
+                    class="field-radio-card flex items-center justify-between gap-3"
                 >
-                    <span class="flex items-center gap-3 text-sm text-ink">
+                    <span class="field-radio">
                         <input
                             type="radio"
                             name="payment-method"
-                            class="h-4 w-4 accent-ink"
+                            class="field-radio__input"
                             :value="`vault:${token.publicHash}`"
                             :checked="checkout.selectedTokenHash === token.publicHash"
                             @change="checkout.selectVaultToken(token.publicHash)"
                         >
-                        {{ token.typeLabel }} {{ t("endingIn", "ending") }} {{ token.last4 }}
+                        <span class="field-radio__label">
+                            {{ token.typeLabel }} {{ t("endingIn", "ending") }} {{ token.last4 }}
+                        </span>
                     </span>
                     <span class="font-mono text-xs text-ink-soft">{{ token.expiration }}</span>
                 </label>
@@ -102,18 +103,17 @@ function toReview(): void {
                 <label
                     v-for="method in checkout.paymentMethods"
                     :key="method.code"
-                    class="flex cursor-pointer items-center gap-3 rounded-edge border px-4 py-3 transition-colors"
-                    :class="checkout.selectedPayment === method.code && checkout.selectedTokenHash === '' ? 'border-ink bg-alabaster-raised' : 'border-ash-300 hover:border-ink'"
+                    class="field-radio-card field-radio"
                 >
                     <input
                         type="radio"
                         name="payment-method"
-                        class="h-4 w-4 accent-ink"
+                        class="field-radio__input"
                         :value="method.code"
                         :checked="checkout.selectedPayment === method.code && checkout.selectedTokenHash === ''"
                         @change="checkout.selectPayment(method.code)"
                     >
-                    <span class="text-sm text-ink">{{ method.title }}</span>
+                    <span class="field-radio__label">{{ method.title }}</span>
                 </label>
             </div>
         </section>
@@ -148,7 +148,7 @@ function toReview(): void {
             v-if="!hideAdvance"
             type="button"
             :disabled="!checkout.selectedPayment"
-            class="inline-flex w-fit items-center justify-center rounded-edge border border-ink bg-ink px-8 py-3 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-alabaster transition-colors hover:bg-transparent hover:text-ink disabled:opacity-50"
+            class="btn btn--solid btn--lg w-fit"
             @click="toReview"
         >
             {{ t("continue", "Review order") }}

@@ -140,7 +140,7 @@ async function onSelect(rate: ShippingRate): Promise<void> {
             <button
                 type="button"
                 :disabled="estimator.loadingRates.value || !countryId"
-                class="inline-flex w-fit items-center justify-center rounded-edge border border-ink px-6 py-2.5 font-mono text-[0.7rem] uppercase tracking-[0.16em] text-ink transition-colors hover:bg-ink hover:text-alabaster disabled:opacity-50"
+                class="btn btn--outline btn--sm w-fit"
                 @click="onEstimate"
             >
                 {{ estimator.loadingRates.value ? t("loading", "Loading…") : t("estimate", "Estimate") }}
@@ -154,19 +154,18 @@ async function onSelect(rate: ShippingRate): Promise<void> {
                     <label
                         v-for="rate in estimator.methods.value"
                         :key="estimator.rateKey(rate)"
-                        class="flex cursor-pointer items-center justify-between gap-4 rounded-edge border px-4 py-2.5 transition-colors"
-                        :class="estimator.selectedKey.value === estimator.rateKey(rate) ? 'border-ink bg-alabaster-raised' : 'border-ash-300 hover:border-ink'"
+                        class="field-radio-card flex items-center justify-between gap-4 py-2.5"
                     >
-                        <span class="flex items-center gap-3">
+                        <span class="field-radio">
                             <input
                                 type="radio"
                                 name="estimator-method"
-                                class="h-4 w-4 accent-ink"
+                                class="field-radio__input"
                                 :value="estimator.rateKey(rate)"
                                 :checked="estimator.selectedKey.value === estimator.rateKey(rate)"
                                 @change="onSelect(rate)"
                             >
-                            <span class="text-sm text-ink">
+                            <span class="field-radio__label">
                                 {{ rate.carrier_title }}<span v-if="rate.method_title"> — {{ rate.method_title }}</span>
                             </span>
                         </span>

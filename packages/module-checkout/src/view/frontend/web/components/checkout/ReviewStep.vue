@@ -66,7 +66,7 @@ const paymentTitle = (): string =>
                 </div>
                 <button
                     type="submit"
-                    class="rounded-edge border border-ink px-6 py-2.5 font-mono text-[0.7rem] uppercase tracking-[0.16em] text-ink transition-colors hover:bg-ink hover:text-alabaster"
+                    class="btn btn--outline btn--sm"
                 >
                     {{ t("apply", "Apply") }}
                 </button>
@@ -98,7 +98,7 @@ const paymentTitle = (): string =>
         <button
             type="button"
             :disabled="checkout.placingOrder || !checkout.selectedPayment || !checkout.allRequiredAccepted"
-            class="inline-flex w-fit items-center justify-center rounded-edge border border-ink bg-ink px-10 py-3.5 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-alabaster transition-colors hover:bg-transparent hover:text-ink disabled:opacity-50"
+            class="btn btn--solid btn--lg w-fit px-10 py-3.5"
             @click="checkout.placeOrder()"
         >
             {{ checkout.placingOrder ? t("placing", "Placing order…") : t("placeOrder", "Place order") }}
