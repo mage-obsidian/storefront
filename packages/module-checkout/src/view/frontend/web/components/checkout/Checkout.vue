@@ -142,9 +142,12 @@ const isEmpty = computed(() => checkout.itemCount === 0);
                 />
             </section>
 
+            <!-- Placed explicitly: the sibling is an async component that renders
+                 nothing until its chunk lands, so auto-placement would seat the
+                 summary in the first column and then shift it a full column over. -->
             <aside
                 aria-labelledby="checkout-summary-heading"
-                class="flex flex-col gap-6 rounded-edge border border-ash-200 bg-alabaster-raised p-6"
+                class="flex flex-col gap-6 rounded-edge border border-ash-200 bg-alabaster-raised p-6 lg:col-start-2 lg:row-start-1"
             >
                 <h2 id="checkout-summary-heading" class="font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">
                     {{ t('summary', 'Order summary') }}
