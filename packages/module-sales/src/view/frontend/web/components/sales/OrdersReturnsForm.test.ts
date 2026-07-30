@@ -1,10 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import OrdersReturnsForm from "./OrdersReturnsForm.vue";
+import { STUB_FORM_KEY } from "MageObsidian_Storefront::js/form-key-provider";
 
 function mountForm() {
     return mount(OrdersReturnsForm, {
-        props: { action: "https://shop.test/sales/guest/view/", formKey: "KEY123" },
+        props: { action: "https://shop.test/sales/guest/view/" },
     });
 }
 
@@ -15,13 +16,15 @@ function fieldShown(wrapper: VueWrapper, name: string): boolean {
 }
 
 describe("OrdersReturnsForm", () => {
-    it("posts to the guest view controller with the primed form key", () => {
+    // The page is cacheable, so the key comes from the cookie at render time, not
+    // from a prop the server baked in.
+    it("posts to the guest view controller with the live form key", () => {
         const wrapper = mountForm();
         const form = wrapper.find("form");
 
         expect(form.attributes("action")).toBe("https://shop.test/sales/guest/view/");
         expect(form.attributes("method")).toBe("post");
-        expect(wrapper.find('input[name="form_key"]').attributes("value")).toBe("KEY123");
+        expect(wrapper.find('input[name="form_key"]').attributes("value")).toBe(STUB_FORM_KEY);
     });
 
     it("keeps both identifiers in the DOM (the controller reads both POST keys)", () => {

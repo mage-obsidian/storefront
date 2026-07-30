@@ -3,14 +3,14 @@ declare(strict_types=1);
 
 namespace MageObsidian\Sales\Test\Unit\ViewModel;
 
-use Magento\Framework\Data\Form\FormKey;
 use Magento\Framework\UrlInterface;
 use MageObsidian\Sales\ViewModel\OrdersReturnsForm;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The guest lookup island's data source. We assert it points the form at the
- * guest view controller and surfaces the server-primed form key the island POSTs.
+ * The guest lookup island's data source. It points the form at the guest view
+ * controller and nothing else — the form key is the island's business, read from
+ * the cookie, because this page is cacheable.
  */
 class OrdersReturnsFormTest extends TestCase
 {
@@ -26,18 +26,15 @@ class OrdersReturnsFormTest extends TestCase
         $url = $this->createMock(UrlInterface::class);
         $url->method('getUrl')->with('sales/guest/view')->willReturn('https://shop.test/sales/guest/view/');
 
-        $viewModel = new OrdersReturnsForm($url, $this->createMock(FormKey::class));
+        $viewModel = new OrdersReturnsForm($url);
 
         $this->assertSame('https://shop.test/sales/guest/view/', $viewModel->getActionUrl());
     }
 
-    public function testFormKeyComesFromTheFrameworkFormKey(): void
+    public function testDoesNotPrimeAFormKey(): void
     {
-        $formKey = $this->createMock(FormKey::class);
-        $formKey->method('getFormKey')->willReturn('abc123');
+        $viewModel = new OrdersReturnsForm($this->createMock(UrlInterface::class));
 
-        $viewModel = new OrdersReturnsForm($this->createMock(UrlInterface::class), $formKey);
-
-        $this->assertSame('abc123', $viewModel->getFormKey());
+        $this->assertFalse(method_exists($viewModel, 'getFormKey'));
     }
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, useId } from "vue";
 import Field from "MageObsidian_Storefront::form/Field";
+import { getFormKey } from "MageObsidian_Storefront::js/form-key-provider";
 
 // Guest "Orders and Returns" lookup island. Replaces Luma's RequireJS
 // `ordersReturns` widget: it toggles between the Email and ZIP identifier field
@@ -9,7 +10,8 @@ import Field from "MageObsidian_Storefront::form/Field";
 // inputs stay mounted and only the active one is shown (and required): the
 // controller's compareStoredBillingDataWithInput reads BOTH oar_email and oar_zip
 // from the POST, so dropping one would raise an undefined-key error. The form key
-// is server-primed (the controller is not CSRF-aware).
+// comes from the cookie, not from the server: this page is cached, so a key
+// rendered into it would be a stranger's by the time a visitor submits.
 interface Labels {
     legend?: string;
     orderId?: string;
@@ -25,7 +27,6 @@ interface Labels {
 const props = withDefaults(
     defineProps<{
         action: string;
-        formKey: string;
         labels?: Labels;
     }>(),
     {
@@ -46,7 +47,7 @@ const findByOptions = [
 
 <template>
     <form :action="props.action" method="post" class="max-w-xl">
-        <input type="hidden" name="form_key" :value="props.formKey" >
+        <input type="hidden" name="form_key" :value="getFormKey()" >
         <fieldset class="flex flex-col gap-5">
             <legend class="mb-2 font-display text-lg text-ink">{{ t.legend }}</legend>
 
@@ -96,7 +97,7 @@ const findByOptions = [
             <div>
                 <button
                     type="submit"
-                    class="h-11 rounded-edge bg-ink px-6 font-mono text-xs uppercase tracking-[0.18em] text-alabaster transition-colors hover:bg-ink-soft"
+                    class="btn btn--solid"
                 >
                     {{ t.submit }}
                 </button>

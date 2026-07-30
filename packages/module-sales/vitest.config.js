@@ -13,6 +13,9 @@ export default defineConfig({
             "MageObsidian_Storefront::form/Field": fileURLToPath(
                 new URL("../module-storefront/src/view/frontend/web/components/form/Field.vue", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/form-key-provider": fileURLToPath(
+                new URL("./src/Test/Js/stubs/form-key-provider.ts", import.meta.url),
+            ),
         },
     },
     test: {
