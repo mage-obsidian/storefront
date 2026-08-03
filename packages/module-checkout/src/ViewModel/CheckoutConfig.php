@@ -169,6 +169,7 @@ class CheckoutConfig implements ArgumentInterface
 
         return [
             'storeCode' => $storeCode,
+            'currencyCode' => $this->currencyCode(),
             'baseUrl' => $baseUrl,
             'restBaseUrl' => $baseUrl . 'rest/' . $storeCode . '/V1/',
             'successUrl' => $baseUrl . 'checkout/onepage/success/',
@@ -198,7 +199,44 @@ class CheckoutConfig implements ArgumentInterface
             'currencyFormat' => $this->currencyFormat(),
             'quote' => $this->quoteSummary($quote),
             'vault' => $this->vaultTokens(),
+            'context' => $this->context(),
         ];
+    }
+
+    /**
+     * Store and currency this payload was computed for, so the client can spot a
+     * section that outlived the context it belongs to.
+     *
+     * Magento only rotates `private_content_version` on POST, and a currency or
+     * store switch is a GET: without this stamp a stale section sits in
+     * localStorage showing the previous currency, and nothing invalidates it.
+     *
+     * @return array{storeCode: string, currencyCode: string}
+     */
+    private function context(): array
+    {
+        try {
+            $storeCode = (string)$this->storeManager->getStore()->getCode();
+        } catch (Throwable) {
+            $storeCode = '';
+        }
+
+        return ['storeCode' => $storeCode, 'currencyCode' => $this->currencyCode()];
+    }
+
+    /**
+     * Currency the request is being served in. Read from the HTTP context, which
+     * is what the page cache keys on, rather than from the session.
+     *
+     * @return string
+     */
+    private function currencyCode(): string
+    {
+        try {
+            return (string)$this->storeManager->getStore()->getCurrentCurrencyCode();
+        } catch (Throwable) {
+            return '';
+        }
     }
 
     /**
@@ -322,6 +360,7 @@ class CheckoutConfig implements ArgumentInterface
     {
         return [
             'storeCode' => '',
+            'currencyCode' => '',
             'baseUrl' => '',
             'restBaseUrl' => '',
             'successUrl' => '',
@@ -348,6 +387,7 @@ class CheckoutConfig implements ArgumentInterface
             'currencyFormat' => '%s',
             'quote' => ['items' => [], 'itemCount' => 0, 'subtotal' => '', 'grandTotal' => ''],
             'vault' => [],
+            'context' => ['storeCode' => '', 'currencyCode' => ''],
         ];
     }
 }

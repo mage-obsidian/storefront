@@ -119,7 +119,28 @@ class CheckoutConfigTest extends TestCase
         sort($whole);
         sort($halves);
         $this->assertSame($halves, $whole);
-        $this->assertCount(16, $whole);
+        $this->assertCount(18, $whole);
+    }
+
+    /**
+     * The two stamps that let the client tell a section computed for another
+     * currency or store from a fresh one. Magento only rotates
+     * `private_content_version` on POST, so a currency switch — a GET — leaves a
+     * stale section in localStorage that nothing else would catch.
+     */
+    public function testPublicConfigCarriesTheCurrencyItWasRenderedIn(): void
+    {
+        $public = $this->viewModel(isLoggedIn: false, maskedId: 'guestmask123')->getPublicConfig();
+
+        $this->assertSame('USD', $public['currencyCode']);
+        $this->assertSame('default', $public['storeCode']);
+    }
+
+    public function testPrivateDataStampsTheContextItWasComputedIn(): void
+    {
+        $private = $this->viewModel(isLoggedIn: false, maskedId: 'guestmask123')->getPrivateData();
+
+        $this->assertSame(['storeCode' => 'default', 'currencyCode' => 'USD'], $private['context']);
     }
 
     /**
@@ -154,6 +175,7 @@ class CheckoutConfigTest extends TestCase
         // Depends on the request currency, so it varies; keeping it out of the
         // cached shell removes a vary dimension instead of trusting one.
         'currencyFormat',
+        'context',
     ];
 
     private function viewModel(

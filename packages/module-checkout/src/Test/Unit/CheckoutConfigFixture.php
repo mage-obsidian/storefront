@@ -68,6 +68,7 @@ trait CheckoutConfigFixture
         $store = $this->createMock(Store::class);
         $store->method('getBaseUrl')->willReturn('https://shop.test/');
         $store->method('getCode')->willReturn('default');
+        $store->method('getCurrentCurrencyCode')->willReturn('USD');
         $storeManager = $this->createMock(StoreManagerInterface::class);
         $storeManager->method('getStore')->willReturn($store);
 

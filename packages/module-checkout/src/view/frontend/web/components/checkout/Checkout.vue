@@ -65,6 +65,21 @@ if (quoteWasInlined) {
     checkout.applyPrivate(props.config);
 }
 
+// Switching currency or store view is a GET, and Magento only rotates
+// `private_content_version` on POST, so nothing tells the client its stored
+// section belongs to the currency it just left. The shell carries the page's own
+// context — it is varied by both — so comparing the two catches it.
+let revalidated = false;
+
+function belongsToThisPage(section): boolean {
+    const stamp = section?.context;
+    if (!stamp || !props.config?.currencyCode) {
+        return true;
+    }
+
+    return stamp.storeCode === props.config.storeCode && stamp.currencyCode === props.config.currencyCode;
+}
+
 // The engine's batch hydrate is deferred to browser idle, which is right for a
 // header badge and too late for the content this page exists to show (measured:
 // cart at 250ms instead of 167ms).
@@ -75,9 +90,15 @@ if (!quoteWasInlined && !customerData.section(PRIVATE_SECTION)) {
 // The section reloads after every cart mutation, so later deliveries are the norm.
 watchEffect(() => {
     const section = customerData.section(PRIVATE_SECTION);
-    if (section) {
-        checkout.applyPrivate(section);
+    if (!section) {
+        return;
     }
+    if (!belongsToThisPage(section) && !revalidated) {
+        revalidated = true;
+        void customerData.reload([PRIVATE_SECTION]);
+        return;
+    }
+    checkout.applyPrivate(section);
 });
 
 // A shared shell cannot run Magento's server-side empty-cart redirect, so restore
