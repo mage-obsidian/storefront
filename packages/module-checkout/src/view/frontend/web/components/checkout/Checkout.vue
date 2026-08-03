@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, onMounted } from "vue";
+import { computed, defineAsyncComponent, onMounted, onUnmounted, watchEffect } from "vue";
 import { useCheckout, CheckoutStep } from "MageObsidian_Checkout::js/useCheckout";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 import type { RegionData } from "MageObsidian_Storefront::js/address";
+
+const PRIVATE_SECTION = "obsidian-checkout";
+const BYPASS_PARAM = "obsidian_shell";
+const PRIVATE_TIMEOUT_MS = 8000;
 
 // Root of the Vue one-page checkout, replacing Magento's Knockout flow. It mounts
 // eager (it IS the page) and is seeded from the server-primed CheckoutConfig +
@@ -51,17 +55,74 @@ const ReviewStep = defineAsyncComponent(() => import("MageObsidian_Checkout::che
 const OnePageCheckout = defineAsyncComponent(() => import("MageObsidian_Checkout::checkout/OnePageCheckout"));
 
 const checkout = useCheckout();
-checkout.init({ ...props.config, defaultCountry: props.directory.defaultCountry });
+const customerData = useCustomerData();
+
+// Cached, the props carry only the store-scoped half and the quote arrives through
+// customer-data; uncached, the whole config is inlined. Seed from whichever has it.
+checkout.initPublic({ ...props.config, defaultCountry: props.directory.defaultCountry });
+const quoteWasInlined = Boolean(props.config?.quote);
+if (quoteWasInlined) {
+    checkout.applyPrivate(props.config);
+}
+
+// The engine's batch hydrate is deferred to browser idle, which is right for a
+// header badge and too late for the content this page exists to show (measured:
+// cart at 250ms instead of 167ms).
+if (!quoteWasInlined && !customerData.section(PRIVATE_SECTION)) {
+    void customerData.reload([PRIVATE_SECTION]);
+}
+
+// The section reloads after every cart mutation, so later deliveries are the norm.
+watchEffect(() => {
+    const section = customerData.section(PRIVATE_SECTION);
+    if (section) {
+        checkout.applyPrivate(section);
+    }
+});
+
+// A shared shell cannot run Magento's server-side empty-cart redirect, so restore
+// its destination here once the quote is known.
+let leaving = false;
+watchEffect(() => {
+    if (leaving || !checkout.ready || checkout.itemCount > 0) {
+        return;
+    }
+    leaving = true;
+    window.location.assign(`${props.config?.baseUrl ?? ""}checkout/cart/`);
+});
 
 const isOnePage = computed(() => checkout.layout === "onepage");
 
-// The checkout server-primes the authoritative quote, so it is the strongest
-// "the cart is exactly this right now" signal there is. Reconcile the shared cart
-// section from it on mount so the header badge / mini-cart can never linger on a
-// stale count that contradicts what checkout will actually order.
-const customerData = useCustomerData();
+let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** All-or-nothing: never leave a checkout that cannot know the cart. */
+function fallbackToUncachedPage(): void {
+    if (checkout.ready) {
+        return;
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.set(BYPASS_PARAM, "0");
+    window.location.assign(url.toString());
+}
+
 onMounted(() => {
-    customerData.reload(["cart"]);
+    // Only worth it when the page inlined the quote. On the cached path the store's
+    // batch already refetches `cart`, and a second request serialises behind it on
+    // the PHP session lock, delaying the one that carries the quote.
+    if (quoteWasInlined) {
+        customerData.reload(["cart"]);
+    }
+
+    if (checkout.ready || window.location.search.includes(`${BYPASS_PARAM}=0`)) {
+        return;
+    }
+    fallbackTimer = setTimeout(fallbackToUncachedPage, PRIVATE_TIMEOUT_MS);
+});
+
+onUnmounted(() => {
+    if (fallbackTimer !== null) {
+        clearTimeout(fallbackTimer);
+    }
 });
 
 const t = (key: string, fallback: string): string => props.labels?.[key] ?? fallback;
@@ -76,7 +137,7 @@ const steps = computed(() => [
 const currentStepLabel = computed(
     () => steps.value.find((s) => s.key === checkout.step)?.label ?? "",
 );
-const isEmpty = computed(() => checkout.itemCount === 0);
+const isEmpty = computed(() => checkout.ready && checkout.itemCount === 0);
 </script>
 
 <template>

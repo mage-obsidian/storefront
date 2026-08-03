@@ -1,8 +1,10 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { setActivePinia, createPinia } from "pinia";
 import Checkout from "./Checkout.vue";
-import { reload, __reset } from "../../../../../Test/Js/stubs/customerData.ts";
+import { nextTick } from "vue";
+import { useCheckout } from "../../js/useCheckout.ts";
+import { reload, __reset, __setSection } from "../../../../../Test/Js/stubs/customerData.ts";
 
 const CONFIG = {
     isLoggedIn: false,
@@ -65,3 +67,224 @@ describe("Checkout.vue", () => {
         expect(reload.calls).toContainEqual([["cart"]]);
     });
 });
+
+describe("Checkout.vue — cacheable shell", () => {
+    // What a cached page inlines: store-scoped keys only, no quote, no identity.
+    const PUBLIC_ONLY = { layoutMode: "stepped", maxSummaryItems: 10 };
+    const PRIVATE_SECTION = {
+        isLoggedIn: false,
+        customerEmail: "",
+        maskedCartId: "mask42",
+        currencyFormat: "$%s",
+        quote: {
+            items: [{ id: 9, name: "Crown Summit Backpack", qty: 1, rowTotal: "$38.00", image: "" }],
+            subtotal: "$38.00",
+            grandTotal: "$38.00",
+        },
+        vault: [],
+    };
+
+    let pinia;
+
+    beforeEach(() => {
+        pinia = createPinia();
+        setActivePinia(pinia);
+        __reset();
+    });
+
+    function render(config) {
+        return mount(Checkout, { props: { config, labels: {} }, global: { plugins: [pinia] } });
+    }
+
+    it("takes the private half from the obsidian-checkout section", async () => {
+        __setSection("obsidian-checkout", PRIVATE_SECTION);
+        const wrapper = render(PUBLIC_ONLY);
+        await nextTick();
+
+        expect(useCheckout().ready).toBe(true);
+        expect(wrapper.text()).toContain("Crown Summit Backpack");
+        expect(wrapper.text()).toContain("$38.00");
+    });
+
+    // Never paint a half-known checkout: an empty summary and a real cart look
+    // identical to a shopper, and the second one loses the order.
+    it("stays unready while the section is missing", async () => {
+        render(PUBLIC_ONLY);
+        await nextTick();
+
+        expect(useCheckout().ready).toBe(false);
+    });
+
+    // Measured in the browser on a cold localStorage: this reconcile fired first
+    // (sections=cart, 111ms) and pushed the store's own batch hydrate — the call
+    // that actually carries the quote — to 135ms, where it took 113ms instead of
+    // ~68 because the two serialise on the PHP session lock. Items appeared at
+    // 258ms instead of 102ms. On this path the batch already refetches `cart`.
+    it("does not reconcile the cart section when the quote comes from the section", () => {
+        __setSection("obsidian-checkout", PRIVATE_SECTION);
+        render(PUBLIC_ONLY);
+
+        expect(reload.calls).not.toContainEqual([["cart"]]);
+    });
+
+    it("still reconciles the cart section when the page inlined the quote", () => {
+        render({ ...PUBLIC_ONLY, ...PRIVATE_SECTION });
+
+        expect(reload.calls).toContainEqual([["cart"]]);
+    });
+
+    // The engine defers its batch hydrate to requestIdleCallback, which is right
+    // for a header badge and wrong for the content this page exists to show.
+    // Measured cold: the batch started at 151ms and the cart appeared at 250ms
+    // against 185ms on the uncached page. So the checkout asks for its own
+    // section straight away and lets the batch follow.
+    it("requests its own section immediately when it is not in the store yet", () => {
+        render(PUBLIC_ONLY);
+
+        expect(reload.calls).toContainEqual([["obsidian-checkout"]]);
+    });
+
+    it("does not refetch a section it already has", () => {
+        __setSection("obsidian-checkout", PRIVATE_SECTION);
+        render(PUBLIC_ONLY);
+
+        expect(reload.calls).not.toContainEqual([["obsidian-checkout"]]);
+    });
+
+    it("applies a section that arrives after mount", async () => {
+        const wrapper = render(PUBLIC_ONLY);
+        await nextTick();
+
+        __setSection("obsidian-checkout", PRIVATE_SECTION);
+        await nextTick();
+
+        expect(useCheckout().ready).toBe(true);
+        expect(wrapper.text()).toContain("Crown Summit Backpack");
+    });
+});
+
+describe("Checkout.vue — all-or-nothing while the private half is missing", () => {
+    const PUBLIC_ONLY = { layoutMode: "stepped", maxSummaryItems: 10 };
+    let pinia;
+
+    beforeEach(() => {
+        pinia = createPinia();
+        setActivePinia(pinia);
+        __reset();
+        vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+        vi.unstubAllGlobals();
+    });
+
+    function render(config, search = "") {
+        vi.stubGlobal("location", {
+            search,
+            href: `https://shop.test/checkout/${search}`,
+            assign: vi.fn(),
+        });
+        return mount(Checkout, { props: { config, labels: {} }, global: { plugins: [pinia] } });
+    }
+
+    // An unready checkout has itemCount 0, which is indistinguishable from a real
+    // empty cart. Telling a shopper their bag is empty when it is not is the worst
+    // failure this page has.
+    it("never claims the bag is empty before the quote is known", async () => {
+        const wrapper = render(PUBLIC_ONLY);
+        await nextTick();
+
+        expect(useCheckout().ready).toBe(false);
+        expect(wrapper.text()).not.toContain("Your bag is empty.");
+    });
+
+    it("falls back to the uncached page when the section never arrives", async () => {
+        render(PUBLIC_ONLY);
+        await nextTick();
+
+        vi.advanceTimersByTime(10000);
+
+        expect(window.location.assign).toHaveBeenCalledTimes(1);
+        expect(window.location.assign.mock.calls[0][0]).toContain("obsidian_shell=0");
+    });
+
+    it("does not fall back twice — the bypass page must not bounce", async () => {
+        render(PUBLIC_ONLY, "?obsidian_shell=0");
+        await nextTick();
+
+        vi.advanceTimersByTime(10000);
+
+        expect(window.location.assign).not.toHaveBeenCalled();
+    });
+
+    it("does not fall back once the section has landed", async () => {
+        // A cart with items: an empty one legitimately navigates to the bag page,
+        // which would muddy what this test is actually about.
+        __setSection("obsidian-checkout", {
+            isLoggedIn: false, customerEmail: "", maskedCartId: "m", currencyFormat: "$%s",
+            quote: {
+                items: [{ id: 1, name: "X", qty: 1, rowTotal: "$1.00" }],
+                subtotal: "$1.00", grandTotal: "$1.00",
+            },
+            vault: [],
+        });
+        render(PUBLIC_ONLY);
+        await nextTick();
+
+        vi.advanceTimersByTime(10000);
+
+        expect(window.location.assign).not.toHaveBeenCalled();
+    });
+});
+
+describe("Checkout.vue — empty cart on a cached shell", () => {
+    const PUBLIC_ONLY = { layoutMode: "stepped", maxSummaryItems: 10, baseUrl: "https://shop.test/" };
+    const EMPTY_SECTION = {
+        isLoggedIn: false, customerEmail: "", maskedCartId: "m", currencyFormat: "$%s",
+        quote: { items: [], subtotal: "$0.00", grandTotal: "$0.00" }, vault: [],
+    };
+
+    let pinia;
+
+    beforeEach(() => {
+        pinia = createPinia();
+        setActivePinia(pinia);
+        __reset();
+        vi.stubGlobal("location", { search: "", href: "https://shop.test/checkout/", assign: vi.fn() });
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    // Magento redirects an empty cart to the bag page from the controller. A
+    // cached shell is shared, so that guard cannot run server-side any more —
+    // measured: with the shell on, an empty-cart visitor gets 200 instead of 302.
+    it("sends an empty cart to the bag page, restoring the native redirect", async () => {
+        __setSection("obsidian-checkout", EMPTY_SECTION);
+        mount(Checkout, { props: { config: PUBLIC_ONLY, labels: {} }, global: { plugins: [pinia] } });
+        await nextTick();
+
+        expect(window.location.assign).toHaveBeenCalledWith("https://shop.test/checkout/cart/");
+    });
+
+    it("does not redirect while the quote is still unknown", async () => {
+        mount(Checkout, { props: { config: PUBLIC_ONLY, labels: {} }, global: { plugins: [pinia] } });
+        await nextTick();
+
+        expect(window.location.assign).not.toHaveBeenCalled();
+    });
+
+    it("does not redirect a cart that has items", async () => {
+        __setSection("obsidian-checkout", {
+            ...EMPTY_SECTION,
+            quote: { items: [{ id: 1, name: "X", qty: 1, rowTotal: "$1.00" }], subtotal: "$1.00", grandTotal: "$1.00" },
+        });
+        mount(Checkout, { props: { config: PUBLIC_ONLY, labels: {} }, global: { plugins: [pinia] } });
+        await nextTick();
+
+        expect(window.location.assign).not.toHaveBeenCalled();
+    });
+});
+

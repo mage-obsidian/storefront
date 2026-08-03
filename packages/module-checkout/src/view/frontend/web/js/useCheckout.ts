@@ -164,31 +164,26 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const agreements = ref<Agreement[]>([]);
     const acceptedAgreements = ref<Array<number | string>>([]);
 
-    let seeded = false;
+    let publicSeeded = false;
+    let restBaseUrl = '';
     let api: ReturnType<typeof createCheckoutApi> | null = null;
+    const ready = ref(false);
 
     /**
-     * Seed the store from the server-primed config. Idempotent: the island mounts
-     * once, but guarding keeps re-mounts (HMR) from clobbering live state.
+     * Seed the store-scoped half. Leaves the store unready on purpose: nothing
+     * here says anything about this shopper's cart. Guarded against HMR re-mounts.
      */
-    function init(config: Record<string, any>): void {
-        if (seeded) {
+    function initPublic(config: Record<string, any>): void {
+        if (publicSeeded) {
             return;
         }
-        seeded = true;
+        publicSeeded = true;
         const cfg = config || {};
-        const quote = cfg.quote || {};
         layout.value = cfg.layoutMode === 'onepage' ? 'onepage' : 'stepped';
-        isLoggedIn.value = !!cfg.isLoggedIn;
-        email.value = cfg.customerEmail || '';
-        items.value = Array.isArray(quote.items) ? quote.items : [];
-        subtotal.value = quote.subtotal || '';
-        grandTotal.value = quote.grandTotal || '';
-        currencyFormat.value = cfg.currencyFormat || '';
         successUrl.value = cfg.successUrl || '';
+        restBaseUrl = cfg.restBaseUrl || '';
         shippingAddress.value = emptyAddress(cfg.defaultCountry || '');
         billingAddress.value = emptyAddress(cfg.defaultCountry || '');
-        vaultTokens.value = Array.isArray(cfg.vault) ? (cfg.vault as VaultToken[]) : [];
         guestCheckout.value = cfg.guestCheckout !== false;
         guestCheckoutLogin.value = !!cfg.guestCheckoutLogin;
         displayBillingOnPayment.value = cfg.displayBillingOnPayment !== false;
@@ -198,15 +193,45 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         const agreementsCfg = cfg.agreements || {};
         agreementsEnabled.value = !!agreementsCfg.enabled;
         agreements.value = Array.isArray(agreementsCfg.items) ? (agreementsCfg.items as Agreement[]) : [];
+    }
+
+    /**
+     * Apply the customer/quote-scoped half. Called more than once by design — the
+     * section reloads after every cart mutation — so only the first delivery
+     * seeds identity; later ones refresh the summary without discarding what the
+     * shopper has typed.
+     */
+    function applyPrivate(data: Record<string, any>): void {
+        const d = data || {};
+        const quote = d.quote || {};
+        items.value = Array.isArray(quote.items) ? quote.items : [];
+        subtotal.value = quote.subtotal || '';
+        grandTotal.value = quote.grandTotal || '';
+
+        if (ready.value) {
+            return;
+        }
+
+        isLoggedIn.value = !!d.isLoggedIn;
+        email.value = d.customerEmail || '';
+        currencyFormat.value = d.currencyFormat || '';
+        vaultTokens.value = Array.isArray(d.vault) ? (d.vault as VaultToken[]) : [];
         api = createCheckoutApi({
-            restBaseUrl: cfg.restBaseUrl || '',
+            restBaseUrl,
             isLoggedIn: isLoggedIn.value,
-            maskedCartId: cfg.maskedCartId || '',
+            maskedCartId: d.maskedCartId || '',
         });
+        ready.value = true;
         // Skip the identity step entirely for known customers.
         if (isLoggedIn.value && email.value) {
             step.value = CheckoutStep.Shipping;
         }
+    }
+
+    /** Seed both halves from one inlined payload (the uncached path). */
+    function init(config: Record<string, any>): void {
+        initPublic(config);
+        applyPrivate(config);
     }
 
     /** Move to a known step. */
@@ -554,7 +579,10 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         visibleItems,
         hiddenItemCount,
         formatTotal,
+        ready,
         init,
+        initPublic,
+        applyPrivate,
         goToStep,
         setEmail,
         checkEmailAvailable,

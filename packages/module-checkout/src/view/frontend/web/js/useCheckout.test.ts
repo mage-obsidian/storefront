@@ -481,3 +481,86 @@ describe("checkout events", () => {
         expect(dispatched.map((d) => d.event)).toEqual(["checkout_estimate_shipping_before"]);
     });
 });
+
+describe("useCheckout — public/private split (cacheable shell)", () => {
+    const PUBLIC_CONFIG = {
+        restBaseUrl: "https://shop.test/rest/default/V1/",
+        successUrl: "https://shop.test/checkout/onepage/success/",
+        layoutMode: "onepage",
+        maxSummaryItems: 5,
+        defaultCountry: "US",
+    };
+    const PRIVATE_DATA = {
+        isLoggedIn: false,
+        customerEmail: "",
+        maskedCartId: "mask42",
+        currencyFormat: "$%s",
+        quote: {
+            items: [{ id: 1, name: "Joust Duffle Bag", qty: 1, rowTotal: "$34.00" }],
+            subtotal: "$34.00",
+            grandTotal: "$34.00",
+        },
+        vault: [],
+    };
+
+    beforeEach(() => {
+        setActivePinia(createPinia());
+    });
+
+    it("stays unready on the public half alone, so no step can act on an unknown quote", () => {
+        const checkout = useCheckout();
+        checkout.initPublic(PUBLIC_CONFIG);
+
+        expect(checkout.ready).toBe(false);
+        expect(checkout.itemCount).toBe(0);
+        expect(checkout.layout).toBe("onepage");
+        expect(checkout.maxSummaryItems).toBe(5);
+    });
+
+    it("becomes ready and seeds the quote when the private section arrives", () => {
+        const checkout = useCheckout();
+        checkout.initPublic(PUBLIC_CONFIG);
+        checkout.applyPrivate(PRIVATE_DATA);
+
+        expect(checkout.ready).toBe(true);
+        expect(checkout.itemCount).toBe(1);
+        expect(checkout.grandTotal).toBe("$34.00");
+        expect(checkout.currencyFormat).toBe("$%s");
+    });
+
+    it("skips identification for a known customer once the private half lands", () => {
+        const checkout = useCheckout();
+        checkout.initPublic(PUBLIC_CONFIG);
+        checkout.applyPrivate({ ...PRIVATE_DATA, isLoggedIn: true, customerEmail: "ada@shop.test" });
+
+        expect(checkout.step).toBe(CheckoutStep.Shipping);
+    });
+
+    // The section reloads after every cart mutation, so a second delivery is the
+    // norm, not an edge case — and it must not wipe what the shopper has typed.
+    it("refreshes the summary on a later section update without discarding typed input", () => {
+        const checkout = useCheckout();
+        checkout.initPublic(PUBLIC_CONFIG);
+        checkout.applyPrivate(PRIVATE_DATA);
+        checkout.setEmail("guest@shop.test");
+
+        checkout.applyPrivate({
+            ...PRIVATE_DATA,
+            quote: { items: [], subtotal: "$0.00", grandTotal: "$0.00" },
+        });
+
+        expect(checkout.itemCount).toBe(0);
+        expect(checkout.grandTotal).toBe("$0.00");
+        expect(checkout.email).toBe("guest@shop.test");
+        expect(checkout.step).toBe(CheckoutStep.Shipping);
+    });
+
+    it("init still seeds both halves, so an inlined config keeps working", () => {
+        const checkout = useCheckout();
+        checkout.init({ ...PUBLIC_CONFIG, ...PRIVATE_DATA });
+
+        expect(checkout.ready).toBe(true);
+        expect(checkout.itemCount).toBe(1);
+        expect(checkout.layout).toBe("onepage");
+    });
+});
