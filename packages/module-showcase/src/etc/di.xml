@@ -55,6 +55,12 @@
                         <item name="onepage" xsi:type="string" translate="true">One page</item>
                     </item>
                 </item>
+                <item name="cacheable_checkout" xsi:type="array">
+                    <item name="path" xsi:type="string">mage_obsidian/checkout/cacheable_shell</item>
+                    <item name="module" xsi:type="string">MageObsidian_Checkout</item>
+                    <item name="label" xsi:type="string" translate="true">Cacheable checkout</item>
+                    <item name="description" xsi:type="string" translate="true">The checkout page itself is served from the full-page cache, with the cart arriving through customer-data.</item>
+                </item>
             </argument>
         </arguments>
     </type>
