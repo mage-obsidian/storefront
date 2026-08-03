@@ -1,0 +1,68 @@
+{#
+  The demo's feature switchboard.
+
+  Rendered server side and left inside the cached page on purpose: the visitor's
+  profile is already a dimension of the cache key, so the panel that shows it
+  can be cached along with everything else it describes.
+
+  Values are the ones actually in force — the store view's own configuration
+  unless this visitor overrode it — so the panel never claims a state the page
+  is not in.
+#}
+{% set panel = block.getPanel() %}
+{% if panel.isEnabled() %}
+    <aside class="showcase" data-showcase
+           data-parameter="{{ panel.getParameter()|escape_html_attr }}"
+           data-cookie="{{ panel.getCookieName()|escape_html_attr }}"
+           data-signature="{{ panel.getSignature()|escape_html_attr }}">
+        <button type="button" class="showcase__handle" data-showcase-toggle
+                aria-expanded="false" aria-controls="showcase-panel">
+            {{ hero_icon('adjustments-horizontal', 'outline', '24') }}
+            <span>{{ __('Features') }}</span>
+            {% if panel.hasOverrides() %}<span class="showcase__badge" aria-hidden="true"></span>{% endif %}
+        </button>
+
+        <div class="showcase__panel" id="showcase-panel" hidden>
+            <div class="showcase__head">
+                <p class="showcase__title">{{ __('Try the features') }}</p>
+                <p class="showcase__note">
+                    {{ __('Changes apply to your visit only. Share the link to hand someone the same setup.') }}
+                </p>
+            </div>
+
+            <ul class="showcase__list">
+                {% for feature in panel.getFeatures() %}
+                    <li class="showcase__item">
+                        <div class="showcase__label">
+                            <span class="showcase__name">{{ feature.label }}</span>
+                            {% if feature.module %}<span class="showcase__module">{{ feature.module }}</span>{% endif %}
+                            {% if feature.overridden %}
+                                <span class="showcase__flag">{{ __('yours') }}</span>
+                            {% endif %}
+                        </div>
+                        {% if feature.description %}
+                            <p class="showcase__hint">{{ feature.description }}</p>
+                        {% endif %}
+                        {# The store view's own value, so the client can leave out of the
+                           profile anything that only repeats it. #}
+                        <select class="showcase__select" data-showcase-feature="{{ feature.key|escape_html_attr }}"
+                                data-showcase-default="{{ feature.storeValue|escape_html_attr }}"
+                                aria-label="{{ feature.label|escape_html_attr }}">
+                            {% for value, label in feature.choices %}
+                                <option value="{{ value|escape_html_attr }}"
+                                        {{ value == feature.value ? 'selected' : '' }}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <div class="showcase__actions">
+                <button type="button" class="showcase__reset" data-showcase-reset
+                        {{ panel.hasOverrides() ? '' : 'disabled' }}>{{ __('Back to this store view') }}</button>
+                <button type="button" class="showcase__share" data-showcase-share>{{ __('Copy link') }}</button>
+            </div>
+        </div>
+    </aside>
+    {{ script('MageObsidian_Showcase::js/showcase-panel') }}
+{% endif %}

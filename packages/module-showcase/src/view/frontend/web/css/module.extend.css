@@ -1,0 +1,160 @@
+/* The demo's feature switchboard. Deliberately reads as an instrument bolted to
+ * the storefront rather than part of it — a visitor has to be able to tell what
+ * belongs to the shop and what belongs to the demo.
+ */
+
+.showcase {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+.showcase__handle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-ash-200, #d8d6d1);
+  background: var(--color-obsidian, #14141a);
+  color: var(--color-alabaster, #f7f6f3);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+  cursor: pointer;
+}
+
+.showcase__handle svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.showcase__badge {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.showcase__panel {
+  width: min(22rem, calc(100vw - 2rem));
+  max-height: min(32rem, calc(100dvh - 6rem));
+  overflow-y: auto;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-ash-200, #d8d6d1);
+  background: var(--color-alabaster-raised, #fff);
+  box-shadow: 0 16px 48px rgb(0 0 0 / 0.16);
+}
+
+.showcase__title {
+  margin: 0;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.showcase__note,
+.showcase__hint {
+  margin: 0.375rem 0 0;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  color: var(--color-ink-soft, #6b6862);
+}
+
+.showcase__list {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 1rem;
+}
+
+.showcase__item {
+  display: grid;
+  gap: 0.375rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-ash-200, #d8d6d1);
+}
+
+.showcase__item:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.showcase__label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.showcase__name {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.showcase__module,
+.showcase__flag {
+  padding: 0.0625rem 0.375rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-ash-200, #d8d6d1);
+  font-size: 0.5625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft, #6b6862);
+}
+
+/* Says the value came from this visitor, not from the store view they are on. */
+.showcase__flag {
+  border-color: currentColor;
+  color: var(--color-obsidian, #14141a);
+}
+
+.showcase__select {
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--color-ash-200, #d8d6d1);
+  background: transparent;
+  font: inherit;
+  font-size: 0.75rem;
+}
+
+.showcase__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.showcase__reset,
+.showcase__share {
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--color-ash-200, #d8d6d1);
+  background: transparent;
+  font: inherit;
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.showcase__reset[disabled] {
+  opacity: 0.45;
+  cursor: default;
+}
+
+@media print {
+  .showcase {
+    display: none;
+  }
+}

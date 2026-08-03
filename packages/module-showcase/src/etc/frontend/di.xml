@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!--
+  Interception only. The registry itself lives in the global etc/di.xml: the
+  pool is built the first time anything reads configuration, which happens
+  while the area's own DI has not been applied yet, so an argument declared
+  here would arrive too late and the pool would hold nothing for the rest of
+  the request.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Framework\App\Config\ScopeConfigInterface">
+        <plugin name="mage_obsidian_showcase_overrides"
+                type="MageObsidian\Showcase\Plugin\Config\ApplyShowcaseOverrides"
+                sortOrder="100"/>
+    </type>
+
+    <type name="Magento\Framework\App\ActionInterface">
+        <plugin name="mage_obsidian_showcase_vary"
+                type="MageObsidian\Showcase\Plugin\App\AddShowcaseVary"
+                sortOrder="20"/>
+    </type>
+</config>

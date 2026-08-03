@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!--
+  The registry is the allowlist. A visitor's cookie can only reach a config path
+  that appears here, with a value the feature declares — everything else is
+  dropped, so a hand-written cookie cannot flip payment methods or anything else
+  the store did not offer.
+
+  Entries are declared here rather than in each feature's own module so that
+  nothing has to depend on this one: a module knows nothing about the showcase,
+  and an entry whose module is absent is skipped.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="MageObsidian\Showcase\Model\FeaturePool">
+        <arguments>
+            <argument name="features" xsi:type="array">
+                <item name="listing_fragments" xsi:type="array">
+                    <item name="path" xsi:type="string">mage_obsidian/listing/fragments_enabled</item>
+                    <item name="module" xsi:type="string">MageObsidian_Search</item>
+                    <item name="label" xsi:type="string" translate="true">Cacheable listing fragments</item>
+                    <item name="description" xsi:type="string" translate="true">Filtering, sorting and paging fetch only the regions that change instead of the whole page.</item>
+                </item>
+                <item name="stock_visualizer" xsi:type="array">
+                    <item name="path" xsi:type="string">cataloginventory/stock_visualizer/enabled</item>
+                    <item name="module" xsi:type="string">MageObsidian_InventoryStockVisualizer</item>
+                    <item name="label" xsi:type="string" translate="true">Stock visualizer</item>
+                    <item name="description" xsi:type="string" translate="true">Availability panel on the product page, per source and per variant.</item>
+                </item>
+                <item name="speculation" xsi:type="array">
+                    <item name="path" xsi:type="string">mage_obsidian/speculation/enabled</item>
+                    <item name="module" xsi:type="string">MageObsidian_Storefront</item>
+                    <item name="label" xsi:type="string" translate="true">Speculative loading</item>
+                    <item name="description" xsi:type="string" translate="true">The browser prefetches or prerenders the page behind a link before it is clicked.</item>
+                </item>
+                <item name="structured_data" xsi:type="array">
+                    <item name="path" xsi:type="string">mage_obsidian/seo/structured_data_enabled</item>
+                    <item name="module" xsi:type="string">MageObsidian_ModernFrontend</item>
+                    <item name="label" xsi:type="string" translate="true">Structured data (JSON-LD)</item>
+                    <item name="description" xsi:type="string" translate="true">Organization, WebSite, BreadcrumbList and Product emitted from the blocks already rendered.</item>
+                </item>
+                <item name="optimistic_ui" xsi:type="array">
+                    <item name="path" xsi:type="string">mage_obsidian/storefront/optimistic_ui</item>
+                    <item name="module" xsi:type="string">MageObsidian_ModernFrontend</item>
+                    <item name="label" xsi:type="string" translate="true">Optimistic UI</item>
+                    <item name="description" xsi:type="string" translate="true">The interface reacts before the server has answered, and rolls back if it refuses.</item>
+                </item>
+                <item name="checkout_layout" xsi:type="array">
+                    <item name="path" xsi:type="string">mage_obsidian/checkout/layout_mode</item>
+                    <item name="module" xsi:type="string">MageObsidian_ModernFrontend</item>
+                    <item name="type" xsi:type="string">choice</item>
+                    <item name="label" xsi:type="string" translate="true">Checkout layout</item>
+                    <item name="description" xsi:type="string" translate="true">The same checkout as a four-step wizard or as a single screen.</item>
+                    <item name="options" xsi:type="array">
+                        <item name="stepped" xsi:type="string" translate="true">Stepped wizard</item>
+                        <item name="onepage" xsi:type="string" translate="true">One page</item>
+                    </item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
+</config>

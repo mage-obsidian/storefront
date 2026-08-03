@@ -1,0 +1,35 @@
+{
+    "name": "mage-obsidian/module-showcase",
+    "description": "Lets a visitor turn MageObsidian features on and off for their own session, so a demo store can show what each one does instead of describing it.",
+    "keywords": [
+        "magento",
+        "magento2",
+        "demo",
+        "feature-flags",
+        "frontend"
+    ],
+    "homepage": "https://mage-obsidian.jeanmarcos.dev/",
+    "authors": [
+        {
+            "name": "Jeanmarcos Juarez",
+            "homepage": "https://github.com/jeanmarcos-dev"
+        }
+    ],
+    "require": {
+        "php": "~8.2.0||~8.3.0||~8.4.0",
+        "magento/framework": ">=103.0.7",
+        "mage-obsidian/module-modern-frontend": "^2.11"
+    },
+    "type": "magento2-module",
+    "license": [
+        "MIT"
+    ],
+    "autoload": {
+        "files": [
+            "src/registration.php"
+        ],
+        "psr-4": {
+            "MageObsidian\\Showcase\\": "src/"
+        }
+    }
+}
