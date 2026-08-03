@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
 import AddressForm from "MageObsidian_Storefront::form/AddressForm";
+import Field from "MageObsidian_Storefront::form/Field";
 import type { RegionData } from "MageObsidian_Storefront::js/address";
 
 // Shipping step: the shared AddressForm (v-model'd to the store address) plus the
@@ -19,6 +20,8 @@ interface DirectoryData {
 
 interface ShippingLabels {
     addressHeading?: string;
+    savedAddress?: string;
+    newAddress?: string;
     methodsHeading?: string;
     getRates?: string;
     noRates?: string;
@@ -49,6 +52,15 @@ const addressForm = ref<{ validate: () => boolean } | null>(null);
 
 const t = (key: keyof ShippingLabels, fallback: string): string => props.labels?.[key] ?? fallback;
 
+const addressOptions = computed(() => [
+    ...checkout.savedAddresses.map((address) => ({ value: String(address.id), label: address.label })),
+    { value: "", label: t("newAddress", "+ New address") },
+]);
+
+function pickAddress(value: string): void {
+    checkout.selectAddress(value === "" ? null : Number(value));
+}
+
 function formatPrice(amount: number): string {
     if (!amount) {
         return t("free", "Free");
@@ -76,6 +88,16 @@ async function toPayment(): Promise<void> {
             <h3 id="shipping-address-heading" class="mb-5 font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">
                 {{ t("addressHeading", "Shipping address") }}
             </h3>
+            <div v-if="checkout.savedAddresses.length > 0" data-saved-addresses class="mb-6">
+                <Field
+                    :id="'checkout-saved-address'"
+                    :model-value="checkout.selectedAddressId === null ? '' : String(checkout.selectedAddressId)"
+                    :label="t('savedAddress', 'Ship to')"
+                    type="select"
+                    :options="addressOptions"
+                    @update:model-value="pickAddress"
+                />
+            </div>
             <AddressForm
                 ref="addressForm"
                 v-model="checkout.shippingAddress"

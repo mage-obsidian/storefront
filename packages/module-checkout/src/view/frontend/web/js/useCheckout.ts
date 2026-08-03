@@ -53,6 +53,14 @@ export interface VaultToken {
     expiration: string;
 }
 
+/** An entry from the customer's address book, as CheckoutConfig ships it. */
+export interface SavedAddress extends AddressData {
+    id: number;
+    /** Server-built one-liner for the picker; the region name is only known there. */
+    label: string;
+    isDefaultShipping: boolean;
+}
+
 export interface TotalSegment {
     code: string;
     title: string;
@@ -136,6 +144,8 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const currencyFormat = ref('');
 
     const shippingAddress = ref<AddressData>(emptyAddress());
+    const savedAddresses = ref<SavedAddress[]>([]);
+    const selectedAddressId = ref<number | null>(null);
     const shippingMethods = ref<ShippingMethod[]>([]);
     const selectedMethod = ref<ShippingMethod | null>(null);
     const paymentMethods = ref<PaymentMethod[]>([]);
@@ -166,6 +176,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
 
     let publicSeeded = false;
     let restBaseUrl = '';
+    let defaultCountry = '';
     let api: ReturnType<typeof createCheckoutApi> | null = null;
     const ready = ref(false);
 
@@ -182,8 +193,9 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         layout.value = cfg.layoutMode === 'onepage' ? 'onepage' : 'stepped';
         successUrl.value = cfg.successUrl || '';
         restBaseUrl = cfg.restBaseUrl || '';
-        shippingAddress.value = emptyAddress(cfg.defaultCountry || '');
-        billingAddress.value = emptyAddress(cfg.defaultCountry || '');
+        defaultCountry = cfg.defaultCountry || '';
+        shippingAddress.value = emptyAddress(defaultCountry);
+        billingAddress.value = emptyAddress(defaultCountry);
         guestCheckout.value = cfg.guestCheckout !== false;
         guestCheckoutLogin.value = !!cfg.guestCheckoutLogin;
         displayBillingOnPayment.value = cfg.displayBillingOnPayment !== false;
@@ -221,11 +233,52 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
             isLoggedIn: isLoggedIn.value,
             maskedCartId: d.maskedCartId || '',
         });
+        savedAddresses.value = Array.isArray(d.addresses) ? (d.addresses as SavedAddress[]) : [];
+        const preferred = savedAddresses.value.find((a) => a.isDefaultShipping) ?? savedAddresses.value[0];
+        if (preferred) {
+            selectAddress(preferred.id);
+        }
         ready.value = true;
         // Skip the identity step entirely for known customers.
         if (isLoggedIn.value && email.value) {
             step.value = CheckoutStep.Shipping;
         }
+    }
+
+    /**
+     * Fill the shipping form from a saved address, or clear it for a new one.
+     *
+     * Copies rather than references: AddressForm writes into `street` in place,
+     * so a shared array would edit the address book as the shopper types.
+     */
+    function selectAddress(id: number | null): void {
+        selectedAddressId.value = id;
+        const saved = id === null ? undefined : savedAddresses.value.find((a) => a.id === id);
+        if (!saved) {
+            selectedAddressId.value = null;
+            shippingAddress.value = emptyAddress(defaultCountry);
+            return;
+        }
+
+        // AddressForm renders two street inputs, so the second slot has to exist
+        // even for a one-line address; extra lines are kept as they are.
+        const street = [...(saved.street ?? [])];
+        while (street.length < 2) {
+            street.push('');
+        }
+
+        shippingAddress.value = {
+            firstname: saved.firstname || '',
+            lastname: saved.lastname || '',
+            company: saved.company || '',
+            street,
+            city: saved.city || '',
+            region: saved.region || '',
+            regionId: saved.regionId ?? null,
+            postcode: saved.postcode || '',
+            countryId: saved.countryId || defaultCountry,
+            telephone: saved.telephone || '',
+        };
     }
 
     /** Seed both halves from one inlined payload (the uncached path). */
@@ -549,6 +602,9 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         grandTotal,
         currencyFormat,
         shippingAddress,
+        savedAddresses,
+        selectedAddressId,
+        selectAddress,
         shippingMethods,
         selectedMethod,
         selectedMethodKey,

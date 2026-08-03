@@ -85,3 +85,78 @@ describe("ShippingStep", () => {
         expect(wrapper.text()).toContain("Free");
     });
 });
+
+describe("ShippingStep — saved address picker", () => {
+    const AUSTIN = {
+        id: 20,
+        label: "Ada Lovelace, 12 Baker Street, Austin, Texas 78701",
+        isDefaultShipping: true,
+        firstname: "Ada", lastname: "Lovelace", company: "Analytical Engines",
+        street: ["12 Baker Street", "Flat 3"], city: "Austin",
+        region: "Texas", regionId: 57, postcode: "78701",
+        countryId: "US", telephone: "+1 512 555 0142",
+    };
+    const MIAMI = {
+        ...AUSTIN, id: 21, isDefaultShipping: false,
+        label: "Ada Lovelace, 440 Ocean Drive, Miami, Florida 33139",
+        street: ["440 Ocean Drive"], city: "Miami", region: "Florida", regionId: 18,
+    };
+
+    let pinia;
+
+    beforeEach(() => {
+        pinia = createPinia();
+        setActivePinia(pinia);
+        vi.restoreAllMocks();
+    });
+
+    function render(addresses) {
+        const checkout = useCheckout();
+        checkout.initPublic({ ...CONFIG, layoutMode: "stepped" });
+        checkout.applyPrivate({ ...CONFIG, isLoggedIn: true, customerEmail: "ada@shop.test", addresses });
+
+        return mount(ShippingStep, { props: { directory: DIRECTORY }, global: { plugins: [pinia] } });
+    }
+
+    function picker(wrapper) {
+        return wrapper.find('[data-saved-addresses] select');
+    }
+
+    it("lists every saved address plus a new-address option", () => {
+        const wrapper = render([AUSTIN, MIAMI]);
+        const options = picker(wrapper).findAll("option");
+
+        expect(options).toHaveLength(3);
+        expect(options[0].text()).toContain("Austin");
+        expect(options[1].text()).toContain("Miami");
+        expect(options[2].text()).toContain("New address");
+    });
+
+    it("starts on the default shipping address", () => {
+        const wrapper = render([MIAMI, AUSTIN]);
+
+        expect(picker(wrapper).element.value).toBe("20");
+    });
+
+    it("refills the form when another address is picked", async () => {
+        const wrapper = render([AUSTIN, MIAMI]);
+        await picker(wrapper).setValue("21");
+
+        expect(useCheckout().shippingAddress.city).toBe("Miami");
+    });
+
+    it("empties the form for a new address", async () => {
+        const wrapper = render([AUSTIN, MIAMI]);
+        await picker(wrapper).setValue("");
+
+        expect(useCheckout().shippingAddress.city).toBe("");
+        expect(useCheckout().selectedAddressId).toBeNull();
+    });
+
+    // A guest, and a customer whose address book is empty, must see the plain form.
+    it("is absent when there is nothing saved", () => {
+        const wrapper = render([]);
+
+        expect(wrapper.find("[data-saved-addresses]").exists()).toBe(false);
+    });
+});

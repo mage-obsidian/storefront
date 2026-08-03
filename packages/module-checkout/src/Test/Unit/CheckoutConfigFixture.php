@@ -11,6 +11,9 @@ namespace MageObsidian\Checkout\Test\Unit;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\CheckoutAgreements\Model\AgreementsConfigProvider;
+use Magento\Customer\Api\Data\AddressInterface;
+use Magento\Customer\Api\Data\CustomerInterface;
+use Magento\Customer\Api\Data\RegionInterface;
 use Magento\Customer\Model\Customer;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Config\ScopeConfigInterface;
@@ -42,7 +45,9 @@ trait CheckoutConfigFixture
         string $layoutMode = 'stepped',
         bool $agreementsEnabled = false,
         array $agreementItems = [],
-        bool $shellCacheable = false
+        bool $shellCacheable = false,
+        array $addresses = [],
+        ?string $defaultShippingId = null
     ): CheckoutConfig {
         $quote = $this->getMockBuilder(Quote::class)
             ->disableOriginalConstructor()
@@ -64,6 +69,13 @@ trait CheckoutConfigFixture
         $customerSession = $this->createMock(CustomerSession::class);
         $customerSession->method('isLoggedIn')->willReturn($isLoggedIn);
         $customerSession->method('getCustomer')->willReturn($customer);
+
+        $customerData = $this->createMock(CustomerInterface::class);
+        $customerData->method('getAddresses')->willReturn(
+            array_map(fn (array $row) => $this->addressMock($row), $addresses)
+        );
+        $customerData->method('getDefaultShipping')->willReturn($defaultShippingId);
+        $customerSession->method('getCustomerData')->willReturn($addresses === [] ? null : $customerData);
 
         $store = $this->createMock(Store::class);
         $store->method('getBaseUrl')->willReturn('https://shop.test/');
@@ -128,5 +140,29 @@ trait CheckoutConfigFixture
             $agreementsConfigProvider,
             $gate
         );
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private function addressMock(array $row): AddressInterface
+    {
+        $region = $this->createMock(RegionInterface::class);
+        $region->method('getRegion')->willReturn($row['region'] ?? '');
+        $region->method('getRegionId')->willReturn(isset($row['regionId']) ? (string)$row['regionId'] : null);
+
+        $address = $this->createMock(AddressInterface::class);
+        $address->method('getId')->willReturn((int)$row['id']);
+        $address->method('getFirstname')->willReturn($row['firstname'] ?? '');
+        $address->method('getLastname')->willReturn($row['lastname'] ?? '');
+        $address->method('getCompany')->willReturn($row['company'] ?? '');
+        $address->method('getStreet')->willReturn($row['street'] ?? []);
+        $address->method('getCity')->willReturn($row['city'] ?? '');
+        $address->method('getRegion')->willReturn($region);
+        $address->method('getPostcode')->willReturn($row['postcode'] ?? '');
+        $address->method('getCountryId')->willReturn($row['countryId'] ?? '');
+        $address->method('getTelephone')->willReturn($row['telephone'] ?? '');
+
+        return $address;
     }
 }

@@ -564,3 +564,121 @@ describe("useCheckout — public/private split (cacheable shell)", () => {
         expect(checkout.layout).toBe("onepage");
     });
 });
+
+describe("useCheckout — the customer's saved addresses", () => {
+    const PUBLIC_CONFIG = {
+        restBaseUrl: "https://shop.test/rest/default/V1/",
+        layoutMode: "stepped",
+        defaultCountry: "US",
+    };
+    const AUSTIN = {
+        id: 20,
+        label: "Ada Lovelace, 12 Baker Street, Austin, Texas 78701",
+        isDefaultShipping: true,
+        firstname: "Ada",
+        lastname: "Lovelace",
+        company: "Analytical Engines",
+        street: ["12 Baker Street", "Flat 3"],
+        city: "Austin",
+        region: "Texas",
+        regionId: 57,
+        postcode: "78701",
+        countryId: "US",
+        telephone: "+1 512 555 0142",
+    };
+    const MIAMI = {
+        ...AUSTIN,
+        id: 21,
+        label: "Ada Lovelace, 440 Ocean Drive, Miami, Florida 33139",
+        isDefaultShipping: false,
+        company: "",
+        street: ["440 Ocean Drive"],
+        city: "Miami",
+        region: "Florida",
+        regionId: 18,
+        postcode: "33139",
+        telephone: "+1 305 555 0199",
+    };
+    const PRIVATE_DATA = {
+        isLoggedIn: true,
+        customerEmail: "ada@shop.test",
+        maskedCartId: "",
+        currencyFormat: "$%s",
+        quote: { items: [], subtotal: "$0.00", grandTotal: "$0.00" },
+        vault: [],
+        addresses: [AUSTIN, MIAMI],
+    };
+
+    beforeEach(() => {
+        setActivePinia(createPinia());
+    });
+
+    function seeded() {
+        const checkout = useCheckout();
+        checkout.initPublic(PUBLIC_CONFIG);
+        checkout.applyPrivate(PRIVATE_DATA);
+
+        return checkout;
+    }
+
+    it("fills the form from the default shipping address", () => {
+        const checkout = seeded();
+
+        expect(checkout.selectedAddressId).toBe(20);
+        expect(checkout.shippingAddress.street).toEqual(["12 Baker Street", "Flat 3"]);
+        expect(checkout.shippingAddress.city).toBe("Austin");
+        expect(checkout.shippingAddress.regionId).toBe(57);
+        expect(checkout.shippingAddress.telephone).toBe("+1 512 555 0142");
+    });
+
+    it("swaps the whole form when another address is picked", () => {
+        const checkout = seeded();
+        checkout.selectAddress(21);
+
+        expect(checkout.shippingAddress.city).toBe("Miami");
+        expect(checkout.shippingAddress.company).toBe("");
+        // Padded to the two inputs AddressForm renders.
+        expect(checkout.shippingAddress.street).toEqual(["440 Ocean Drive", ""]);
+    });
+
+    // The street array is shared with the saved entry unless it is copied, and
+    // AddressForm writes into it in place: typing would edit the address book.
+    it("does not let edits leak back into the saved address", () => {
+        const checkout = seeded();
+        checkout.shippingAddress.street[0] = "999 Typo Lane";
+        checkout.selectAddress(21);
+        checkout.selectAddress(20);
+
+        expect(checkout.shippingAddress.street[0]).toBe("12 Baker Street");
+    });
+
+    it("clears the form for a new address", () => {
+        const checkout = seeded();
+        checkout.selectAddress(null);
+
+        expect(checkout.selectedAddressId).toBeNull();
+        expect(checkout.shippingAddress.city).toBe("");
+        expect(checkout.shippingAddress.countryId).toBe("US");
+    });
+
+    // applyPrivate runs again after every cart mutation, so anything it seeds
+    // outside the ready guard would wipe what the shopper has typed.
+    it("never overwrites the form on a later section delivery", () => {
+        const checkout = seeded();
+        checkout.selectAddress(21);
+        checkout.applyPrivate({ ...PRIVATE_DATA, quote: { items: [], subtotal: "$9.00", grandTotal: "$9.00" } });
+
+        expect(checkout.shippingAddress.city).toBe("Miami");
+        expect(checkout.subtotal).toBe("$9.00");
+    });
+
+    it("leaves a guest with an empty form and no picker", () => {
+        const checkout = useCheckout();
+        checkout.initPublic(PUBLIC_CONFIG);
+        checkout.applyPrivate({ ...PRIVATE_DATA, isLoggedIn: false, addresses: [] });
+
+        expect(checkout.savedAddresses).toEqual([]);
+        expect(checkout.selectedAddressId).toBeNull();
+        expect(checkout.shippingAddress.city).toBe("");
+    });
+});

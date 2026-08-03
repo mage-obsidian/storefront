@@ -119,7 +119,7 @@ class CheckoutConfigTest extends TestCase
         sort($whole);
         sort($halves);
         $this->assertSame($halves, $whole);
-        $this->assertCount(18, $whole);
+        $this->assertCount(19, $whole);
     }
 
     /**
@@ -134,6 +134,52 @@ class CheckoutConfigTest extends TestCase
 
         $this->assertSame('USD', $public['currencyCode']);
         $this->assertSame('default', $public['storeCode']);
+    }
+
+    /**
+     * The address book is customer data, so it may only travel through the
+     * section — never the shell, which is shared by every visitor on this URL.
+     */
+    public function testPrivateDataCarriesTheCustomerAddressBook(): void
+    {
+        $private = $this->viewModel(
+            isLoggedIn: true,
+            maskedId: '',
+            addresses: self::ADDRESS_BOOK,
+            defaultShippingId: '20'
+        )->getPrivateData();
+
+        $this->assertCount(2, $private['addresses']);
+
+        $austin = $private['addresses'][0];
+        $this->assertSame(20, $austin['id']);
+        $this->assertTrue($austin['isDefaultShipping']);
+        $this->assertSame(['12 Baker Street', 'Flat 3'], $austin['street']);
+        $this->assertSame(57, $austin['regionId']);
+        $this->assertSame('Texas', $austin['region']);
+        $this->assertSame('Ada Lovelace, 12 Baker Street, Austin, Texas 78701', $austin['label']);
+
+        $this->assertFalse($private['addresses'][1]['isDefaultShipping']);
+    }
+
+    public function testAGuestHasNoAddressBook(): void
+    {
+        $private = $this->viewModel(isLoggedIn: false, maskedId: 'guestmask123')->getPrivateData();
+
+        $this->assertSame([], $private['addresses']);
+    }
+
+    public function testTheAddressBookNeverReachesTheCachedShell(): void
+    {
+        $inlined = $this->viewModel(
+            isLoggedIn: true,
+            maskedId: '',
+            shellCacheable: true,
+            addresses: self::ADDRESS_BOOK,
+            defaultShippingId: '20'
+        )->getInlineConfig();
+
+        $this->assertArrayNotHasKey('addresses', $inlined);
     }
 
     public function testPrivateDataStampsTheContextItWasComputedIn(): void
@@ -166,6 +212,22 @@ class CheckoutConfigTest extends TestCase
         $this->assertSame('guestmask123', $viewModel->getInlineConfig()['maskedCartId']);
     }
 
+    /** Mirrors the two addresses seeded on the e2e customer in zento-obsidian. */
+    private const ADDRESS_BOOK = [
+        [
+            'id' => 20, 'firstname' => 'Ada', 'lastname' => 'Lovelace',
+            'company' => 'Analytical Engines', 'street' => ['12 Baker Street', 'Flat 3'],
+            'city' => 'Austin', 'region' => 'Texas', 'regionId' => 57, 'postcode' => '78701',
+            'countryId' => 'US', 'telephone' => '+1 512 555 0142',
+        ],
+        [
+            'id' => 21, 'firstname' => 'Ada', 'lastname' => 'Lovelace',
+            'company' => '', 'street' => ['440 Ocean Drive'],
+            'city' => 'Miami', 'region' => 'Florida', 'regionId' => 18, 'postcode' => '33139',
+            'countryId' => 'US', 'telephone' => '+1 305 555 0199',
+        ],
+    ];
+
     private const PRIVATE_KEYS = [
         'isLoggedIn',
         'customerEmail',
@@ -176,6 +238,7 @@ class CheckoutConfigTest extends TestCase
         // cached shell removes a vary dimension instead of trusting one.
         'currencyFormat',
         'context',
+        'addresses',
     ];
 
     private function viewModel(
@@ -184,8 +247,19 @@ class CheckoutConfigTest extends TestCase
         string $layoutMode = 'stepped',
         bool $agreementsEnabled = false,
         array $agreementItems = [],
-        bool $shellCacheable = false
+        bool $shellCacheable = false,
+        array $addresses = [],
+        ?string $defaultShippingId = null
     ): CheckoutConfig {
-        return $this->checkoutConfig($isLoggedIn, $maskedId, $layoutMode, $agreementsEnabled, $agreementItems, $shellCacheable);
+        return $this->checkoutConfig(
+            $isLoggedIn,
+            $maskedId,
+            $layoutMode,
+            $agreementsEnabled,
+            $agreementItems,
+            $shellCacheable,
+            $addresses,
+            $defaultShippingId
+        );
     }
 }

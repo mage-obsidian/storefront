@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace MageObsidian\Checkout\ViewModel;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\Customer\Api\Data\AddressInterface;
 use Magento\CheckoutAgreements\Model\AgreementsConfigProvider;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Config\ScopeConfigInterface;
@@ -199,8 +200,84 @@ class CheckoutConfig implements ArgumentInterface
             'currencyFormat' => $this->currencyFormat(),
             'quote' => $this->quoteSummary($quote),
             'vault' => $this->vaultTokens(),
+            'addresses' => $isLoggedIn ? $this->addressBook() : [],
             'context' => $this->context(),
         ];
+    }
+
+    /**
+     * The customer's saved addresses, shaped like the client's AddressData so the
+     * form can be filled straight from a picked entry.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function addressBook(): array
+    {
+        try {
+            $customer = $this->customerSession->getCustomerData();
+            if ($customer === null) {
+                return [];
+            }
+            $defaultShipping = (string)$customer->getDefaultShipping();
+
+            return array_values(array_map(
+                fn (AddressInterface $address): array => $this->addressRow($address, $defaultShipping),
+                $customer->getAddresses() ?? []
+            ));
+        } catch (Throwable) {
+            return [];
+        }
+    }
+
+    /**
+     * @param AddressInterface $address
+     * @param string $defaultShippingId
+     * @return array<string, mixed>
+     */
+    private function addressRow(AddressInterface $address, string $defaultShippingId): array
+    {
+        $region = $address->getRegion();
+        $regionName = $region ? (string)$region->getRegion() : '';
+        $regionId = $region && $region->getRegionId() ? (int)$region->getRegionId() : null;
+        $street = array_values(array_filter((array)$address->getStreet(), static fn ($line) => (string)$line !== ''));
+
+        return [
+            'id' => (int)$address->getId(),
+            'label' => $this->addressLabel($address, $street, $regionName),
+            'isDefaultShipping' => (string)$address->getId() === $defaultShippingId,
+            'firstname' => (string)$address->getFirstname(),
+            'lastname' => (string)$address->getLastname(),
+            'company' => (string)$address->getCompany(),
+            'street' => $street,
+            'city' => (string)$address->getCity(),
+            'region' => $regionName,
+            'regionId' => $regionId,
+            'postcode' => (string)$address->getPostcode(),
+            'countryId' => (string)$address->getCountryId(),
+            'telephone' => (string)$address->getTelephone(),
+        ];
+    }
+
+    /**
+     * One-line summary for the picker. Built here rather than in the island
+     * because the region name only exists server-side: the client's directory
+     * data is keyed by country, and a free-text region has no id to look up.
+     *
+     * @param AddressInterface $address
+     * @param array<int, string> $street
+     * @param string $regionName
+     * @return string
+     */
+    private function addressLabel(AddressInterface $address, array $street, string $regionName): string
+    {
+        $parts = [
+            trim($address->getFirstname() . ' ' . $address->getLastname()),
+            $street[0] ?? '',
+            (string)$address->getCity(),
+            trim($regionName . ' ' . (string)$address->getPostcode()),
+        ];
+
+        return implode(', ', array_filter($parts, static fn (string $part): bool => $part !== ''));
     }
 
     /**
@@ -387,6 +464,7 @@ class CheckoutConfig implements ArgumentInterface
             'currencyFormat' => '%s',
             'quote' => ['items' => [], 'itemCount' => 0, 'subtotal' => '', 'grandTotal' => ''],
             'vault' => [],
+            'addresses' => [],
             'context' => ['storeCode' => '', 'currencyCode' => ''],
         ];
     }
