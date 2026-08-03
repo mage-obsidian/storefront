@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="MageObsidian_Search">
+        <sequence>
+            <module name="MageObsidian_ModernFrontend"/>
+            <!-- The listing structure this serves fragments of is declared by the
+                 catalog module (and, when installed, its search sibling). -->
+            <module name="MageObsidian_Catalog"/>
+            <!-- Cacheability of a fragment is decided by the same layout the page
+                 uses, so the page-cache plugins must already be wired. -->
+            <module name="Magento_PageCache"/>
+        </sequence>
+    </module>
+</config>

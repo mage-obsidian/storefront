@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!--
+  Added by the fragment plugin before the layout is built. Generating the whole
+  page's block tree costs real time even when only two of its blocks are ever
+  rendered, so the containers a fragment can never need are dropped before
+  generation instead of after.
+
+  Only page furniture is removed. `content` and `sidebar.main` stay: they hold
+  the listing and the filters. A module that puts a servable region somewhere
+  else must not have that container removed here — override this handle.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="header.container" remove="true"/>
+        <referenceContainer name="page.top" remove="true"/>
+        <referenceContainer name="footer-container" remove="true"/>
+        <referenceContainer name="before.body.end" remove="true"/>
+        <referenceContainer name="sidebar.additional" remove="true"/>
+    </body>
+</page>

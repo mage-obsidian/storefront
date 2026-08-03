@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<!--
+  Two wires only: which blocks make up a servable listing, and the plugin that
+  turns those blocks into the response. No preference — the page keeps rendering
+  through its own controller, its own blocks and its own templates.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="MageObsidian\Search\Model\Fragment\SectionPool">
+        <arguments>
+            <!--
+              Declaration order is render order, and it has to match the page:
+              the sidebar sits before the content in every two-column layout, and
+              rendering the layered navigation is what settles the layer before
+              the grid asks it anything. Listing first and the toolbar comes back
+              with a different sort and page size than the page had.
+            -->
+            <argument name="sections" xsi:type="array">
+                <item name="catalog_category_view" xsi:type="array">
+                    <item name="filters" xsi:type="string">catalog.leftnav</item>
+                    <item name="listing" xsi:type="string">category.products.list</item>
+                </item>
+                <!--
+                  The results page owns its region from Result, not from the
+                  list inside it: its template asks for the result count before
+                  rendering the grid, and that call is what settles the toolbar's
+                  sort state. Serving the inner list alone reproduces the markup
+                  of a page that was never rendered that way.
+                -->
+                <item name="catalogsearch_result_index" xsi:type="array">
+                    <item name="filters" xsi:type="string">catalogsearch.leftnav</item>
+                    <item name="results" xsi:type="string">search.result</item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
+
+    <!--
+      sortOrder 100 so the fragment decision is made over whatever the other
+      plugins on execute() ended up returning, not over an intermediate result.
+    -->
+    <type name="Magento\Catalog\Controller\Category\View">
+        <plugin name="mage_obsidian_listing_fragment"
+                type="MageObsidian\Search\Plugin\Controller\RenderListingFragment"
+                sortOrder="100"/>
+    </type>
+    <!--
+      The search results controller is still the old kind: it drives App\View
+      directly and returns null, so execute() carries no result to swap. The
+      same plugin therefore also hooks the view, where loadLayout gets the
+      chrome-stripping handle and renderLayout is replaced by the fragments.
+    -->
+    <type name="Magento\Framework\App\ViewInterface">
+        <plugin name="mage_obsidian_listing_fragment"
+                type="MageObsidian\Search\Plugin\Controller\RenderListingFragment"
+                sortOrder="100"/>
+    </type>
+</config>

@@ -1,0 +1,141 @@
+/* Choreography for a listing fragment swap.
+ *
+ * Everything here is scoped to the class js/listing-transition holds on the
+ * root while a swap is in flight, so the theme's cross-document tuning (a full
+ * page navigation) is untouched. The theme already neutralises every
+ * ::view-transition-* animation under prefers-reduced-motion.
+ */
+
+/* The chrome, the breadcrumbs and the page title are identical on both sides of
+ * a filter click: showing the old root at all would only cross-fade a picture
+ * of the page onto itself.
+ */
+:root.obsidian-listing-swap::view-transition-group(root) {
+  animation: none;
+}
+:root.obsidian-listing-swap::view-transition-image-pair(root) {
+  isolation: auto;
+}
+:root.obsidian-listing-swap::view-transition-old(root) {
+  display: none;
+}
+:root.obsidian-listing-swap::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Named only for the duration of the swap. A view-transition-name applies
+ * containment, which would make the sidebar a containing block for a fixed
+ * descendant — harmless for the 300ms this lasts, wrong as a permanent style.
+ */
+:root.obsidian-listing-swap [data-obsidian-section="filters"] {
+  view-transition-name: obsidian-ln;
+}
+:root.obsidian-listing-swap .toolbar-top {
+  view-transition-name: obsidian-toolbar-top;
+}
+:root.obsidian-listing-swap .toolbar-bottom {
+  view-transition-name: obsidian-toolbar-bottom;
+}
+
+:root.obsidian-listing-swap::view-transition-group(obsidian-ln),
+:root.obsidian-listing-swap::view-transition-group(obsidian-toolbar-top),
+:root.obsidian-listing-swap::view-transition-group(obsidian-toolbar-bottom) {
+  animation-duration: 280ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Applying a filter drops its whole group from the sidebar, so the box loses
+ * height mid-flight. Left to stretch to the animating box, the old snapshot
+ * smears every filter label; rendering both at intrinsic size turns the height
+ * change into a clip instead.
+ */
+:root.obsidian-listing-swap::view-transition-old(obsidian-ln),
+:root.obsidian-listing-swap::view-transition-new(obsidian-ln),
+:root.obsidian-listing-swap::view-transition-old(obsidian-toolbar-top),
+:root.obsidian-listing-swap::view-transition-new(obsidian-toolbar-top) {
+  height: 100%;
+  width: 100%;
+  object-fit: none;
+  object-position: top left;
+}
+/* Sequential, not a cross-fade: the two sides carry different text in the same
+ * place — a group leaves the sidebar, "1-12 of 13" becomes "1 item" — and
+ * showing both at once reads as double vision rather than a dissolve.
+ */
+:root.obsidian-listing-swap::view-transition-old(obsidian-ln),
+:root.obsidian-listing-swap::view-transition-old(obsidian-toolbar-top),
+:root.obsidian-listing-swap::view-transition-old(obsidian-toolbar-bottom) {
+  animation: 110ms cubic-bezier(0.4, 0, 1, 1) both obsidian-listing-fade-out;
+}
+:root.obsidian-listing-swap::view-transition-new(obsidian-ln),
+:root.obsidian-listing-swap::view-transition-new(obsidian-toolbar-top),
+:root.obsidian-listing-swap::view-transition-new(obsidian-toolbar-bottom) {
+  animation: 200ms 120ms cubic-bezier(0, 0, 0.2, 1) both obsidian-listing-fade-in;
+  mix-blend-mode: normal;
+}
+
+@keyframes obsidian-listing-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes obsidian-listing-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* A product on both sides of the swap keeps the bare class: its group travels
+ * to the new slot and the two snapshots cross-fade over it. Anything beyond
+ * opacity here would fight that movement.
+ */
+:root.obsidian-listing-swap::view-transition-group(.obsidian-card) {
+  animation-duration: 340ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+:root.obsidian-listing-swap::view-transition-old(.obsidian-card) {
+  animation-duration: 200ms;
+}
+:root.obsidian-listing-swap::view-transition-new(.obsidian-card) {
+  animation-duration: 240ms;
+  mix-blend-mode: normal;
+}
+
+/* Arriving and leaving cards are tagged by the navigator, which is the only
+ * place that knows which side of the swap a product was on. Declared after the
+ * shared rules: same specificity, source order decides.
+ */
+:root.obsidian-listing-swap::view-transition-old(.obsidian-card-exit) {
+  animation: 180ms cubic-bezier(0.4, 0, 1, 1) both obsidian-listing-card-out;
+}
+:root.obsidian-listing-swap::view-transition-new(.obsidian-card-enter) {
+  animation: 320ms 100ms cubic-bezier(0.2, 0, 0, 1) both obsidian-listing-card-in;
+}
+
+@keyframes obsidian-listing-card-out {
+  to {
+    opacity: 0;
+    transform: scale(0.94);
+    filter: blur(2px);
+  }
+}
+
+@keyframes obsidian-listing-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+}
+
+/* The fetch is usually a cache hit, so the dim is delayed past the point where
+ * it would only register as a flash.
+ */
+[data-obsidian-section] {
+  transition: opacity 200ms ease;
+}
+[data-obsidian-section][aria-busy="true"] {
+  opacity: 0.55;
+  transition: opacity 140ms ease 220ms;
+}

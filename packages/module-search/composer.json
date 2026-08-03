@@ -1,0 +1,39 @@
+{
+    "name": "mage-obsidian/module-search",
+    "description": "Cacheable listing fragments for MageObsidian: filtering, sorting and pagination on category and search pages are served as HTML fragments rendered by the native blocks, instead of re-assembling the whole page.",
+    "keywords": [
+        "magento",
+        "magento2",
+        "performance",
+        "varnish",
+        "layered-navigation",
+        "search",
+        "frontend"
+    ],
+    "homepage": "https://mage-obsidian.jeanmarcos.dev/",
+    "authors": [
+        {
+            "name": "Jeanmarcos Juarez",
+            "homepage": "https://github.com/jeanmarcos-dev"
+        }
+    ],
+    "require": {
+        "mage-obsidian/module-modern-frontend": "^2.13",
+        "mage-obsidian/module-catalog": "^3.5"
+    },
+    "suggest": {
+        "mage-obsidian/module-catalog-search": "Extends the listing fragments to the search results page."
+    },
+    "type": "magento2-module",
+    "license": [
+        "MIT"
+    ],
+    "autoload": {
+        "files": [
+            "src/registration.php"
+        ],
+        "psr-4": {
+            "MageObsidian\\Search\\": "src/"
+        }
+    }
+}

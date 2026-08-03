@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="mage_obsidian_frontend">
+            <group id="listing" translate="label comment" type="text" sortOrder="40"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Product Listing</label>
+                <field id="fragments_enabled" translate="label comment" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Serve Filters and Pagination as Fragments</label>
+                    <comment><![CDATA[Filtering, sorting and paging a category or search listing fetch only the
+                        listing and the sidebar instead of re-assembling the page. Turning this off leaves the
+                        links working as plain navigations. A single visit can opt out with
+                        <code>?obsidian_data=0</code>.]]></comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mage_obsidian/listing/fragments_enabled</config_path>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

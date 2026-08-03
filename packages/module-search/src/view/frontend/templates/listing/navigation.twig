@@ -1,0 +1,18 @@
+{#
+  Boots the listing navigator. The two names the client shares with PHP — the
+  query parameter that asks for fragments and the attribute that marks a
+  swappable region — are handed over as data attributes rather than baked into
+  the bundle, so di.xml stays the single source of truth.
+
+  Nothing here is required for the listing to work: without JS (or with
+  ?obsidian_data=0) every filter, sort and pager control is a plain link that
+  navigates.
+#}
+{% set navigation = block.getNavigation() %}
+{% if navigation.isEnabled() %}
+    <div hidden data-obsidian-listing
+         data-parameter="{{ navigation.getFragmentParameter()|escape_html_attr }}"
+         data-attribute="{{ navigation.getSectionAttribute()|escape_html_attr }}"
+         data-paths="{{ navigation.getListingPaths()|join(' ')|escape_html_attr }}"></div>
+    {{ script('MageObsidian_Search::js/listing-navigator') }}
+{% endif %}
