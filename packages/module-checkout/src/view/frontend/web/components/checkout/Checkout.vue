@@ -65,10 +65,7 @@ if (quoteWasInlined) {
     checkout.applyPrivate(props.config);
 }
 
-// Switching currency or store view is a GET, and Magento only rotates
-// `private_content_version` on POST, so nothing tells the client its stored
-// section belongs to the currency it just left. The shell carries the page's own
-// context — it is varied by both — so comparing the two catches it.
+// The version cookie only moves on POST, and a currency switch is a GET.
 let revalidated = false;
 
 function belongsToThisPage(section): boolean {
@@ -80,14 +77,10 @@ function belongsToThisPage(section): boolean {
     return stamp.storeCode === props.config.storeCode && stamp.currencyCode === props.config.currencyCode;
 }
 
-// The engine's batch hydrate is deferred to browser idle, which is right for a
-// header badge and too late for the content this page exists to show (measured:
-// cart at 250ms instead of 167ms).
 if (!quoteWasInlined && !customerData.section(PRIVATE_SECTION)) {
     void customerData.reload([PRIVATE_SECTION]);
 }
 
-// The section reloads after every cart mutation, so later deliveries are the norm.
 watchEffect(() => {
     const section = customerData.section(PRIVATE_SECTION);
     if (!section) {
@@ -127,9 +120,8 @@ function fallbackToUncachedPage(): void {
 }
 
 onMounted(() => {
-    // Only worth it when the page inlined the quote. On the cached path the store's
-    // batch already refetches `cart`, and a second request serialises behind it on
-    // the PHP session lock, delaying the one that carries the quote.
+    // On the cached path the batch already refetches `cart`; a second request
+    // serialises behind it on the PHP session lock.
     if (quoteWasInlined) {
         customerData.reload(["cart"]);
     }
@@ -252,7 +244,16 @@ const isEmpty = computed(() => checkout.ready && checkout.itemCount === 0);
                         </span>
                         <span class="flex min-w-0 flex-1 flex-col">
                             <span class="truncate text-sm text-ink">{{ item.name }}</span>
-                            <span class="font-mono text-xs text-ink-soft">× {{ item.qty }}</span>
+                            <ul
+                                v-if="item.options && item.options.length"
+                                data-item-options
+                                class="mt-0.5 flex flex-col gap-0.5 text-xs text-ink-soft"
+                            >
+                                <li v-for="option in item.options" :key="option.label" class="truncate">
+                                    {{ option.label }}: {{ option.value }}
+                                </li>
+                            </ul>
+                            <span class="mt-0.5 font-mono text-xs text-ink-soft">× {{ item.qty }}</span>
                         </span>
                         <span class="shrink-0 font-mono text-sm text-ink">{{ item.rowTotal }}</span>
                     </li>

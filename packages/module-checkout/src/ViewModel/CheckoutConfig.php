@@ -206,8 +206,7 @@ class CheckoutConfig implements ArgumentInterface
     }
 
     /**
-     * The customer's saved addresses, shaped like the client's AddressData so the
-     * form can be filled straight from a picked entry.
+     * The customer's saved addresses, shaped like the client's AddressData.
      *
      * @return array<int, array<string, mixed>>
      */
@@ -259,9 +258,8 @@ class CheckoutConfig implements ArgumentInterface
     }
 
     /**
-     * One-line summary for the picker. Built here rather than in the island
-     * because the region name only exists server-side: the client's directory
-     * data is keyed by country, and a free-text region has no id to look up.
+     * One-line summary for the picker. Built here because the region name only
+     * exists server-side.
      *
      * @param AddressInterface $address
      * @param array<int, string> $street
@@ -281,12 +279,8 @@ class CheckoutConfig implements ArgumentInterface
     }
 
     /**
-     * Store and currency this payload was computed for, so the client can spot a
-     * section that outlived the context it belongs to.
-     *
-     * Magento only rotates `private_content_version` on POST, and a currency or
-     * store switch is a GET: without this stamp a stale section sits in
-     * localStorage showing the previous currency, and nothing invalidates it.
+     * Store and currency this payload was computed for. The version cookie only
+     * moves on POST, and a currency or store switch is a GET.
      *
      * @return array{storeCode: string, currencyCode: string}
      */
@@ -302,8 +296,7 @@ class CheckoutConfig implements ArgumentInterface
     }
 
     /**
-     * Currency the request is being served in. Read from the HTTP context, which
-     * is what the page cache keys on, rather than from the session.
+     * Currency the request is being served in, read from the HTTP context.
      *
      * @return string
      */

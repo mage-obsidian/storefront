@@ -153,7 +153,6 @@ describe("ShippingStep — saved address picker", () => {
         expect(useCheckout().selectedAddressId).toBeNull();
     });
 
-    // A guest, and a customer whose address book is empty, must see the plain form.
     it("is absent when there is nothing saved", () => {
         const wrapper = render([]);
 

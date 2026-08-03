@@ -21,12 +21,18 @@ import {
     type CheckoutEvent,
 } from 'MageObsidian_Checkout::js/checkout-events';
 
+export interface CheckoutItemOption {
+    label: string;
+    value: string;
+}
+
 export interface CheckoutItem {
     id: number | string;
     name?: string;
     image?: string;
     qty?: number | string;
     rowTotal?: string;
+    options?: CheckoutItemOption[];
 }
 
 export interface ShippingMethod {
@@ -53,10 +59,8 @@ export interface VaultToken {
     expiration: string;
 }
 
-/** An entry from the customer's address book, as CheckoutConfig ships it. */
 export interface SavedAddress extends AddressData {
     id: number;
-    /** Server-built one-liner for the picker; the region name is only known there. */
     label: string;
     isDefaultShipping: boolean;
 }
@@ -245,12 +249,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         }
     }
 
-    /**
-     * Fill the shipping form from a saved address, or clear it for a new one.
-     *
-     * Copies rather than references: AddressForm writes into `street` in place,
-     * so a shared array would edit the address book as the shopper types.
-     */
+    /** Copies rather than references: AddressForm writes into `street` in place. */
     function selectAddress(id: number | null): void {
         selectedAddressId.value = id;
         const saved = id === null ? undefined : savedAddresses.value.find((a) => a.id === id);
@@ -260,8 +259,6 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
             return;
         }
 
-        // AddressForm renders two street inputs, so the second slot has to exist
-        // even for a one-line address; extra lines are kept as they are.
         const street = [...(saved.street ?? [])];
         while (street.length < 2) {
             street.push('');

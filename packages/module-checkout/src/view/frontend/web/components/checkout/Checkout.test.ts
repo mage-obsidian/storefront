@@ -6,10 +6,8 @@ import { nextTick } from "vue";
 import { useCheckout } from "../../js/useCheckout.ts";
 import { reload, __reset, __setSection } from "../../../../../Test/Js/stubs/customerData.ts";
 
-// Every mount here leaves live watchEffects on the section stub's shared ref, so
-// a component from an earlier test reacts to a later test's __setSection and
-// writes into whatever store is active by then. Unmounting is what keeps each
-// test's assertions about its own component.
+// Live watchEffects on the stub's shared ref make an unmounted component react
+// to a later test's __setSection.
 const mounted: { unmount: () => void }[] = [];
 
 function track<T extends { unmount: () => void }>(wrapper: T): T {
@@ -85,7 +83,6 @@ describe("Checkout.vue", () => {
 });
 
 describe("Checkout.vue — cacheable shell", () => {
-    // What a cached page inlines: store-scoped keys only, no quote, no identity.
     const PUBLIC_ONLY = { layoutMode: "stepped", maxSummaryItems: 10 };
     const PRIVATE_SECTION = {
         isLoggedIn: false,
@@ -122,8 +119,6 @@ describe("Checkout.vue — cacheable shell", () => {
         expect(wrapper.text()).toContain("$38.00");
     });
 
-    // Never paint a half-known checkout: an empty summary and a real cart look
-    // identical to a shopper, and the second one loses the order.
     it("stays unready while the section is missing", async () => {
         render(PUBLIC_ONLY);
         await nextTick();
@@ -131,11 +126,7 @@ describe("Checkout.vue — cacheable shell", () => {
         expect(useCheckout().ready).toBe(false);
     });
 
-    // Measured in the browser on a cold localStorage: this reconcile fired first
-    // (sections=cart, 111ms) and pushed the store's own batch hydrate — the call
-    // that actually carries the quote — to 135ms, where it took 113ms instead of
-    // ~68 because the two serialise on the PHP session lock. Items appeared at
-    // 258ms instead of 102ms. On this path the batch already refetches `cart`.
+    // Measured: this reconcile serialises with the batch hydrate on the session lock.
     it("does not reconcile the cart section when the quote comes from the section", () => {
         __setSection("obsidian-checkout", PRIVATE_SECTION);
         render(PUBLIC_ONLY);
@@ -149,11 +140,7 @@ describe("Checkout.vue — cacheable shell", () => {
         expect(reload.calls).toContainEqual([["cart"]]);
     });
 
-    // The engine defers its batch hydrate to requestIdleCallback, which is right
-    // for a header badge and wrong for the content this page exists to show.
-    // Measured cold: the batch started at 151ms and the cart appeared at 250ms
-    // against 185ms on the uncached page. So the checkout asks for its own
-    // section straight away and lets the batch follow.
+    // The engine's batch hydrate waits for browser idle; the cart cannot.
     it("requests its own section immediately when it is not in the store yet", () => {
         render(PUBLIC_ONLY);
 
@@ -179,10 +166,58 @@ describe("Checkout.vue — cacheable shell", () => {
     });
 });
 
-// Magento rotates `private_content_version` on POST only, and switching currency
-// or store view is a GET. Nothing else ages this section out, so without the
-// stamp the summary keeps showing the previous currency — reproduced in the
-// browser: the server answered EUR 53.10 while the page showed USD 59.00.
+describe("Checkout.vue — configurable and custom options in the summary", () => {
+    const WITH_OPTIONS = {
+        ...CONFIG,
+        quote: {
+            items: [
+                {
+                    id: 7,
+                    name: "Chaz Kangeroo Hoodie",
+                    qty: 1,
+                    rowTotal: "$59.00",
+                    image: "",
+                    options: [
+                        { label: "Color", value: "Black" },
+                        { label: "Size", value: "XS" },
+                        { label: "Monogram", value: "JMJ" },
+                    ],
+                },
+            ],
+            subtotal: "$59.00",
+            grandTotal: "$59.00",
+        },
+    };
+
+    let pinia;
+
+    beforeEach(() => {
+        pinia = createPinia();
+        setActivePinia(pinia);
+        __reset();
+    });
+
+    function render(config) {
+        return track(mount(Checkout, { props: { config, labels: {} }, global: { plugins: [pinia] } }));
+    }
+
+    it("lists each selected option under its line", () => {
+        const wrapper = render(WITH_OPTIONS);
+        const options = wrapper.findAll("[data-item-options] li");
+
+        expect(options).toHaveLength(3);
+        expect(options[0].text()).toBe("Color: Black");
+        expect(options[2].text()).toBe("Monogram: JMJ");
+    });
+
+    it("draws nothing for a simple product", () => {
+        const wrapper = render(CONFIG);
+
+        expect(wrapper.find("[data-item-options]").exists()).toBe(false);
+    });
+});
+
+// Magento rotates `private_content_version` on POST only; a currency switch is a GET.
 describe("Checkout.vue — a section from another currency or store", () => {
     const PUBLIC_ONLY = {
         layoutMode: "stepped",
@@ -238,9 +273,7 @@ describe("Checkout.vue — a section from another currency or store", () => {
         expect(wrapper.text()).toContain("Crown Summit Backpack");
     });
 
-    // The shell is what carries the page's currency, and the plan does not let
-    // correctness rest on the vary being right. If a mismatch survives the
-    // refetch, refetching again forever would be worse than showing the section.
+    // A wrong shell must not spin; after one retry the live section wins.
     it("refetches at most once, so a wrong shell cannot spin", async () => {
         __setSection("obsidian-checkout", STALE);
         render(PUBLIC_ONLY);

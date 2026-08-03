@@ -637,12 +637,9 @@ describe("useCheckout — the customer's saved addresses", () => {
 
         expect(checkout.shippingAddress.city).toBe("Miami");
         expect(checkout.shippingAddress.company).toBe("");
-        // Padded to the two inputs AddressForm renders.
         expect(checkout.shippingAddress.street).toEqual(["440 Ocean Drive", ""]);
     });
 
-    // The street array is shared with the saved entry unless it is copied, and
-    // AddressForm writes into it in place: typing would edit the address book.
     it("does not let edits leak back into the saved address", () => {
         const checkout = seeded();
         checkout.shippingAddress.street[0] = "999 Typo Lane";
@@ -661,8 +658,7 @@ describe("useCheckout — the customer's saved addresses", () => {
         expect(checkout.shippingAddress.countryId).toBe("US");
     });
 
-    // applyPrivate runs again after every cart mutation, so anything it seeds
-    // outside the ready guard would wipe what the shopper has typed.
+    // applyPrivate runs again after every cart mutation.
     it("never overwrites the form on a later section delivery", () => {
         const checkout = seeded();
         checkout.selectAddress(21);
