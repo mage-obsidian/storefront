@@ -1,3 +1,7 @@
+import events from "MageObsidian_ModernFrontend::js/events";
+import { MutationPhase } from "mage-obsidian/runtime/mutationEvent.ts";
+import { listingEvent } from "MageObsidian_Storefront::js/listing-events";
+
 const SELECTOR = "select[data-nav-select]";
 const BOUND = "navSelectBound";
 
@@ -27,3 +31,7 @@ if (document.readyState === "loading") {
 } else {
     bindNavSelects();
 }
+
+// A listing swapped in from the server brings unbound selects with it. The
+// per-element guard makes re-running this a no-op for everything already wired.
+events.observe(listingEvent(MutationPhase.After), () => bindNavSelects());

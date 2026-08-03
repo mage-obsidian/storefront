@@ -30,6 +30,9 @@ export default defineConfig({
             "MageObsidian_ModernFrontend::js/events": fileURLToPath(
                 new URL("./src/Test/Js/stubs/events.ts", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/listing-events": fileURLToPath(
+                new URL("./src/view/frontend/web/js/listing-events.ts", import.meta.url),
+            ),
             "MageObsidian_Storefront::elements/Drawer": fileURLToPath(
                 new URL("./src/view/frontend/web/components/elements/Drawer.vue", import.meta.url),
             ),
