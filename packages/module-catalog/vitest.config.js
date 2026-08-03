@@ -21,6 +21,9 @@ export default defineConfig({
             "MageObsidian_Storefront::js/notifications": fileURLToPath(
                 new URL("../module-storefront/src/view/frontend/web/js/notifications.ts", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/listing-events": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/js/listing-events.ts", import.meta.url),
+            ),
             "MageObsidian_Storefront::js/scroll-lock": fileURLToPath(
                 new URL("../module-storefront/src/view/frontend/web/js/scroll-lock.ts", import.meta.url),
             ),

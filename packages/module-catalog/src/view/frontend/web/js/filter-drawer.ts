@@ -5,6 +5,9 @@
  * reimplemented here. Desktop never calls it — CSS keeps the same dialog laid out
  * as a plain sidebar.
  */
+import events from "MageObsidian_ModernFrontend::js/events";
+import { MutationPhase } from "mage-obsidian/runtime/mutationEvent.ts";
+import { listingEvent } from "MageObsidian_Storefront::js/listing-events";
 import { lockScroll, unlockScroll } from "MageObsidian_Storefront::js/scroll-lock";
 
 const Hook = {
@@ -105,8 +108,20 @@ export function bindFilterDrawer(root: ParentNode = document, deps: FilterDrawer
     };
 }
 
+// Both the dialog and its trigger sit inside regions a listing fragment
+// replaces, so the listeners have to move to the new elements — unlike the
+// selects next door, there is no per-element guard to make a second bind free.
+let release = (): void => {};
+
+const rebind = (): void => {
+    release();
+    release = bindFilterDrawer();
+};
+
 if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => bindFilterDrawer());
+    document.addEventListener("DOMContentLoaded", rebind);
 } else {
-    bindFilterDrawer();
+    rebind();
 }
+
+events.observe(listingEvent(MutationPhase.After), rebind);
