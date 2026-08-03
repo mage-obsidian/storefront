@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!--
+  Invalidation for the checkout island's private seed.
+
+  Mirrors the actions Magento_Checkout already declares for its own `cart`
+  section: anything that can move the quote, its totals or the auth mode has to
+  age this one out too, or a cached shell would hydrate from a stale localStorage
+  snapshot. The REST entries matter as much as the controller ones — the island
+  mutates the quote through `carts/mine` and `guest-carts/:maskedId`, never
+  through the native controllers.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Customer:etc/sections.xsd">
+    <action name="checkout/cart/add">
+        <section name="obsidian-checkout"/>
+    </action>
+    <action name="checkout/cart/delete">
+        <section name="obsidian-checkout"/>
+    </action>
+    <action name="checkout/cart/updatePost">
+        <section name="obsidian-checkout"/>
+    </action>
+    <action name="checkout/cart/updateItemOptions">
+        <section name="obsidian-checkout"/>
+    </action>
+    <action name="checkout/cart/couponPost">
+        <section name="obsidian-checkout"/>
+    </action>
+    <action name="checkout/sidebar/removeItem">
+        <section name="obsidian-checkout"/>
+    </action>
+    <action name="checkout/sidebar/updateItemQty">
+        <section name="obsidian-checkout"/>
+    </action>
+    <action name="checkout/onepage/saveOrder">
+        <section name="obsidian-checkout"/>
+    </action>
+    <action name="rest/*/V1/carts/*">
+        <section name="obsidian-checkout"/>
+    </action>
+    <action name="rest/*/V1/guest-carts/*">
+        <section name="obsidian-checkout"/>
+    </action>
+    <action name="customer/account/logout">
+        <section name="obsidian-checkout"/>
+    </action>
+</config>

@@ -23,7 +23,7 @@
         <referenceBlock name="page.main.title" remove="true"/>
         <referenceContainer name="content">
             <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.checkout"
-                   template="Magento_Checkout::checkout/page.twig" cacheable="false">
+                   template="Magento_Checkout::checkout/page.twig">
                 <arguments>
                     <argument name="checkout_config" xsi:type="object">MageObsidian\Checkout\ViewModel\CheckoutConfig</argument>
                     <argument name="directory_data" xsi:type="object">MageObsidian\Storefront\ViewModel\DirectoryData</argument>

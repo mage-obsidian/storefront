@@ -17,6 +17,7 @@ use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
 use MageObsidian\Checkout\Api\VaultTokenProviderInterface;
+use MageObsidian\Checkout\Model\Shell\Gate;
 use MageObsidian\ModernFrontend\Model\Config\ConfigProvider;
 use MageObsidian\ModernFrontend\Model\Config\Source\CheckoutLayout;
 use Magento\Quote\Model\Quote;
@@ -40,11 +41,18 @@ use Throwable;
 class CheckoutConfig implements ArgumentInterface
 {
     /**
-     * Memoised config payload.
+     * Memoised public payload (store-scoped; safe to inline into a cached page).
      *
      * @var array<string, mixed>|null
      */
-    private ?array $config = null;
+    private ?array $publicConfig = null;
+
+    /**
+     * Memoised private payload (customer/quote-scoped).
+     *
+     * @var array<string, mixed>|null
+     */
+    private ?array $privateData = null;
 
     /**
      * @param CheckoutSession $checkoutSession
@@ -59,6 +67,7 @@ class CheckoutConfig implements ArgumentInterface
      * @param ConfigProvider $configProvider
      * @param ScopeConfigInterface $scopeConfig
      * @param AgreementsConfigProvider $agreementsConfigProvider
+     * @param Gate $gate
      */
     public function __construct(
         private readonly CheckoutSession $checkoutSession,
@@ -72,7 +81,8 @@ class CheckoutConfig implements ArgumentInterface
         private readonly VaultTokenProviderInterface $vaultTokenProvider,
         private readonly ConfigProvider $configProvider,
         private readonly ScopeConfigInterface $scopeConfig,
-        private readonly AgreementsConfigProvider $agreementsConfigProvider
+        private readonly AgreementsConfigProvider $agreementsConfigProvider,
+        private readonly Gate $gate
     ) {
     }
 
@@ -83,17 +93,57 @@ class CheckoutConfig implements ArgumentInterface
      */
     public function getConfig(): array
     {
-        if ($this->config !== null) {
-            return $this->config;
+        return $this->getPublicConfig() + $this->getPrivateData();
+    }
+
+    /**
+     * What the page writes into its HTML: the public half alone when cacheable,
+     * since that is all that stands between this and a cart in the page cache.
+     *
+     * @return array<string, mixed>
+     */
+    public function getInlineConfig(): array
+    {
+        return $this->gate->isCacheable() ? $this->getPublicConfig() : $this->getConfig();
+    }
+
+    /**
+     * The store-scoped half. Touches neither the quote nor the customer session:
+     * a cached shell must not pay for, or start, one.
+     *
+     * @return array<string, mixed>
+     */
+    public function getPublicConfig(): array
+    {
+        if ($this->publicConfig === null) {
+            try {
+                $this->publicConfig = $this->buildPublic();
+            } catch (Throwable) {
+                $this->publicConfig = $this->emptyPublicConfig();
+            }
         }
 
-        try {
-            $this->config = $this->build();
-        } catch (Throwable) {
-            $this->config = $this->emptyConfig();
+        return $this->publicConfig;
+    }
+
+    /**
+     * The customer/quote-scoped half. `currencyFormat` belongs here because it
+     * follows the request currency: keeping it out removes a vary dimension
+     * rather than trusting one.
+     *
+     * @return array<string, mixed>
+     */
+    public function getPrivateData(): array
+    {
+        if ($this->privateData === null) {
+            try {
+                $this->privateData = $this->buildPrivate();
+            } catch (Throwable) {
+                $this->privateData = $this->emptyPrivateData();
+            }
         }
 
-        return $this->config;
+        return $this->privateData;
     }
 
     /**
@@ -107,35 +157,47 @@ class CheckoutConfig implements ArgumentInterface
     }
 
     /**
-     * Assemble the config from the session quote and store context.
+     * Assemble the store-scoped half.
      *
      * @return array<string, mixed>
      */
-    private function build(): array
+    private function buildPublic(): array
     {
-        $quote = $this->checkoutSession->getQuote();
         $store = $this->storeManager->getStore();
-        $isLoggedIn = $this->customerSession->isLoggedIn();
         $baseUrl = (string)$store->getBaseUrl();
         $storeCode = (string)$store->getCode();
 
         return [
-            'isLoggedIn' => $isLoggedIn,
-            'maskedCartId' => $isLoggedIn ? '' : $this->maskedCartId($quote),
             'storeCode' => $storeCode,
             'baseUrl' => $baseUrl,
             'restBaseUrl' => $baseUrl . 'rest/' . $storeCode . '/V1/',
             'successUrl' => $baseUrl . 'checkout/onepage/success/',
-            'customerEmail' => $isLoggedIn ? $this->customerEmail() : '',
-            'currencyFormat' => $this->currencyFormat(),
-            'quote' => $this->quoteSummary($quote),
-            'vault' => $this->vaultTokens(),
             'layoutMode' => $this->configProvider->getCheckoutLayoutMode(),
             'guestCheckout' => $this->scopeConfig->isSetFlag('checkout/options/guest_checkout', ScopeInterface::SCOPE_STORE),
             'guestCheckoutLogin' => $this->scopeConfig->isSetFlag('checkout/options/enable_guest_checkout_login', ScopeInterface::SCOPE_STORE),
             'displayBillingOnPayment' => (int)$this->scopeConfig->getValue('checkout/options/display_billing_address_on', ScopeInterface::SCOPE_STORE) === 0,
             'maxSummaryItems' => (int)$this->scopeConfig->getValue('checkout/options/max_items_display_count', ScopeInterface::SCOPE_STORE) ?: 10,
             'agreements' => $this->agreements(),
+        ];
+    }
+
+    /**
+     * Assemble the customer/quote-scoped half.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildPrivate(): array
+    {
+        $quote = $this->checkoutSession->getQuote();
+        $isLoggedIn = $this->customerSession->isLoggedIn();
+
+        return [
+            'isLoggedIn' => $isLoggedIn,
+            'maskedCartId' => $isLoggedIn ? '' : $this->maskedCartId($quote),
+            'customerEmail' => $isLoggedIn ? $this->customerEmail() : '',
+            'currencyFormat' => $this->currencyFormat(),
+            'quote' => $this->quoteSummary($quote),
+            'vault' => $this->vaultTokens(),
         ];
     }
 
@@ -251,28 +313,41 @@ class CheckoutConfig implements ArgumentInterface
     }
 
     /**
-     * Safe fallback config (renders an empty checkout rather than failing).
+     * Safe fallback for the public half (renders an empty checkout rather than
+     * failing).
      *
      * @return array<string, mixed>
      */
-    private function emptyConfig(): array
+    private function emptyPublicConfig(): array
     {
         return [
-            'isLoggedIn' => false,
-            'maskedCartId' => '',
             'storeCode' => '',
             'baseUrl' => '',
             'restBaseUrl' => '',
             'successUrl' => '',
-            'customerEmail' => '',
-            'quote' => ['items' => [], 'itemCount' => 0, 'subtotal' => '', 'grandTotal' => ''],
-            'vault' => [],
             'layoutMode' => CheckoutLayout::STEPPED,
             'guestCheckout' => true,
             'guestCheckoutLogin' => false,
             'displayBillingOnPayment' => true,
             'maxSummaryItems' => 10,
             'agreements' => ['enabled' => false, 'items' => []],
+        ];
+    }
+
+    /**
+     * Safe fallback for the private half.
+     *
+     * @return array<string, mixed>
+     */
+    private function emptyPrivateData(): array
+    {
+        return [
+            'isLoggedIn' => false,
+            'maskedCartId' => '',
+            'customerEmail' => '',
+            'currencyFormat' => '%s',
+            'quote' => ['items' => [], 'itemCount' => 0, 'subtotal' => '', 'grandTotal' => ''],
+            'vault' => [],
         ];
     }
 }
