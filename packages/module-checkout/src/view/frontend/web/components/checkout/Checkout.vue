@@ -86,6 +86,12 @@ watchEffect(() => {
     if (!section) {
         return;
     }
+    // A cart mutation reloads `cart` alone, leaving this section holding the
+    // pre-mutation quote. Acting on it sends a shopper who just added an item
+    // back to the bag page. The store's hydrate is already refetching.
+    if (customerData.isStale()) {
+        return;
+    }
     if (!belongsToThisPage(section) && !revalidated) {
         revalidated = true;
         void customerData.reload([PRIVATE_SECTION]);

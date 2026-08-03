@@ -4,7 +4,7 @@ import { setActivePinia, createPinia } from "pinia";
 import Checkout from "./Checkout.vue";
 import { nextTick } from "vue";
 import { useCheckout } from "../../js/useCheckout.ts";
-import { reload, __reset, __setSection } from "../../../../../Test/Js/stubs/customerData.ts";
+import { reload, __reset, __setSection, __setStale } from "../../../../../Test/Js/stubs/customerData.ts";
 
 // Live watchEffects on the stub's shared ref make an unmounted component react
 // to a later test's __setSection.
@@ -427,6 +427,102 @@ describe("Checkout.vue — empty cart on a cached shell", () => {
         await nextTick();
 
         expect(window.location.assign).not.toHaveBeenCalled();
+    });
+});
+
+// Adding to the cart reloads `cart,messages` only, so the stored checkout section
+// keeps the pre-add empty quote while the store has not synced the new version.
+// Trusting it sends a shopper who just added an item back to the bag page.
+describe("Checkout.vue — an unsynced snapshot cannot decide the cart is empty", () => {
+    const PUBLIC_ONLY = { layoutMode: "stepped", maxSummaryItems: 10, baseUrl: "https://shop.test/" };
+    const EMPTY_SECTION = {
+        isLoggedIn: false, customerEmail: "", maskedCartId: "m", currencyFormat: "$%s",
+        quote: { items: [], subtotal: "$0.00", grandTotal: "$0.00" }, vault: [],
+    };
+    const FILLED_SECTION = {
+        ...EMPTY_SECTION,
+        quote: {
+            items: [{ id: 1, name: "Joust Duffle Bag", qty: 1, rowTotal: "$34.00" }],
+            subtotal: "$34.00", grandTotal: "$34.00",
+        },
+    };
+
+    let pinia;
+
+    beforeEach(() => {
+        pinia = createPinia();
+        setActivePinia(pinia);
+        __reset();
+        vi.stubGlobal("location", { search: "", href: "https://shop.test/checkout/", assign: vi.fn() });
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    function render() {
+        return track(mount(Checkout, {
+            props: { config: PUBLIC_ONLY, labels: {} },
+            global: { plugins: [pinia] },
+        }));
+    }
+
+    it("does not redirect on an empty quote the store has not synced", async () => {
+        __setStale(true);
+        __setSection("obsidian-checkout", EMPTY_SECTION);
+        render();
+        await nextTick();
+
+        expect(window.location.assign).not.toHaveBeenCalled();
+    });
+
+    it("stays unready rather than trusting the unsynced copy", async () => {
+        __setStale(true);
+        __setSection("obsidian-checkout", EMPTY_SECTION);
+        render();
+        await nextTick();
+
+        expect(useCheckout().ready).toBe(false);
+    });
+
+    // The store's own hydrate already has a full reload in flight, and a partial
+    // one would not stamp the version marker anyway — so the snapshot would stay
+    // unsynced forever and the page would never become ready.
+    it("does not fire a partial reload that could never clear the staleness", async () => {
+        __setStale(true);
+        __setSection("obsidian-checkout", EMPTY_SECTION);
+        render();
+        await nextTick();
+
+        expect(reload.calls).not.toContainEqual([["obsidian-checkout"]]);
+    });
+
+    it("paints the cart once the synced section arrives", async () => {
+        __setStale(true);
+        __setSection("obsidian-checkout", EMPTY_SECTION);
+        const wrapper = render();
+        await nextTick();
+
+        __setStale(false);
+        __setSection("obsidian-checkout", FILLED_SECTION);
+        await nextTick();
+
+        expect(window.location.assign).not.toHaveBeenCalled();
+        expect(useCheckout().ready).toBe(true);
+        expect(wrapper.text()).toContain("Joust Duffle Bag");
+    });
+
+    it("still redirects once a synced section confirms the cart is empty", async () => {
+        __setStale(true);
+        __setSection("obsidian-checkout", EMPTY_SECTION);
+        render();
+        await nextTick();
+
+        __setStale(false);
+        __setSection("obsidian-checkout", { ...EMPTY_SECTION });
+        await nextTick();
+
+        expect(window.location.assign).toHaveBeenCalledWith("https://shop.test/checkout/cart/");
     });
 });
 

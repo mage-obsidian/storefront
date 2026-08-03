@@ -7,9 +7,14 @@ import { ref } from "vue";
 type Section = Record<string, unknown>;
 
 const sections = ref<Record<string, Section>>({});
+const stale = ref(false);
 
 export function __setSection(name: string, value: Section): void {
     sections.value = { ...sections.value, [name]: value };
+}
+
+export function __setStale(value: boolean): void {
+    stale.value = value;
 }
 
 interface ReloadFn {
@@ -27,12 +32,14 @@ export const reload: ReloadFn = Object.assign(
 
 export function __reset(): void {
     sections.value = {};
+    stale.value = false;
     reload.calls = [];
 }
 
 export function useCustomerData() {
     return {
         section: (name: string): Section | null => sections.value[name] ?? null,
+        isStale: (): boolean => stale.value,
         reload,
         patch: (name: string, partial: Section): void => {
             sections.value = {
