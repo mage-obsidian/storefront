@@ -11,6 +11,9 @@
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="MageObsidian\Showcase\Model\Telemetry\RecorderInterface"
+                type="MageObsidian\Showcase\Model\Telemetry\NewRelicRecorder"/>
+
     <type name="MageObsidian\Showcase\Model\FeaturePool">
         <arguments>
             <argument name="features" xsi:type="array">

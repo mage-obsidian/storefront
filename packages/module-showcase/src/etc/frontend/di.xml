@@ -19,4 +19,14 @@
                 type="MageObsidian\Showcase\Plugin\App\AddShowcaseVary"
                 sortOrder="20"/>
     </type>
+
+    <!--
+      A low sort order puts this on the outside of the chain, so its `after` runs
+      once everything else has finished and reports what the page was served with.
+    -->
+    <type name="Magento\Framework\App\FrontControllerInterface">
+        <plugin name="mage_obsidian_showcase_telemetry"
+                type="MageObsidian\Showcase\Plugin\App\ReportShowcaseAttributes"
+                sortOrder="10"/>
+    </type>
 </config>
