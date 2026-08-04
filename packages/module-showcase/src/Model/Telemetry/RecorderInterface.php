@@ -16,5 +16,10 @@ namespace MageObsidian\Showcase\Model\Telemetry;
  */
 interface RecorderInterface
 {
-    public function record(string $name, string $value): void;
+    /**
+     * Numbers must stay numbers: the agent types an attribute from the value it
+     * is handed, and on a string one `average()` is null in NRQL unless every
+     * query remembers `numeric()`.
+     */
+    public function record(string $name, string|int|float $value): void;
 }

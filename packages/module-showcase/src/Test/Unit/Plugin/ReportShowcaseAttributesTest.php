@@ -55,6 +55,24 @@ class ReportShowcaseAttributesTest extends TestCase
         $this->assertSame($result, $plugin->afterDispatch($this->frontController(), $result));
     }
 
+    /**
+     * A measurement has to arrive as a number. New Relic types an attribute from
+     * the value it receives, and on a string one `average()` returns null unless
+     * every single query remembers to wrap it in `numeric()`.
+     */
+    public function testKeepsNumbersAsNumbers(): void
+    {
+        $recorder = $this->recorder();
+        $plugin = $this->plugin(['obsidian.autoload_ms' => 12.5, 'obsidian.classes' => 1840], $recorder);
+
+        $plugin->afterDispatch($this->frontController(), $this->response());
+
+        $this->assertSame(
+            ['obsidian.autoload_ms' => 12.5, 'obsidian.classes' => 1840],
+            $recorder->recorded
+        );
+    }
+
     public function testRecordsNothingWhenTheShowcaseCollectedNothing(): void
     {
         $recorder = $this->recorder();
@@ -81,7 +99,7 @@ class ReportShowcaseAttributesTest extends TestCase
     }
 
     /**
-     * @param array<string, string> $collected
+     * @param array<string, string|int|float> $collected
      */
     private function plugin(array $collected, RecorderInterface $recorder): ReportShowcaseAttributes
     {
@@ -94,10 +112,10 @@ class ReportShowcaseAttributesTest extends TestCase
     private function recorder(): RecorderInterface
     {
         return new class implements RecorderInterface {
-            /** @var array<string, string> */
+            /** @var array<string, string|int|float> */
             public array $recorded = [];
 
-            public function record(string $name, string $value): void
+            public function record(string $name, string|int|float $value): void
             {
                 $this->recorded[$name] = $value;
             }

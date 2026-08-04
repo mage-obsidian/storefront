@@ -40,12 +40,13 @@ class Attributes
         private readonly FeaturePool $pool,
         private readonly Profile $profile,
         private readonly ScopeConfigInterface $scopeConfig,
-        private readonly StoreManagerInterface $storeManager
+        private readonly StoreManagerInterface $storeManager,
+        private readonly AutoloadTimer $autoloadTimer
     ) {
     }
 
     /**
-     * @return array<string, string>
+     * @return array<string, string|int|float>
      */
     public function collect(): array
     {
@@ -63,6 +64,17 @@ class Attributes
                 $feature->path,
                 ScopeInterface::SCOPE_STORE
             );
+        }
+
+        // Absent unless the prepend is installed; a zero would be a measurement
+        // that never happened and would drag down every average.
+        $autoloadMs = $this->autoloadTimer->milliseconds();
+        if ($autoloadMs !== null) {
+            $collected[self::PREFIX . 'autoload_ms'] = $autoloadMs;
+        }
+        $autoloadClasses = $this->autoloadTimer->classes();
+        if ($autoloadClasses !== null) {
+            $collected[self::PREFIX . 'autoload_classes'] = $autoloadClasses;
         }
 
         return $collected;

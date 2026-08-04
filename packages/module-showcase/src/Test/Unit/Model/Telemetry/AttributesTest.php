@@ -17,6 +17,7 @@ use MageObsidian\Showcase\Model\Config;
 use MageObsidian\Showcase\Model\FeaturePool;
 use MageObsidian\Showcase\Model\Profile;
 use MageObsidian\Showcase\Model\Telemetry\Attributes;
+use MageObsidian\Showcase\Model\Telemetry\AutoloadTimer;
 use PHPUnit\Framework\TestCase;
 
 class AttributesTest extends TestCase
@@ -118,6 +119,35 @@ class AttributesTest extends TestCase
     }
 
     /**
+     * The figure only means anything as a number: New Relic types an attribute
+     * from what it is handed, and `average()` on a string one returns null.
+     */
+    public function testReportsTheAutoloadCostAsNumbers(): void
+    {
+        $attributes = $this->attributes(
+            features: [],
+            effective: [],
+            autoloadMs: 12.5,
+            autoloadClasses: 1840
+        );
+
+        $collected = $attributes->collect();
+
+        $this->assertSame(12.5, $collected['obsidian.autoload_ms']);
+        $this->assertSame(1840, $collected['obsidian.autoload_classes']);
+    }
+
+    // Without the prepend there is no measurement, and reporting a zero would
+    // drag down every average that includes these requests.
+    public function testOmitsTheAutoloadCostWhenItWasNotMeasured(): void
+    {
+        $collected = $this->attributes(features: [], effective: [])->collect();
+
+        $this->assertArrayNotHasKey('obsidian.autoload_ms', $collected);
+        $this->assertArrayNotHasKey('obsidian.autoload_classes', $collected);
+    }
+
+    /**
      * @param array<string, string> $features key => config path
      * @param array<string, string> $effective config path => value in force
      */
@@ -126,7 +156,9 @@ class AttributesTest extends TestCase
         array $effective,
         bool $enabled = true,
         string $signature = '',
-        string $storeCode = 'default'
+        string $storeCode = 'default',
+        ?float $autoloadMs = null,
+        ?int $autoloadClasses = null
     ): Attributes {
         $config = $this->createMock(Config::class);
         $config->method('isEnabled')->willReturn($enabled);
@@ -151,12 +183,17 @@ class AttributesTest extends TestCase
         $storeManager = $this->createMock(StoreManagerInterface::class);
         $storeManager->method('getStore')->willReturn($store);
 
+        $autoloadTimer = $this->createMock(AutoloadTimer::class);
+        $autoloadTimer->method('milliseconds')->willReturn($autoloadMs);
+        $autoloadTimer->method('classes')->willReturn($autoloadClasses);
+
         return new Attributes(
             $config,
             new FeaturePool($moduleList, $definitions),
             $profile,
             $scopeConfig,
-            $storeManager
+            $storeManager,
+            $autoloadTimer
         );
     }
 }

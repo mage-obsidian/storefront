@@ -21,7 +21,7 @@ class NewRelicRecorder implements RecorderInterface
 {
     private const string AGENT_FUNCTION = 'newrelic_add_custom_parameter';
 
-    public function record(string $name, string $value): void
+    public function record(string $name, string|int|float $value): void
     {
         // The agent ships as a PHP extension that most installs do not load.
         if (!function_exists(self::AGENT_FUNCTION)) {
