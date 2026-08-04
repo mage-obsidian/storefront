@@ -2,9 +2,11 @@
 declare(strict_types=1);
 
 use MageObsidian\ModernFrontend\Block\Template;
+use Magento\Framework\Escaper;
 
 /**
  * @var Template $block
+ * @var Escaper $escaper
  */
 ?>
 
@@ -21,49 +23,7 @@ use MageObsidian\ModernFrontend\Block\Template;
     </div>
 </div>
 
-<script type="module">
-    import {createApp, ref, watch, nextTick} from 'vue';
-    import {pinia, useMainStore} from 'mainStore';
-    import {onClickOutside} from 'mini-vueuse'
-
-    const app = createApp({
-        setup() {
-            const mainStore = useMainStore();
-            const searchInput = ref(null);
-            const root = ref(null);
-            watch(
-                () => mainStore.searchOpen,
-                (newValue) => {
-                    if (newValue) {
-                        nextTick(() => {
-                            if (searchInput.value) {
-                                searchInput.value.focus();
-                            }
-                        });
-                    }
-                }
-            );
-
-            onClickOutside(root, (event) => {
-                if (mainStore.searchOpen) {
-                    const insideRoot = root.value && root.value.contains(event.target);
-                    const insideSearchlink = mainStore.searchLink && mainStore.searchLink.contains(event.target);
-                    if (!insideRoot && !insideSearchlink
-                    ) {
-                        mainStore.searchOpen = false;
-                    }
-                }
-            });
-
-            return {
-                mainStore,
-                searchInput,
-                root
-            };
-        },
-    });
-
-    app.use(pinia);
-
-    app.mount('#search-panel');
-</script>
+<?php // External rather than inline: checkout_index_index enforces CSP with inline
+      // scripts disallowed (Magento_Checkout ships it that way for PCI), and an
+      // inline tag dies there. A same-origin file is covered by 'self'. ?>
+<script type="module" src="<?= $escaper->escapeUrl($block->resolvePathByName('js/search-panel.js')) ?>"></script>
