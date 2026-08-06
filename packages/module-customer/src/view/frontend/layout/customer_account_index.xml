@@ -12,6 +12,12 @@
         <referenceBlock name="account.shell">
             <block class="MageObsidian\ModernFrontend\Block\Template" name="account.dashboard"
                    as="account_content" template="Magento_Customer::account/dashboard.twig" cacheable="false">
+                <arguments>
+                    <!-- The same ViewModels the shell uses: the metric tiles are
+                         the rail's counters, so a counted entry gets a tile free. -->
+                    <argument name="account_nav" xsi:type="object">MageObsidian\Customer\ViewModel\AccountNav</argument>
+                    <argument name="account_summary" xsi:type="object">MageObsidian\Customer\ViewModel\AccountSummary</argument>
+                </arguments>
                 <block class="Magento\Customer\Block\Account\Dashboard\Info" name="account.dashboard.info" as="info"/>
                 <block class="Magento\Customer\Block\Account\Dashboard\Address" name="account.dashboard.address" as="address"/>
             </block>

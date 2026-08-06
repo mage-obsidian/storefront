@@ -5,6 +5,7 @@ namespace MageObsidian\Customer\Test\Unit\ViewModel;
 
 use Magento\Framework\App\Request\Http;
 use Magento\Framework\UrlInterface;
+use MageObsidian\Customer\Api\AccountNavCounterInterface;
 use MageObsidian\Customer\ViewModel\AccountNav;
 use PHPUnit\Framework\TestCase;
 
@@ -90,5 +91,55 @@ class AccountNavTest extends TestCase
     {
         $links = $this->buildViewModel('cms_index_index')->getLinks();
         $this->assertSame([], array_filter($links, static fn (array $l): bool => $l['active']));
+    }
+
+    public function testCarriesTheInjectedIcon(): void
+    {
+        $links = $this->buildViewModel('cms_index_index', [
+            'wishlist' => ['route' => 'wishlist', 'label' => 'Wish List', 'icon' => 'heart'],
+        ])->getLinks();
+
+        $this->assertSame('heart', $links[0]['icon']);
+    }
+
+    public function testDefaultsIconAndCountWhenNotContributed(): void
+    {
+        $links = $this->buildViewModel('cms_index_index')->getLinks();
+
+        $this->assertSame('', $links[0]['icon']);
+        $this->assertNull($links[0]['count']);
+    }
+
+    public function testResolvesTheCountFromTheInjectedCounter(): void
+    {
+        $counter = $this->createMock(AccountNavCounterInterface::class);
+        $counter->method('getCount')->willReturn(4);
+
+        $links = $this->buildViewModel('cms_index_index', [
+            'wishlist' => ['route' => 'wishlist', 'label' => 'Wish List', 'counter' => $counter],
+        ])->getLinks();
+
+        $this->assertSame(4, $links[0]['count']);
+    }
+
+    public function testANullCountIsKeptNull(): void
+    {
+        $counter = $this->createMock(AccountNavCounterInterface::class);
+        $counter->method('getCount')->willReturn(null);
+
+        $links = $this->buildViewModel('cms_index_index', [
+            'orders' => ['route' => 'sales/order/history', 'label' => 'Orders', 'counter' => $counter],
+        ])->getLinks();
+
+        $this->assertNull($links[0]['count']);
+    }
+
+    public function testIgnoresACounterThatDoesNotImplementTheContract(): void
+    {
+        $links = $this->buildViewModel('cms_index_index', [
+            'orders' => ['route' => 'sales/order/history', 'label' => 'Orders', 'counter' => new \stdClass()],
+        ])->getLinks();
+
+        $this->assertNull($links[0]['count']);
     }
 }

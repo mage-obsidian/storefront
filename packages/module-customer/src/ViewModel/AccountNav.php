@@ -13,6 +13,7 @@ namespace MageObsidian\Customer\ViewModel;
 use Magento\Framework\App\Request\Http;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
+use MageObsidian\Customer\Api\AccountNavCounterInterface;
 
 /**
  * Account sidebar links, injected via di.xml so domain modules (reviews, wishlist)
@@ -24,7 +25,8 @@ class AccountNav implements ArgumentInterface
     /**
      * @param UrlInterface $url
      * @param Http $request
-     * @param array $links Account-nav link defs keyed by id (route/match/label/sortOrder)
+     * @param array $links Account-nav link defs keyed by id
+     *                     (route/match/label/sortOrder/icon/counter)
      */
     public function __construct(
         private readonly UrlInterface $url,
@@ -52,6 +54,8 @@ class AccountNav implements ArgumentInterface
                 'url' => $this->url->getUrl($link['route']),
                 'active' => str_starts_with($current, (string)($link['match'] ?? '')),
                 'label' => (string)($link['label'] ?? $id),
+                'icon' => (string)($link['icon'] ?? ''),
+                'count' => $this->countOf($link['counter'] ?? null),
                 'sortOrder' => (int)($link['sortOrder'] ?? 0),
             ];
         }
@@ -63,9 +67,21 @@ class AccountNav implements ArgumentInterface
                 'url' => $item['url'],
                 'active' => $item['active'],
                 'label' => $item['label'],
+                'icon' => $item['icon'],
+                'count' => $item['count'],
             ],
             $items
         );
+    }
+
+    /**
+     * Resolve one link's badge. Anything that is not a counter is treated as no
+     * badge rather than an error: a broken third-party contribution should cost
+     * a number on a nav item, not the whole account area.
+     */
+    private function countOf(mixed $counter): ?int
+    {
+        return $counter instanceof AccountNavCounterInterface ? $counter->getCount() : null;
     }
 
     /**

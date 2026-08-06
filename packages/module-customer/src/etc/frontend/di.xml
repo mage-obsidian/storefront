@@ -8,30 +8,35 @@
                     <item name="route" xsi:type="string">customer/account</item>
                     <item name="match" xsi:type="string">customer_account_index</item>
                     <item name="label" xsi:type="string" translate="true">Account Dashboard</item>
+                    <item name="icon" xsi:type="string">squares-2x2</item>
                     <item name="sortOrder" xsi:type="string">10</item>
                 </item>
                 <item name="orders" xsi:type="array">
                     <item name="route" xsi:type="string">sales/order/history</item>
                     <item name="match" xsi:type="string">sales_order</item>
                     <item name="label" xsi:type="string" translate="true">My Orders</item>
+                    <item name="icon" xsi:type="string">archive-box</item>
                     <item name="sortOrder" xsi:type="string">20</item>
                 </item>
                 <item name="address" xsi:type="array">
                     <item name="route" xsi:type="string">customer/address</item>
                     <item name="match" xsi:type="string">customer_address</item>
                     <item name="label" xsi:type="string" translate="true">Address Book</item>
+                    <item name="icon" xsi:type="string">map-pin</item>
                     <item name="sortOrder" xsi:type="string">30</item>
                 </item>
                 <item name="edit" xsi:type="array">
                     <item name="route" xsi:type="string">customer/account/edit</item>
                     <item name="match" xsi:type="string">customer_account_edit</item>
                     <item name="label" xsi:type="string" translate="true">Account Information</item>
+                    <item name="icon" xsi:type="string">user</item>
                     <item name="sortOrder" xsi:type="string">40</item>
                 </item>
                 <item name="newsletter" xsi:type="array">
                     <item name="route" xsi:type="string">newsletter/manage</item>
                     <item name="match" xsi:type="string">newsletter_manage</item>
                     <item name="label" xsi:type="string" translate="true">Newsletter Subscriptions</item>
+                    <item name="icon" xsi:type="string">envelope</item>
                     <item name="sortOrder" xsi:type="string">50</item>
                 </item>
             </argument>

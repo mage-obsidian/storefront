@@ -128,7 +128,7 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, tru
             :id="panelId"
             ref="panel"
             :aria-label="menuLabel"
-            class="absolute right-0 z-40 mt-2 w-max min-w-[10rem] max-w-[18rem] rounded-edge border border-ash-200 bg-alabaster/95 py-1 shadow-xl backdrop-blur-md"
+            class="absolute right-0 z-40 mt-2 w-max min-w-[10rem] max-w-[18rem] rounded-edge border border-ash-200 bg-alabaster py-1 shadow-xl"
         >
             <li v-for="link in links" :key="link.label">
                 <a

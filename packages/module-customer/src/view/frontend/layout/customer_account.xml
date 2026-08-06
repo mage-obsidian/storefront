@@ -17,6 +17,7 @@
                    template="Magento_Customer::account/shell.twig">
                 <arguments>
                     <argument name="account_nav" xsi:type="object">MageObsidian\Customer\ViewModel\AccountNav</argument>
+                    <argument name="account_summary" xsi:type="object">MageObsidian\Customer\ViewModel\AccountSummary</argument>
                 </arguments>
             </block>
         </referenceContainer>
