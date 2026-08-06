@@ -8,6 +8,7 @@
                     <item name="route" xsi:type="string">vault/cards/listaction</item>
                     <item name="match" xsi:type="string">vault_cards_listaction</item>
                     <item name="label" xsi:type="string" translate="true">Stored Payment Methods</item>
+                    <item name="icon" xsi:type="string">credit-card</item>
                     <item name="sortOrder" xsi:type="string">160</item>
                 </item>
             </argument>
