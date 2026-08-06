@@ -15,7 +15,19 @@ export interface LoginRequest {
     password: string;
     /** Magento login context; "default" unless signing in mid-checkout. */
     context?: string;
+    /** Captcha form the attempt belongs to; see CAPTCHA_FORM_ID. */
+    captchaFormId?: string;
+    /** Solution, once a template renders the challenge. */
+    captchaString?: string;
 }
+
+/**
+ * Magento_Captcha's plugin on the ajax endpoint reads the form id straight off
+ * the JSON body and hands it to the captcha helper. Omitting it is not benign:
+ * the helper indexes an array by the null, which PHP 8.4+ rejects, so the whole
+ * endpoint answers 500 before the credentials are ever looked at.
+ */
+export const CAPTCHA_FORM_ID = "user_login";
 
 export interface LoginResult {
     ok: boolean;
@@ -51,6 +63,8 @@ export function useAuth() {
                     username: req.username,
                     password: req.password,
                     context: req.context ?? "default",
+                    captcha_form_id: req.captchaFormId ?? CAPTCHA_FORM_ID,
+                    captcha_string: req.captchaString ?? "",
                 }),
                 credentials: "same-origin",
             });

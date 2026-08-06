@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { useAuth } from "./useAuth.ts";
+import { useAuth, CAPTCHA_FORM_ID } from "./useAuth.ts";
 import { reload, __reset } from "../../../../Test/Js/stubs/customerData.ts";
 
 function mockFetch(response: { ok: boolean; body: unknown }): void {
@@ -50,7 +50,7 @@ describe("useAuth.login", () => {
         expect(reload.calls).toHaveLength(0);
     });
 
-    it("posts JSON credentials with the default context", async () => {
+    it("posts JSON credentials with the default context and captcha form", async () => {
         const fetchSpy = vi.fn(() =>
             Promise.resolve({ ok: true, json: () => Promise.resolve({ errors: false }) } as Response),
         );
@@ -65,6 +65,30 @@ describe("useAuth.login", () => {
             username: "ada@shop.test",
             password: "secret",
             context: "default",
+            captcha_form_id: CAPTCHA_FORM_ID,
+            captcha_string: "",
+        });
+    });
+
+    it("carries a captcha solution when the caller has one", async () => {
+        const fetchSpy = vi.fn(() =>
+            Promise.resolve({ ok: true, json: () => Promise.resolve({ errors: false }) } as Response),
+        );
+        vi.stubGlobal("fetch", fetchSpy);
+        const { login } = useAuth();
+
+        await login({
+            url: "/customer/ajax/login",
+            username: "ada@shop.test",
+            password: "secret",
+            captchaFormId: "guest_checkout",
+            captchaString: "AB12CD",
+        });
+
+        const [, init] = fetchSpy.mock.calls[0];
+        expect(JSON.parse(init?.body as string)).toMatchObject({
+            captcha_form_id: "guest_checkout",
+            captcha_string: "AB12CD",
         });
     });
 });
