@@ -8,6 +8,7 @@
                     <item name="route" xsi:type="string">review/customer</item>
                     <item name="match" xsi:type="string">review_customer</item>
                     <item name="label" xsi:type="string" translate="true">My Product Reviews</item>
+                    <item name="icon" xsi:type="string">star</item>
                     <item name="sortOrder" xsi:type="string">45</item>
                 </item>
             </argument>

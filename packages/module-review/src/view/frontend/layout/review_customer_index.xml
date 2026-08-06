@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <!--
-  Re-declares the suppressed core "My Product Reviews" page in the account shell,
-  reusing the native Customer\ListCustomer block as the data source.
+  Re-declares the suppressed core "My Product Reviews" page in the account shell.
+  The block is our subclass of the native Customer\ListCustomer: it only re-templates
+  the pager core creates in PHP, which is what paginates the review collection.
 -->
 <page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
@@ -9,7 +10,7 @@
     <body>
         <referenceBlock name="page.main.title" remove="true"/>
         <referenceBlock name="account.shell">
-            <block class="Magento\Review\Block\Customer\ListCustomer" name="review_customer_list"
+            <block class="MageObsidian\Review\Block\Customer\ListCustomer" name="review_customer_list"
                    as="account_content" template="Magento_Review::customer/list.twig"
                    cacheable="false" ifconfig="catalog/review/active"/>
         </referenceBlock>
