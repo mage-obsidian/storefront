@@ -198,6 +198,44 @@
     color: var(--color-obsidian-950);
   }
 
+  /* Confirmation modal (js/confirm-action). A native <dialog>, so the top layer,
+     the backdrop, Escape and the focus trap are the browser's job. */
+  .confirm-dialog {
+    /* Preflight zeroes every margin, which also takes out the `margin: auto` the
+       UA stylesheet uses to centre a modal dialog in its inset-0 box. */
+    margin: auto;
+    width: min(26rem, calc(100vw - 2rem));
+    padding: 0;
+    background: var(--color-paper);
+    border: 1px solid var(--color-ash-200);
+    border-radius: var(--radius-edge);
+    color: var(--color-ink);
+  }
+
+  .confirm-dialog::backdrop {
+    background: color-mix(in srgb, var(--color-obsidian-950) 55%, transparent);
+  }
+
+  .confirm-dialog__title {
+    padding: 1.5rem 1.5rem 0;
+    font-family: var(--font-display);
+    font-size: var(--text-lead);
+    line-height: 1.25;
+  }
+
+  .confirm-dialog__body {
+    padding: 0.75rem 1.5rem 0;
+    font-size: 0.875rem;
+    color: var(--color-ink-soft);
+  }
+
+  .confirm-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1.5rem;
+  }
+
   /* A text link, not a button: no box, so it inherits the size and colour of the
      text it sits in unless a modifier or a utility says otherwise. */
   .link {
