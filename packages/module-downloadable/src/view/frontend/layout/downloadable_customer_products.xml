@@ -15,7 +15,9 @@
             <block class="MageObsidian\ModernFrontend\Block\Template" name="account.downloadable.products"
                    as="account_content" template="Magento_Downloadable::customer/products/list.twig"
                    cacheable="false">
-                <block class="Magento\Downloadable\Block\Customer\Products\ListProducts"
+                <!-- Our subclass of the core block: it only re-templates the pager
+                     core creates in PHP, which is what paginates the item list. -->
+                <block class="MageObsidian\Downloadable\Block\Customer\Products\ListProducts"
                        name="downloadable_customer_products_list" as="list"/>
             </block>
         </referenceBlock>

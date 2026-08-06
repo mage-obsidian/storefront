@@ -8,6 +8,7 @@
                     <item name="route" xsi:type="string">downloadable/customer/products</item>
                     <item name="match" xsi:type="string">downloadable_customer_products</item>
                     <item name="label" xsi:type="string" translate="true">My Downloadable Products</item>
+                    <item name="icon" xsi:type="string">arrow-down-tray</item>
                     <item name="sortOrder" xsi:type="string">25</item>
                 </item>
             </argument>
