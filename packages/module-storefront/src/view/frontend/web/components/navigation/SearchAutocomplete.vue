@@ -206,7 +206,7 @@ defineExpose({ suggestions, activeIndex, open, fetchSuggestions });
 
         <div
             v-if="open"
-            class="absolute right-0 z-40 mt-3 w-[min(22rem,calc(100vw-2rem))] rounded-edge border border-ash-200 bg-alabaster/95 p-3 shadow-xl backdrop-blur-md"
+            class="absolute right-0 z-40 mt-3 w-[min(22rem,calc(100vw-2rem))] rounded-edge border border-ash-200 bg-alabaster p-3 shadow-xl"
         >
             <form :action="actionUrl" method="get" role="search" class="flex items-center gap-2">
                 <input

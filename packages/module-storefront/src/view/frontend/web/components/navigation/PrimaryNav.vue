@@ -129,7 +129,7 @@ onBeforeUnmount(() => {
                 <div v-show="flyoutIndex === i" class="absolute left-0 top-full z-40 pt-3">
                     <ul
                         :aria-label="link.label"
-                        class="min-w-[12rem] rounded-edge border border-ash-200 bg-alabaster/95 py-1 shadow-xl backdrop-blur-md"
+                        class="max-h-[calc(100dvh-9rem)] min-w-[12rem] overflow-y-auto overscroll-contain rounded-edge border border-ash-200 bg-alabaster py-1 shadow-xl"
                     >
                         <li v-for="child in link.children" :key="child.label">
                             <a
@@ -178,7 +178,7 @@ onBeforeUnmount(() => {
                 :id="panelId"
                 ref="panel"
                 :aria-label="moreLabel"
-                class="absolute right-0 z-40 mt-3 min-w-[11rem] rounded-edge border border-ash-200 bg-alabaster/95 py-1 shadow-xl backdrop-blur-md"
+                class="absolute right-0 z-40 mt-3 max-h-[calc(100dvh-9rem)] min-w-[11rem] overflow-y-auto overscroll-contain rounded-edge border border-ash-200 bg-alabaster py-1 shadow-xl"
             >
                 <li v-for="(link, i) in links" :key="link.label" :data-nav-overflow-index="i">
                     <a
