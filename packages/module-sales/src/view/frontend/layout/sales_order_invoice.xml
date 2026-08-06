@@ -15,6 +15,7 @@
                    as="account_content" template="Magento_Sales::account/order-invoice.twig" cacheable="false">
                 <arguments>
                     <argument name="item_options" xsi:type="object">MageObsidian\Sales\ViewModel\ItemOptions</argument>
+                    <argument name="order_presentation" xsi:type="object">MageObsidian\Sales\ViewModel\OrderPresentation</argument>
                     <argument name="tax_breakdown" xsi:type="object">MageObsidian\Sales\ViewModel\TaxBreakdown</argument>
                 </arguments>
                 <block class="MageObsidian\Sales\Block\OrderTitle" name="account.invoice.title"/>

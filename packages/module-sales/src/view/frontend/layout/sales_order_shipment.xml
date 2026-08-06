@@ -15,6 +15,7 @@
                    as="account_content" template="Magento_Sales::account/order-shipment.twig" cacheable="false">
                 <arguments>
                     <argument name="item_options" xsi:type="object">MageObsidian\Sales\ViewModel\ItemOptions</argument>
+                    <argument name="order_presentation" xsi:type="object">MageObsidian\Sales\ViewModel\OrderPresentation</argument>
                 </arguments>
                 <block class="MageObsidian\Sales\Block\OrderTitle" name="account.shipment.title"/>
                 <block class="Magento\Shipping\Block\Order\Shipment" name="sales.order.shipment" as="shipment"/>

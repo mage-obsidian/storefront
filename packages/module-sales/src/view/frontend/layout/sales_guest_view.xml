@@ -16,6 +16,7 @@
                     <argument name="route_prefix" xsi:type="string">sales/guest</argument>
                     <argument name="is_guest" xsi:type="boolean">true</argument>
                     <argument name="item_options" xsi:type="object">MageObsidian\Sales\ViewModel\ItemOptions</argument>
+                    <argument name="order_presentation" xsi:type="object">MageObsidian\Sales\ViewModel\OrderPresentation</argument>
                 </arguments>
                 <block class="MageObsidian\Sales\Block\OrderTitle" name="guest.order.title"/>
                 <block class="Magento\Sales\Block\Order\View" name="sales.order.view" as="view"/>

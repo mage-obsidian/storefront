@@ -15,6 +15,7 @@
                    template="Magento_Sales::account/order-view.twig" cacheable="false">
                 <arguments>
                     <argument name="item_options" xsi:type="object">MageObsidian\Sales\ViewModel\ItemOptions</argument>
+                    <argument name="order_presentation" xsi:type="object">MageObsidian\Sales\ViewModel\OrderPresentation</argument>
                 </arguments>
                 <block class="MageObsidian\Sales\Block\OrderTitle" name="print.order.title"/>
                 <block class="Magento\Sales\Block\Order\View" name="sales.order.view" as="view"/>

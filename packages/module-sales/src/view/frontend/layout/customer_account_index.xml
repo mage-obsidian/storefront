@@ -12,6 +12,7 @@
                    template="Magento_Sales::account/dashboard-orders.twig">
                 <arguments>
                     <argument name="cancellation" xsi:type="object">Magento\OrderCancellationUi\ViewModel\Config</argument>
+                    <argument name="order_presentation" xsi:type="object">MageObsidian\Sales\ViewModel\OrderPresentation</argument>
                 </arguments>
                 <block class="Magento\Sales\Block\Order\Recent" name="sales.order.recent.source" as="recent"/>
             </block>

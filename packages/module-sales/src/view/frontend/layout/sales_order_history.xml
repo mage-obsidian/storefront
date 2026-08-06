@@ -15,8 +15,11 @@
                    as="account_content" template="Magento_Sales::account/order-history.twig" cacheable="false">
                 <arguments>
                     <argument name="cancellation" xsi:type="object">Magento\OrderCancellationUi\ViewModel\Config</argument>
+                    <argument name="order_presentation" xsi:type="object">MageObsidian\Sales\ViewModel\OrderPresentation</argument>
                 </arguments>
-                <block class="Magento\Sales\Block\Order\History" name="sales.order.history" as="history"/>
+                <!-- Our subclass only re-templates the pager the core block builds
+                     for itself; see MageObsidian\Sales\Block\Order\History. -->
+                <block class="MageObsidian\Sales\Block\Order\History" name="sales.order.history" as="history"/>
             </block>
         </referenceBlock>
     </body>
