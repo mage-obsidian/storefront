@@ -223,8 +223,6 @@
     display: none;
 }
 
-/* One row that scrolls rather than wraps: a wrapped sequence reads as a grid,
-   and the connectors would run off the end of each line. */
 .step-rail__list {
     display: flex;
     align-items: center;
@@ -315,8 +313,6 @@
    Mobile total bar.
    ============================================================ */
 
-/* Below lg the order summary sits under a form taller than the viewport, so the
-   shopper fills in an address without ever seeing what they are paying. */
 .checkout-total-bar {
     position: fixed;
     inset-inline: 0;
@@ -355,15 +351,12 @@
     color: var(--color-ink);
 }
 
-/* The breakpoint lives here, not on a `lg:hidden` utility: these rules are
-   unlayered and would beat the utility's `display: none`. */
 @media (width >= 64rem) {
     .checkout-total-bar {
         display: none;
     }
 }
 
-/* Reserves the bar's own height so it never sits on top of Place Order. */
 @media (width < 64rem) {
     .checkout-page {
         padding-bottom: calc(5rem + env(safe-area-inset-bottom));
