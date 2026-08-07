@@ -518,6 +518,16 @@ describe("useCheckout — public/private split (cacheable shell)", () => {
         expect(checkout.maxSummaryItems).toBe(5);
     });
 
+    it("keeps an email a guest typed before the section landed", () => {
+        const checkout = useCheckout();
+        checkout.initPublic(PUBLIC_CONFIG);
+        checkout.email = "early@shop.test";
+
+        checkout.applyPrivate({ ...PRIVATE_DATA, isLoggedIn: false, customerEmail: "" });
+
+        expect(checkout.email).toBe("early@shop.test");
+    });
+
     it("becomes ready and seeds the quote when the private section arrives", () => {
         const checkout = useCheckout();
         checkout.initPublic(PUBLIC_CONFIG);

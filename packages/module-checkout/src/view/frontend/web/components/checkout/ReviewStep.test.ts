@@ -82,6 +82,28 @@ describe("ReviewStep", () => {
         expect(wrapper.find("[data-shipping-pending]").exists()).toBe(true);
     });
 
+    it("tells a shopper whose checkout will not sync itself what to do about it", async () => {
+        mockFetch({ payment_methods: [{ code: "checkmo", title: "Check" }], totals: {} });
+        checkout.selectMethod({ carrier_code: "flatrate", method_code: "flatrate" });
+        await checkout.saveShipping();
+        checkout.shippingAddress.city = "Lyon";
+        const wrapper = render();
+
+        expect(wrapper.find("[data-shipping-pending]").text()).toMatch(/go back to the shipping step/i);
+    });
+
+    it("says it is working while the sync it owes is still owed", async () => {
+        mockFetch({ payment_methods: [{ code: "checkmo", title: "Check" }], totals: {} });
+        checkout.selectMethod({ carrier_code: "flatrate", method_code: "flatrate" });
+        await checkout.saveShipping();
+        checkout.shippingAddress.city = "Lyon";
+        checkout.scheduleShippingSync();
+        const wrapper = render();
+
+        expect(wrapper.find("[data-shipping-pending]").text()).toMatch(/confirming your shipping/i);
+        checkout.cancelShippingSync();
+    });
+
     it("says nothing about shipping once the quote holds what is on screen", () => {
         const wrapper = render();
 

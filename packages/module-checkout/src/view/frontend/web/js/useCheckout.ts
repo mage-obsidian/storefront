@@ -197,6 +197,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const ready = ref(false);
 
     const persistedSignature = ref('');
+    const shippingSyncPending = ref(false);
     const shippingSaved = ref(false);
     const shippingTouched = ref(false);
     let ratedSignature = '';
@@ -249,7 +250,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         }
 
         isLoggedIn.value = !!d.isLoggedIn;
-        email.value = d.customerEmail || '';
+        email.value = d.customerEmail || email.value;
         currencyFormat.value = d.currencyFormat || '';
         vaultTokens.value = Array.isArray(d.vault) ? (d.vault as VaultToken[]) : [];
         api = createCheckoutApi({
@@ -361,7 +362,15 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     }
 
     function runShippingSync(withEstimate: boolean): Promise<void> {
-        const pass = (): Promise<void> => shippingSyncPass(withEstimate);
+        const pass = async (): Promise<void> => {
+            try {
+                await shippingSyncPass(withEstimate);
+            } finally {
+                if (syncTimer === undefined) {
+                    shippingSyncPending.value = false;
+                }
+            }
+        };
         syncChain = syncChain.then(pass, pass);
 
         return syncChain;
@@ -369,6 +378,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
 
     function scheduleShippingSync(): void {
         clearTimeout(syncTimer);
+        shippingSyncPending.value = true;
         syncTimer = setTimeout(() => {
             syncTimer = undefined;
             void runShippingSync(true);
@@ -378,6 +388,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     function cancelShippingSync(): void {
         clearTimeout(syncTimer);
         syncTimer = undefined;
+        shippingSyncPending.value = false;
     }
 
     async function flushShippingSync(): Promise<boolean> {
@@ -769,6 +780,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         emailReady,
         shippingSignature,
         shippingDirty,
+        shippingSyncPending,
         shippingMethods,
         selectedMethod,
         selectedMethodKey,

@@ -16,6 +16,7 @@ interface ReviewLabels {
     placeOrder?: string;
     placing?: string;
     confirmingShipping?: string;
+    confirmShipping?: string;
 }
 
 const props = withDefaults(defineProps<{ labels?: ReviewLabels }>(), { labels: () => ({}) });
@@ -50,7 +51,8 @@ function remove(): Promise<void> {
     return withCouponBusy(() => checkout.removeCoupon());
 }
 
-const shippingPending = computed(() => checkout.shippingDirty || checkout.savingShipping);
+const shippingBusy = computed(() => checkout.savingShipping || checkout.shippingSyncPending);
+const shippingPending = computed(() => checkout.shippingDirty || shippingBusy.value);
 
 const paymentTitle = (): string =>
     checkout.paymentMethods.find((m) => m.code === checkout.selectedPayment)?.title ?? checkout.selectedPayment;
@@ -132,7 +134,9 @@ const paymentTitle = (): string =>
                 {{ checkout.placingOrder ? t("placing", "Placing order…") : t("placeOrder", "Place order") }}
             </button>
             <p v-if="shippingPending" data-shipping-pending aria-live="polite" class="font-mono text-xs text-ink-soft">
-                {{ t("confirmingShipping", "Confirming your shipping details…") }}
+                {{ shippingBusy
+                    ? t("confirmingShipping", "Confirming your shipping details…")
+                    : t("confirmShipping", "Go back to the shipping step to confirm your change.") }}
             </p>
         </div>
 
