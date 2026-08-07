@@ -70,6 +70,25 @@ describe("ReviewStep", () => {
         expect((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0]).toContain("payment-information");
     });
 
+    it("will not let the order close while the quote is behind the screen", async () => {
+        mockFetch({ payment_methods: [{ code: "checkmo", title: "Check" }], totals: {} });
+        checkout.selectMethod({ carrier_code: "flatrate", method_code: "flatrate" });
+        await checkout.saveShipping();
+        checkout.shippingAddress.city = "Lyon";
+        const wrapper = render();
+
+        expect(checkout.shippingDirty).toBe(true);
+        expect(wrapper.find("[data-place-order]").attributes("disabled")).toBeDefined();
+        expect(wrapper.find("[data-shipping-pending]").exists()).toBe(true);
+    });
+
+    it("says nothing about shipping once the quote holds what is on screen", () => {
+        const wrapper = render();
+
+        expect(wrapper.find("[data-place-order]").attributes("disabled")).toBeUndefined();
+        expect(wrapper.find("[data-shipping-pending]").exists()).toBe(false);
+    });
+
     it("locks the coupon actions while the request is in flight", async () => {
         let settle: (value: unknown) => void = () => {};
         globalThis.fetch = vi.fn().mockReturnValue(new Promise((resolve) => { settle = resolve; }));

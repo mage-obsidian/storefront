@@ -199,10 +199,89 @@ class CheckoutConfig implements ArgumentInterface
             'customerEmail' => $isLoggedIn ? $this->customerEmail() : '',
             'currencyFormat' => $this->currencyFormat(),
             'quote' => $this->quoteSummary($quote),
+            'shipping' => $this->quoteShipping($quote),
             'vault' => $this->vaultTokens(),
             'addresses' => $isLoggedIn ? $this->addressBook() : [],
             'context' => $this->context(),
         ];
+    }
+
+    /**
+     * @param Quote $quote
+     * @return array{address: array<string, mixed>|null, method: array{carrier_code: string, method_code: string}, email: string}
+     */
+    private function quoteShipping(Quote $quote): array
+    {
+        $empty = ['address' => null, 'method' => ['carrier_code' => '', 'method_code' => ''], 'email' => ''];
+
+        try {
+            if ((bool)$quote->getIsVirtual()) {
+                return $empty;
+            }
+            $address = $quote->getShippingAddress();
+            $street = array_values(array_filter(
+                (array)$address->getStreet(),
+                static fn ($line): bool => trim((string)$line) !== ''
+            ));
+            if ((string)$address->getCountryId() === '' || $street === []) {
+                return $empty;
+            }
+
+            return [
+                'address' => [
+                    'firstname' => (string)$address->getFirstname(),
+                    'lastname' => (string)$address->getLastname(),
+                    'company' => (string)$address->getCompany(),
+                    'street' => $street,
+                    'city' => (string)$address->getCity(),
+                    'region' => (string)$address->getRegion(),
+                    'regionId' => $address->getRegionId() ? (int)$address->getRegionId() : null,
+                    'postcode' => (string)$address->getPostcode(),
+                    'countryId' => (string)$address->getCountryId(),
+                    'telephone' => (string)$address->getTelephone(),
+                ],
+                'method' => $this->shippingMethod((string)$address->getShippingMethod()),
+                'email' => $this->quoteEmail($quote, $address),
+            ];
+        } catch (Throwable) {
+            return $empty;
+        }
+    }
+
+    /**
+     * @param Quote $quote
+     * @param mixed $shippingAddress
+     * @return string
+     */
+    private function quoteEmail(Quote $quote, mixed $shippingAddress): string
+    {
+        $candidates = [
+            (string)$quote->getCustomerEmail(),
+            (string)$quote->getBillingAddress()?->getEmail(),
+            (string)$shippingAddress->getEmail(),
+        ];
+
+        foreach ($candidates as $email) {
+            if ($email !== '') {
+                return $email;
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * @param string $method
+     * @return array{carrier_code: string, method_code: string}
+     */
+    private function shippingMethod(string $method): array
+    {
+        if ($method === '') {
+            return ['carrier_code' => '', 'method_code' => ''];
+        }
+        [$carrier, $code] = array_pad(explode('_', $method, 2), 2, '');
+
+        return ['carrier_code' => $carrier, 'method_code' => $code];
     }
 
     /**
@@ -456,6 +535,7 @@ class CheckoutConfig implements ArgumentInterface
             'customerEmail' => '',
             'currencyFormat' => '%s',
             'quote' => ['items' => [], 'itemCount' => 0, 'subtotal' => '', 'grandTotal' => ''],
+            'shipping' => ['address' => null, 'method' => ['carrier_code' => '', 'method_code' => ''], 'email' => ''],
             'vault' => [],
             'addresses' => [],
             'context' => ['storeCode' => '', 'currencyCode' => ''],

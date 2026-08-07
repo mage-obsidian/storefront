@@ -99,58 +99,52 @@ describe("OnePageCheckout.vue", () => {
         expect(wrapper.findAll("nav ol li button")).toHaveLength(2);
     });
 
-    it("estimates shipping reactively (debounced, once) when the address is complete", async () => {
+    it("asks the store to bring the quote in line whenever the shipping input changes", async () => {
         const { checkout } = render();
-        const estimate = vi.spyOn(checkout, "estimateShipping").mockResolvedValue(true);
+        const sync = vi.spyOn(checkout, "scheduleShippingSync");
 
         checkout.shippingAddress = { ...COMPLETE_ADDRESS };
         await nextTick();
-        expect(estimate).not.toHaveBeenCalled();
+        expect(sync).toHaveBeenCalledTimes(1);
 
-        vi.advanceTimersByTime(400);
-        expect(estimate).toHaveBeenCalledTimes(1);
-
-        // No address change → no second call.
-        vi.advanceTimersByTime(400);
-        expect(estimate).toHaveBeenCalledTimes(1);
-    });
-
-    it("does not estimate while the rating fields are incomplete", async () => {
-        const { checkout } = render();
-        const estimate = vi.spyOn(checkout, "estimateShipping").mockResolvedValue(true);
-
-        checkout.shippingAddress = { ...COMPLETE_ADDRESS, postcode: "" };
+        checkout.selectMethod(FLATRATE);
         await nextTick();
-        vi.advanceTimersByTime(400);
-        expect(estimate).not.toHaveBeenCalled();
+        expect(sync).toHaveBeenCalledTimes(2);
+
+        await nextTick();
+        expect(sync).toHaveBeenCalledTimes(2);
     });
 
-    it("estimates shipping for an address the store already held at mount", async () => {
-        let estimate: ReturnType<typeof vi.spyOn> | null = null;
+    it("asks once at mount, so an address the store already held still gets its rates", () => {
+        let sync: ReturnType<typeof vi.spyOn> | null = null;
         const { checkout } = render(
             { isLoggedIn: true, customerEmail: "ada@shop.test", addresses: [SAVED_ADDRESS] },
             (store) => {
-                estimate = vi.spyOn(store, "estimateShipping").mockResolvedValue(true);
+                sync = vi.spyOn(store, "scheduleShippingSync");
             },
         );
 
         expect(checkout.shippingAddress.postcode).toBe("75001");
-        vi.advanceTimersByTime(400);
-        expect(estimate).toHaveBeenCalledTimes(1);
+        expect(sync).toHaveBeenCalledTimes(1);
     });
 
-    it("saves shipping-information reactively once a method is selected on a complete address", async () => {
+    it("also reacts to the guest email, which the address signature cannot carry", async () => {
         const { checkout } = render();
-        vi.spyOn(checkout, "estimateShipping").mockResolvedValue(true);
-        const save = vi.spyOn(checkout, "saveShipping").mockResolvedValue(true);
+        const sync = vi.spyOn(checkout, "scheduleShippingSync");
 
         checkout.email = "guest@shop.test";
-        checkout.shippingAddress = { ...COMPLETE_ADDRESS };
-        checkout.selectMethod(FLATRATE);
         await nextTick();
-        vi.advanceTimersByTime(400);
 
-        expect(save).toHaveBeenCalledTimes(1);
+        expect(sync).toHaveBeenCalledTimes(1);
+    });
+
+    it("drops the pending sync when the checkout goes away", () => {
+        const { wrapper, checkout } = render();
+        const cancel = vi.spyOn(checkout, "cancelShippingSync");
+
+        wrapper.unmount();
+
+        expect(cancel).toHaveBeenCalled();
     });
 
     it("scrolls back to a finished stage through the component's own section, not a lookup by id", async () => {
@@ -177,22 +171,4 @@ describe("OnePageCheckout.vue", () => {
         expect(wrapper.find("#onepage-payment").exists()).toBe(false);
     });
 
-    it("re-persists an address edited after it was already saved", async () => {
-        const { checkout } = render();
-        vi.spyOn(checkout, "estimateShipping").mockResolvedValue(true);
-        const save = vi.spyOn(checkout, "saveShipping").mockResolvedValue(true);
-
-        checkout.email = "guest@shop.test";
-        checkout.shippingAddress = { ...COMPLETE_ADDRESS };
-        checkout.selectMethod(FLATRATE);
-        await nextTick();
-        vi.advanceTimersByTime(400);
-        expect(save).toHaveBeenCalledTimes(1);
-
-        checkout.shippingAddress = { ...COMPLETE_ADDRESS, city: "Lyon" };
-        await nextTick();
-        vi.advanceTimersByTime(400);
-
-        expect(save).toHaveBeenCalledTimes(2);
-    });
 });

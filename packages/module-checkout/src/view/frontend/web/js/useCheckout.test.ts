@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
-import { useCheckout, CheckoutStep } from "./useCheckout.ts";
+import { nextTick } from "vue";
+import { useCheckout, CheckoutStep, SHIPPING_SYNC_DEBOUNCE_MS } from "./useCheckout.ts";
 import { CheckoutOperation } from "./checkout-events.ts";
 import events, { dispatched, __reset as __resetEvents } from "MageObsidian_ModernFrontend::js/events";
 
@@ -769,5 +770,259 @@ describe("useCheckout — the customer's saved addresses", () => {
 
             expect(body.addressInformation.shipping_address).not.toHaveProperty("save_in_address_book");
         });
+    });
+});
+
+describe("useCheckout — keeping the quote and the screen in step", () => {
+    const COMPLETE = {
+        firstname: "Ada", lastname: "Lovelace", company: "", street: ["1 Rue", ""],
+        city: "Paris", region: "", regionId: null, postcode: "75001", countryId: "FR",
+        telephone: "0102030405",
+    };
+    const SAVE_RESPONSE = { payment_methods: [{ code: "checkmo", title: "Check" }], totals: { grand_total: 39 } };
+    const ORDER_ID = 424242;
+
+    beforeEach(() => {
+        setActivePinia(createPinia());
+        vi.restoreAllMocks();
+        vi.useFakeTimers();
+        __resetEvents();
+        Object.defineProperty(window, "location", { value: { assign: vi.fn() }, writable: true });
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    function mockCheckoutFetch() {
+        globalThis.fetch = vi.fn().mockImplementation((url) => {
+            const path = String(url);
+            const body = path.includes("estimate-shipping-methods")
+                ? [FLATRATE]
+                : path.includes("shipping-information")
+                  ? SAVE_RESPONSE
+                  : ORDER_ID;
+            return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(body) });
+        });
+        return globalThis.fetch;
+    }
+
+    const called = (fetchMock, endpoint) =>
+        fetchMock.mock.calls.filter((call) => String(call[0]).includes(endpoint));
+
+    function guest(config = {}) {
+        const checkout = useCheckout();
+        checkout.init({ ...GUEST_CONFIG, ...config });
+        checkout.email = "guest@shop.test";
+        return checkout;
+    }
+
+    const settle = () => vi.advanceTimersByTimeAsync(SHIPPING_SYNC_DEBOUNCE_MS);
+
+    async function shipped(checkout) {
+        checkout.shippingAddress = { ...COMPLETE };
+        checkout.scheduleShippingSync();
+        await settle();
+    }
+
+    it("waits for the shopper to stop typing, and asks nothing for an address that did not change", async () => {
+        const fetchMock = mockCheckoutFetch();
+        const checkout = guest();
+
+        checkout.shippingAddress = { ...COMPLETE };
+        checkout.scheduleShippingSync();
+        expect(fetchMock).not.toHaveBeenCalled();
+
+        await settle();
+        expect(called(fetchMock, "estimate-shipping-methods")).toHaveLength(1);
+
+        checkout.scheduleShippingSync();
+        await settle();
+        expect(called(fetchMock, "estimate-shipping-methods")).toHaveLength(1);
+    });
+
+    it("does not go to the network while the address cannot be quoted", async () => {
+        const fetchMock = mockCheckoutFetch();
+        const checkout = guest();
+
+        checkout.shippingAddress = { ...COMPLETE, postcode: "" };
+        checkout.scheduleShippingSync();
+        await settle();
+
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it("persists the address once a method is chosen, and again after an edit", async () => {
+        const fetchMock = mockCheckoutFetch();
+        const checkout = guest();
+        await shipped(checkout);
+        expect(called(fetchMock, "shipping-information")).toHaveLength(1);
+        expect(checkout.shippingDirty).toBe(false);
+
+        checkout.shippingAddress = { ...COMPLETE, city: "Lyon" };
+        expect(checkout.shippingDirty).toBe(true);
+
+        checkout.scheduleShippingSync();
+        await settle();
+
+        const saves = called(fetchMock, "shipping-information");
+        expect(saves).toHaveLength(2);
+        expect(JSON.parse(saves[1][1].body).addressInformation.shipping_address.city).toBe("Lyon");
+        expect(checkout.shippingDirty).toBe(false);
+    });
+
+    it("takes the rates, the method and the payment methods down with an address that can no longer be quoted", async () => {
+        mockCheckoutFetch();
+        const checkout = guest();
+        await shipped(checkout);
+        expect(checkout.shippingMethods.length).toBeGreaterThan(0);
+        expect(checkout.paymentMethods).toHaveLength(1);
+
+        checkout.selectAddress(null);
+        await nextTick();
+
+        expect(checkout.shippingMethods).toEqual([]);
+        expect(checkout.selectedMethod).toBeNull();
+        expect(checkout.paymentMethods).toEqual([]);
+        expect(checkout.ratesRequested).toBe(false);
+        expect(checkout.shippingDirty).toBe(true);
+    });
+
+    it("saves again when the same address comes back, since the payment methods went with it", async () => {
+        const fetchMock = mockCheckoutFetch();
+        const checkout = guest();
+        await shipped(checkout);
+        expect(called(fetchMock, "shipping-information")).toHaveLength(1);
+
+        checkout.selectAddress(null);
+        await nextTick();
+        await shipped(checkout);
+
+        expect(called(fetchMock, "shipping-information")).toHaveLength(2);
+        expect(checkout.paymentMethods).toHaveLength(1);
+        expect(checkout.shippingDirty).toBe(false);
+    });
+
+    it("settles the debounced write before placing the order, so the order carries the edit", async () => {
+        const fetchMock = mockCheckoutFetch();
+        const checkout = guest();
+        await shipped(checkout);
+
+        checkout.selectPayment("checkmo");
+        checkout.shippingAddress = { ...COMPLETE, city: "Lyon" };
+        checkout.scheduleShippingSync();
+
+        const order = checkout.placeOrder();
+        await vi.runAllTimersAsync();
+
+        expect(await order).toBe(ORDER_ID);
+        const saves = called(fetchMock, "shipping-information");
+        expect(JSON.parse(saves.at(-1)[1].body).addressInformation.shipping_address.city).toBe("Lyon");
+        const urls = fetchMock.mock.calls.map((call) => String(call[0]));
+        expect(urls.lastIndexOf(urls.find((url) => url.includes("payment-information")))).toBe(urls.length - 1);
+    });
+
+    it("refuses the order outright when the quote cannot be brought up to date", async () => {
+        const fetchMock = mockCheckoutFetch();
+        const checkout = guest();
+        await shipped(checkout);
+        checkout.selectPayment("checkmo");
+
+        checkout.selectAddress(null);
+        await nextTick();
+        const orderId = await checkout.placeOrder();
+
+        expect(orderId).toBeNull();
+        expect(called(fetchMock, "payment-information")).toHaveLength(0);
+    });
+});
+
+describe("useCheckout — restoring the shipping choice the quote already holds", () => {
+    const HELD = {
+        firstname: "Grace", lastname: "Hopper", company: "", street: ["440 Ocean Drive", "Apt 2"],
+        city: "Miami", region: "Florida", regionId: 18, postcode: "33139", countryId: "US",
+        telephone: "3055550199",
+    };
+    const AUSTIN = {
+        id: 20, label: "Ada, 12 Baker Street, Austin", isDefaultShipping: true,
+        firstname: "Ada", lastname: "Lovelace", company: "", street: ["12 Baker Street"],
+        city: "Austin", region: "Texas", regionId: 57, postcode: "78701",
+        countryId: "US", telephone: "5125550142",
+    };
+    const PUBLIC_CONFIG = { restBaseUrl: "https://shop.test/rest/default/V1/", defaultCountry: "US" };
+
+    beforeEach(() => {
+        setActivePinia(createPinia());
+    });
+
+    function seeded(shipping, extra = {}) {
+        const checkout = useCheckout();
+        checkout.initPublic(PUBLIC_CONFIG);
+        checkout.applyPrivate({
+            isLoggedIn: false,
+            customerEmail: "",
+            maskedCartId: "mask42",
+            currencyFormat: "$%s",
+            quote: { items: [], subtotal: "$0.00", grandTotal: "$0.00" },
+            vault: [],
+            addresses: [],
+            shipping,
+            ...extra,
+        });
+        return checkout;
+    }
+
+    it("puts the shopper's own address back, not a blank form", () => {
+        const checkout = seeded({ address: HELD, method: { carrier_code: "tablerate", method_code: "bestway" }, email: "grace@shop.test" });
+
+        expect(checkout.shippingAddress.city).toBe("Miami");
+        expect(checkout.shippingAddress.street).toEqual(["440 Ocean Drive", "Apt 2"]);
+        expect(checkout.shippingAddress.regionId).toBe(18);
+        expect(checkout.selectedMethodKey).toBe("tablerate_bestway");
+        expect(checkout.email).toBe("grace@shop.test");
+        expect(checkout.step).toBe("shipping");
+    });
+
+    it("still owes the quote a write, which is the only way the payment methods come back", () => {
+        const checkout = seeded({ address: HELD, method: { carrier_code: "tablerate", method_code: "bestway" }, email: "grace@shop.test" });
+
+        expect(checkout.paymentMethods).toEqual([]);
+        expect(checkout.shippingDirty).toBe(false);
+    });
+
+    it("keeps the quote's address over the customer's default", () => {
+        const checkout = seeded(
+            { address: HELD, method: { carrier_code: "", method_code: "" }, email: "" },
+            { isLoggedIn: true, customerEmail: "ada@shop.test", addresses: [AUSTIN] },
+        );
+
+        expect(checkout.shippingAddress.city).toBe("Miami");
+        expect(checkout.selectedAddressId).toBeNull();
+    });
+
+    it("recognises the quote's address as one from the book, so the picker stays in charge", () => {
+        const checkout = seeded(
+            { address: { ...AUSTIN, street: ["12 Baker Street"] }, method: { carrier_code: "", method_code: "" }, email: "" },
+            { isLoggedIn: true, customerEmail: "ada@shop.test", addresses: [AUSTIN] },
+        );
+
+        expect(checkout.selectedAddressId).toBe(20);
+        expect(checkout.shippingAddress.city).toBe("Austin");
+    });
+
+    it("falls back to the default address when the quote holds nothing", () => {
+        const checkout = seeded(
+            { address: null, method: { carrier_code: "", method_code: "" }, email: "" },
+            { isLoggedIn: true, customerEmail: "ada@shop.test", addresses: [AUSTIN] },
+        );
+
+        expect(checkout.selectedAddressId).toBe(20);
+        expect(checkout.shippingAddress.city).toBe("Austin");
+    });
+
+    it("survives a section that predates the shipping block", () => {
+        const checkout = seeded(undefined, { addresses: [AUSTIN], isLoggedIn: true, customerEmail: "ada@shop.test" });
+
+        expect(checkout.selectedAddressId).toBe(20);
     });
 });

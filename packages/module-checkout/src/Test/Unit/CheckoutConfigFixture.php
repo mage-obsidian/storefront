@@ -14,11 +14,13 @@ use Magento\CheckoutAgreements\Model\AgreementsConfigProvider;
 use Magento\Customer\Api\Data\AddressInterface;
 use Magento\Customer\Api\Data\CustomerInterface;
 use Magento\Customer\Api\Data\RegionInterface;
-use Magento\Customer\Model\Customer;
 use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Directory\Model\Currency;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\DataObject;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Quote\Model\Quote;
+use Magento\Quote\Model\Quote\Address as QuoteAddress;
 use Magento\Quote\Model\QuoteIdMaskFactory;
 use Magento\Quote\Model\QuoteIdToMaskedQuoteIdInterface;
 use Magento\Quote\Model\ResourceModel\Quote\QuoteIdMask as QuoteIdMaskResource;
@@ -47,25 +49,29 @@ trait CheckoutConfigFixture
         array $agreementItems = [],
         bool $shellCacheable = false,
         array $addresses = [],
-        ?string $defaultShippingId = null
+        ?string $defaultShippingId = null,
+        array $quoteShipping = []
     ): CheckoutConfig {
         $quote = $this->getMockBuilder(Quote::class)
             ->disableOriginalConstructor()
-            ->addMethods(['getSubtotal', 'getGrandTotal'])
-            ->onlyMethods(['getId'])
+            ->onlyMethods(['getId', 'getIsVirtual', 'getShippingAddress', 'getBillingAddress'])
             ->getMock();
         $quote->method('getId')->willReturn(42);
-        $quote->method('getSubtotal')->willReturn(80.0);
-        $quote->method('getGrandTotal')->willReturn(88.0);
+        $quote->method('getIsVirtual')->willReturn($quoteShipping['isVirtual'] ?? false);
+        $quote->method('getShippingAddress')->willReturn($this->quoteAddressMock($quoteShipping));
+        $quote->method('getBillingAddress')->willReturn(
+            $this->quoteAddressMock(['addressEmail' => $quoteShipping['billingEmail'] ?? ''])
+        );
+        $quote->setData([
+            'subtotal' => 80.0,
+            'grand_total' => 88.0,
+            'customer_email' => $quoteShipping['email'] ?? '',
+        ]);
 
         $checkoutSession = $this->createMock(CheckoutSession::class);
         $checkoutSession->method('getQuote')->willReturn($quote);
 
-        $customer = $this->getMockBuilder(Customer::class)
-            ->disableOriginalConstructor()
-            ->addMethods(['getEmail'])
-            ->getMock();
-        $customer->method('getEmail')->willReturn('ada@shop.test');
+        $customer = new DataObject(['email' => 'ada@shop.test']);
         $customerSession = $this->createMock(CustomerSession::class);
         $customerSession->method('isLoggedIn')->willReturn($isLoggedIn);
         $customerSession->method('getCustomer')->willReturn($customer);
@@ -84,7 +90,7 @@ trait CheckoutConfigFixture
         $storeManager = $this->createMock(StoreManagerInterface::class);
         $storeManager->method('getStore')->willReturn($store);
 
-        $currency = $this->getMockBuilder(\stdClass::class)->addMethods(['getOutputFormat'])->getMock();
+        $currency = $this->createMock(Currency::class);
         $currency->method('getOutputFormat')->willReturn('$%s');
         $priceCurrency = $this->createMock(PriceCurrencyInterface::class);
         $priceCurrency->method('format')->willReturnCallback(
@@ -140,6 +146,28 @@ trait CheckoutConfigFixture
             $agreementsConfigProvider,
             $gate
         );
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private function quoteAddressMock(array $row): QuoteAddress
+    {
+        $address = $this->createMock(QuoteAddress::class);
+        $address->method('getFirstname')->willReturn($row['firstname'] ?? '');
+        $address->method('getLastname')->willReturn($row['lastname'] ?? '');
+        $address->method('getCompany')->willReturn($row['company'] ?? '');
+        $address->method('getStreet')->willReturn($row['street'] ?? []);
+        $address->method('getCity')->willReturn($row['city'] ?? '');
+        $address->method('getRegion')->willReturn($row['region'] ?? '');
+        $address->method('getRegionId')->willReturn($row['regionId'] ?? null);
+        $address->method('getPostcode')->willReturn($row['postcode'] ?? '');
+        $address->method('getCountryId')->willReturn($row['countryId'] ?? '');
+        $address->method('getTelephone')->willReturn($row['telephone'] ?? '');
+        $address->method('getShippingMethod')->willReturn($row['method'] ?? '');
+        $address->method('getEmail')->willReturn($row['addressEmail'] ?? '');
+
+        return $address;
     }
 
     /**

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import Field from "MageObsidian_Storefront::form/Field";
 import { isValidEmail } from "MageObsidian_Storefront::js/form-validation";
 import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
@@ -36,6 +36,9 @@ const checkout = useCheckout();
 const t = (key: keyof IdentificationLabels, fallback: string): string => props.labels?.[key] ?? fallback;
 
 const email = ref(checkout.email);
+watch(() => checkout.email, (value) => {
+    email.value = value;
+});
 const emailError = ref("");
 const accountExists = ref(false);
 const checking = ref(false);

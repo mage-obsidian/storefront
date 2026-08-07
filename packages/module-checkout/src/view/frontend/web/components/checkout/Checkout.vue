@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, onMounted, onUnmounted, watchEffect } from "vue";
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watchEffect } from "vue";
 import { useCheckout, CheckoutStep } from "MageObsidian_Checkout::js/useCheckout";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 import StepRail from "MageObsidian_Checkout::checkout/StepRail";
@@ -60,7 +60,11 @@ const customerData = useCustomerData();
 
 // Cached, the props carry only the store-scoped half and the quote arrives through
 // customer-data; uncached, the whole config is inlined. Seed from whichever has it.
-checkout.initPublic({ ...props.config, defaultCountry: props.directory.defaultCountry });
+checkout.initPublic({
+    ...props.config,
+    defaultCountry: props.directory.defaultCountry,
+    statesRequired: props.directory.statesRequired,
+});
 const quoteWasInlined = Boolean(props.config?.quote);
 if (quoteWasInlined) {
     checkout.applyPrivate(props.config);
@@ -78,13 +82,16 @@ function belongsToThisPage(section): boolean {
     return stamp.storeCode === props.config.storeCode && stamp.currencyCode === props.config.currencyCode;
 }
 
-if (!quoteWasInlined && !customerData.section(PRIVATE_SECTION)) {
-    void customerData.reload([PRIVATE_SECTION]);
+const privateIsFresh = ref(quoteWasInlined);
+if (!quoteWasInlined) {
+    void customerData.reload([PRIVATE_SECTION]).then(() => {
+        privateIsFresh.value = true;
+    });
 }
 
 watchEffect(() => {
     const section = customerData.section(PRIVATE_SECTION);
-    if (!section) {
+    if (!section || !privateIsFresh.value) {
         return;
     }
     // A cart mutation reloads `cart` alone, leaving this section holding the

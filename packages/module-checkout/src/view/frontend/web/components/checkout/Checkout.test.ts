@@ -10,6 +10,12 @@ import { reload, __reset, __setSection, __setStale } from "../../../../../Test/J
 // to a later test's __setSection.
 const mounted: { unmount: () => void }[] = [];
 
+const settle = async (): Promise<void> => {
+    await Promise.resolve();
+    await nextTick();
+    await nextTick();
+};
+
 function track<T extends { unmount: () => void }>(wrapper: T): T {
     mounted.push(wrapper);
 
@@ -157,7 +163,7 @@ describe("Checkout.vue — cacheable shell", () => {
     it("takes the private half from the obsidian-checkout section", async () => {
         __setSection("obsidian-checkout", PRIVATE_SECTION);
         const wrapper = render(PUBLIC_ONLY);
-        await nextTick();
+        await settle();
 
         expect(useCheckout().ready).toBe(true);
         expect(wrapper.text()).toContain("Crown Summit Backpack");
@@ -192,16 +198,23 @@ describe("Checkout.vue — cacheable shell", () => {
         expect(reload.calls).toContainEqual([["obsidian-checkout"]]);
     });
 
-    it("does not refetch a section it already has", () => {
+    it("refetches the section even when it already has one", () => {
         __setSection("obsidian-checkout", PRIVATE_SECTION);
         render(PUBLIC_ONLY);
 
-        expect(reload.calls).not.toContainEqual([["obsidian-checkout"]]);
+        expect(reload.calls).toContainEqual([["obsidian-checkout"]]);
+    });
+
+    it("acts on nothing until that fetch comes back", () => {
+        __setSection("obsidian-checkout", PRIVATE_SECTION);
+        render(PUBLIC_ONLY);
+
+        expect(useCheckout().ready).toBe(false);
     });
 
     it("applies a section that arrives after mount", async () => {
         const wrapper = render(PUBLIC_ONLY);
-        await nextTick();
+        await settle();
 
         __setSection("obsidian-checkout", PRIVATE_SECTION);
         await nextTick();
@@ -309,7 +322,7 @@ describe("Checkout.vue — a section from another currency or store", () => {
     it("applies the section once it comes back in the page's currency", async () => {
         __setSection("obsidian-checkout", STALE);
         const wrapper = render(PUBLIC_ONLY);
-        await nextTick();
+        await settle();
 
         __setSection("obsidian-checkout", FRESH);
         await nextTick();
@@ -318,25 +331,24 @@ describe("Checkout.vue — a section from another currency or store", () => {
         expect(wrapper.text()).toContain("Crown Summit Backpack");
     });
 
-    // A wrong shell must not spin; after one retry the live section wins.
-    it("refetches at most once, so a wrong shell cannot spin", async () => {
+    it("revalidates at most once, so a wrong shell cannot spin", async () => {
         __setSection("obsidian-checkout", STALE);
         render(PUBLIC_ONLY);
-        await nextTick();
+        await settle();
 
         __setSection("obsidian-checkout", { ...STALE, quote: { ...STALE.quote, subtotal: "$39.00" } });
         await nextTick();
 
-        expect(reload.calls.filter((c) => c[0]?.[0] === "obsidian-checkout")).toHaveLength(1);
+        expect(reload.calls.filter((c) => c[0]?.[0] === "obsidian-checkout")).toHaveLength(2);
         expect(useCheckout().ready).toBe(true);
     });
 
-    it("leaves a section without a stamp alone", async () => {
+    it("does not revalidate a section without a stamp", async () => {
         __setSection("obsidian-checkout", { ...STALE, context: undefined });
         render(PUBLIC_ONLY);
-        await nextTick();
+        await settle();
 
-        expect(reload.calls).not.toContainEqual([["obsidian-checkout"]]);
+        expect(reload.calls.filter((c) => c[0]?.[0] === "obsidian-checkout")).toHaveLength(1);
         expect(useCheckout().ready).toBe(true);
     });
 
@@ -417,7 +429,7 @@ describe("Checkout.vue — all-or-nothing while the private half is missing", ()
             vault: [],
         });
         render(PUBLIC_ONLY);
-        await nextTick();
+        await settle();
 
         vi.advanceTimersByTime(10000);
 
@@ -451,7 +463,7 @@ describe("Checkout.vue — empty cart on a cached shell", () => {
     it("sends an empty cart to the bag page, restoring the native redirect", async () => {
         __setSection("obsidian-checkout", EMPTY_SECTION);
         mount(Checkout, { props: { config: PUBLIC_ONLY, labels: {} }, global: { plugins: [pinia] } });
-        await nextTick();
+        await settle();
 
         expect(window.location.assign).toHaveBeenCalledWith("https://shop.test/checkout/cart/");
     });
@@ -533,13 +545,13 @@ describe("Checkout.vue — an unsynced snapshot cannot decide the cart is empty"
     // The store's own hydrate already has a full reload in flight, and a partial
     // one would not stamp the version marker anyway — so the snapshot would stay
     // unsynced forever and the page would never become ready.
-    it("does not fire a partial reload that could never clear the staleness", async () => {
+    it("does not chase the staleness with a second partial reload", async () => {
         __setStale(true);
         __setSection("obsidian-checkout", EMPTY_SECTION);
         render();
-        await nextTick();
+        await settle();
 
-        expect(reload.calls).not.toContainEqual([["obsidian-checkout"]]);
+        expect(reload.calls.filter((c) => c[0]?.[0] === "obsidian-checkout")).toHaveLength(1);
     });
 
     it("paints the cart once the synced section arrives", async () => {

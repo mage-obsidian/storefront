@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
 import Agreements from "MageObsidian_Checkout::checkout/Agreements";
 
@@ -15,6 +15,7 @@ interface ReviewLabels {
     payment?: string;
     placeOrder?: string;
     placing?: string;
+    confirmingShipping?: string;
 }
 
 const props = withDefaults(defineProps<{ labels?: ReviewLabels }>(), { labels: () => ({}) });
@@ -48,6 +49,8 @@ async function apply(): Promise<void> {
 function remove(): Promise<void> {
     return withCouponBusy(() => checkout.removeCoupon());
 }
+
+const shippingPending = computed(() => checkout.shippingDirty || checkout.savingShipping);
 
 const paymentTitle = (): string =>
     checkout.paymentMethods.find((m) => m.code === checkout.selectedPayment)?.title ?? checkout.selectedPayment;
@@ -118,14 +121,20 @@ const paymentTitle = (): string =>
 
         <Agreements />
 
-        <button
-            type="button"
-            :disabled="checkout.placingOrder || !checkout.selectedPayment || !checkout.allRequiredAccepted"
-            class="btn btn--solid btn--lg w-fit px-10 py-3.5"
-            @click="checkout.placeOrder()"
-        >
-            {{ checkout.placingOrder ? t("placing", "Placing order…") : t("placeOrder", "Place order") }}
-        </button>
+        <div class="flex flex-col gap-3">
+            <button
+                type="button"
+                data-place-order
+                :disabled="checkout.placingOrder || shippingPending || !checkout.selectedPayment || !checkout.allRequiredAccepted"
+                class="btn btn--solid btn--lg w-fit px-10 py-3.5"
+                @click="checkout.placeOrder()"
+            >
+                {{ checkout.placingOrder ? t("placing", "Placing order…") : t("placeOrder", "Place order") }}
+            </button>
+            <p v-if="shippingPending" data-shipping-pending aria-live="polite" class="font-mono text-xs text-ink-soft">
+                {{ t("confirmingShipping", "Confirming your shipping details…") }}
+            </p>
+        </div>
 
         <p v-if="checkout.orderError" role="alert" class="font-mono text-sm text-sale">{{ checkout.orderError }}</p>
     </div>

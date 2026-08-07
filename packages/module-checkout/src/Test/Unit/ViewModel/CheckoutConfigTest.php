@@ -119,7 +119,92 @@ class CheckoutConfigTest extends TestCase
         sort($whole);
         sort($halves);
         $this->assertSame($halves, $whole);
-        $this->assertCount(19, $whole);
+        $this->assertCount(20, $whole);
+    }
+
+    public function testPrivateDataCarriesTheShippingChoiceHeldOnTheQuote(): void
+    {
+        $private = $this->viewModel(
+            isLoggedIn: false,
+            maskedId: 'guestmask123',
+            quoteShipping: self::QUOTE_SHIPPING
+        )->getPrivateData();
+
+        $shipping = $private['shipping'];
+        $this->assertSame('Grace', $shipping['address']['firstname']);
+        $this->assertSame(['440 Ocean Drive', 'Apt 2'], $shipping['address']['street']);
+        $this->assertSame('Miami', $shipping['address']['city']);
+        $this->assertSame('Florida', $shipping['address']['region']);
+        $this->assertSame(18, $shipping['address']['regionId']);
+        $this->assertSame('33139', $shipping['address']['postcode']);
+        $this->assertSame('US', $shipping['address']['countryId']);
+        $this->assertSame(['carrier_code' => 'tablerate', 'method_code' => 'bestway'], $shipping['method']);
+        $this->assertSame('grace@shop.test', $shipping['email']);
+    }
+
+    public function testTheGuestEmailFallsBackToTheAddressThatCarriedIt(): void
+    {
+        $private = $this->viewModel(
+            isLoggedIn: false,
+            maskedId: 'guestmask123',
+            quoteShipping: array_merge(self::QUOTE_SHIPPING, ['email' => '', 'billingEmail' => 'grace@shop.test'])
+        )->getPrivateData();
+
+        $this->assertSame('grace@shop.test', $private['shipping']['email']);
+    }
+
+    public function testAnUntouchedQuoteCarriesNoShippingChoice(): void
+    {
+        $private = $this->viewModel(isLoggedIn: false, maskedId: 'guestmask123')->getPrivateData();
+
+        $this->assertNull($private['shipping']['address']);
+        $this->assertSame(['carrier_code' => '', 'method_code' => ''], $private['shipping']['method']);
+        $this->assertSame('', $private['shipping']['email']);
+    }
+
+    public function testTheShippingMethodIsSplitOnTheFirstUnderscoreOnly(): void
+    {
+        $private = $this->viewModel(
+            isLoggedIn: false,
+            maskedId: 'guestmask123',
+            quoteShipping: array_merge(self::QUOTE_SHIPPING, ['method' => 'ups_11_XDM'])
+        )->getPrivateData();
+
+        $this->assertSame(['carrier_code' => 'ups', 'method_code' => '11_XDM'], $private['shipping']['method']);
+    }
+
+    public function testAStreetlessQuoteAddressIsNotOfferedForRestore(): void
+    {
+        $private = $this->viewModel(
+            isLoggedIn: false,
+            maskedId: 'guestmask123',
+            quoteShipping: ['countryId' => 'US', 'postcode' => '33139', 'street' => ['', ' ']]
+        )->getPrivateData();
+
+        $this->assertNull($private['shipping']['address']);
+    }
+
+    public function testAVirtualQuoteHasNoShippingToRestore(): void
+    {
+        $private = $this->viewModel(
+            isLoggedIn: false,
+            maskedId: 'guestmask123',
+            quoteShipping: self::QUOTE_SHIPPING + ['isVirtual' => true]
+        )->getPrivateData();
+
+        $this->assertNull($private['shipping']['address']);
+    }
+
+    public function testTheQuoteShippingNeverReachesTheCachedShell(): void
+    {
+        $inlined = $this->viewModel(
+            isLoggedIn: false,
+            maskedId: 'guestmask123',
+            shellCacheable: true,
+            quoteShipping: self::QUOTE_SHIPPING
+        )->getInlineConfig();
+
+        $this->assertArrayNotHasKey('shipping', $inlined);
     }
 
     /**
@@ -228,11 +313,20 @@ class CheckoutConfigTest extends TestCase
         ],
     ];
 
+    private const QUOTE_SHIPPING = [
+        'firstname' => 'Grace', 'lastname' => 'Hopper', 'company' => '',
+        'street' => ['440 Ocean Drive', 'Apt 2', ''], 'city' => 'Miami',
+        'region' => 'Florida', 'regionId' => '18', 'postcode' => '33139',
+        'countryId' => 'US', 'telephone' => '+1 305 555 0199',
+        'method' => 'tablerate_bestway', 'email' => 'grace@shop.test',
+    ];
+
     private const PRIVATE_KEYS = [
         'isLoggedIn',
         'customerEmail',
         'maskedCartId',
         'quote',
+        'shipping',
         'vault',
         // Depends on the request currency, so it varies; keeping it out of the
         // cached shell removes a vary dimension instead of trusting one.
@@ -249,7 +343,8 @@ class CheckoutConfigTest extends TestCase
         array $agreementItems = [],
         bool $shellCacheable = false,
         array $addresses = [],
-        ?string $defaultShippingId = null
+        ?string $defaultShippingId = null,
+        array $quoteShipping = []
     ): CheckoutConfig {
         return $this->checkoutConfig(
             $isLoggedIn,
@@ -259,7 +354,8 @@ class CheckoutConfigTest extends TestCase
             $agreementItems,
             $shellCacheable,
             $addresses,
-            $defaultShippingId
+            $defaultShippingId,
+            $quoteShipping
         );
     }
 }

@@ -6,12 +6,12 @@
  * information, payment) layer on through the actions, which wrap the Vue-free
  * `createCheckoutApi` against Magento's native quote endpoints.
  */
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { ensureSharedPinia } from 'MageObsidian_ModernFrontend::js/store';
 import { createCheckoutApi } from 'MageObsidian_Checkout::js/useCheckoutApi';
 import { useCustomerData } from 'MageObsidian_ModernFrontend::js/customer-data';
-import { emptyAddress, toRestAddress, type AddressData } from 'MageObsidian_Storefront::js/address';
+import { emptyAddress, missingFields, toRestAddress, type AddressData } from 'MageObsidian_Storefront::js/address';
 import events from 'MageObsidian_ModernFrontend::js/events';
 import { MutationPhase } from 'mage-obsidian/runtime/mutationEvent.ts';
 import {
@@ -91,6 +91,12 @@ interface ShippingInformationResult {
     totals?: QuoteTotals;
 }
 
+export interface QuoteShipping {
+    address?: AddressData | null;
+    method?: { carrier_code: string; method_code: string };
+    email?: string;
+}
+
 export const CheckoutStep = {
     Identification: 'identification',
     Shipping: 'shipping',
@@ -109,6 +115,8 @@ export const CheckoutLayout = {
 } as const;
 
 export type CheckoutLayout = (typeof CheckoutLayout)[keyof typeof CheckoutLayout];
+
+export const SHIPPING_SYNC_DEBOUNCE_MS = 400;
 
 async function runFlow<Result>(
     operation: CheckoutOperation,
@@ -148,6 +156,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const grandTotal = ref('');
     const currencyFormat = ref('');
 
+    const statesRequired = ref<string[]>([]);
     const shippingAddress = ref<AddressData>(emptyAddress());
     const savedAddresses = ref<SavedAddress[]>([]);
     const selectedAddressId = ref<number | null>(null);
@@ -187,6 +196,13 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     let api: ReturnType<typeof createCheckoutApi> | null = null;
     const ready = ref(false);
 
+    const persistedSignature = ref('');
+    const shippingSaved = ref(false);
+    const shippingTouched = ref(false);
+    let ratedSignature = '';
+    let syncTimer: ReturnType<typeof setTimeout> | undefined;
+    let syncChain: Promise<void> = Promise.resolve();
+
     /**
      * Seed the store-scoped half. Leaves the store unready on purpose: nothing
      * here says anything about this shopper's cart. Guarded against HMR re-mounts.
@@ -201,6 +217,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         successUrl.value = cfg.successUrl || '';
         restBaseUrl = cfg.restBaseUrl || '';
         defaultCountry = cfg.defaultCountry || '';
+        statesRequired.value = Array.isArray(cfg.statesRequired) ? (cfg.statesRequired as string[]) : [];
         shippingAddress.value = emptyAddress(defaultCountry);
         billingAddress.value = emptyAddress(defaultCountry);
         guestCheckout.value = cfg.guestCheckout !== false;
@@ -241,15 +258,41 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
             maskedCartId: d.maskedCartId || '',
         });
         savedAddresses.value = Array.isArray(d.addresses) ? (d.addresses as SavedAddress[]) : [];
-        const preferred = savedAddresses.value.find((a) => a.isDefaultShipping) ?? savedAddresses.value[0];
-        if (preferred) {
-            selectAddress(preferred.id);
+        if (!restoreShipping(d.shipping as QuoteShipping | undefined)) {
+            const preferred = savedAddresses.value.find((a) => a.isDefaultShipping) ?? savedAddresses.value[0];
+            if (preferred) {
+                selectAddress(preferred.id);
+            }
         }
         ready.value = true;
-        // Skip the identity step entirely for known customers.
-        if (isLoggedIn.value && email.value) {
+        if (email.value !== '') {
             enterStep(CheckoutStep.Shipping);
         }
+    }
+
+    function restoreShipping(shipping?: QuoteShipping | null): boolean {
+        const held = shipping?.address;
+        if (!held || (held.countryId ?? '') === '') {
+            return false;
+        }
+
+        const street = [...(held.street ?? [])];
+        while (street.length < 2) {
+            street.push('');
+        }
+        shippingAddress.value = { ...emptyAddress(defaultCountry), ...held, street };
+        selectedAddressId.value =
+            savedAddresses.value.find((a) => addressKey(a) === addressKey(shippingAddress.value))?.id ?? null;
+
+        const heldEmail = shipping?.email ?? '';
+        if (!isLoggedIn.value && heldEmail !== '') {
+            email.value = heldEmail;
+        }
+        const method = shipping?.method;
+        if (method && method.carrier_code !== '') {
+            selectedMethod.value = { carrier_code: method.carrier_code, method_code: method.method_code };
+        }
+        return true;
     }
 
     /** Copies rather than references: AddressForm writes into `street` in place. */
@@ -285,6 +328,63 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     function init(config: Record<string, any>): void {
         initPublic(config);
         applyPrivate(config);
+    }
+
+    function clearRates(): void {
+        shippingMethods.value = [];
+        selectedMethod.value = null;
+        paymentMethods.value = [];
+        ratesRequested.value = false;
+        shippingSaved.value = false;
+        ratedSignature = '';
+        error.value = '';
+    }
+
+    async function shippingSyncPass(withEstimate: boolean): Promise<void> {
+        if (!rateReady.value) {
+            return;
+        }
+        const signature = addressKey(shippingAddress.value);
+        if (withEstimate && signature !== ratedSignature) {
+            if (!(await estimateShipping())) {
+                return;
+            }
+            ratedSignature = signature;
+        }
+        if (!addressComplete.value || !emailReady.value || selectedMethod.value === null) {
+            return;
+        }
+        if (!shippingUnsaved.value) {
+            return;
+        }
+        await saveShipping();
+    }
+
+    function runShippingSync(withEstimate: boolean): Promise<void> {
+        const pass = (): Promise<void> => shippingSyncPass(withEstimate);
+        syncChain = syncChain.then(pass, pass);
+
+        return syncChain;
+    }
+
+    function scheduleShippingSync(): void {
+        clearTimeout(syncTimer);
+        syncTimer = setTimeout(() => {
+            syncTimer = undefined;
+            void runShippingSync(true);
+        }, SHIPPING_SYNC_DEBOUNCE_MS);
+    }
+
+    function cancelShippingSync(): void {
+        clearTimeout(syncTimer);
+        syncTimer = undefined;
+    }
+
+    async function flushShippingSync(): Promise<boolean> {
+        cancelShippingSync();
+        await runShippingSync(false);
+
+        return !shippingDirty.value;
     }
 
     function enterStep(key: CheckoutStep): void {
@@ -392,6 +492,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     async function doSaveShipping(): Promise<boolean> {
         savingShipping.value = true;
         error.value = '';
+        const signature = shippingSignature.value;
         try {
             const extra = isLoggedIn.value ? {} : { email: email.value };
             const result = (await api.setShippingInformation({
@@ -408,6 +509,9 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
                 selectedPayment.value = paymentMethods.value[0].code;
             }
             captureTotals(result.totals);
+            persistedSignature.value = signature;
+            shippingSaved.value = true;
+            shippingTouched.value = true;
             goToStep(CheckoutStep.Payment);
             return true;
         } catch (e) {
@@ -510,6 +614,10 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         if (!api || selectedPayment.value === '' || !allRequiredAccepted.value) {
             return null;
         }
+        if (!(await flushShippingSync())) {
+            orderError.value = error.value;
+            return null;
+        }
         return (
             (await runFlow(
                 CheckoutOperation.PlaceOrder,
@@ -576,6 +684,21 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         return (currencyFormat.value || '%s').replace('%s', amount.toFixed(2));
     }
 
+    function addressKey(address: AddressData): string {
+        return JSON.stringify([
+            address.firstname.trim(),
+            address.lastname.trim(),
+            address.company.trim(),
+            (address.street ?? []).map((line) => line.trim()).filter((line) => line !== ''),
+            address.city.trim(),
+            address.region.trim(),
+            address.regionId ?? null,
+            address.postcode.trim(),
+            address.countryId.trim(),
+            address.telephone.trim(),
+        ]);
+    }
+
     function methodInList(method: ShippingMethod | null): boolean {
         return (
             method !== null &&
@@ -586,6 +709,22 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     }
 
     const canSaveAddress = computed(() => isLoggedIn.value && selectedAddressId.value === null);
+    const regionRequired = computed(() => statesRequired.value.includes(shippingAddress.value.countryId));
+    const rateReady = computed(() => {
+        const a = shippingAddress.value;
+        return (
+            a.countryId.trim() !== '' &&
+            a.postcode.trim() !== '' &&
+            (!regionRequired.value || a.region.trim() !== '' || a.regionId !== null)
+        );
+    });
+    const addressComplete = computed(() => missingFields(shippingAddress.value, regionRequired.value).length === 0);
+    const emailReady = computed(() => isLoggedIn.value || email.value.trim() !== '');
+    const shippingSignature = computed(() => `${addressKey(shippingAddress.value)}|${selectedMethodKey.value}`);
+    const shippingUnsaved = computed(
+        () => !shippingSaved.value || shippingSignature.value !== persistedSignature.value,
+    );
+    const shippingDirty = computed(() => shippingTouched.value && shippingUnsaved.value);
     const stepIndex = computed(() => STEPS.indexOf(step.value));
     const itemCount = computed(() => items.value.length);
     const selectedMethodKey = computed(() =>
@@ -599,6 +738,12 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     );
     const visibleItems = computed(() => items.value.slice(0, maxSummaryItems.value));
     const hiddenItemCount = computed(() => Math.max(0, items.value.length - maxSummaryItems.value));
+
+    watch(rateReady, (canQuote) => {
+        if (!canQuote) {
+            clearRates();
+        }
+    });
 
     return {
         step,
@@ -618,6 +763,12 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         saveAddress,
         canSaveAddress,
         selectAddress,
+        regionRequired,
+        rateReady,
+        addressComplete,
+        emailReady,
+        shippingSignature,
+        shippingDirty,
         shippingMethods,
         selectedMethod,
         selectedMethodKey,
@@ -660,6 +811,9 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         estimateShipping,
         selectMethod,
         saveShipping,
+        scheduleShippingSync,
+        cancelShippingSync,
+        flushShippingSync,
         selectPayment,
         selectVaultToken,
         applyCoupon,

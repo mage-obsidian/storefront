@@ -32,6 +32,16 @@ describe("IdentificationStep", () => {
         });
     }
 
+    it("shows an email the store learns after mount, as a reload restores it", async () => {
+        const wrapper = render();
+        expect((wrapper.find("input[type=email]").element as HTMLInputElement).value).toBe("");
+
+        useCheckout().email = "grace@shop.test";
+        await wrapper.vm.$nextTick();
+
+        expect((wrapper.find("input[type=email]").element as HTMLInputElement).value).toBe("grace@shop.test");
+    });
+
     it("rejects an invalid email without advancing", async () => {
         const wrapper = render();
         await wrapper.find("input[type=email]").setValue("not-an-email");

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, onBeforeUnmount } from "vue";
 import { useCheckout, CheckoutStep } from "MageObsidian_Checkout::js/useCheckout";
-import { missingFields } from "MageObsidian_Storefront::js/address";
 import type { RegionData } from "MageObsidian_Storefront::js/address";
 import IdentificationStep from "MageObsidian_Checkout::checkout/IdentificationStep";
 import ShippingStep from "MageObsidian_Checkout::checkout/ShippingStep";
@@ -51,18 +50,6 @@ const checkout = useCheckout();
 
 const t = (key: string, fallback: string): string => props.labels?.[key] ?? fallback;
 
-const regionRequired = computed(() => props.directory.statesRequired.includes(checkout.shippingAddress.countryId));
-
-// The shipping estimate only needs country + postcode (+ region where the country
-// mandates a state); persisting the address (shipping-information) needs the whole
-// form. Gate each REST call on the minimum it requires.
-const rateReady = computed(() => {
-    const a = checkout.shippingAddress;
-    return a.countryId.trim() !== "" && a.postcode.trim() !== "" && (!regionRequired.value || a.region.trim() !== "" || a.regionId !== null);
-});
-const addressComplete = computed(() => missingFields(checkout.shippingAddress, regionRequired.value).length === 0);
-const emailReady = computed(() => checkout.isLoggedIn || checkout.email.trim() !== "");
-
 // The Information stage is "done" once shipping-information persisted — which is
 // true iff it returned payment methods. That also gates the reveal of Payment.
 const shippingDone = computed(() => checkout.paymentMethods.length > 0);
@@ -104,59 +91,13 @@ function goTo(step: { key: string }): void {
     sectionOf[step.key]?.value?.scrollIntoView?.({ behavior: "smooth", block: "start" });
 }
 
-function addressSignature(): string {
-    const a = checkout.shippingAddress;
-    return JSON.stringify([a.firstname, a.lastname, a.street, a.city, a.region, a.regionId, a.postcode, a.countryId, a.telephone]);
-}
-
-const DEBOUNCE_MS = 400;
-let rateTimer: ReturnType<typeof setTimeout> | undefined;
-let saveTimer: ReturnType<typeof setTimeout> | undefined;
-let lastRateSig = "";
-let lastSaveSig = "";
-
 watch(
-    () => [rateReady.value, addressSignature()],
-    () => {
-        if (!rateReady.value) {
-            return;
-        }
-        const sig = addressSignature();
-        if (sig === lastRateSig) {
-            return;
-        }
-        clearTimeout(rateTimer);
-        rateTimer = setTimeout(() => {
-            lastRateSig = sig;
-            void checkout.estimateShipping();
-        }, DEBOUNCE_MS);
-    },
+    () => [checkout.shippingSignature, checkout.emailReady],
+    () => checkout.scheduleShippingSync(),
     { immediate: true },
 );
 
-watch(
-    () => [addressComplete.value, emailReady.value, checkout.selectedMethodKey, addressSignature()],
-    () => {
-        if (!addressComplete.value || !emailReady.value || checkout.selectedMethodKey === "") {
-            return;
-        }
-        const sig = `${addressSignature()}|${checkout.selectedMethodKey}`;
-        if (sig === lastSaveSig) {
-            return;
-        }
-        clearTimeout(saveTimer);
-        saveTimer = setTimeout(() => {
-            lastSaveSig = sig;
-            void checkout.saveShipping();
-        }, DEBOUNCE_MS);
-    },
-    { immediate: true },
-);
-
-onBeforeUnmount(() => {
-    clearTimeout(rateTimer);
-    clearTimeout(saveTimer);
-});
+onBeforeUnmount(() => checkout.cancelShippingSync());
 </script>
 
 <template>
