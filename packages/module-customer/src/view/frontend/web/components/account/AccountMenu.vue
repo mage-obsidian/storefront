@@ -1,7 +1,18 @@
 <script setup lang="ts">
-import { computed, ref, onBeforeUnmount, nextTick, useId } from "vue";
+import { computed, ref, onBeforeUnmount, onMounted, nextTick, useId } from "vue";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 
+// Before customer-data lands neither branch is true. The last branch renders the
+// pre-paint hint rather than nothing, so the server always has a state to hand
+// over and the island adopts it instead of clearing the header and painting it
+// again; `.mo-prepaint-guest` still decides whether the hint is visible.
+//
+// The signed-in branch is `max-sm:hidden`, not `hidden sm:block`: in Tailwind v4
+// the display-utility sort order lets `hidden` win over `sm:block`, so the
+// disclosure would stay hidden on desktop. The note lives here rather than in the
+// template because a comment beside the root branches makes the component a
+// fragment, which no server markup can be adopted into.
+//
 // Header account state. Reads the engine's customer-data `customer` section, so
 // it reflects sign-in/out reactively and stays FPC-safe (the name is never baked
 // into cached HTML). Guests get a plain "Sign In" link; signed-in customers get
@@ -51,7 +62,17 @@ const props = withDefaults(
 
 const customerData = useCustomerData();
 const section = computed(() => customerData.section("customer"));
-const known = computed(() => Boolean(section.value));
+
+// Only flipped after mounting: customer-data is read from localStorage, which
+// the server cannot see, so branching on it during the first render would make
+// that render disagree with the markup being adopted and Vue would discard the
+// island. The real branch is patched in on the same frame.
+const hydrated = ref(false);
+onMounted(() => {
+    hydrated.value = true;
+});
+
+const known = computed(() => hydrated.value && Boolean(section.value));
 const customer = computed<CustomerSection>(() => (section.value ?? {}) as CustomerSection);
 const isLoggedIn = computed(() => Boolean(customer.value.firstname || customer.value.fullname));
 const displayName = computed(() => customer.value.firstname || props.menuLabel);
@@ -103,9 +124,6 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, tru
         class="hidden whitespace-nowrap transition-colors hover:text-ink sm:inline"
     >{{ signInLabel }}</a>
 
-    <!-- max-sm:hidden (not `hidden sm:block`): in Tailwind v4 the display-utility
-         sort order lets `hidden` win over `sm:block`, so the disclosure would stay
-         hidden on desktop. A block-by-default div hidden below sm avoids that. -->
     <div v-else-if="known" ref="root" class="relative max-sm:hidden" @keydown.escape="close()">
         <button
             ref="trigger"
@@ -146,4 +164,9 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, tru
             </li>
         </ul>
     </div>
+
+    <span
+        v-else
+        class="mo-prepaint-guest whitespace-nowrap font-mono text-[0.72rem] uppercase tracking-[0.12em] text-ink-soft"
+    >{{ signInLabel }}</span>
 </template>

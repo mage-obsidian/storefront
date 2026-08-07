@@ -14,21 +14,34 @@ const URLS = {
 describe("AccountMenu.vue", () => {
     beforeEach(() => __reset());
 
-    it("shows a Sign In link for guests", () => {
+    it("shows a Sign In link for guests", async () => {
         __setSection("customer", {});
         const wrapper = mount(AccountMenu, { props: { ...URLS, signInLabel: "Sign In" } });
+        await wrapper.vm.$nextTick();
+
         const link = wrapper.get("a");
         expect(link.text()).toBe("Sign In");
         expect(link.attributes("href")).toBe("/customer/account/login");
         expect(wrapper.find("button").exists()).toBe(false);
     });
 
-    it("renders neither branch until the customer section says which one is true", () => {
+    it("renders neither branch until the customer section says which one is true", async () => {
         const wrapper = mount(AccountMenu, { props: { ...URLS, signInLabel: "Sign In" } });
+        await wrapper.vm.$nextTick();
 
         expect(wrapper.find("a").exists()).toBe(false);
         expect(wrapper.find("button").exists()).toBe(false);
-        expect(wrapper.text()).not.toContain("Sign In");
+    });
+
+    // The first render must match the markup the server sent, whatever the browser
+    // already knows, or hydration discards the island and the header is repainted.
+    it("renders the pre-paint hint before mounting resolves the section", () => {
+        __setSection("customer", {});
+        const wrapper = mount(AccountMenu, { props: { ...URLS, signInLabel: "Sign In" } });
+
+        const hint = wrapper.get("span.mo-prepaint-guest");
+        expect(hint.text()).toBe("Sign In");
+        expect(wrapper.find("a").exists()).toBe(false);
     });
 
     it("shows a disclosure with the first name when logged in", async () => {
