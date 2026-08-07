@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch, onBeforeUnmount } from "vue";
+import { computed, ref, watch, onBeforeUnmount } from "vue";
 import { useCheckout, CheckoutStep } from "MageObsidian_Checkout::js/useCheckout";
 import { missingFields } from "MageObsidian_Storefront::js/address";
 import type { RegionData } from "MageObsidian_Storefront::js/address";
@@ -7,6 +7,7 @@ import IdentificationStep from "MageObsidian_Checkout::checkout/IdentificationSt
 import ShippingStep from "MageObsidian_Checkout::checkout/ShippingStep";
 import PaymentStep from "MageObsidian_Checkout::checkout/PaymentStep";
 import ReviewStep from "MageObsidian_Checkout::checkout/ReviewStep";
+import StepRail from "MageObsidian_Checkout::checkout/StepRail";
 
 // One-page checkout (Hyvä-style): a two-stage flow on a single screen, mirroring
 // Magento's native one-step (1. Information = contact + address + shipping,
@@ -70,18 +71,20 @@ const paymentReady = shippingDone;
 interface StepState {
     key: string;
     label: string;
-    target: string;
     done: boolean;
     reachable: boolean;
     active: boolean;
     index: number;
 }
 
+const informationSection = ref<HTMLElement | null>(null);
+const paymentSection = ref<HTMLElement | null>(null);
+
 // Two stages, matching Magento's native one-step model.
 const steps = computed<StepState[]>(() => {
     const raw = [
-        { key: "information", label: t("stepInformation", "Information"), target: "onepage-information", done: shippingDone.value, reachable: true },
-        { key: CheckoutStep.Payment, label: t("stepPayment", "Payment"), target: "onepage-payment", done: false, reachable: shippingDone.value },
+        { key: "information", label: t("stepInformation", "Information"), done: shippingDone.value, reachable: true },
+        { key: CheckoutStep.Payment, label: t("stepPayment", "Payment"), done: false, reachable: shippingDone.value },
     ];
     const activeIndex = raw.findIndex((s) => !s.done);
     return raw.map((s, index) => ({ ...s, index, active: index === activeIndex }));
@@ -89,11 +92,16 @@ const steps = computed<StepState[]>(() => {
 
 const activeKey = computed(() => steps.value.find((s) => s.active)?.key ?? "");
 
-function goTo(step: StepState): void {
-    if (!step.reachable) {
+const sectionOf: Record<string, typeof informationSection> = {
+    information: informationSection,
+    [CheckoutStep.Payment]: paymentSection,
+};
+
+function goTo(step: { key: string }): void {
+    if (!steps.value.find((s) => s.key === step.key)?.reachable) {
         return;
     }
-    document.getElementById(step.target)?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+    sectionOf[step.key]?.value?.scrollIntoView?.({ behavior: "smooth", block: "start" });
 }
 
 function addressSignature(): string {
@@ -123,10 +131,11 @@ watch(
             void checkout.estimateShipping();
         }, DEBOUNCE_MS);
     },
+    { immediate: true },
 );
 
 watch(
-    () => [addressComplete.value, emailReady.value, checkout.selectedMethodKey],
+    () => [addressComplete.value, emailReady.value, checkout.selectedMethodKey, addressSignature()],
     () => {
         if (!addressComplete.value || !emailReady.value || checkout.selectedMethodKey === "") {
             return;
@@ -141,6 +150,7 @@ watch(
             void checkout.saveShipping();
         }, DEBOUNCE_MS);
     },
+    { immediate: true },
 );
 
 onBeforeUnmount(() => {
@@ -151,41 +161,17 @@ onBeforeUnmount(() => {
 
 <template>
     <div class="flex flex-col gap-8">
-        <nav
-            class="rounded-edge border border-ash-200 bg-alabaster-raised px-5 py-3.5"
-            :aria-label="t('steps', 'Checkout steps')"
-        >
-            <ol class="flex flex-wrap items-center gap-x-8 gap-y-3">
-                <li v-for="s in steps" :key="s.key" class="flex items-center gap-2">
-                    <button
-                        type="button"
-                        class="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.16em] transition-colors"
-                        :class="[
-                            s.done || s.active ? 'text-ink' : 'text-ink-soft',
-                            s.reachable ? 'cursor-pointer hover:text-ink' : 'cursor-default',
-                        ]"
-                        :disabled="!s.reachable"
-                        :aria-current="s.active ? 'step' : undefined"
-                        @click="goTo(s)"
-                    >
-                        <span
-                            class="flex h-6 w-6 items-center justify-center rounded-full border text-[0.7rem] transition-colors"
-                            :class="s.done ? 'border-ink bg-ink text-alabaster' : s.active ? 'border-ink text-ink' : 'border-ash-300 text-ink-soft'"
-                            aria-hidden="true"
-                        >
-                            <svg v-if="s.done" viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5">
-                                <path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0L3.3 9.7a1 1 0 1 1 1.4-1.4l3.8 3.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clip-rule="evenodd" />
-                            </svg>
-                            <template v-else>{{ s.index + 1 }}</template>
-                        </span>
-                        {{ s.label }}
-                    </button>
-                </li>
-            </ol>
-        </nav>
+        <StepRail
+            :steps="steps"
+            :label="t('steps', 'Checkout steps')"
+            :done-label="t('stepDone', 'completed')"
+            :current-label="t('stepCurrent', 'current step')"
+            @go="goTo"
+        />
 
         <section
             id="onepage-information"
+            ref="informationSection"
             aria-labelledby="onepage-information-heading"
             class="scroll-mt-20 rounded-edge border bg-alabaster-raised p-6 transition-colors md:p-8"
             :class="activeKey === 'information' ? 'border-ink/40' : 'border-ash-200'"
@@ -207,6 +193,7 @@ onBeforeUnmount(() => {
         <section
             v-if="paymentReady"
             id="onepage-payment"
+            ref="paymentSection"
             aria-labelledby="onepage-payment-heading"
             class="scroll-mt-20 rounded-edge border bg-alabaster-raised p-6 transition-colors md:p-8"
             :class="activeKey === CheckoutStep.Payment ? 'border-ink/40' : 'border-ash-200'"

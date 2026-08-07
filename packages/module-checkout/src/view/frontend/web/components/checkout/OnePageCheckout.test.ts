@@ -26,11 +26,17 @@ const COMPLETE_ADDRESS = {
 
 const FLATRATE = { carrier_code: "flatrate", method_code: "flatrate", carrier_title: "Flat Rate", available: true };
 
-function render(configOverrides = {}) {
+const SAVED_ADDRESS = {
+    id: 7, label: "Ada, 1 Rue, Paris", isDefaultShipping: true,
+    ...COMPLETE_ADDRESS,
+};
+
+function render(configOverrides = {}, before?: (checkout: ReturnType<typeof useCheckout>) => void) {
     const pinia = createPinia();
     setActivePinia(pinia);
     const checkout = useCheckout();
     checkout.init({ ...CONFIG, ...configOverrides });
+    before?.(checkout);
     const wrapper = mount(OnePageCheckout, {
         props: { directory: DIRECTORY, labels: {} },
         global: { plugins: [pinia] },
@@ -119,6 +125,20 @@ describe("OnePageCheckout.vue", () => {
         expect(estimate).not.toHaveBeenCalled();
     });
 
+    it("estimates shipping for an address the store already held at mount", async () => {
+        let estimate: ReturnType<typeof vi.spyOn> | null = null;
+        const { checkout } = render(
+            { isLoggedIn: true, customerEmail: "ada@shop.test", addresses: [SAVED_ADDRESS] },
+            (store) => {
+                estimate = vi.spyOn(store, "estimateShipping").mockResolvedValue(true);
+            },
+        );
+
+        expect(checkout.shippingAddress.postcode).toBe("75001");
+        vi.advanceTimersByTime(400);
+        expect(estimate).toHaveBeenCalledTimes(1);
+    });
+
     it("saves shipping-information reactively once a method is selected on a complete address", async () => {
         const { checkout } = render();
         vi.spyOn(checkout, "estimateShipping").mockResolvedValue(true);
@@ -131,5 +151,48 @@ describe("OnePageCheckout.vue", () => {
         vi.advanceTimersByTime(400);
 
         expect(save).toHaveBeenCalledTimes(1);
+    });
+
+    it("scrolls back to a finished stage through the component's own section, not a lookup by id", async () => {
+        const { wrapper, checkout } = render();
+        checkout.paymentMethods = [{ code: "checkmo", title: "Check" }];
+        await nextTick();
+
+        const section = wrapper.find("#onepage-information").element as HTMLElement;
+        const scrollIntoView = vi.fn();
+        section.scrollIntoView = scrollIntoView;
+        vi.spyOn(document, "getElementById");
+
+        await wrapper.findAll(".step-rail__button")[0].trigger("click");
+
+        expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+        expect(document.getElementById).not.toHaveBeenCalled();
+    });
+
+    it("keeps the shopper out of a stage that is not reachable yet", async () => {
+        const { wrapper } = render();
+
+        await wrapper.findAll(".step-rail__button")[1].trigger("click");
+
+        expect(wrapper.find("#onepage-payment").exists()).toBe(false);
+    });
+
+    it("re-persists an address edited after it was already saved", async () => {
+        const { checkout } = render();
+        vi.spyOn(checkout, "estimateShipping").mockResolvedValue(true);
+        const save = vi.spyOn(checkout, "saveShipping").mockResolvedValue(true);
+
+        checkout.email = "guest@shop.test";
+        checkout.shippingAddress = { ...COMPLETE_ADDRESS };
+        checkout.selectMethod(FLATRATE);
+        await nextTick();
+        vi.advanceTimersByTime(400);
+        expect(save).toHaveBeenCalledTimes(1);
+
+        checkout.shippingAddress = { ...COMPLETE_ADDRESS, city: "Lyon" };
+        await nextTick();
+        vi.advanceTimersByTime(400);
+
+        expect(save).toHaveBeenCalledTimes(2);
     });
 });
