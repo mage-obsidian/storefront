@@ -41,15 +41,13 @@ class CartItemsTest extends TestCase
 
         $item = $this->getMockBuilder(QuoteItem::class)
             ->disableOriginalConstructor()
-            ->addMethods(['getRowTotalInclTax', 'getRowTotal', 'getWeeeTaxAppliedRowAmount'])
             ->onlyMethods(['getItemId', 'getName', 'getQty', 'getCalculationPrice', 'getProduct', 'getProductType'])
             ->getMock();
         $item->method('getItemId')->willReturn(15);
         $item->method('getName')->willReturn('Chaz Hoodie');
         $item->method('getQty')->willReturn(2.0);
         $item->method('getCalculationPrice')->willReturn(52.0);
-        $item->method('getRowTotalInclTax')->willReturn(104.0);
-        $item->method('getWeeeTaxAppliedRowAmount')->willReturn(0.0);
+        $item->setData(['row_total_incl_tax' => 104.0, 'weee_tax_applied_row_amount' => 0.0]);
         $item->method('getProduct')->willReturn($product);
         $item->method('getProductType')->willReturn('configurable');
 
@@ -88,15 +86,13 @@ class CartItemsTest extends TestCase
 
         $item = $this->getMockBuilder(QuoteItem::class)
             ->disableOriginalConstructor()
-            ->addMethods(['getRowTotalInclTax', 'getRowTotal', 'getWeeeTaxAppliedRowAmount'])
             ->onlyMethods(['getItemId', 'getName', 'getQty', 'getCalculationPrice', 'getProduct', 'getProductType'])
             ->getMock();
         $item->method('getItemId')->willReturn(7);
         $item->method('getName')->willReturn('Strive Shoulder Pack');
         $item->method('getQty')->willReturn(1.0);
         $item->method('getCalculationPrice')->willReturn(32.0);
-        $item->method('getRowTotalInclTax')->willReturn(37.0);
-        $item->method('getWeeeTaxAppliedRowAmount')->willReturn(5.0);
+        $item->setData(['row_total_incl_tax' => 37.0, 'weee_tax_applied_row_amount' => 5.0]);
         $item->method('getProduct')->willReturn($product);
         $item->method('getProductType')->willReturn('simple');
 
