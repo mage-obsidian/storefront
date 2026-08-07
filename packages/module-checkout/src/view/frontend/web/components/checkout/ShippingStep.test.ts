@@ -118,44 +118,130 @@ describe("ShippingStep — saved address picker", () => {
         return mount(ShippingStep, { props: { directory: DIRECTORY }, global: { plugins: [pinia] } });
     }
 
-    function picker(wrapper) {
-        return wrapper.find('[data-saved-addresses] select');
+    function cards(wrapper) {
+        return wrapper.findAll('[data-saved-addresses] .field-radio-card');
+    }
+
+    function pick(wrapper, index) {
+        return cards(wrapper)[index].find("input").trigger("change");
     }
 
     it("lists every saved address plus a new-address option", () => {
-        const wrapper = render([AUSTIN, MIAMI]);
-        const options = picker(wrapper).findAll("option");
+        const options = cards(render([AUSTIN, MIAMI]));
 
         expect(options).toHaveLength(3);
         expect(options[0].text()).toContain("Austin");
         expect(options[1].text()).toContain("Miami");
-        expect(options[2].text()).toContain("New address");
+        expect(options[2].text()).toContain("new address");
+    });
+
+    it("offers the saved addresses as a radio group, not a dropdown", () => {
+        const wrapper = render([AUSTIN, MIAMI]);
+
+        expect(wrapper.find("[data-saved-addresses]").attributes("role")).toBe("radiogroup");
+        expect(wrapper.find("[data-saved-addresses] select").exists()).toBe(false);
     });
 
     it("starts on the default shipping address", () => {
         const wrapper = render([MIAMI, AUSTIN]);
 
-        expect(picker(wrapper).element.value).toBe("20");
+        expect(cards(wrapper)[1].find("input").element.checked).toBe(true);
+        expect(useCheckout().selectedAddressId).toBe(20);
     });
 
     it("refills the form when another address is picked", async () => {
         const wrapper = render([AUSTIN, MIAMI]);
-        await picker(wrapper).setValue("21");
+        await pick(wrapper, 1);
 
         expect(useCheckout().shippingAddress.city).toBe("Miami");
     });
 
     it("empties the form for a new address", async () => {
         const wrapper = render([AUSTIN, MIAMI]);
-        await picker(wrapper).setValue("");
+        await pick(wrapper, 2);
 
         expect(useCheckout().shippingAddress.city).toBe("");
         expect(useCheckout().selectedAddressId).toBeNull();
+    });
+
+    it("folds the address fields away while a saved address is in use", async () => {
+        const wrapper = render([AUSTIN, MIAMI]);
+        expect(wrapper.find("[data-address-fields]").exists()).toBe(false);
+
+        await pick(wrapper, 2);
+
+        expect(wrapper.find("[data-address-fields]").exists()).toBe(true);
+    });
+
+    it("offers to file a new address, but never one already in the book", async () => {
+        const wrapper = render([AUSTIN, MIAMI]);
+        await pick(wrapper, 2);
+        expect(wrapper.find("[data-save-address]").exists()).toBe(true);
+
+        await pick(wrapper, 0);
+        expect(wrapper.find("[data-save-address]").exists()).toBe(false);
     });
 
     it("is absent when there is nothing saved", () => {
         const wrapper = render([]);
 
         expect(wrapper.find("[data-saved-addresses]").exists()).toBe(false);
+    });
+
+    it("keeps the shipping method section on screen and says what is missing", () => {
+        const wrapper = render();
+        const status = wrapper.find("[data-rates-status]");
+
+        expect(wrapper.find("#shipping-methods-heading").exists()).toBe(true);
+        expect(status.attributes("aria-live")).toBe("polite");
+        expect(status.text()).toContain("Complete your address");
+    });
+
+    it("shows a spinner in the status while the rates are in flight", async () => {
+        globalThis.fetch = vi.fn().mockReturnValue(new Promise(() => {}));
+        const wrapper = render();
+
+        await wrapper.find("button").trigger("click");
+        await flush();
+        await wrapper.vm.$nextTick();
+
+        const status = wrapper.find("[data-rates-status]");
+        expect(status.find(".btn__spinner").exists()).toBe(true);
+        expect(status.text()).toContain("Looking for shipping options");
+    });
+
+    it("says so when the address returns no options at all", async () => {
+        mockFetch([]);
+        const wrapper = render();
+
+        await wrapper.find("button").trigger("click");
+        await flush();
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.find("[data-rates-status]").text()).toContain("No shipping options");
+        expect(wrapper.find('[role="radiogroup"]').exists()).toBe(false);
+    });
+
+    it("announces the option count to assistive tech once they land", async () => {
+        mockFetch([FLATRATE]);
+        const wrapper = render();
+
+        await wrapper.find("button").trigger("click");
+        await flush();
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.find("[data-rates-status] .sr-only").text()).toContain("1 shipping options");
+    });
+
+    it("hides the advance button until there is something to advance with", async () => {
+        const wrapper = render();
+        expect(wrapper.findAll("button")).toHaveLength(1);
+
+        mockFetch([FLATRATE]);
+        await wrapper.find("button").trigger("click");
+        await flush();
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.findAll("button")).toHaveLength(2);
     });
 });

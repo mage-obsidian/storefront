@@ -15,6 +15,7 @@ interface IdentificationLabels {
     email?: string;
     invalidEmail?: string;
     continue?: string;
+    hasAccount?: string;
     accountExists?: string;
     signIn?: string;
 }
@@ -80,6 +81,11 @@ defineExpose({ submit });
 <template>
     <form class="flex max-w-lg flex-col gap-5" novalidate @submit.prevent="submit">
         <p class="text-ink-soft">{{ t("intro", "Enter your email to continue as a guest.") }}</p>
+
+        <p v-if="loginUrl" data-signin-prompt class="text-sm text-ink-soft">
+            {{ t("hasAccount", "Already have an account?") }}
+            <a :href="loginUrl" class="link link--meta">{{ t("signIn", "Sign in") }}</a>
+        </p>
 
         <Field
             id="checkout-email"

@@ -2,6 +2,7 @@
 import { computed, defineAsyncComponent, onMounted, onUnmounted, watchEffect } from "vue";
 import { useCheckout, CheckoutStep } from "MageObsidian_Checkout::js/useCheckout";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
+import StepRail from "MageObsidian_Checkout::checkout/StepRail";
 import type { RegionData } from "MageObsidian_Storefront::js/address";
 
 const PRIVATE_SECTION = "obsidian-checkout";
@@ -146,37 +147,49 @@ onUnmounted(() => {
 
 const t = (key: string, fallback: string): string => props.labels?.[key] ?? fallback;
 
-const steps = computed(() => [
-    { key: CheckoutStep.Identification, label: t("stepIdentification", "Identification") },
-    { key: CheckoutStep.Shipping, label: t("stepShipping", "Shipping") },
-    { key: CheckoutStep.Payment, label: t("stepPayment", "Payment") },
-    { key: CheckoutStep.Review, label: t("stepReview", "Review") },
-]);
+const steps = computed(() => {
+    const raw = [
+        { key: CheckoutStep.Identification, label: t("stepIdentification", "Identification") },
+        { key: CheckoutStep.Shipping, label: t("stepShipping", "Shipping") },
+        { key: CheckoutStep.Payment, label: t("stepPayment", "Payment") },
+        { key: CheckoutStep.Review, label: t("stepReview", "Review") },
+    ];
+    const current = checkout.stepIndex;
+    const furthest = checkout.furthestStepIndex;
+
+    return raw.map((step, index) => {
+        const blocked = step.key === CheckoutStep.Identification && checkout.isLoggedIn;
+        return {
+            ...step,
+            index,
+            done: index <= furthest && index !== current,
+            active: index === current,
+            reachable: index <= furthest && index !== current && !blocked,
+        };
+    });
+});
 
 const currentStepLabel = computed(
     () => steps.value.find((s) => s.key === checkout.step)?.label ?? "",
 );
 const isEmpty = computed(() => checkout.ready && checkout.itemCount === 0);
+const grandTotalLabel = computed(() => {
+    const segment = checkout.totalSegments.find((s) => s.code === "grand_total");
+    return segment?.value != null ? checkout.formatTotal(segment.value) : checkout.grandTotal;
+});
 </script>
 
 <template>
-    <div class="mx-auto w-full max-w-[1320px] px-4 py-10 md:px-8">
-        <ol v-if="!isOnePage" class="mb-10 flex flex-wrap items-center gap-x-6 gap-y-2" :aria-label="t('steps', 'Checkout steps')">
-            <li
-                v-for="(s, i) in steps"
-                :key="s.key"
-                class="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.16em]"
-                :class="s.key === checkout.step ? 'text-ink' : 'text-ink-soft'"
-                :aria-current="s.key === checkout.step ? 'step' : undefined"
-            >
-                <span
-                    class="flex h-6 w-6 items-center justify-center rounded-full border text-[0.7rem]"
-                    :class="s.key === checkout.step ? 'border-ink bg-ink text-alabaster' : 'border-ash-300'"
-                    aria-hidden="true"
-                >{{ i + 1 }}</span>
-                {{ s.label }}
-            </li>
-        </ol>
+    <div class="checkout-page mx-auto w-full max-w-[1320px] px-4 py-10 md:px-8">
+        <StepRail
+            v-if="!isOnePage"
+            class="mb-10"
+            :steps="steps"
+            :label="t('steps', 'Checkout steps')"
+            :done-label="t('stepDone', 'completed')"
+            :current-label="t('stepCurrent', 'current step')"
+            @go="(s) => checkout.goToStep(s.key)"
+        />
 
         <div class="grid gap-10 lg:grid-cols-[1fr_360px]">
             <OnePageCheckout
@@ -227,7 +240,7 @@ const isEmpty = computed(() => checkout.ready && checkout.itemCount === 0);
                  summary in the first column and then shift it a full column over. -->
             <aside
                 aria-labelledby="checkout-summary-heading"
-                class="flex flex-col gap-6 rounded-edge border border-ash-200 bg-alabaster-raised p-6 lg:col-start-2 lg:row-start-1"
+                class="flex flex-col gap-6 rounded-edge border border-ash-200 bg-alabaster-raised p-6 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 lg:max-h-[calc(100dvh-8rem)] lg:self-start lg:overflow-y-auto"
             >
                 <h2 id="checkout-summary-heading" class="font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">
                     {{ t('summary', 'Order summary') }}
@@ -291,6 +304,14 @@ const isEmpty = computed(() => checkout.ready && checkout.itemCount === 0);
                     </div>
                 </dl>
             </aside>
+        </div>
+
+        <div v-if="!isEmpty && checkout.ready" class="checkout-total-bar" data-total-bar>
+            <span class="checkout-total-bar__label">
+                {{ t('total', 'Total') }}
+                <span class="checkout-total-bar__count">{{ t('barItems', '{count} items').replace('{count}', String(checkout.itemCount)) }}</span>
+            </span>
+            <span class="checkout-total-bar__value">{{ grandTotalLabel }}</span>
         </div>
     </div>
 </template>

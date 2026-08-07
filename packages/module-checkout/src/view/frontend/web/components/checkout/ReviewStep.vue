@@ -21,13 +21,32 @@ const props = withDefaults(defineProps<{ labels?: ReviewLabels }>(), { labels: (
 
 const checkout = useCheckout();
 const code = ref("");
+const couponBusy = ref(false);
 
 const t = (key: keyof ReviewLabels, fallback: string): string => props.labels?.[key] ?? fallback;
 
-async function apply(): Promise<void> {
-    if (await checkout.applyCoupon(code.value)) {
-        code.value = "";
+async function withCouponBusy(run: () => Promise<unknown>): Promise<void> {
+    if (couponBusy.value) {
+        return;
     }
+    couponBusy.value = true;
+    try {
+        await run();
+    } finally {
+        couponBusy.value = false;
+    }
+}
+
+async function apply(): Promise<void> {
+    await withCouponBusy(async () => {
+        if (await checkout.applyCoupon(code.value)) {
+            code.value = "";
+        }
+    });
+}
+
+function remove(): Promise<void> {
+    return withCouponBusy(() => checkout.removeCoupon());
 }
 
 const paymentTitle = (): string =>
@@ -44,8 +63,10 @@ const paymentTitle = (): string =>
                 <span class="font-mono text-sm text-ink">{{ t("couponApplied", "Applied") }}: {{ checkout.appliedCoupon }}</span>
                 <button
                     type="button"
-                    class="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-sale underline"
-                    @click="checkout.removeCoupon()"
+                    :disabled="couponBusy"
+                    :aria-busy="couponBusy ? 'true' : undefined"
+                    class="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-sale underline disabled:opacity-50"
+                    @click="remove"
                 >
                     {{ t("remove", "Remove") }}
                 </button>
@@ -66,9 +87,11 @@ const paymentTitle = (): string =>
                 </div>
                 <button
                     type="submit"
-                    class="btn btn--outline btn--sm"
+                    :disabled="couponBusy"
+                    :class="['btn btn--outline btn--sm', couponBusy && 'is-loading']"
                 >
-                    {{ t("apply", "Apply") }}
+                    <span class="btn__label">{{ t("apply", "Apply") }}</span>
+                    <span v-if="couponBusy" class="btn__spinner" aria-hidden="true"></span>
                 </button>
             </form>
         </section>

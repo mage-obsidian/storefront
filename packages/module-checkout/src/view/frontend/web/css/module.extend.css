@@ -204,3 +204,168 @@
     opacity: 0;
   }
 }
+
+/* ============================================================
+   Checkout step rail.
+   ============================================================ */
+
+.step-rail {
+    border: 1px solid var(--color-ash-200);
+    border-radius: var(--radius-edge, 2px);
+    background: var(--color-alabaster-raised);
+    padding: 0.875rem 1.25rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+}
+
+.step-rail::-webkit-scrollbar {
+    display: none;
+}
+
+/* One row that scrolls rather than wraps: a wrapped sequence reads as a grid,
+   and the connectors would run off the end of each line. */
+.step-rail__list {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: max-content;
+}
+
+.step-rail__item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.step-rail__item + .step-rail__item::before {
+    content: "";
+    display: block;
+    width: 2.5rem;
+    height: 1px;
+    background: var(--color-ash-300);
+    transition: background 0.3s var(--ease-obsidian);
+}
+
+.step-rail__item[data-state="done"]::before,
+.step-rail__item[data-state="active"]::before {
+    background: var(--color-ink);
+}
+
+.step-rail__button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-ink-soft);
+    white-space: nowrap;
+    transition: color 0.3s var(--ease-obsidian);
+}
+
+.step-rail__button:not(:disabled) {
+    cursor: pointer;
+}
+
+.step-rail__item[data-state="done"] .step-rail__button,
+.step-rail__item[data-state="active"] .step-rail__button {
+    color: var(--color-ink);
+}
+
+.step-rail__mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    flex-shrink: 0;
+    border: 1px solid var(--color-ash-300);
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    letter-spacing: 0;
+    transition:
+        background 0.3s var(--ease-obsidian),
+        border-color 0.3s var(--ease-obsidian),
+        color 0.3s var(--ease-obsidian);
+}
+
+.step-rail__item[data-state="done"] .step-rail__mark {
+    border-color: var(--color-ink);
+    background: var(--color-ink);
+    color: var(--color-alabaster);
+}
+
+.step-rail__item[data-state="active"] .step-rail__mark {
+    border-color: var(--color-ink);
+    color: var(--color-ink);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-ink) 12%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .step-rail__item::before,
+    .step-rail__button,
+    .step-rail__mark {
+        transition: none;
+    }
+}
+
+/* ============================================================
+   Mobile total bar.
+   ============================================================ */
+
+/* Below lg the order summary sits under a form taller than the viewport, so the
+   shopper fills in an address without ever seeing what they are paying. */
+.checkout-total-bar {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 20;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.875rem 1rem calc(0.875rem + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--color-ash-200);
+    background: color-mix(in oklab, var(--color-alabaster) 92%, transparent);
+    backdrop-filter: blur(8px);
+}
+
+.checkout-total-bar__label {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-ink-soft);
+}
+
+.checkout-total-bar__count {
+    letter-spacing: 0.08em;
+    opacity: 0.75;
+}
+
+.checkout-total-bar__value {
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink);
+}
+
+/* The breakpoint lives here, not on a `lg:hidden` utility: these rules are
+   unlayered and would beat the utility's `display: none`. */
+@media (width >= 64rem) {
+    .checkout-total-bar {
+        display: none;
+    }
+}
+
+/* Reserves the bar's own height so it never sits on top of Place Order. */
+@media (width < 64rem) {
+    .checkout-page {
+        padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+    }
+}

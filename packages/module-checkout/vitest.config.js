@@ -31,6 +31,9 @@ export default defineConfig({
             "MageObsidian_ModernFrontend::elements/Icon": fileURLToPath(
                 new URL("./src/Test/Js/stubs/Icon.vue", import.meta.url),
             ),
+            "MageObsidian_Checkout::checkout/StepRail": fileURLToPath(
+                new URL("./src/view/frontend/web/components/checkout/StepRail.vue", import.meta.url),
+            ),
             "MageObsidian_Storefront::js/useValueFlash": fileURLToPath(
                 new URL("../module-storefront/src/view/frontend/web/js/useValueFlash.ts", import.meta.url),
             ),

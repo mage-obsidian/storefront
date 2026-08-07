@@ -28,6 +28,7 @@ export interface RestAddress {
     lastname: string;
     company?: string;
     email?: string;
+    save_in_address_book?: number;
 }
 
 export function emptyAddress(countryId = ''): AddressData {
@@ -74,7 +75,10 @@ export function missingFields(address: AddressData, regionRequired: boolean): st
     return missing;
 }
 
-export function toRestAddress(address: AddressData, extra: { email?: string } = {}): RestAddress {
+export function toRestAddress(
+    address: AddressData,
+    extra: { email?: string; regionCode?: string; saveInAddressBook?: boolean } = {},
+): RestAddress {
     const street = address.street.map((line) => line.trim()).filter((line) => line !== '');
     const rest: RestAddress = {
         country_id: address.countryId,
@@ -92,6 +96,9 @@ export function toRestAddress(address: AddressData, extra: { email?: string } = 
     }
     if (extra.email) {
         rest.email = extra.email;
+    }
+    if (extra.saveInAddressBook !== undefined) {
+        rest.save_in_address_book = extra.saveInAddressBook ? 1 : 0;
     }
     return rest;
 }

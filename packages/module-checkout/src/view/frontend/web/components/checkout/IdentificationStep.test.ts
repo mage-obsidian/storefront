@@ -64,4 +64,21 @@ describe("IdentificationStep", () => {
         expect(wrapper.find("a[href*='login']").exists()).toBe(true);
         expect(useCheckout().step).toBe("identification");
     });
+
+    it("offers the way in to a customer who already has an account", () => {
+        const wrapper = mount(IdentificationStep, {
+            props: { loginUrl: "https://shop.test/customer/account/login" },
+            global: { plugins: [pinia] },
+        });
+
+        const prompt = wrapper.find("[data-signin-prompt]");
+        expect(prompt.exists()).toBe(true);
+        expect(prompt.find("a").attributes("href")).toBe("https://shop.test/customer/account/login");
+    });
+
+    it("says nothing about signing in when there is nowhere to send them", () => {
+        const wrapper = mount(IdentificationStep, { global: { plugins: [pinia] } });
+
+        expect(wrapper.find("[data-signin-prompt]").exists()).toBe(false);
+    });
 });

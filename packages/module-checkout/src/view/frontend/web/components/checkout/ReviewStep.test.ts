@@ -69,4 +69,20 @@ describe("ReviewStep", () => {
 
         expect((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0]).toContain("payment-information");
     });
+
+    it("locks the coupon actions while the request is in flight", async () => {
+        let settle: (value: unknown) => void = () => {};
+        globalThis.fetch = vi.fn().mockReturnValue(new Promise((resolve) => { settle = resolve; }));
+        const wrapper = render();
+
+        await wrapper.find("#coupon-code").setValue("SAVE10");
+        void wrapper.find('button[type="submit"]').trigger("submit");
+        await flush();
+
+        const apply = wrapper.find('button[type="submit"]');
+        expect(apply.attributes("disabled")).toBeDefined();
+        expect(apply.find(".btn__spinner").exists()).toBe(true);
+
+        settle({ ok: true, status: 200, json: () => Promise.resolve(true) });
+    });
 });

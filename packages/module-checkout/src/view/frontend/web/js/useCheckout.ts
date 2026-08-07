@@ -137,6 +137,7 @@ ensureSharedPinia();
 
 export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const step = ref<CheckoutStep>(CheckoutStep.Identification);
+    const furthestStepIndex = ref(0);
     // Presentation layout the island renders with: 'stepped' (the wizard) or
     // 'onepage'. Domain logic is layout-agnostic; only the components read this.
     const layout = ref<CheckoutLayout>(CheckoutLayout.Stepped);
@@ -150,12 +151,14 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const shippingAddress = ref<AddressData>(emptyAddress());
     const savedAddresses = ref<SavedAddress[]>([]);
     const selectedAddressId = ref<number | null>(null);
+    const saveAddress = ref(true);
     const shippingMethods = ref<ShippingMethod[]>([]);
     const selectedMethod = ref<ShippingMethod | null>(null);
     const paymentMethods = ref<PaymentMethod[]>([]);
     const vaultTokens = ref<VaultToken[]>([]);
     const selectedTokenHash = ref('');
     const loadingRates = ref(false);
+    const ratesRequested = ref(false);
     const savingShipping = ref(false);
     const error = ref('');
 
@@ -245,7 +248,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         ready.value = true;
         // Skip the identity step entirely for known customers.
         if (isLoggedIn.value && email.value) {
-            step.value = CheckoutStep.Shipping;
+            enterStep(CheckoutStep.Shipping);
         }
     }
 
@@ -284,13 +287,18 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         applyPrivate(config);
     }
 
+    function enterStep(key: CheckoutStep): void {
+        step.value = key;
+        furthestStepIndex.value = Math.max(furthestStepIndex.value, STEPS.indexOf(key));
+    }
+
     /** Move to a known step. */
     function goToStep(key: string): void {
         if (!STEPS.includes(key as CheckoutStep) || key === step.value) {
             return;
         }
         const from = step.value;
-        step.value = key as CheckoutStep;
+        enterStep(key as CheckoutStep);
         void events.dispatch(CHECKOUT_STEP_CHANGE_EVENT, { from, to: step.value });
     }
 
@@ -337,6 +345,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
 
     async function doEstimateShipping(): Promise<boolean> {
         loadingRates.value = true;
+        ratesRequested.value = true;
         error.value = '';
         try {
             const rest = toRestAddress(shippingAddress.value);
@@ -384,10 +393,13 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         savingShipping.value = true;
         error.value = '';
         try {
-            const address = toRestAddress(shippingAddress.value, isLoggedIn.value ? {} : { email: email.value });
+            const extra = isLoggedIn.value ? {} : { email: email.value };
             const result = (await api.setShippingInformation({
-                shipping_address: address,
-                billing_address: address,
+                shipping_address: toRestAddress(shippingAddress.value, {
+                    ...extra,
+                    ...(canSaveAddress.value ? { saveInAddressBook: saveAddress.value } : {}),
+                }),
+                billing_address: toRestAddress(shippingAddress.value, extra),
                 shipping_carrier_code: selectedMethod.value.carrier_code,
                 shipping_method_code: selectedMethod.value.method_code,
             })) as ShippingInformationResult;
@@ -573,6 +585,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         );
     }
 
+    const canSaveAddress = computed(() => isLoggedIn.value && selectedAddressId.value === null);
     const stepIndex = computed(() => STEPS.indexOf(step.value));
     const itemCount = computed(() => items.value.length);
     const selectedMethodKey = computed(() =>
@@ -591,6 +604,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         step,
         layout,
         stepIndex,
+        furthestStepIndex,
         isLoggedIn,
         email,
         items,
@@ -601,6 +615,8 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         shippingAddress,
         savedAddresses,
         selectedAddressId,
+        saveAddress,
+        canSaveAddress,
         selectAddress,
         shippingMethods,
         selectedMethod,
@@ -609,6 +625,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         vaultTokens,
         selectedTokenHash,
         loadingRates,
+        ratesRequested,
         savingShipping,
         error,
         billingAddress,

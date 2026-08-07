@@ -677,4 +677,97 @@ describe("useCheckout — the customer's saved addresses", () => {
         expect(checkout.selectedAddressId).toBeNull();
         expect(checkout.shippingAddress.city).toBe("");
     });
+
+    it("remembers the furthest step reached, so going back does not undo the progress", () => {
+        const checkout = useCheckout();
+        checkout.init(GUEST_CONFIG);
+
+        checkout.goToStep("shipping");
+        checkout.goToStep("payment");
+        expect(checkout.furthestStepIndex).toBe(2);
+
+        checkout.goToStep("shipping");
+        expect(checkout.stepIndex).toBe(1);
+        expect(checkout.furthestStepIndex).toBe(2);
+    });
+
+    it("counts the skipped identity step as reached for a known customer", () => {
+        const checkout = useCheckout();
+        checkout.init({ ...GUEST_CONFIG, isLoggedIn: true, customerEmail: "ada@shop.test" });
+
+        expect(checkout.stepIndex).toBe(1);
+        expect(checkout.furthestStepIndex).toBe(1);
+    });
+
+    describe("filing the shipping address in the address book", () => {
+        const SAVED = {
+            id: 20, label: "Ada, 12 Baker Street, Austin", isDefaultShipping: true,
+            firstname: "Ada", lastname: "Lovelace", company: "", street: ["12 Baker Street"],
+            city: "Austin", region: "Texas", regionId: 57, postcode: "78701",
+            countryId: "US", telephone: "5125550142",
+        };
+
+        const member = (addresses = []) => {
+            const checkout = useCheckout();
+            checkout.init({ ...GUEST_CONFIG, isLoggedIn: true, customerEmail: "ada@shop.test", addresses });
+            return checkout;
+        };
+
+        const sentBody = (fetchMock) => JSON.parse(fetchMock.mock.calls.at(-1)[1].body);
+
+        async function saveWith(checkout) {
+            const fetchMock = mockFetch({ payment_methods: [], totals: {} });
+            checkout.selectMethod(FLATRATE);
+            await checkout.saveShipping();
+            return sentBody(fetchMock);
+        }
+
+        it("asks Magento to file a new address when the shopper opted in", async () => {
+            const checkout = member();
+            checkout.saveAddress = true;
+
+            const body = await saveWith(checkout);
+
+            expect(body.addressInformation.shipping_address.save_in_address_book).toBe(1);
+        });
+
+        it("sends an explicit no when the shopper opted out", async () => {
+            const checkout = member();
+            checkout.saveAddress = false;
+
+            const body = await saveWith(checkout);
+
+            expect(body.addressInformation.shipping_address.save_in_address_book).toBe(0);
+        });
+
+        it("never files an address that is already in the book", async () => {
+            const checkout = member([SAVED]);
+            checkout.saveAddress = true;
+            expect(checkout.selectedAddressId).toBe(20);
+
+            const body = await saveWith(checkout);
+
+            expect(body.addressInformation.shipping_address).not.toHaveProperty("save_in_address_book");
+        });
+
+        it("leaves the flag off the billing copy, which would file the address twice", async () => {
+            const checkout = member();
+            checkout.saveAddress = true;
+
+            const body = await saveWith(checkout);
+
+            expect(body.addressInformation.billing_address).not.toHaveProperty("save_in_address_book");
+        });
+
+        it("says nothing about the address book for a guest", async () => {
+            const checkout = useCheckout();
+            checkout.init(GUEST_CONFIG);
+            checkout.email = "guest@shop.test";
+            checkout.saveAddress = true;
+
+            const body = await saveWith(checkout);
+
+            expect(body.addressInformation.shipping_address).not.toHaveProperty("save_in_address_book");
+        });
+    });
 });

@@ -56,6 +56,51 @@ describe("Checkout.vue", () => {
         expect(current[0].text()).toContain("Identification");
     });
 
+    it("keeps a finished step marked and reachable after the shopper steps back", async () => {
+        const wrapper = render();
+        const checkout = useCheckout();
+        checkout.goToStep("shipping");
+        checkout.goToStep("payment");
+        await nextTick();
+        checkout.goToStep("shipping");
+        await nextTick();
+
+        const items = wrapper.findAll(".step-rail__item");
+        expect(items[1].attributes("data-state")).toBe("active");
+        expect(items[2].attributes("data-state")).toBe("done");
+        expect(items[2].find("button").attributes("disabled")).toBeUndefined();
+        expect(items[3].attributes("data-state")).toBe("pending");
+    });
+
+
+    it("keeps the total in front of the shopper on a phone, where the summary is below the fold", () => {
+        const wrapper = render();
+        const bar = wrapper.find("[data-total-bar]");
+
+        expect(bar.exists()).toBe(true);
+        expect(bar.classes()).toContain("checkout-total-bar");
+        expect(bar.text()).toContain("$73.00");
+    });
+
+    it("drops the total bar once the bag is empty", async () => {
+        const wrapper = render({ ...CONFIG, quote: { items: [], subtotal: "", grandTotal: "" } });
+        await nextTick();
+
+        expect(wrapper.find("[data-total-bar]").exists()).toBe(false);
+    });
+
+    it("prefers the recalculated grand total over the primed one", async () => {
+        const wrapper = render();
+        useCheckout().totalSegments = [{ code: "grand_total", title: "Grand Total", value: 91.5 }];
+        await nextTick();
+
+        expect(wrapper.find("[data-total-bar]").text()).toContain("91.50");
+    });
+
+    it("pins the order summary beside a long form", () => {
+        expect(render().find("aside").classes()).toContain("lg:sticky");
+    });
+
     it("paints the server-primed order summary without any fetch", () => {
         const wrapper = render();
         expect(wrapper.text()).toContain("Joust Duffle Bag");
