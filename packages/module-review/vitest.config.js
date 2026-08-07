@@ -10,6 +10,9 @@ export default defineConfig({
             "MageObsidian_Storefront::js/form-validation": fileURLToPath(
                 new URL("../module-storefront/src/view/frontend/web/js/form-validation.ts", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/button-state": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/js/button-state.ts", import.meta.url),
+            ),
         },
     },
     test: {

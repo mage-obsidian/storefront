@@ -3,6 +3,7 @@
 // cannot host the browser's validation bubble.
 
 import { enhanceValidation, required } from "MageObsidian_Storefront::js/form-validation";
+import { setButtonBusy } from "MageObsidian_Storefront::js/button-state";
 
 const RATING_GROUP = '[role="radiogroup"]';
 const FORM_SELECTOR = "[data-review-form]";
@@ -33,6 +34,7 @@ export function setup(form: HTMLFormElement): void {
             onValidSubmit: () => {
                 const unrated = findUnratedGroup(form);
                 if (!unrated) {
+                    setButtonBusy(form.querySelector<HTMLButtonElement>('button[type="submit"]'), true);
                     // Bypasses the listeners, which is what lets the native POST through.
                     form.submit();
                     return;
