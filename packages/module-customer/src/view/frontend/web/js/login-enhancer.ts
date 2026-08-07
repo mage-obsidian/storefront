@@ -1,4 +1,5 @@
 import { enhanceValidation, required, email } from "MageObsidian_Storefront::js/form-validation";
+import { setButtonBusy } from "MageObsidian_Storefront::js/button-state";
 import { useAuth } from "MageObsidian_Customer::js/useAuth";
 
 // Login page entry (loaded only here, so the customer-data/Pinia cost is paid
@@ -31,9 +32,7 @@ function init(): void {
                 if (errorRegion) {
                     errorRegion.textContent = "";
                 }
-                if (submit) {
-                    submit.disabled = true;
-                }
+                setButtonBusy(submit, true);
 
                 const result = await login({
                     url,
@@ -51,9 +50,7 @@ function init(): void {
                         || form.dataset.errFailed
                         || "We couldn't sign you in. Check your details and try again.";
                 }
-                if (submit) {
-                    submit.disabled = false;
-                }
+                setButtonBusy(submit, false);
             },
         },
     );
