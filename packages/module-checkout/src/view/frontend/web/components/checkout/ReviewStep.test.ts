@@ -85,4 +85,13 @@ describe("ReviewStep", () => {
 
         settle({ ok: true, status: 200, json: () => Promise.resolve(true) });
     });
+
+    it("sizes the coupon field and its action off the same primitives", () => {
+        const wrapper = render();
+
+        expect(wrapper.find("#coupon-code").classes()).toContain("field__control");
+        const apply = wrapper.find('button[type="submit"]');
+        expect(apply.classes()).toContain("btn");
+        expect(apply.classes()).not.toContain("btn--sm");
+    });
 });

@@ -81,14 +81,14 @@ const paymentTitle = (): string =>
                         :placeholder="t('couponPlaceholder', 'Enter code')"
                         :aria-invalid="checkout.couponError ? 'true' : undefined"
                         :aria-describedby="checkout.couponError ? 'coupon-error' : undefined"
-                        class="w-full rounded-edge border border-ash-300 bg-transparent px-3 py-2.5 font-mono text-sm text-ink focus:border-ink focus:outline-none"
+                        class="field__control w-full font-mono"
                     >
                     <p v-if="checkout.couponError" id="coupon-error" role="alert" class="font-mono text-[0.66rem] text-sale">{{ checkout.couponError }}</p>
                 </div>
                 <button
                     type="submit"
                     :disabled="couponBusy"
-                    :class="['btn btn--outline btn--sm', couponBusy && 'is-loading']"
+                    :class="['btn btn--outline shrink-0', couponBusy && 'is-loading']"
                 >
                     <span class="btn__label">{{ t("apply", "Apply") }}</span>
                     <span v-if="couponBusy" class="btn__spinner" aria-hidden="true"></span>
