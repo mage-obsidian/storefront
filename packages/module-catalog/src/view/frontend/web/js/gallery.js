@@ -12,10 +12,21 @@ import events from 'MageObsidian_ModernFrontend::js/events';
 import { CatalogEvent, LEGACY_VARIANT_IMAGE_EVENT } from 'MageObsidian_Catalog::js/catalog-events';
 
 const SWAP_SCOPE_CLASS = 'pdp-gallery-swap';
+const DECODE_BUDGET = 400;
 
 const prefersReducedMotion = () =>
     typeof window.matchMedia === 'function'
     && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const decoded = (sources) =>
+    Promise.all(sources.filter(Boolean).map((src) => {
+        const image = new Image();
+        image.src = src;
+        return typeof image.decode === 'function' ? image.decode().catch(() => {}) : Promise.resolve();
+    }));
+
+const within = (promise, ms) =>
+    Promise.race([promise, new Promise((resolve) => { setTimeout(resolve, ms); })]);
 
 function init() {
     const root = document.querySelector('[data-pdp]');
@@ -40,28 +51,38 @@ function init() {
         return strip ? Array.from(strip.querySelectorAll('[data-gallery-thumb]')) : [];
     }
 
-    function swapMain(large, label) {
-        if (!large || main.getAttribute('src') === large) {
+    function applyMain(large, label) {
+        main.setAttribute('src', large);
+        // Keep the prior alt (the product name) when a variant image has no
+        // caption, rather than blanking it.
+        if (label) {
+            main.setAttribute('alt', label);
+        }
+    }
+
+    // The transition snapshots the new state one frame after the callback: an
+    // image that has not decoded yet is captured as nothing, and the cross-fade
+    // lands on the frame's bare background instead of the photo.
+    function transition(mutate, sources) {
+        if (typeof document.startViewTransition !== 'function' || prefersReducedMotion()) {
+            mutate();
             return;
         }
-        const apply = () => {
-            main.setAttribute('src', large);
-            // Keep the prior alt (the product name) when a variant image has no
-            // caption, rather than blanking it.
-            if (label) {
-                main.setAttribute('alt', label);
-            }
-        };
-        if (typeof document.startViewTransition === 'function' && !prefersReducedMotion()) {
+        void within(decoded(sources), DECODE_BUDGET).then(() => {
             // Without the scope class the whole viewport is captured as `root` and
             // cross-faded with itself, tinting the page for the length of the swap.
             const root = document.documentElement;
             root.classList.add(SWAP_SCOPE_CLASS);
             const release = () => root.classList.remove(SWAP_SCOPE_CLASS);
-            document.startViewTransition(apply).finished.then(release, release);
-        } else {
-            apply();
+            document.startViewTransition(mutate).finished.then(release, release);
+        });
+    }
+
+    function swapMain(large, label) {
+        if (!large || main.getAttribute('src') === large) {
+            return;
         }
+        transition(() => applyMain(large, label), [large]);
     }
 
     function setActiveThumb(active) {
@@ -84,7 +105,7 @@ function init() {
         img.className = 'aspect-[4/5] h-full w-full object-cover';
         img.src = tile.thumb;
         img.alt = '';
-        img.loading = 'lazy';
+        img.loading = 'eager';
         img.decoding = 'async';
         button.appendChild(img);
         li.appendChild(button);
@@ -128,20 +149,26 @@ function init() {
 
     function onGalleryChange(detail) {
         if (detail.reset) {
-            if (strip && base.thumbs != null) {
-                strip.innerHTML = base.thumbs;
-            }
-            swapMain(base.src, base.label);
+            transition(() => {
+                if (strip && base.thumbs != null) {
+                    strip.innerHTML = base.thumbs;
+                }
+                applyMain(base.src, base.label);
+            }, [base.src]);
             return;
         }
 
         if (Array.isArray(detail.tiles) && detail.tiles.length) {
-            rebuildStrip(detail.tiles);
-            const list = thumbs();
-            swapMain(detail.large ?? detail.tiles[0].large, detail.label ?? detail.tiles[0].label);
-            if (list.length) {
-                setActiveThumb(list[0]);
-            }
+            const large = detail.large ?? detail.tiles[0].large;
+            const label = detail.label ?? detail.tiles[0].label;
+            transition(() => {
+                rebuildStrip(detail.tiles);
+                applyMain(large, label);
+                const list = thumbs();
+                if (list.length) {
+                    setActiveThumb(list[0]);
+                }
+            }, [large, ...detail.tiles.map((tile) => tile.thumb)]);
             return;
         }
 

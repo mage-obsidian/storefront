@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { init } from "./gallery.js";
 
 // Gallery enhancer: thumbs swap the main image and the strip reacts to the
@@ -95,5 +95,74 @@ describe("gallery enhancer", () => {
         const thumbs = document.querySelectorAll("[data-gallery-thumb]");
         expect(thumbs).toHaveLength(2);
         expect([...thumbs].map((t) => t.dataset.large)).toEqual(["/a.jpg", "/b.jpg"]);
+    });
+});
+
+describe("gallery enhancer under a view transition", () => {
+    let decodes;
+    let callbacks;
+
+    beforeEach(() => {
+        decodes = [];
+        callbacks = [];
+        class StubImage {
+            set src(value) {
+                this.pending = value;
+            }
+            decode() {
+                decodes.push(this.pending);
+                return Promise.resolve();
+            }
+        }
+        vi.stubGlobal("Image", StubImage);
+        document.startViewTransition = (callback) => {
+            callbacks.push(callback);
+            callback();
+            return { finished: Promise.resolve() };
+        };
+        setup();
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        delete document.startViewTransition;
+    });
+
+    it("decodes the incoming image before opening the transition", async () => {
+        document.querySelectorAll("[data-gallery-thumb]")[1].click();
+
+        expect(decodes).toEqual(["/b.jpg"]);
+        expect(callbacks).toHaveLength(0);
+
+        await vi.waitFor(() => expect(callbacks).toHaveLength(1));
+        expect(document.querySelector("[data-gallery-main]").getAttribute("src")).toBe("/b.jpg");
+    });
+
+    it("decodes the variant's thumbs too, and rebuilds the strip inside the transition", async () => {
+        fireVariant({ large: "/red-main.jpg", label: "Red", tiles: variantTiles });
+
+        expect([...new Set(decodes)]).toEqual(["/red-main.jpg", "/red-t1.jpg", "/red-t2.jpg", "/red-t3.jpg"]);
+        expect(document.querySelectorAll("[data-gallery-thumb]")).toHaveLength(2);
+
+        await vi.waitFor(() => expect(callbacks.length).toBeGreaterThan(0));
+        expect(document.querySelectorAll("[data-gallery-thumb]")).toHaveLength(3);
+        expect(document.querySelector("[data-gallery-main]").getAttribute("src")).toBe("/red-main.jpg");
+    });
+
+    it("swaps anyway when the image never decodes", async () => {
+        vi.stubGlobal("Image", class {
+            set src(value) {
+                this.pending = value;
+            }
+            decode() {
+                return new Promise(() => {});
+            }
+        });
+        document.querySelectorAll("[data-gallery-thumb]")[1].click();
+
+        await vi.waitFor(
+            () => expect(document.querySelector("[data-gallery-main]").getAttribute("src")).toBe("/b.jpg"),
+            { timeout: 2000 },
+        );
     });
 });
