@@ -55,7 +55,7 @@ async function confirm(): Promise<void> {
         </button>
 
         <div v-else class="rounded-edge border border-ink/40 bg-alabaster-raised p-4">
-            <dl class="flex flex-col gap-1 font-mono text-[0.7rem] uppercase tracking-[0.12em] text-ink-soft">
+            <dl class="flex flex-col gap-1 font-mono text-eyebrow uppercase tracking-mono text-ink-soft">
                 <div v-if="ip.data.value.paymentToken" class="flex justify-between gap-3">
                     <dt>{{ t("paying", "Paying with") }}</dt>
                     <dd class="text-ink">{{ ip.data.value.paymentToken.summary }}</dd>
@@ -81,7 +81,7 @@ async function confirm(): Promise<void> {
                 <button
                     type="button"
                     :disabled="placing"
-                    class="font-mono text-[0.7rem] uppercase tracking-[0.16em] text-ink-soft underline-offset-4 hover:text-ink hover:underline disabled:opacity-60"
+                    class="font-mono text-eyebrow uppercase tracking-label text-ink-soft underline-offset-4 hover:text-ink hover:underline disabled:opacity-60"
                     @click="confirming = false"
                 >
                     {{ t("cancel", "Cancel") }}
