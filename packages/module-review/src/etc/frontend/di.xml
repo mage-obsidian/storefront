@@ -14,4 +14,10 @@
             </argument>
         </arguments>
     </type>
+
+    <!-- The rating lives on the page's single Product node; see the plugin. -->
+    <type name="MageObsidian\ModernFrontend\Model\SchemaOrg\CurrentPageSchemaProvider">
+        <plugin name="mage_obsidian_review_product_rating"
+                type="MageObsidian\Review\Plugin\SchemaOrg\AddProductRating"/>
+    </type>
 </config>
