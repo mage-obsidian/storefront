@@ -1,5 +1,0 @@
-/* Critical, above-the-fold CSS inlined in the document head.
-   Keep this minimal: only rules needed before the main stylesheet loads. */
-[v-cloak] {
-    display: none !important;
-}
