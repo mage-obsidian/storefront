@@ -332,14 +332,25 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         applyPrivate(config);
     }
 
+    /**
+     * Drop everything `setShippingInformation` gave us. `shippingSaved` goes with
+     * it: without that, re-entering the very same address would match the
+     * persisted signature, skip the write, and never bring the methods back.
+     */
+    function clearPayment(): void {
+        paymentMethods.value = [];
+        selectedPayment.value = '';
+        selectedTokenHash.value = '';
+        shippingSaved.value = false;
+    }
+
     function clearRates(): void {
         shippingMethods.value = [];
         selectedMethod.value = null;
-        paymentMethods.value = [];
         ratesRequested.value = false;
-        shippingSaved.value = false;
         ratedSignature = '';
         error.value = '';
+        clearPayment();
     }
 
     async function shippingSyncPass(withEstimate: boolean): Promise<void> {
@@ -730,7 +741,8 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
             (!regionRequired.value || a.region.trim() !== '' || a.regionId !== null)
         );
     });
-    const addressComplete = computed(() => missingFields(shippingAddress.value, regionRequired.value).length === 0);
+    const missingAddressFields = computed(() => missingFields(shippingAddress.value, regionRequired.value));
+    const addressComplete = computed(() => missingAddressFields.value.length === 0);
     const emailReady = computed(() => isLoggedIn.value || email.value.trim() !== '');
     const shippingSignature = computed(() => `${addressKey(shippingAddress.value)}|${selectedMethodKey.value}`);
     const shippingUnsaved = computed(
@@ -757,6 +769,25 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         }
     });
 
+    // The payment methods only exist as the answer to a shipment the quote
+    // accepted. The moment the address stops being persistable they describe a
+    // quote we can no longer write, so they go — and with them the right to sit
+    // on a step that shipping no longer supports. The rates stay: the address is
+    // still quotable, it just cannot be saved.
+    watch(
+        () => addressComplete.value && emailReady.value,
+        (canPersist) => {
+            if (canPersist) {
+                return;
+            }
+            clearPayment();
+            furthestStepIndex.value = Math.min(
+                furthestStepIndex.value,
+                STEPS.indexOf(CheckoutStep.Shipping),
+            );
+        },
+    );
+
     return {
         step,
         layout,
@@ -778,6 +809,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         regionRequired,
         rateReady,
         addressComplete,
+        missingAddressFields,
         emailReady,
         shippingSignature,
         shippingDirty,

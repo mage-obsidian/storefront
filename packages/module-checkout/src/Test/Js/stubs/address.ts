@@ -46,6 +46,25 @@ export function emptyAddress(countryId = ''): AddressData {
     };
 }
 
+export const ADDRESS_FIELD_LABELS: Record<string, string> = {
+    firstname: 'First name',
+    lastname: 'Last name',
+    street: 'Street address',
+    city: 'City',
+    country: 'Country',
+    region: 'State / Province',
+    postcode: 'ZIP / Postal code',
+    telephone: 'Phone number',
+};
+
+const LABEL_KEY_OF: Record<string, string> = { street0: 'street', countryId: 'country' };
+
+export function addressFieldLabel(field: string, labels: Record<string, string> = {}): string {
+    const key = LABEL_KEY_OF[field] ?? field;
+
+    return labels[key] ?? ADDRESS_FIELD_LABELS[key] ?? key;
+}
+
 export function missingFields(address: AddressData, regionRequired: boolean): string[] {
     const missing: string[] = [];
     if (!address.firstname.trim()) {

@@ -245,3 +245,65 @@ describe("ShippingStep — saved address picker", () => {
         expect(wrapper.findAll("button")).toHaveLength(2);
     });
 });
+
+describe("ShippingStep — sending the shopper to a field the checkout is waiting on", () => {
+    const AUSTIN = {
+        id: 20,
+        label: "Ada Lovelace, 12 Baker Street, Austin, Texas 78701",
+        isDefaultShipping: true,
+        firstname: "Ada", lastname: "Lovelace", company: "",
+        street: ["12 Baker Street"], city: "Austin",
+        region: "Texas", regionId: 57, postcode: "78701",
+        countryId: "US", telephone: "+1 512 555 0142",
+    };
+
+    let pinia;
+
+    beforeEach(() => {
+        pinia = createPinia();
+        setActivePinia(pinia);
+        vi.restoreAllMocks();
+    });
+
+    function render(addresses = []) {
+        const checkout = useCheckout();
+        checkout.initPublic({ ...CONFIG, layoutMode: "onepage" });
+        checkout.applyPrivate({ ...CONFIG, isLoggedIn: addresses.length > 0, customerEmail: "", addresses });
+        const wrapper = mount(ShippingStep, {
+            props: { directory: DIRECTORY, hideAdvance: true },
+            global: { plugins: [pinia] },
+        });
+
+        return { wrapper, checkout, form: () => wrapper.find("[data-address-form-stub]") };
+    }
+
+    it("marks the field and hands the focus to the address form", async () => {
+        const { wrapper, form } = render();
+
+        wrapper.vm.focusMissingField("firstname");
+        await wrapper.vm.$nextTick();
+
+        expect(form().attributes("data-invalid-fields")).toBe("firstname");
+        expect(wrapper.findComponent({ ref: "addressForm" }).vm.focused).toContain("firstname");
+    });
+
+    it("drops the mark by itself once the field stops being missing", async () => {
+        const { wrapper, checkout, form } = render();
+
+        wrapper.vm.focusMissingField("firstname");
+        await wrapper.vm.$nextTick();
+        expect(form().attributes("data-invalid-fields")).toBe("firstname");
+
+        checkout.shippingAddress.firstname = "Grace";
+        await wrapper.vm.$nextTick();
+
+        expect(form().attributes("data-invalid-fields")).toBe("");
+    });
+
+    it("stays put when a saved address is in charge and there is no form to focus", async () => {
+        const { wrapper } = render([AUSTIN]);
+        expect(wrapper.find("[data-address-form-stub]").exists()).toBe(false);
+
+        expect(() => wrapper.vm.focusMissingField("firstname")).not.toThrow();
+    });
+});

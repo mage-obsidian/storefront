@@ -172,3 +172,134 @@ describe("OnePageCheckout.vue", () => {
     });
 
 });
+
+describe("OnePageCheckout — why the payment section is not there yet", () => {
+    const QUOTABLE_ONLY = {
+        firstname: "", lastname: "", company: "129467797", street: ["test", ""],
+        city: "GENERAL LAGOS", region: "", regionId: null, postcode: "123",
+        countryId: "US", telephone: "2115654",
+    };
+
+    beforeEach(() => {
+        __reset();
+        vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+        vi.restoreAllMocks();
+    });
+
+    const CHECKMO = { code: "checkmo", title: "Check / Money order" };
+
+    // estimate-shipping-methods answers with the rates; shipping-information with
+    // the payment methods. One blanket mock cannot stand in for both.
+    function mockRates(rates: unknown[]) {
+        globalThis.fetch = vi.fn().mockImplementation((url: string) => {
+            const body = String(url).includes("shipping-information")
+                ? { payment_methods: [CHECKMO], totals: { grand_total: 39 } }
+                : rates;
+            return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(body) });
+        });
+    }
+
+    const settle = async () => {
+        await vi.advanceTimersByTimeAsync(1000);
+        await nextTick();
+    };
+
+    async function stalled({ address = QUOTABLE_ONLY, rates = [FLATRATE], pickMethod = true, ...config } = {}) {
+        mockRates(rates);
+        const { wrapper, checkout } = render(config, (store) => {
+            Object.assign(store.shippingAddress, address);
+        });
+        await settle();
+        if (pickMethod && checkout.shippingMethods.length > 0) {
+            checkout.selectMethod(FLATRATE);
+            await settle();
+        }
+        return { wrapper, checkout };
+    }
+
+    it("names every field still standing between the shopper and the payment methods", async () => {
+        const { wrapper } = await stalled({ isLoggedIn: true, customerEmail: "ada@shop.test" });
+
+        const notice = wrapper.find("[data-payment-blockers]");
+        expect(notice.exists()).toBe(true);
+        expect(notice.text()).toContain("First name");
+        expect(notice.text()).toContain("Last name");
+        expect(notice.text()).not.toContain("City");
+        expect(wrapper.find("#onepage-payment-pending-heading").text()).toContain("Payment");
+    });
+
+    it("says nothing while there are no shipping options — the shipping section already explains that", async () => {
+        const { wrapper, checkout } = await stalled({ rates: [], isLoggedIn: true, customerEmail: "ada@shop.test" });
+
+        expect(checkout.shippingMethods).toEqual([]);
+        expect(wrapper.find("#onepage-payment-pending").exists()).toBe(false);
+    });
+
+    it("waits for the request in flight instead of accusing the shopper mid-keystroke", async () => {
+        const { wrapper, checkout } = await stalled({ isLoggedIn: true, customerEmail: "ada@shop.test" });
+        expect(wrapper.find("[data-payment-blockers]").exists()).toBe(true);
+
+        checkout.savingShipping = true;
+        await nextTick();
+
+        expect(wrapper.find("[data-payment-blockers]").exists()).toBe(false);
+        expect(wrapper.find("#onepage-payment-pending").text()).toContain("Confirming your shipping choice");
+    });
+
+    it("counts the guest email, which is not an address field at all", async () => {
+        const { wrapper } = await stalled();
+
+        expect(wrapper.find("[data-payment-blockers]").text()).toContain("Email address");
+    });
+
+    it("gives way to the real payment section the moment the methods land", async () => {
+        const { wrapper, checkout } = await stalled({ isLoggedIn: true, customerEmail: "ada@shop.test" });
+        expect(wrapper.find("#onepage-payment-pending").exists()).toBe(true);
+
+        checkout.paymentMethods = [CHECKMO];
+        await nextTick();
+
+        expect(wrapper.find("#onepage-payment-pending").exists()).toBe(false);
+        expect(wrapper.find("#onepage-payment").exists()).toBe(true);
+    });
+
+    it("hands the screen back to the notice when a field is emptied after payment was up", async () => {
+        const { wrapper, checkout } = await stalled({
+            address: COMPLETE_ADDRESS,
+            isLoggedIn: true,
+            customerEmail: "ada@shop.test",
+        });
+        expect(checkout.paymentMethods).toHaveLength(1);
+        expect(wrapper.find("#onepage-payment").exists()).toBe(true);
+
+        checkout.shippingAddress.firstname = "";
+        await settle();
+
+        expect(wrapper.find("#onepage-payment").exists()).toBe(false);
+        expect(wrapper.find("[data-payment-blockers]").text()).toContain("First name");
+    });
+
+    it("sends the shopper to the field behind the item they clicked", async () => {
+        const { wrapper } = await stalled({ isLoggedIn: true, customerEmail: "ada@shop.test" });
+
+        await wrapper.find('[data-blocker="firstname"]').trigger("click");
+
+        expect(wrapper.find("[data-address-form-stub]").attributes("data-invalid-fields")).toBe("firstname");
+    });
+
+    it("never puts up an empty card: with nothing missing, the notice stays away", async () => {
+        const { wrapper, checkout } = await stalled({
+            address: COMPLETE_ADDRESS,
+            isLoggedIn: true,
+            customerEmail: "ada@shop.test",
+        });
+
+        expect(checkout.missingAddressFields).toEqual([]);
+        expect(checkout.emailReady).toBe(true);
+        expect(wrapper.find("#onepage-payment-pending").exists()).toBe(false);
+    });
+});

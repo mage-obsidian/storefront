@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, onBeforeUnmount } from "vue";
 import { useCheckout, CheckoutStep } from "MageObsidian_Checkout::js/useCheckout";
-import type { RegionData } from "MageObsidian_Storefront::js/address";
+import { type RegionData, addressFieldLabel } from "MageObsidian_Storefront::js/address";
 import IdentificationStep from "MageObsidian_Checkout::checkout/IdentificationStep";
 import ShippingStep from "MageObsidian_Checkout::checkout/ShippingStep";
 import PaymentStep from "MageObsidian_Checkout::checkout/PaymentStep";
@@ -54,6 +54,45 @@ const t = (key: string, fallback: string): string => props.labels?.[key] ?? fall
 // true iff it returned payment methods. That also gates the reveal of Payment.
 const shippingDone = computed(() => checkout.paymentMethods.length > 0);
 const paymentReady = shippingDone;
+
+const shippingStep = ref<{ focusMissingField: (field: string) => void } | null>(null);
+
+const syncing = computed(
+    () => checkout.loadingRates || checkout.savingShipping || checkout.shippingSyncPending,
+);
+
+const paymentBlockers = computed<Array<{ key: string; label: string }>>(() => {
+    if (paymentReady.value || checkout.shippingMethods.length === 0) {
+        return [];
+    }
+    const blockers = checkout.missingAddressFields.map((field) => ({
+        key: field,
+        label: addressFieldLabel(field, props.addressLabels),
+    }));
+    if (!checkout.emailReady) {
+        blockers.unshift({
+            key: "email",
+            label: props.identificationLabels?.email ?? "Email address",
+        });
+    }
+
+    return blockers;
+});
+
+const showPaymentPending = computed(
+    () =>
+        !paymentReady.value &&
+        checkout.shippingMethods.length > 0 &&
+        (syncing.value || paymentBlockers.value.length > 0),
+);
+
+function focusBlocker(key: string): void {
+    if (key === "email") {
+        document.getElementById("checkout-email")?.focus();
+        return;
+    }
+    shippingStep.value?.focusMissingField(key);
+}
 
 interface StepState {
     key: string;
@@ -127,7 +166,39 @@ onBeforeUnmount(() => checkout.cancelShippingSync());
                     </h3>
                     <IdentificationStep hide-advance :login-url="loginUrl" :labels="identificationLabels" />
                 </div>
-                <ShippingStep hide-advance :directory="directory" :labels="shippingLabels" :address-labels="addressLabels" />
+                <ShippingStep ref="shippingStep" hide-advance :directory="directory" :labels="shippingLabels" :address-labels="addressLabels" />
+            </div>
+        </section>
+
+        <section
+            v-if="showPaymentPending"
+            id="onepage-payment-pending"
+            aria-labelledby="onepage-payment-pending-heading"
+            class="scroll-mt-20 rounded-edge border border-ash-200 bg-alabaster-raised p-6 transition-colors md:p-8"
+        >
+            <h2 id="onepage-payment-pending-heading" class="mb-6 font-display text-2xl text-ink">
+                {{ t("stepPayment", "Payment") }}
+            </h2>
+            <div aria-live="polite">
+                <p v-if="syncing" class="flex items-center gap-3 text-sm text-ink-soft">
+                    <span class="btn__spinner shrink-0" aria-hidden="true"></span>
+                    {{ t("paymentConfirming", "Confirming your shipping choice…") }}
+                </p>
+                <div v-else-if="paymentBlockers.length > 0" class="form-banner" data-payment-blockers role="alert">
+                    <p>{{ t("paymentBlockedHeading", "To see the payment methods, complete:") }}</p>
+                    <ul class="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                        <li v-for="blocker in paymentBlockers" :key="blocker.key">
+                            <button
+                                type="button"
+                                class="underline underline-offset-4"
+                                :data-blocker="blocker.key"
+                                @click="focusBlocker(blocker.key)"
+                            >
+                                {{ blocker.label }}
+                            </button>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </section>
 

@@ -1036,3 +1036,132 @@ describe("useCheckout — restoring the shipping choice the quote already holds"
         expect(checkout.selectedAddressId).toBe(20);
     });
 });
+
+describe("useCheckout — naming what the address is still missing", () => {
+    const QUOTABLE = { countryId: "US", postcode: "33139", region: "Florida", regionId: 18 };
+
+    beforeEach(() => {
+        setActivePinia(createPinia());
+    });
+
+    function seeded(overrides = {}) {
+        const checkout = useCheckout();
+        checkout.init({ ...GUEST_CONFIG, statesRequired: ["US"] });
+        Object.assign(checkout.shippingAddress, overrides);
+        return checkout;
+    }
+
+    it("lists the missing fields in form order while the address is already quotable", () => {
+        const checkout = seeded({ ...QUOTABLE, city: "Miami" });
+
+        expect(checkout.rateReady).toBe(true);
+        expect(checkout.addressComplete).toBe(false);
+        expect(checkout.missingAddressFields).toEqual(["firstname", "lastname", "street0", "telephone"]);
+    });
+
+    it("empties once the address is complete, in step with addressComplete", () => {
+        const checkout = seeded({
+            ...QUOTABLE,
+            firstname: "Grace",
+            lastname: "Hopper",
+            street: ["440 Ocean Drive", ""],
+            city: "Miami",
+            telephone: "3055550199",
+        });
+
+        expect(checkout.missingAddressFields).toEqual([]);
+        expect(checkout.addressComplete).toBe(true);
+    });
+
+    it("only asks for a region where the country demands one", () => {
+        const checkout = seeded({ countryId: "US", postcode: "33139" });
+        expect(checkout.missingAddressFields).toContain("region");
+
+        checkout.shippingAddress.countryId = "FR";
+        expect(checkout.missingAddressFields).not.toContain("region");
+    });
+});
+
+const STEPS_SHIPPING = 1;
+
+describe("useCheckout — an address that stops being complete after the payment methods landed", () => {
+    const COMPLETE = {
+        firstname: "Ada", lastname: "Lovelace", company: "", street: ["1 Rue", ""],
+        city: "Paris", region: "", regionId: null, postcode: "75001", countryId: "FR",
+        telephone: "0102030405",
+    };
+    const SAVE_RESPONSE = { payment_methods: [{ code: "checkmo", title: "Check" }], totals: { grand_total: 39 } };
+
+    beforeEach(() => {
+        setActivePinia(createPinia());
+        vi.restoreAllMocks();
+    });
+
+    async function paid() {
+        const checkout = useCheckout();
+        checkout.init(GUEST_CONFIG);
+        checkout.email = "ada@shop.test";
+        Object.assign(checkout.shippingAddress, COMPLETE);
+        mockFetch([FLATRATE]);
+        await checkout.estimateShipping();
+        mockFetch(SAVE_RESPONSE);
+        await checkout.saveShipping();
+        return checkout;
+    }
+
+    it("takes the payment methods down when a required field is emptied", async () => {
+        const checkout = await paid();
+        expect(checkout.paymentMethods).toHaveLength(1);
+
+        checkout.shippingAddress.firstname = "";
+        await nextTick();
+
+        expect(checkout.paymentMethods).toEqual([]);
+        expect(checkout.selectedPayment).toBe("");
+    });
+
+    it("leaves the rates alone — the address is still quotable, only unsaveable", async () => {
+        const checkout = await paid();
+
+        checkout.shippingAddress.firstname = "";
+        await nextTick();
+
+        expect(checkout.shippingMethods).toHaveLength(1);
+        expect(checkout.selectedMethodKey).toBe("flatrate_flatrate");
+    });
+
+    it("owes the quote a write again, so filling the field back in brings payment back", async () => {
+        const checkout = await paid();
+
+        checkout.shippingAddress.firstname = "";
+        await nextTick();
+        checkout.shippingAddress.firstname = "Ada";
+        await nextTick();
+
+        expect(checkout.shippingDirty).toBe(true);
+
+        mockFetch(SAVE_RESPONSE);
+        await checkout.saveShipping();
+
+        expect(checkout.paymentMethods).toHaveLength(1);
+    });
+
+    it("gives up the step the shipping no longer supports, so the wizard cannot jump back to payment", async () => {
+        const checkout = await paid();
+        expect(checkout.furthestStepIndex).toBeGreaterThan(STEPS_SHIPPING);
+
+        checkout.shippingAddress.firstname = "";
+        await nextTick();
+
+        expect(checkout.furthestStepIndex).toBe(STEPS_SHIPPING);
+    });
+
+    it("does the same when a guest clears the email", async () => {
+        const checkout = await paid();
+
+        checkout.email = "";
+        await nextTick();
+
+        expect(checkout.paymentMethods).toEqual([]);
+    });
+});

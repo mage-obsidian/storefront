@@ -14,20 +14,27 @@ const props = withDefaults(
         statesRequired?: string[];
         displayAllRegions?: boolean;
         labels?: Record<string, string>;
+        invalidFields?: string[];
         valid?: boolean;
     }>(),
-    { valid: true },
+    { valid: true, invalidFields: () => [] },
 );
 
 defineModel<AddressData>({ required: true });
+
+const focused: string[] = [];
 
 function validate(): boolean {
     return props.valid;
 }
 
-defineExpose({ validate });
+function focusField(field: string): void {
+    focused.push(field);
+}
+
+defineExpose({ validate, focusField, focused });
 </script>
 
 <template>
-    <div data-address-form-stub />
+    <div data-address-form-stub :data-invalid-fields="props.invalidFields.join(',')" />
 </template>

@@ -53,7 +53,8 @@ const props = withDefaults(
 );
 
 const checkout = useCheckout();
-const addressForm = ref<{ validate: () => boolean } | null>(null);
+const addressForm = ref<{ validate: () => boolean; focusField: (field: string) => void } | null>(null);
+const markedFields = ref<string[]>([]);
 
 const t = (key: keyof ShippingLabels, fallback: string): string => props.labels?.[key] ?? fallback;
 
@@ -76,6 +77,22 @@ function pickAddress(value: string): void {
 function addressValid(): boolean {
     return addressForm.value ? addressForm.value.validate() : checkout.selectedAddressId !== null;
 }
+
+const invalidFields = computed(() =>
+    markedFields.value.filter((field) => checkout.missingAddressFields.includes(field)),
+);
+
+function focusMissingField(field: string): void {
+    if (!showAddressForm.value) {
+        return;
+    }
+    if (!markedFields.value.includes(field)) {
+        markedFields.value = [...markedFields.value, field];
+    }
+    addressForm.value?.focusField(field);
+}
+
+defineExpose({ focusMissingField });
 
 function formatPrice(amount: number): string {
     if (!amount) {
@@ -142,6 +159,7 @@ async function toPayment(): Promise<void> {
                     :states-required="directory.statesRequired"
                     :display-all-regions="directory.displayAllRegions"
                     :labels="addressLabels"
+                    :invalid-fields="invalidFields"
                 />
                 <label v-if="checkout.canSaveAddress" class="field-check" data-save-address>
                     <input v-model="checkout.saveAddress" type="checkbox" class="field-check__input">
