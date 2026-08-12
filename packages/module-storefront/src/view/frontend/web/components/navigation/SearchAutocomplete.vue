@@ -256,7 +256,7 @@ defineExpose({ suggestions, activeIndex, open, fetchSuggestions });
                     @mousemove="activeIndex = index"
                 >
                     <span class="truncate">{{ suggestion.title }}</span>
-                    <span v-if="suggestion.num_results" class="shrink-0 text-[0.7rem] text-ash-500">{{ suggestion.num_results }}</span>
+                    <span v-if="suggestion.num_results" class="shrink-0 text-eyebrow text-ash-500">{{ suggestion.num_results }}</span>
                 </li>
             </ul>
         </div>

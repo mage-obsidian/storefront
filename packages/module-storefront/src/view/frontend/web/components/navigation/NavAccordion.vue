@@ -36,7 +36,7 @@ const toggle = (label: string): void => {
             <div v-if="item.children && item.children.length" class="flex items-center">
                 <a
                     :href="item.url"
-                    class="flex-1 rounded-edge px-3 py-3 font-mono text-[0.8rem] uppercase tracking-[0.16em] text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
+                    class="flex-1 rounded-edge px-3 py-3 font-mono text-note uppercase tracking-label text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
                     :style="{ paddingLeft: `${0.75 + level * 0.75}rem` }"
                 >
                     {{ item.label }}
@@ -65,7 +65,7 @@ const toggle = (label: string): void => {
             <a
                 v-else
                 :href="item.url"
-                class="block rounded-edge px-3 py-3 font-mono text-[0.8rem] uppercase tracking-[0.16em] text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
+                class="block rounded-edge px-3 py-3 font-mono text-note uppercase tracking-label text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
                 :style="{ paddingLeft: `${0.75 + level * 0.75}rem` }"
             >
                 {{ item.label }}

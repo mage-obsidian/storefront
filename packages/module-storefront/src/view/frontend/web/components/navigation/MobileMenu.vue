@@ -85,8 +85,8 @@ const hasSwitcher = (group: SwitcherGroup | null) =>
 
         <Drawer :id="drawerId" :open="open" side="left" :label="label" @close="open = false">
             <div class="flex items-center justify-between border-b border-ash-200 px-5 py-4">
-                <a v-if="homeUrl" :href="homeUrl" class="font-display text-xl tracking-[0.16em] text-ink">{{ brand }}</a>
-                <span v-else class="font-display text-xl tracking-[0.16em] text-ink">{{ brand }}</span>
+                <a v-if="homeUrl" :href="homeUrl" class="font-display text-xl tracking-label text-ink">{{ brand }}</a>
+                <span v-else class="font-display text-xl tracking-label text-ink">{{ brand }}</span>
                 <button
                     type="button"
                     class="inline-flex h-9 w-9 items-center justify-center text-ink-soft transition-colors hover:text-ink"
@@ -106,7 +106,7 @@ const hasSwitcher = (group: SwitcherGroup | null) =>
                     v-for="util in utilities"
                     :key="util.kind"
                     :href="util.url"
-                    class="flex items-center gap-3 rounded-edge px-3 py-3 font-mono text-[0.8rem] uppercase tracking-[0.16em] text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
+                    class="flex items-center gap-3 rounded-edge px-3 py-3 font-mono text-note uppercase tracking-label text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
                 >
                     <component :is="countComponents[util.kind]" :label="util.label" />
                     {{ util.label }}

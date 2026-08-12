@@ -56,7 +56,7 @@ onBeforeUnmount(() => {
                 <div
                     v-for="toast in toasts"
                     :key="toast.id"
-                    class="pointer-events-auto flex items-center gap-3 rounded-edge border px-5 py-3 font-mono text-[0.72rem] uppercase tracking-[0.14em] shadow-xl backdrop-blur-md"
+                    class="pointer-events-auto flex items-center gap-3 rounded-edge border px-5 py-3 font-mono text-eyebrow uppercase tracking-eyebrow shadow-xl backdrop-blur-md"
                     :class="toast.tone === NotificationTone.Success
                         ? 'border-ash-200 bg-obsidian-950/95 text-on-obsidian'
                         : 'border-sale/40 bg-alabaster/95 text-sale'"

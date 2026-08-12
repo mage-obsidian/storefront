@@ -88,14 +88,14 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, tru
 
 <template>
     <div v-if="variant === 'inline'" class="flex flex-col gap-1">
-        <span class="px-3 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-ash-500">{{ srLabel }}</span>
+        <span class="px-3 font-mono text-micro uppercase tracking-label text-ash-500">{{ srLabel }}</span>
         <div class="flex flex-wrap gap-x-4 gap-y-1 px-3">
             <a
                 v-for="item in items"
                 :key="item.label"
                 :href="item.url"
                 :aria-current="item.current ? 'true' : null"
-                class="font-mono text-[0.78rem] uppercase tracking-[0.14em] transition-colors"
+                class="font-mono text-note uppercase tracking-eyebrow transition-colors"
                 :class="item.current ? 'text-ink' : 'text-ink-soft hover:text-ink'"
                 @click="onSelect(item, $event)"
             >
@@ -108,7 +108,7 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, tru
         <button
             ref="trigger"
             type="button"
-            class="inline-flex items-center gap-1 whitespace-nowrap font-mono text-[0.72rem] uppercase tracking-[0.12em] text-ink-soft transition-colors hover:text-ink"
+            class="inline-flex items-center gap-1 whitespace-nowrap font-mono text-eyebrow uppercase tracking-mono text-ink-soft transition-colors hover:text-ink"
             aria-haspopup="true"
             :aria-controls="panelId"
             :aria-label="label ? `${label} — ${srLabel}` : srLabel"
@@ -132,7 +132,7 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, tru
                 <a
                     :href="item.url"
                     :aria-current="item.current ? 'true' : null"
-                    class="block truncate px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.12em] transition-colors"
+                    class="block truncate px-4 py-2 font-mono text-eyebrow uppercase tracking-mono transition-colors"
                     :class="item.current ? 'text-ink' : 'text-ink-soft hover:bg-ash-100 hover:text-ink'"
                     @click="onSelect(item, $event)"
                 >

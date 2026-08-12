@@ -95,7 +95,7 @@ onBeforeUnmount(() => {
                 :data-nav-index="i"
                 :href="link.url"
                 :aria-current="link.active ? 'page' : null"
-                class="whitespace-nowrap font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft transition-colors hover:text-ink"
+                class="whitespace-nowrap font-mono text-eyebrow uppercase tracking-label text-ink-soft transition-colors hover:text-ink"
             >
                 {{ link.label }}
             </a>
@@ -116,7 +116,7 @@ onBeforeUnmount(() => {
                     :aria-current="link.active ? 'page' : null"
                     aria-haspopup="true"
                     :aria-expanded="flyoutIndex === i ? 'true' : 'false'"
-                    class="inline-flex items-center gap-1 whitespace-nowrap font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft transition-colors hover:text-ink"
+                    class="inline-flex items-center gap-1 whitespace-nowrap font-mono text-eyebrow uppercase tracking-label text-ink-soft transition-colors hover:text-ink"
                 >
                     {{ link.label }}
                     <Icon name="chevron-down" set="outline"
@@ -135,7 +135,7 @@ onBeforeUnmount(() => {
                             <a
                                 :href="child.url"
                                 :aria-current="child.active ? 'page' : null"
-                                class="block whitespace-nowrap px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.16em] text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
+                                class="block whitespace-nowrap px-4 py-2 font-mono text-eyebrow uppercase tracking-label text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
                             >
                                 {{ child.label }}
                             </a>
@@ -143,7 +143,7 @@ onBeforeUnmount(() => {
                                 <li v-for="grandchild in child.children" :key="grandchild.label">
                                     <a
                                         :href="grandchild.url"
-                                        class="block whitespace-nowrap px-4 py-1.5 pl-7 font-mono text-[0.66rem] uppercase tracking-[0.14em] text-ash-500 transition-colors hover:bg-ash-100 hover:text-ink"
+                                        class="block whitespace-nowrap px-4 py-1.5 pl-7 font-mono text-micro uppercase tracking-eyebrow text-ash-500 transition-colors hover:bg-ash-100 hover:text-ink"
                                     >
                                         {{ grandchild.label }}
                                     </a>
@@ -159,7 +159,7 @@ onBeforeUnmount(() => {
             <button
                 ref="trigger"
                 type="button"
-                class="inline-flex items-center gap-1 whitespace-nowrap font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft transition-colors hover:text-ink"
+                class="inline-flex items-center gap-1 whitespace-nowrap font-mono text-eyebrow uppercase tracking-label text-ink-soft transition-colors hover:text-ink"
                 aria-haspopup="true"
                 :aria-controls="panelId"
                 :aria-expanded="open ? 'true' : 'false'"
@@ -184,7 +184,7 @@ onBeforeUnmount(() => {
                     <a
                         :href="link.url"
                         :aria-current="link.active ? 'page' : null"
-                        class="block whitespace-nowrap px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
+                        class="block whitespace-nowrap px-4 py-2 font-mono text-eyebrow uppercase tracking-label text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
                         @click="close(false)"
                     >
                         {{ link.label }}
@@ -193,7 +193,7 @@ onBeforeUnmount(() => {
                         <li v-for="child in link.children" :key="child.label">
                             <a
                                 :href="child.url"
-                                class="block whitespace-nowrap px-4 py-1.5 pl-7 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-ash-500 transition-colors hover:bg-ash-100 hover:text-ink"
+                                class="block whitespace-nowrap px-4 py-1.5 pl-7 font-mono text-micro uppercase tracking-label text-ash-500 transition-colors hover:bg-ash-100 hover:text-ink"
                                 @click="close(false)"
                             >
                                 {{ child.label }}
