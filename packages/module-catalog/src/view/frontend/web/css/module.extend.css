@@ -357,10 +357,150 @@
     mix-blend-mode: normal;
 }
 
+/* Long-list render perf: skip off-screen cards' layout/paint, reserving space
+   so there is no CLS. The intrinsic size is remembered after first render. */
 .products-grid .product-item {
     view-transition-class: obsidian-card;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 420px;
 }
 
 :root:active-view-transition .products-grid .product-item {
     animation: none;
+}
+
+/* ── Catalog: product card media. Magento's native <img> (anti-CLS width/height
+   + lazy); we cover-fit it and add the hover scale here since the helper image()
+   is unavailable in the core ListProduct render context. ── */
+.product-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s var(--ease-obsidian);
+}
+.product-card:hover .product-card__media img { transform: scale(1.03); }
+
+/* ── Catalog: native price render (product.price.render.default) skinned to the
+   obsidian palette. Shared by the listing card, the PDP buy box and the grouped
+   rows. ── */
+.product-card__price .price,
+.pdp__price .price,
+.pdp__group .price { font-family: var(--font-mono); color: var(--color-ink); }
+.product-card__price .price-box,
+.pdp__price .price-box,
+.pdp__group .price-box { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; }
+.product-card__price .special-price .price,
+.pdp__price .special-price .price,
+.pdp__group .special-price .price { color: var(--color-sale); }
+.product-card__price .old-price .price,
+.pdp__price .old-price .price,
+.pdp__group .old-price .price { color: var(--color-ash-500); text-decoration: line-through; }
+/* "Special Price" / "Regular Price" labels are redundant — colour and the
+   strikethrough already convey it. Hidden visually, kept for screen readers. The
+   minimal-price "As low as" label stays, since it carries meaning. */
+.product-card__price .special-price .price-label,
+.product-card__price .old-price .price-label,
+.pdp__price .special-price .price-label,
+.pdp__price .old-price .price-label,
+.pdp__group .special-price .price-label,
+.pdp__group .old-price .price-label {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.product-card__price .minimal-price,
+.product-card__price .minimal-price-link,
+.pdp__price .minimal-price,
+.pdp__price .minimal-price-link,
+.pdp__group .minimal-price,
+.pdp__group .minimal-price-link {
+    display: block; margin-top: 0.25rem; font-size: 0.72rem;
+    color: var(--color-ash-500); text-decoration: none;
+}
+.pdp__price .price { font-size: 1.5rem; line-height: 2rem; }
+.pdp__price .old-price .price { font-size: 1rem; }
+.pdp__price .minimal-price,
+.pdp__price .minimal-price-link { font-size: 0.8rem; }
+
+/* ── Catalog: subcategory landing tiles. PAGE / static categories surface the
+   real category tree as navigable tiles instead of an off-brand CMS block. The
+   child categories carry no image of their own, so the artwork is a
+   representative product; the veil keeps the label legible and lifts an obsidian
+   sheen on hover. ── */
+.subcategory-card__img { transition: transform 0.6s var(--ease-obsidian); }
+.subcategory-card:hover .subcategory-card__img { transform: scale(1.04); }
+.subcategory-card__veil {
+    background: linear-gradient(to top, rgb(0 0 0 / 0.30), transparent 55%);
+    opacity: 0.55;
+    transition: opacity 0.4s var(--ease-obsidian);
+}
+.subcategory-card:hover .subcategory-card__veil { opacity: 0.85; }
+
+/* ── Catalog: product detail page. Server-rendered gallery (the main image is
+   the LCP) with thumbs that swap it; the configurable swatches are a Vue island.
+   Swatch availability greys impossible combinations with a diagonal cut. ── */
+.pdp__gallery-img { transition: opacity 0.3s var(--ease-obsidian); }
+
+.pdp__thumb { cursor: pointer; }
+.pdp__thumb img {
+    opacity: 0.72;
+    transition: opacity 0.3s var(--ease-obsidian);
+}
+.pdp__thumb[aria-pressed="true"] img,
+.pdp__thumb:hover img { opacity: 1; }
+
+.pdp__swatch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0.5rem;
+    border: 1px solid var(--color-ash-300);
+    border-radius: var(--radius-edge);
+    cursor: pointer;
+    transition: border-color 0.2s var(--ease-obsidian),
+        box-shadow 0.2s var(--ease-obsidian);
+}
+.pdp__swatch--text {
+    padding-inline: 1rem;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-ink);
+}
+.pdp__swatch:hover { border-color: var(--color-ink); }
+.pdp__swatch--selected {
+    border-color: var(--color-ink);
+    box-shadow: inset 0 0 0 1px var(--color-ink);
+}
+.pdp__swatch:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+.pdp__swatch--unavailable {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.pdp__swatch--unavailable::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to top left,
+        transparent 46%,
+        var(--color-ash-400) 47%,
+        var(--color-ash-400) 53%,
+        transparent 54%
+    );
+}
+.pdp__swatch-chip {
+    display: block;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    background-size: cover;
+    background-position: center;
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
 }
