@@ -22,7 +22,7 @@
   padding: 0.625rem 0.875rem;
   border-radius: 999px;
   border: 1px solid var(--color-ash-200, #d8d6d1);
-  background: var(--color-obsidian, #14141a);
+  background: var(--color-obsidian-800);
   color: var(--color-alabaster, #f7f6f3);
   font-size: 0.6875rem;
   letter-spacing: 0.14em;
@@ -115,7 +115,7 @@
 /* Says the value came from this visitor, not from the store view they are on. */
 .showcase__flag {
   border-color: currentColor;
-  color: var(--color-obsidian, #14141a);
+  color: var(--color-obsidian-800);
 }
 
 .showcase__select {
