@@ -60,6 +60,9 @@ export default defineConfig({
             "MageObsidian_Storefront::js/form-validation": fileURLToPath(
                 new URL("./src/view/frontend/web/js/form-validation.ts", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/switcher": fileURLToPath(
+                new URL("./src/view/frontend/web/js/switcher.ts", import.meta.url),
+            ),
             "MageObsidian_Storefront::js/scroll-lock": fileURLToPath(
                 new URL("./src/view/frontend/web/js/scroll-lock.ts", import.meta.url),
             ),

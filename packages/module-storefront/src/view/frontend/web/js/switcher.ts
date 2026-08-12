@@ -37,7 +37,7 @@ function close(details: HTMLDetailsElement, returnFocus: boolean): void {
     }
 }
 
-async function switchTo(url: string, deps: SwitchDeps): Promise<void> {
+export async function switchTo(url: string, deps: SwitchDeps): Promise<void> {
     try {
         const response = await deps.fetch(url, { credentials: "same-origin", redirect: "follow" });
         const target = resolveSwitchTarget(response.url ?? "", deps.currentUrl());

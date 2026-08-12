@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onBeforeUnmount, nextTick, useId } from "vue";
+import { browserDeps, isPlainClick, switchTo } from "MageObsidian_Storefront::js/switcher";
 
 // Reusable store / language / currency switcher. One component, two looks:
 //   - dropdown (default): a DISCLOSURE — a button that toggles a list of links.
@@ -60,27 +61,13 @@ const close = (returnFocus = true) => {
 
 const toggle = () => (open.value ? close(false) : openPanel());
 
-// Native switch links are GET redirects back to a cacheable page. With built-in
-// FPC (no Varnish) the browser can serve that page from its own HTTP cache, so a
-// currency/language switch shows stale content until a manual reload. Apply the
-// switch, then force a revalidating navigation: reload when the target is the
-// current URL (currency/language return to the referrer), assign when it differs
-// (store view). Modified clicks and the missing-JS path keep the plain link.
 const onSelect = (item: SwitcherItem, event: MouseEvent): void => {
     close(false);
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+    if (!isPlainClick(event)) {
         return;
     }
     event.preventDefault();
-    fetch(item.url, { credentials: "same-origin", redirect: "follow" })
-        .then((res) => {
-            if (res.url && res.url !== window.location.href) {
-                window.location.assign(res.url);
-            } else {
-                window.location.reload();
-            }
-        })
-        .catch(() => window.location.assign(item.url));
+    void switchTo(item.url, browserDeps);
 };
 
 onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, true));
