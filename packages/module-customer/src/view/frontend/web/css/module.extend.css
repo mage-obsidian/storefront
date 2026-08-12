@@ -387,6 +387,14 @@
     color: var(--color-ink-soft);
   }
 
+  .address-lines {
+    font-size: var(--text-sm);
+    font-style: normal;
+    --tw-leading: var(--leading-relaxed);
+    line-height: var(--leading-relaxed);
+    color: var(--color-ink-soft);
+  }
+
   .address-card {
     display: flex;
     flex-direction: column;
