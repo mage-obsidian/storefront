@@ -59,7 +59,7 @@ async function saveItem(id: number | string, data: GiftMessageData): Promise<voi
 
 <template>
     <details class="mt-10 rounded-edge border border-ash-200 bg-alabaster-raised">
-        <summary class="cursor-pointer list-none px-6 py-4 font-mono text-xs uppercase tracking-[0.18em] text-ink [&::-webkit-details-marker]:hidden">
+        <summary class="cursor-pointer list-none px-6 py-4 font-mono text-xs uppercase tracking-label text-ink [&::-webkit-details-marker]:hidden">
             {{ panelLabel }}
         </summary>
         <div class="flex flex-col gap-8 border-t border-ash-200 px-6 py-6">
@@ -79,7 +79,7 @@ async function saveItem(id: number | string, data: GiftMessageData): Promise<voi
             />
 
             <div v-if="itemsAllowed && items.length" class="flex flex-col gap-6">
-                <p class="font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">{{ itemsTitle }}</p>
+                <p class="font-mono text-xs uppercase tracking-label text-ink-soft">{{ itemsTitle }}</p>
                 <GiftMessageForm
                     v-for="item in items"
                     :key="item.id"

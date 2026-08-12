@@ -59,7 +59,7 @@ defineExpose({ resolve });
 
 <template>
     <form class="flex flex-col gap-3" @submit.prevent="submit">
-        <p class="font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">{{ title }}</p>
+        <p class="font-mono text-xs uppercase tracking-label text-ink-soft">{{ title }}</p>
         <div class="grid gap-3 sm:grid-cols-2">
             <Field v-model="sender" :label="fromLabel" name="gift_message_sender" />
             <Field v-model="recipient" :label="toLabel" name="gift_message_recipient" />
@@ -69,7 +69,7 @@ defineExpose({ resolve });
             <button type="submit" :disabled="busy" class="btn btn--solid btn--sm">
                 {{ saveLabel }}
             </button>
-            <span v-if="saved" class="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-accent">{{ savedLabel }}</span>
+            <span v-if="saved" class="font-mono text-eyebrow uppercase tracking-eyebrow text-accent">{{ savedLabel }}</span>
             <span v-if="error" role="alert" class="field__error">{{ error }}</span>
         </div>
     </form>
