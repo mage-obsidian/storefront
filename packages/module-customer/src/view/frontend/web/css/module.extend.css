@@ -357,36 +357,6 @@
     --chip-tone: var(--color-ash-500);
   }
 
-  .account-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 4rem 1.5rem;
-    border: 1px dashed var(--color-ash-300);
-    border-radius: var(--radius-edge);
-  }
-
-  .account-empty__icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    color: var(--color-ash-400);
-  }
-
-  .account-empty__title {
-    margin-top: 1rem;
-    font-family: var(--font-display);
-    font-size: var(--text-lead);
-    color: var(--color-ink);
-  }
-
-  .account-empty__body {
-    margin-top: 0.5rem;
-    max-width: 44ch;
-    font-size: 0.875rem;
-    color: var(--color-ink-soft);
-  }
-
   .address-lines {
     font-size: var(--text-sm);
     font-style: normal;
