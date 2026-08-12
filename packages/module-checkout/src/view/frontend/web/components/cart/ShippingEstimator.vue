@@ -102,7 +102,7 @@ async function onSelect(rate: ShippingRate): Promise<void> {
 
 <template>
     <details class="rounded-edge border border-ash-200 px-5 py-4" data-shipping-estimator>
-        <summary class="cursor-pointer select-none font-mono text-xs uppercase tracking-[0.14em] text-ink-soft">
+        <summary class="cursor-pointer select-none font-mono text-xs uppercase tracking-eyebrow text-ink-soft">
             {{ t("panel", "Estimate Shipping and Tax") }}
         </summary>
 
@@ -147,7 +147,7 @@ async function onSelect(rate: ShippingRate): Promise<void> {
             </button>
 
             <section v-if="estimator.methods.value.length > 0" aria-labelledby="estimator-methods-heading">
-                <h3 id="estimator-methods-heading" class="mb-3 font-mono text-xs uppercase tracking-[0.14em] text-ink-soft">
+                <h3 id="estimator-methods-heading" class="mb-3 font-mono text-xs uppercase tracking-eyebrow text-ink-soft">
                     {{ t("methodsHeading", "Shipping method") }}
                 </h3>
                 <div class="flex flex-col gap-2" role="radiogroup" :aria-label="t('methodsHeading', 'Shipping method')">
@@ -184,7 +184,7 @@ async function onSelect(rate: ShippingRate): Promise<void> {
                     class="flex items-center justify-between gap-4"
                     :class="segment.code === 'grand_total' ? 'border-t border-ash-200 pt-2 text-base font-semibold text-ink' : 'text-ink-soft'"
                 >
-                    <dt class="uppercase tracking-[0.1em]">{{ segment.title }}</dt>
+                    <dt class="uppercase tracking-mono">{{ segment.title }}</dt>
                     <dd :class="segment.code === 'grand_total' ? 'text-ink' : ''">{{ formatPrice(segment.value) }}</dd>
                 </div>
             </dl>

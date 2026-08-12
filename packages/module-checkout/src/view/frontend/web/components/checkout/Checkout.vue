@@ -187,7 +187,7 @@ const grandTotalLabel = computed(() => {
 </script>
 
 <template>
-    <div class="checkout-page mx-auto w-full max-w-[1320px] px-4 py-10 md:px-8">
+    <div class="checkout-page mx-auto w-full max-w-shell px-4 py-10 md:px-8">
         <StepRail
             v-if="!isOnePage"
             class="mb-10"
@@ -249,7 +249,7 @@ const grandTotalLabel = computed(() => {
                 aria-labelledby="checkout-summary-heading"
                 class="flex flex-col gap-6 rounded-edge border border-ash-200 bg-alabaster-raised p-6 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 lg:max-h-[calc(100dvh-8rem)] lg:self-start lg:overflow-y-auto"
             >
-                <h2 id="checkout-summary-heading" class="font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">
+                <h2 id="checkout-summary-heading" class="font-mono text-xs uppercase tracking-label text-ink-soft">
                     {{ t('summary', 'Order summary') }}
                 </h2>
 

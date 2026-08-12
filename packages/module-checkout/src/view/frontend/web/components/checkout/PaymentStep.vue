@@ -65,7 +65,7 @@ function toReview(): void {
 <template>
     <div class="flex flex-col gap-10">
         <section v-if="checkout.vaultTokens.length > 0" aria-labelledby="saved-cards-heading">
-            <h3 id="saved-cards-heading" class="mb-4 font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">
+            <h3 id="saved-cards-heading" class="mb-4 font-mono text-xs uppercase tracking-label text-ink-soft">
                 {{ t("savedCardsHeading", "Saved cards") }}
             </h3>
             <div class="flex flex-col gap-3" role="radiogroup" :aria-label="t('savedCardsHeading', 'Saved cards')">
@@ -93,7 +93,7 @@ function toReview(): void {
         </section>
 
         <section aria-labelledby="payment-methods-heading">
-            <h3 id="payment-methods-heading" class="mb-4 font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">
+            <h3 id="payment-methods-heading" class="mb-4 font-mono text-xs uppercase tracking-label text-ink-soft">
                 {{ checkout.vaultTokens.length > 0 ? t("otherMethodsHeading", "Or pay another way") : t("methodsHeading", "Payment method") }}
             </h3>
             <p v-if="checkout.paymentMethods.length === 0" class="font-mono text-sm text-ink-soft">
@@ -119,7 +119,7 @@ function toReview(): void {
         </section>
 
         <section v-if="billingVisible" aria-labelledby="billing-heading">
-            <h3 id="billing-heading" class="mb-4 font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">
+            <h3 id="billing-heading" class="mb-4 font-mono text-xs uppercase tracking-label text-ink-soft">
                 {{ t("billingHeading", "Billing address") }}
             </h3>
             <p

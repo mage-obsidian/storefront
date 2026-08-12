@@ -122,7 +122,7 @@ onBeforeUnmount(() => checkout.cancelShippingSync());
             </h2>
             <div class="flex flex-col gap-8">
                 <div v-if="!checkout.isLoggedIn">
-                    <h3 class="mb-4 font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">
+                    <h3 class="mb-4 font-mono text-xs uppercase tracking-label text-ink-soft">
                         {{ t("contactHeading", "Contact") }}
                     </h3>
                     <IdentificationStep hide-advance :login-url="loginUrl" :labels="identificationLabels" />

@@ -103,7 +103,7 @@ defineExpose({ submit });
 
         <p v-if="accountExists" role="alert" class="rounded-edge border border-ash-300 bg-alabaster p-4 text-sm text-ink-soft">
             {{ t("accountExists", "An account already exists with this email.") }}
-            <a v-if="loginUrl" :href="loginUrl" class="font-mono text-xs uppercase tracking-[0.14em] text-ink underline">{{ t("signIn", "Sign in") }}</a>
+            <a v-if="loginUrl" :href="loginUrl" class="font-mono text-xs uppercase tracking-eyebrow text-ink underline">{{ t("signIn", "Sign in") }}</a>
         </p>
 
         <button

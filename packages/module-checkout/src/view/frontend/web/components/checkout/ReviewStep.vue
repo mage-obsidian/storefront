@@ -61,7 +61,7 @@ const paymentTitle = (): string =>
 <template>
     <div class="flex flex-col gap-10">
         <section aria-labelledby="coupon-heading">
-            <h3 id="coupon-heading" class="mb-4 font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">
+            <h3 id="coupon-heading" class="mb-4 font-mono text-xs uppercase tracking-label text-ink-soft">
                 {{ t("couponHeading", "Discount code") }}
             </h3>
             <div v-if="checkout.appliedCoupon" class="flex items-center justify-between gap-4 rounded-edge border border-ash-300 bg-alabaster-raised px-4 py-3">
@@ -70,7 +70,7 @@ const paymentTitle = (): string =>
                     type="button"
                     :disabled="couponBusy"
                     :aria-busy="couponBusy ? 'true' : undefined"
-                    class="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-sale underline disabled:opacity-50"
+                    class="font-mono text-eyebrow uppercase tracking-eyebrow text-sale underline disabled:opacity-50"
                     @click="remove"
                 >
                     {{ t("remove", "Remove") }}
@@ -88,7 +88,7 @@ const paymentTitle = (): string =>
                         :aria-describedby="checkout.couponError ? 'coupon-error' : undefined"
                         class="field__control w-full font-mono"
                     >
-                    <p v-if="checkout.couponError" id="coupon-error" role="alert" class="font-mono text-[0.66rem] text-sale">{{ checkout.couponError }}</p>
+                    <p v-if="checkout.couponError" id="coupon-error" role="alert" class="font-mono text-micro text-sale">{{ checkout.couponError }}</p>
                 </div>
                 <button
                     type="submit"
@@ -102,20 +102,20 @@ const paymentTitle = (): string =>
         </section>
 
         <section aria-labelledby="recap-heading">
-            <h3 id="recap-heading" class="mb-4 font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">
+            <h3 id="recap-heading" class="mb-4 font-mono text-xs uppercase tracking-label text-ink-soft">
                 {{ t("recapHeading", "Review") }}
             </h3>
             <dl class="flex flex-col gap-2 text-sm text-ink-soft">
                 <div class="flex gap-2">
-                    <dt class="w-24 shrink-0 font-mono text-[0.68rem] uppercase tracking-[0.14em]">{{ t("email", "Email") }}</dt>
+                    <dt class="w-24 shrink-0 font-mono text-eyebrow uppercase tracking-eyebrow">{{ t("email", "Email") }}</dt>
                     <dd class="text-ink">{{ checkout.email }}</dd>
                 </div>
                 <div v-if="checkout.selectedMethod" class="flex gap-2">
-                    <dt class="w-24 shrink-0 font-mono text-[0.68rem] uppercase tracking-[0.14em]">{{ t("shipping", "Shipping") }}</dt>
+                    <dt class="w-24 shrink-0 font-mono text-eyebrow uppercase tracking-eyebrow">{{ t("shipping", "Shipping") }}</dt>
                     <dd class="text-ink">{{ checkout.selectedMethod.carrier_title }}<span v-if="checkout.selectedMethod.method_title"> — {{ checkout.selectedMethod.method_title }}</span></dd>
                 </div>
                 <div v-if="checkout.selectedPayment" class="flex gap-2">
-                    <dt class="w-24 shrink-0 font-mono text-[0.68rem] uppercase tracking-[0.14em]">{{ t("payment", "Payment") }}</dt>
+                    <dt class="w-24 shrink-0 font-mono text-eyebrow uppercase tracking-eyebrow">{{ t("payment", "Payment") }}</dt>
                     <dd class="text-ink">{{ paymentTitle() }}</dd>
                 </div>
             </dl>

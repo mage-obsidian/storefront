@@ -106,7 +106,7 @@ async function toPayment(): Promise<void> {
 <template>
     <div class="flex flex-col gap-10">
         <section aria-labelledby="shipping-address-heading">
-            <h3 id="shipping-address-heading" class="mb-5 font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">
+            <h3 id="shipping-address-heading" class="mb-5 font-mono text-xs uppercase tracking-label text-ink-soft">
                 {{ t("addressHeading", "Shipping address") }}
             </h3>
             <div
@@ -161,7 +161,7 @@ async function toPayment(): Promise<void> {
         </section>
 
         <section aria-labelledby="shipping-methods-heading">
-            <h3 id="shipping-methods-heading" class="mb-4 font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">
+            <h3 id="shipping-methods-heading" class="mb-4 font-mono text-xs uppercase tracking-label text-ink-soft">
                 {{ t("methodsHeading", "Shipping method") }}
             </h3>
 

@@ -14,7 +14,7 @@ const t = (key: keyof AgreementLabels, fallback: string): string => props.labels
 
 <template>
     <section v-if="checkout.agreementsEnabled && checkout.agreements.length > 0" aria-labelledby="agreements-heading">
-        <h3 id="agreements-heading" class="mb-4 font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">
+        <h3 id="agreements-heading" class="mb-4 font-mono text-xs uppercase tracking-label text-ink-soft">
             {{ t("heading", "Terms & conditions") }}
         </h3>
         <div class="flex flex-col gap-4">

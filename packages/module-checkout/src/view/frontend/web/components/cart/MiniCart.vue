@@ -207,7 +207,7 @@ watch(open, (isOpen) => {
 <template>
     <Drawer :id="drawerId" :open="open" side="right" :label="labels.title" @close="open = false">
         <header class="flex items-center justify-between border-b border-ash-200 px-5 py-4">
-            <h2 class="font-display text-xl tracking-[0.12em] text-ink">
+            <h2 class="font-display text-xl tracking-mono text-ink">
                 {{ labels.title }}
                 <span v-if="count > 0" class="ml-1 font-mono text-sm text-ink-soft">({{ count }})</span>
             </h2>
@@ -317,7 +317,7 @@ watch(open, (isOpen) => {
                 </TransitionGroup>
 
                 <footer class="border-t border-ash-200 px-5 py-4">
-                    <div class="flex items-center justify-between pb-4 font-mono text-sm uppercase tracking-[0.12em] text-ink">
+                    <div class="flex items-center justify-between pb-4 font-mono text-sm uppercase tracking-mono text-ink">
                         <span>{{ labels.subtotal }}</span>
                         <span
                             class="minicart-value px-1"
