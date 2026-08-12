@@ -1,0 +1,87 @@
+@layer components {
+  .order-thumbs {
+    display: flex;
+    align-items: center;
+  }
+
+  .order-thumbs__item {
+    width: 3.25rem;
+    height: 3.25rem;
+    object-fit: cover;
+    background: var(--color-alabaster-raised);
+    border: 1px solid var(--color-ash-200);
+    border-radius: var(--radius-edge);
+  }
+
+  /* The paper ring is what keeps the overlap legible against a white panel. */
+  .order-thumbs__item + .order-thumbs__item {
+    margin-left: -0.65rem;
+    box-shadow: -2px 0 0 0 var(--color-paper);
+  }
+
+  .order-thumbs__more {
+    margin-left: 0.65rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--color-ash-500);
+  }
+
+  .order-track {
+    display: flex;
+  }
+
+  .order-track__step {
+    position: relative;
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.55rem;
+  }
+
+  .order-track__step:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 0.3rem;
+    left: 0.85rem;
+    right: 0.35rem;
+    height: 1px;
+    background: var(--color-ash-200);
+  }
+
+  .order-track__step--done::after {
+    background: var(--color-accent);
+  }
+
+  .order-track__dot {
+    width: 0.6rem;
+    height: 0.6rem;
+    border: 1px solid var(--color-ash-300);
+    border-radius: 9999px;
+    background: var(--color-paper);
+  }
+
+  .order-track__step--done .order-track__dot {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
+  .order-track__step--current .order-track__dot {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 18%, transparent);
+  }
+
+  .order-track__label {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-ash-500);
+  }
+
+  .order-track__step--done .order-track__label,
+  .order-track__step--current .order-track__label {
+    color: var(--color-ink);
+  }
+}
