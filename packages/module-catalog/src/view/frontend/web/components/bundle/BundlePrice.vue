@@ -3,6 +3,7 @@ import { ref, onMounted } from "vue";
 import events from "MageObsidian_ModernFrontend::js/events";
 import { CatalogEvent } from "MageObsidian_Catalog::js/catalog-events";
 import { createBundlePrice, type BundleConfig } from "MageObsidian_Catalog::js/bundle-price";
+import { formatCurrency } from "MageObsidian_Storefront::js/currency";
 
 // Live selection total for a bundle. The option controls are server-rendered
 // (getOptionHtml) and POST without JS; this island only reads them plus the
@@ -24,9 +25,7 @@ function parse(json: string): BundleConfig {
     }
 }
 
-function format(amount: number): string {
-    return props.currencyFormat.replace("%s", amount.toFixed(2));
-}
+const format = (amount: number): string => formatCurrency(props.currencyFormat, amount);
 
 onMounted(() => {
     const form = document.querySelector<HTMLElement>(props.formSelector);

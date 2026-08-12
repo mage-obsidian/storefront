@@ -5,6 +5,7 @@ import { notify, NotificationTone } from "MageObsidian_Storefront::js/notificati
 import { CatalogEvent } from "MageObsidian_Catalog::js/catalog-events";
 import { useCart } from "MageObsidian_Storefront::js/useCart";
 import { createProductOptions } from "MageObsidian_Catalog::js/product-options";
+import { formatCurrency } from "MageObsidian_Storefront::js/currency";
 
 // Configurable buy box. Parses core's getJsonConfig / getJsonSwatchConfig and
 // owns the selection flow. Stock truth stays server-side — we only grey out
@@ -93,10 +94,7 @@ const variantId = computed(() => {
     return matches.length ? matches[0] : null;
 });
 
-function formatAmount(amount) {
-    const fmt = config.currencyFormat ?? "%s";
-    return fmt.replace("%s", Number(amount).toFixed(2));
-}
+const formatAmount = (amount) => formatCurrency(config.currencyFormat, amount);
 
 const price = computed(() => {
     const prices = variantId.value && config.optionPrices?.[variantId.value];

@@ -13,15 +13,12 @@ import { useCart } from "MageObsidian_Storefront::js/useCart";
 import { createProductOptions } from "MageObsidian_Catalog::js/product-options";
 import { notify, NotificationTone } from "MageObsidian_Storefront::js/notifications";
 import { setButtonBusy } from "MageObsidian_Storefront::js/button-state";
+import { formatCurrency } from "MageObsidian_Storefront::js/currency";
 
 function announce(message: string, tone: NotificationTone): void {
     if (message) {
         void notify(message, tone);
     }
-}
-
-function formatTotal(format: string, amount: number): string {
-    return format.replace("%s", amount.toFixed(2));
 }
 
 export function setup(form: HTMLFormElement): void {
@@ -33,7 +30,7 @@ export function setup(form: HTMLFormElement): void {
 
     const renderTotal = (): void => {
         if (totalEl) {
-            totalEl.textContent = formatTotal(format, base + (options?.delta() ?? 0));
+            totalEl.textContent = formatCurrency(format, base + (options?.delta() ?? 0));
         }
     };
     options?.onChange(renderTotal);

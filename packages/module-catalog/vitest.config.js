@@ -15,6 +15,9 @@ export default defineConfig({
             "mage-obsidian/runtime": fileURLToPath(
                 new URL("../js-package-utils/src/runtime", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/currency": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/js/currency.ts", import.meta.url),
+            ),
             "MageObsidian_Storefront::js/button-state": fileURLToPath(
                 new URL("../module-storefront/src/view/frontend/web/js/button-state.ts", import.meta.url),
             ),
