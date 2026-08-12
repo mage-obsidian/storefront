@@ -128,7 +128,7 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, tru
         <button
             ref="trigger"
             type="button"
-            class="inline-flex items-center gap-1 font-mono text-[0.72rem] uppercase tracking-[0.12em] text-ink-soft transition-colors hover:text-ink"
+            class="inline-flex items-center gap-1 font-mono text-eyebrow uppercase tracking-mono text-ink-soft transition-colors hover:text-ink"
             aria-haspopup="true"
             :aria-controls="panelId"
             :aria-label="`${menuLabel} — ${displayName}`"
@@ -151,14 +151,14 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, tru
             <li v-for="link in links" :key="link.label">
                 <a
                     :href="link.url"
-                    class="block truncate px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.12em] text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
+                    class="block truncate px-4 py-2 font-mono text-eyebrow uppercase tracking-mono text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
                     @click="close(false)"
                 >{{ link.label }}</a>
             </li>
             <li class="mt-1 border-t border-ash-200 pt-1">
                 <a
                     :href="logoutUrl"
-                    class="block truncate px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.12em] text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
+                    class="block truncate px-4 py-2 font-mono text-eyebrow uppercase tracking-mono text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
                     @click="close(false)"
                 >{{ signOutLabel }}</a>
             </li>
@@ -167,6 +167,6 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, tru
 
     <span
         v-else
-        class="mo-prepaint-guest whitespace-nowrap font-mono text-[0.72rem] uppercase tracking-[0.12em] text-ink-soft"
+        class="mo-prepaint-guest whitespace-nowrap font-mono text-eyebrow uppercase tracking-mono text-ink-soft"
     >{{ signInLabel }}</span>
 </template>
