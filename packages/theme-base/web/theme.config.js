@@ -1,5 +1,5 @@
 export default {
-    includeParentThemes: false,
+    includeCssSourceFromParentThemes: false,
     ignoredCssFromModules: [],
     ignoredTailwindConfigFromModules: [],
     exposeNpmPackages: [
