@@ -4,6 +4,7 @@ import Field from "MageObsidian_Storefront::form/Field";
 import {
     type AddressData,
     type RegionData,
+    ADDRESS_FIELD_LABELS,
     missingFields,
 } from "MageObsidian_Storefront::js/address";
 
@@ -42,6 +43,7 @@ const props = withDefaults(
         statesRequired?: string[];
         displayAllRegions?: boolean;
         labels?: AddressLabels;
+        invalidFields?: string[];
     }>(),
     {
         countries: () => [],
@@ -49,6 +51,7 @@ const props = withDefaults(
         statesRequired: () => [],
         displayAllRegions: false,
         labels: () => ({}),
+        invalidFields: () => [],
     },
 );
 
@@ -58,20 +61,21 @@ const errors = ref<Set<string>>(new Set());
 const fieldId = useId();
 const id = (field: string): string => `${fieldId}-${field}`;
 const errorId = (field: string): string => `${fieldId}-${field}-error`;
-const hasError = (field: string): boolean => errors.value.has(field);
+const hasError = (field: string): boolean =>
+    errors.value.has(field) || props.invalidFields.includes(field);
 
 const t = computed(() => ({
-    firstname: props.labels.firstname ?? "First name",
-    lastname: props.labels.lastname ?? "Last name",
+    firstname: props.labels.firstname ?? ADDRESS_FIELD_LABELS.firstname,
+    lastname: props.labels.lastname ?? ADDRESS_FIELD_LABELS.lastname,
     company: props.labels.company ?? "Company",
-    street: props.labels.street ?? "Street address",
+    street: props.labels.street ?? ADDRESS_FIELD_LABELS.street,
     streetLine2: props.labels.streetLine2 ?? "Apartment, suite, etc.",
-    city: props.labels.city ?? "City",
-    country: props.labels.country ?? "Country",
-    region: props.labels.region ?? "State / Province",
+    city: props.labels.city ?? ADDRESS_FIELD_LABELS.city,
+    country: props.labels.country ?? ADDRESS_FIELD_LABELS.country,
+    region: props.labels.region ?? ADDRESS_FIELD_LABELS.region,
     regionPlaceholder: props.labels.regionPlaceholder ?? "Please select a region",
-    postcode: props.labels.postcode ?? "ZIP / Postal code",
-    telephone: props.labels.telephone ?? "Phone number",
+    postcode: props.labels.postcode ?? ADDRESS_FIELD_LABELS.postcode,
+    telephone: props.labels.telephone ?? ADDRESS_FIELD_LABELS.telephone,
     required: props.labels.required ?? "This field is required.",
     optional: props.labels.optional ?? "optional",
 }));
@@ -111,6 +115,12 @@ function clearError(field: string): void {
     }
 }
 
+function focusField(field: string): void {
+    const control = document.getElementById(id(field === "street0" ? "street" : field));
+    control?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+    control?.focus();
+}
+
 /**
  * Validate the required fields; mark the offenders, focus the first one and
  * return whether the address is complete. Called by the parent step before it
@@ -120,14 +130,13 @@ function validate(): boolean {
     const missing = missingFields(address.value, regionRequired.value);
     errors.value = new Set(missing);
     if (missing.length > 0) {
-        const first = missing[0] === "street0" ? "street" : missing[0];
-        document.getElementById(id(first))?.focus();
+        focusField(missing[0]);
         return false;
     }
     return true;
 }
 
-defineExpose({ validate });
+defineExpose({ validate, focusField });
 </script>
 
 <template>

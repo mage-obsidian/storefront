@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { emptyAddress, missingFields, toRestAddress, type AddressData } from "./address.ts";
+import { addressFieldLabel, emptyAddress, missingFields, toRestAddress, type AddressData } from "./address.ts";
 
 function filled(overrides: Partial<AddressData> = {}): AddressData {
     return {
@@ -95,5 +95,29 @@ describe("toRestAddress", () => {
         expect(rest.email).toBe("ada@shop.test");
         expect(rest.region_code).toBe("CA");
         expect(rest.save_in_address_book).toBe(0);
+    });
+});
+
+describe("addressFieldLabel", () => {
+    it("names every field missingFields can report", () => {
+        const all = missingFields(emptyAddress(), true);
+        expect(all.length).toBeGreaterThan(0);
+        for (const field of all) {
+            expect(addressFieldLabel(field)).not.toBe(field);
+        }
+    });
+
+    it("maps the two field names that differ from their label key", () => {
+        expect(addressFieldLabel("street0")).toBe("Street address");
+        expect(addressFieldLabel("countryId")).toBe("Country");
+    });
+
+    it("prefers the translated label the theme passes down", () => {
+        expect(addressFieldLabel("street0", { street: "Dirección" })).toBe("Dirección");
+        expect(addressFieldLabel("firstname", { firstname: "Nombre" })).toBe("Nombre");
+    });
+
+    it("falls back to the field name for something it does not know", () => {
+        expect(addressFieldLabel("vatId")).toBe("vatId");
     });
 });

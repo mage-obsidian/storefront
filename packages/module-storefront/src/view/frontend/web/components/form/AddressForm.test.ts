@@ -82,4 +82,35 @@ describe("AddressForm", () => {
 
         expect(wrapper.vm.validate()).toBe(true);
     });
+
+    it("marks the fields a caller reports as invalid without any validate() call", async () => {
+        const address = emptyAddress("US");
+        const wrapper = mount(AddressForm, {
+            props: {
+                ...DIRECTORY,
+                modelValue: address,
+                "onUpdate:modelValue": (v: AddressData) => Object.assign(address, v),
+                invalidFields: ["firstname"],
+            },
+        });
+
+        const firstname = wrapper.find("#" + wrapper.findAll("input")[0].attributes("id"));
+        expect(firstname.attributes("aria-invalid")).toBe("true");
+        expect(wrapper.findAll("input")[1].attributes("aria-invalid")).toBeUndefined();
+
+        await wrapper.setProps({ invalidFields: [] });
+
+        expect(wrapper.findAll("input")[0].attributes("aria-invalid")).toBeUndefined();
+    });
+
+    it("focusField() lands on the street control, whose name the helper reports as street0", () => {
+        const address = emptyAddress("US");
+        const wrapper = mountForm(address);
+        document.body.appendChild(wrapper.element as HTMLElement);
+
+        wrapper.vm.focusField("street0");
+
+        const street = wrapper.find('input[autocomplete="address-line1"]').element;
+        expect(document.activeElement).toBe(street);
+    });
 });

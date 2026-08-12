@@ -98,6 +98,25 @@ export function missingFields(address: AddressData, regionRequired: boolean): st
     return missing;
 }
 
+export const ADDRESS_FIELD_LABELS: Record<string, string> = {
+    firstname: 'First name',
+    lastname: 'Last name',
+    street: 'Street address',
+    city: 'City',
+    country: 'Country',
+    region: 'State / Province',
+    postcode: 'ZIP / Postal code',
+    telephone: 'Phone number',
+};
+
+const LABEL_KEY_OF: Record<string, string> = { street0: 'street', countryId: 'country' };
+
+export function addressFieldLabel(field: string, labels: Record<string, string> = {}): string {
+    const key = LABEL_KEY_OF[field] ?? field;
+
+    return labels[key] ?? ADDRESS_FIELD_LABELS[key] ?? key;
+}
+
 /**
  * Map the form address to Magento's REST envelope, dropping empty street lines
  * and omitting the region id/code when the region is free text. `extra` carries
