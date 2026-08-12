@@ -535,6 +535,51 @@
   .form-banner:empty {
     display: none;
   }
+
+  /* Class recipes: the utility strings the templates repeated verbatim, named.
+     Written as the utilities' own declarations rather than @apply — a module's
+     CSS is compiled into EVERY theme, and @apply on a token the current theme
+     does not define fails the build instead of degrading. */
+  .shell {
+    margin-inline: auto;
+    width: 100%;
+    max-width: var(--container-shell);
+    padding-inline: calc(var(--spacing) * 4);
+  }
+
+  @media (min-width: 48rem) {
+    .shell {
+      padding-inline: calc(var(--spacing) * 8);
+    }
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-size: var(--text-3xl);
+    line-height: var(--tw-leading, var(--text-3xl--line-height));
+    --tw-tracking: var(--tracking-fine);
+    letter-spacing: var(--tracking-fine);
+    color: var(--color-ink);
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--text-eyebrow);
+    text-transform: uppercase;
+    --tw-tracking: var(--tracking-label);
+    letter-spacing: var(--tracking-label);
+    color: var(--color-ink-soft);
+  }
+
+  .table-label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: var(--tw-leading, var(--text-xs--line-height));
+    text-transform: uppercase;
+    --tw-tracking: var(--tracking-eyebrow);
+    letter-spacing: var(--tracking-eyebrow);
+    color: var(--color-ink-soft);
+  }
 }
 
 .mo-badge,
