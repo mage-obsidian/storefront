@@ -7,6 +7,7 @@ import {
     type ShippingRate,
 } from "MageObsidian_Checkout::js/useShippingEstimator";
 import type { CheckoutApiConfig } from "MageObsidian_Checkout::js/useCheckoutApi";
+import { formatCurrency } from "MageObsidian_Storefront::js/currency";
 
 // Cart "Estimate Shipping and Tax" panel (Luma parity). It previews shipping
 // rates + recalculated totals for a partial address through the native REST
@@ -69,10 +70,8 @@ const regionOptions = computed(() => [
     ...countryRegions.value.map((region) => ({ value: String(region.id), label: region.name })),
 ]);
 
-function formatPrice(amount: number | null): string {
-    const value = amount ?? 0;
-    return (props.currencyFormat || "%s").replace("%s", value.toFixed(2));
-}
+const formatPrice = (amount: number | null): string =>
+    formatCurrency(props.currencyFormat, amount);
 
 function buildAddress(): EstimatorAddress {
     const address: EstimatorAddress = { country_id: countryId.value };

@@ -75,6 +75,9 @@ export default defineConfig({
             "MageObsidian_Checkout::js/useShippingEstimator": fileURLToPath(
                 new URL("./src/view/frontend/web/js/useShippingEstimator.ts", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/currency": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/js/currency.ts", import.meta.url),
+            ),
             "MageObsidian_Storefront::js/address": fileURLToPath(
                 new URL("./src/Test/Js/stubs/address.ts", import.meta.url),
             ),

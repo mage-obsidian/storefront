@@ -12,6 +12,7 @@ import { ensureSharedPinia } from 'MageObsidian_ModernFrontend::js/store';
 import { createCheckoutApi } from 'MageObsidian_Checkout::js/useCheckoutApi';
 import { useCustomerData } from 'MageObsidian_ModernFrontend::js/customer-data';
 import { emptyAddress, missingFields, toRestAddress, type AddressData } from 'MageObsidian_Storefront::js/address';
+import { formatCurrency } from 'MageObsidian_Storefront::js/currency';
 import events from 'MageObsidian_ModernFrontend::js/events';
 import { MutationPhase } from 'mage-obsidian/runtime/mutationEvent.ts';
 import {
@@ -692,7 +693,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     }
 
     function formatTotal(amount: number): string {
-        return (currencyFormat.value || '%s').replace('%s', amount.toFixed(2));
+        return formatCurrency(currencyFormat.value, amount);
     }
 
     function addressKey(address: AddressData): string {

@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
 import AddressForm from "MageObsidian_Storefront::form/AddressForm";
 import type { RegionData } from "MageObsidian_Storefront::js/address";
+import { formatCurrency } from "MageObsidian_Storefront::js/currency";
 
 // Shipping step: the shared AddressForm (v-model'd to the store address) plus the
 // native shipping rates. Estimating only happens once the address validates; the
@@ -80,8 +81,7 @@ function formatPrice(amount: number): string {
     if (!amount) {
         return t("free", "Free");
     }
-    const format = checkout.currencyFormat || "%s";
-    return format.replace("%s", amount.toFixed(2));
+    return formatCurrency(checkout.currencyFormat, amount);
 }
 
 const hasMethods = computed(() => checkout.shippingMethods.length > 0);
