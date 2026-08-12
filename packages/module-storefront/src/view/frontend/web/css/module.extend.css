@@ -583,7 +583,7 @@
     }
   }
 
-  .page-title {
+  .page-heading {
     font-family: var(--font-display);
     font-size: var(--text-3xl);
     line-height: var(--tw-leading, var(--text-3xl--line-height));
