@@ -42,6 +42,42 @@
   }
 }
 
+/* Toast stack enter/leave: a short rise and fade. The leaving row is pulled out
+   of flow so the survivors slide up through `-move` instead of snapping once it
+   is removed; it spans the region's width (the chip inside stays centred) so
+   going absolute does not resize it. */
+.obsidian-toast-enter-active {
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s var(--ease-obsidian);
+}
+
+.obsidian-toast-leave-active {
+  position: absolute;
+  inset-inline: 0;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s var(--ease-obsidian);
+}
+
+.obsidian-toast-move {
+  transition: transform 0.22s var(--ease-obsidian);
+}
+
+.obsidian-toast-enter-from,
+.obsidian-toast-leave-to {
+  opacity: 0;
+  transform: translateY(0.5rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .obsidian-toast-enter-active,
+  .obsidian-toast-leave-active,
+  .obsidian-toast-move {
+    transition: none;
+  }
+}
+
 .cart-count__ring {
   position: absolute;
   inset: -6px;
