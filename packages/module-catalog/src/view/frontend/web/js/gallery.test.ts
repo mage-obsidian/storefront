@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { init } from "./gallery.js";
+import { init } from "./gallery";
 
 // Gallery enhancer: thumbs swap the main image and the strip reacts to the
 // configurable island's `obsidian:variant-image` event (single-image swap, full
@@ -66,6 +66,27 @@ describe("gallery enhancer", () => {
             "/red-side.jpg",
         ]);
         expect(thumbs[2].getAttribute("aria-label")).toBe("Show image 3");
+    });
+
+    it("clones the server's thumb, so the markup only lives in the template", () => {
+        document.body.innerHTML = `
+            <div data-pdp>
+                <img data-gallery-main src="/a.jpg" alt="A">
+                <ul data-gallery-thumbs data-thumb-label="Show image %1">
+                    <li class="tile"><button class="pdp__thumb custom-chain" data-gallery-thumb data-large="/a.jpg" data-label="A" aria-pressed="true"><img loading="lazy" decoding="async"></button></li>
+                </ul>
+            </div>`;
+        init();
+
+        fireVariant({ large: "/red-main.jpg", label: "Red", tiles: variantTiles });
+
+        const item = document.querySelector("[data-gallery-thumbs] li");
+        const button = item.querySelector("[data-gallery-thumb]");
+        expect(item.className).toBe("tile");
+        expect(button.className).toBe("pdp__thumb custom-chain");
+        expect(button.querySelector("img").getAttribute("decoding")).toBe("async");
+        // Rebuilt thumbs are already in view, so they stop being lazy.
+        expect(button.querySelector("img").getAttribute("loading")).toBe("eager");
     });
 
     it("keeps rebuilt thumbs interactive (delegated listeners)", () => {
