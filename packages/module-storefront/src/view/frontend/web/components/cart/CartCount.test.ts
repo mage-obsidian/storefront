@@ -112,3 +112,13 @@ describe("CartCount while the cart is syncing", () => {
         await close("wishlist_add_after");
     });
 });
+
+describe("CartCount — hydration contract", () => {
+    it("marks its children as legitimately differing from the server markup", () => {
+        __setSection("cart", { summary_count: 2 });
+
+        const wrapper = mount(CartCount);
+
+        expect(wrapper.get(".cart-count").attributes("data-allow-mismatch")).toBe("children");
+    });
+});

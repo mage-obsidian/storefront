@@ -23,3 +23,13 @@ describe("CompareCount", () => {
         expect(wrapper.get('[role="status"]').text()).toContain("0");
     });
 });
+
+describe("CompareCount — hydration contract", () => {
+    it("marks its children as legitimately differing from the server markup", () => {
+        __setSection("compare-products", { count: 3 });
+
+        const wrapper = mount(CompareCount);
+
+        expect(wrapper.get(".compare-count").attributes("data-allow-mismatch")).toBe("children");
+    });
+});

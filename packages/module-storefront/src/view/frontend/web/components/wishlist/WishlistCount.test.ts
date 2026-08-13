@@ -23,3 +23,13 @@ describe("WishlistCount", () => {
         expect(wrapper.get('[role="status"]').text()).toContain("0");
     });
 });
+
+describe("WishlistCount — hydration contract", () => {
+    it("marks its children as legitimately differing from the server markup", () => {
+        __setSection("wishlist", { saved: { "12": "/r/5" } });
+
+        const wrapper = mount(WishlistCount);
+
+        expect(wrapper.get(".wishlist-count").attributes("data-allow-mismatch")).toBe("children");
+    });
+});

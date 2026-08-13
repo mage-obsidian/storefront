@@ -14,7 +14,7 @@ const count = computed(() => {
 </script>
 
 <template>
-    <span class="wishlist-count relative inline-flex items-center">
+    <span class="wishlist-count relative inline-flex items-center" data-allow-mismatch="children">
         <Icon name="heart" set="outline" class="h-5 w-5" />
         <span
             v-if="count > 0"

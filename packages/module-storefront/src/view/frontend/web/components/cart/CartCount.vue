@@ -27,7 +27,11 @@ const syncing = computed(() => activity.isBusy(CART_DOMAIN));
 </script>
 
 <template>
-    <span class="cart-count relative inline-flex items-center" :class="{ 'is-syncing': syncing }">
+    <span
+        class="cart-count relative inline-flex items-center"
+        :class="{ 'is-syncing': syncing }"
+        data-allow-mismatch="children"
+    >
         <Icon name="shopping-bag" set="outline" class="h-5 w-5" />
         <span v-if="syncing" class="cart-count__ring" aria-hidden="true"></span>
         <span

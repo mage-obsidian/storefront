@@ -14,7 +14,7 @@ const count = computed(() => {
 </script>
 
 <template>
-    <span class="compare-count relative inline-flex items-center">
+    <span class="compare-count relative inline-flex items-center" data-allow-mismatch="children">
         <Icon name="view-columns" set="outline" class="h-5 w-5" />
         <span
             v-if="count > 0"
