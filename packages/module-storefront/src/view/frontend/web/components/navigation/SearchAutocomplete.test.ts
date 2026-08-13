@@ -120,3 +120,61 @@ describe("SearchAutocomplete", () => {
         wrapper.unmount();
     });
 });
+
+describe("SearchAutocomplete — dismissing the panel", () => {
+    const elsewhere = (): HTMLElement => {
+        const node = document.createElement("a");
+        node.href = "/elsewhere";
+        document.body.appendChild(node);
+        return node;
+    };
+
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    const openPanel = async () => {
+        const wrapper = mountSearch();
+        await wrapper.get("button").trigger("click");
+        await settle();
+        expect(wrapper.find("input").exists()).toBe(true);
+        return wrapper;
+    };
+
+    it("closes when the click lands outside", async () => {
+        const wrapper = await openPanel();
+
+        elsewhere().dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }));
+        await settle();
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.find("input").exists()).toBe(false);
+
+        wrapper.unmount();
+    });
+
+    it("stays open when the click lands inside the panel", async () => {
+        const wrapper = await openPanel();
+
+        wrapper.get("input").element.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }));
+        await settle();
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.find("input").exists()).toBe(true);
+
+        wrapper.unmount();
+    });
+
+    it("keeps the typed query when a text selection drag releases outside the panel", async () => {
+        const wrapper = await openPanel();
+        await wrapper.get("input").setValue("chaqueta");
+
+        wrapper.get("input").element.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+        elsewhere().dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }));
+        await settle();
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.find("input").exists()).toBe(true);
+        expect(wrapper.get("input").element.value).toBe("chaqueta");
+
+        wrapper.unmount();
+    });
+});

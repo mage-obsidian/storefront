@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onBeforeUnmount, nextTick, useId } from "vue";
+import { ref, nextTick, useId } from "vue";
+import { onClickOutside } from "@vueuse/core";
 import { browserDeps, isPlainClick, switchTo } from "MageObsidian_Storefront::js/switcher";
 
 // Reusable store / language / currency switcher. One component, two looks:
@@ -34,15 +35,8 @@ const trigger = ref<HTMLElement | null>(null);
 const panel = ref<HTMLElement | null>(null);
 const panelId = useId();
 
-const onDocumentClick = (event: Event): void => {
-    if (root.value && !root.value.contains(event.target as Node | null)) {
-        close(false);
-    }
-};
-
 const openPanel = () => {
     open.value = true;
-    document.addEventListener("click", onDocumentClick, true);
     nextTick(() => panel.value?.querySelector("a")?.focus());
 };
 
@@ -53,11 +47,12 @@ const close = (returnFocus = true) => {
         return;
     }
     open.value = false;
-    document.removeEventListener("click", onDocumentClick, true);
     if (returnFocus) {
         trigger.value?.focus();
     }
 };
+
+onClickOutside(root, () => close(false));
 
 const toggle = () => (open.value ? close(false) : openPanel());
 
@@ -69,8 +64,6 @@ const onSelect = (item: SwitcherItem, event: MouseEvent): void => {
     event.preventDefault();
     void switchTo(item.url, browserDeps);
 };
-
-onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, true));
 </script>
 
 <template>

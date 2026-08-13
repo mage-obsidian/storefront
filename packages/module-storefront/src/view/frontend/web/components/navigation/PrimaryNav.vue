@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onBeforeUnmount, nextTick, useId } from "vue";
+import { ref, nextTick, useId } from "vue";
+import { onClickOutside } from "@vueuse/core";
 import Icon from "MageObsidian_ModernFrontend::elements/Icon";
 
 interface NavLink {
@@ -24,15 +25,8 @@ const panel = ref<HTMLElement | null>(null);
 const panelId = useId();
 const open = ref(false);
 
-const onDocumentClick = (event: Event): void => {
-    if (moreWrap.value && !moreWrap.value.contains(event.target as Node | null)) {
-        close(false);
-    }
-};
-
 const openPanel = (): void => {
     open.value = true;
-    document.addEventListener("click", onDocumentClick, true);
     nextTick(() => panel.value?.querySelector("a")?.focus());
 };
 
@@ -41,11 +35,12 @@ const close = (returnFocus = true): void => {
         return;
     }
     open.value = false;
-    document.removeEventListener("click", onDocumentClick, true);
     if (returnFocus) {
         trigger.value?.focus();
     }
 };
+
+onClickOutside(moreWrap, () => close(false));
 
 const toggle = (): void => (open.value ? close(false) : openPanel());
 
@@ -80,10 +75,6 @@ const onFlyoutEscape = (event: KeyboardEvent): void => {
     flyoutSuppressed.value = true;
     (event.currentTarget as HTMLElement).querySelector("a")?.focus();
 };
-
-onBeforeUnmount(() => {
-    document.removeEventListener("click", onDocumentClick, true);
-});
 </script>
 
 <template>

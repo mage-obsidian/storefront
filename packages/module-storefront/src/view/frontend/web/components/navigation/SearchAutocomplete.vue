@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onBeforeUnmount, nextTick, useId, watch } from "vue";
+import { onClickOutside } from "@vueuse/core";
 import Icon from "MageObsidian_ModernFrontend::elements/Icon";
 import events from "MageObsidian_ModernFrontend::js/events";
 import { MutationPhase } from "mage-obsidian/runtime/mutationEvent.ts";
@@ -136,15 +137,8 @@ watch(term, (value) => {
     debounce = setTimeout(() => fetchSuggestions(query), 200);
 });
 
-const onDocumentClick = (event: Event): void => {
-    if (root.value && !root.value.contains(event.target as Node | null)) {
-        close(false);
-    }
-};
-
 function openPanel(): void {
     open.value = true;
-    document.addEventListener("click", onDocumentClick, true);
     nextTick(() => input.value?.focus());
 }
 
@@ -154,11 +148,12 @@ function close(returnFocus = true): void {
     }
     open.value = false;
     activeIndex.value = -1;
-    document.removeEventListener("click", onDocumentClick, true);
     if (returnFocus) {
         trigger.value?.focus();
     }
 }
+
+onClickOutside(root, () => close(false));
 
 const toggle = (): void => (open.value ? close(false) : openPanel());
 
@@ -185,7 +180,6 @@ function onEnter(event: KeyboardEvent): void {
 
 onBeforeUnmount(() => {
     clearTimeout(debounce);
-    document.removeEventListener("click", onDocumentClick, true);
 });
 
 defineExpose({ suggestions, activeIndex, open, fetchSuggestions });
@@ -196,7 +190,7 @@ defineExpose({ suggestions, activeIndex, open, fetchSuggestions });
         <button
             ref="trigger"
             type="button"
-            class="inline-flex items-center transition-colors hover:text-ink"
+            class="inline-flex h-10 w-10 items-center justify-center transition-colors hover:text-ink"
             :aria-label="text.search"
             :aria-expanded="open ? 'true' : 'false'"
             @click="toggle"
