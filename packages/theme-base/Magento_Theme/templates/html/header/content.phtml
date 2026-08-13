@@ -1,0 +1,16 @@
+<?php
+declare(strict_types=1);
+
+use Magento\Framework\View\Element\Template;
+
+/**
+ * Header body. Its own template rather than `Magento_Theme::html/header.phtml`:
+ * the core one prints nothing unless the block is given a `show_part`, so the
+ * logo and the top links declared under it never reached the page.
+ *
+ * @var Template $block
+ */
+?>
+<div class="header content">
+    <?= $block->getChildHtml() ?>
+</div>

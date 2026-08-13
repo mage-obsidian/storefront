@@ -29,7 +29,7 @@
             </container>
             <container name="header-wrapper" label="Page Header" as="header-wrapper">
                 <block
-                        template="Magento_Theme::html/header.phtml"
+                        template="Magento_Theme::html/header/content.phtml"
                         name="header-content">
                     <block class="Magento\Theme\Block\Html\Header\Logo"
                            name="logo">
