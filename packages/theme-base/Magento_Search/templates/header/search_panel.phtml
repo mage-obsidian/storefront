@@ -1,29 +1,35 @@
 <?php
 declare(strict_types=1);
 
-use MageObsidian\ModernFrontend\Block\Template;
 use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+use Magento\Search\ViewModel\ConfigProvider;
 
 /**
+ * Quick search. A real GET form to the native results route, so search works
+ * before — and without — any JavaScript. A skin can enhance or replace it.
+ *
  * @var Template $block
  * @var Escaper $escaper
  */
+/** @var ConfigProvider $configProvider */
+$configProvider = $block->getData('configProvider');
+$helper = $configProvider->getSearchHelperData();
 ?>
-
-<div id="search-panel" class="relative">
-    <div v-cloak v-show="mainStore.searchOpen" ref="root" class="absolute w-full bg-gray-50 shadow-md p-4">
-        <div class="container mx-auto w-full">
-            <input
-                    ref="searchInput"
-                    type="text"
-                    placeholder="Search"
-                    class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            >
-        </div>
-    </div>
-</div>
-
-<?php // External rather than inline: checkout_index_index enforces CSP with inline
-      // scripts disallowed (Magento_Checkout ships it that way for PCI), and an
-      // inline tag dies there. A same-origin file is covered by 'self'. ?>
-<script type="module" src="<?= $escaper->escapeUrl($block->resolvePathByName('js/search-panel.js')) ?>"></script>
+<form class="search-form" action="<?= $escaper->escapeUrl($helper->getResultUrl()) ?>" method="get" role="search">
+    <label class="search-form__label" for="search">
+        <?= $escaper->escapeHtml(__('Search')) ?>
+    </label>
+    <input
+        id="search"
+        class="search-form__input"
+        type="text"
+        name="<?= $escaper->escapeHtmlAttr($helper->getQueryParamName()) ?>"
+        value="<?= /* @noEscape */ $helper->getEscapedQueryText() ?>"
+        maxlength="<?= $escaper->escapeHtmlAttr((string)$helper->getMaxQueryLength()) ?>"
+        autocomplete="off"
+    >
+    <button class="search-form__submit" type="submit">
+        <?= $escaper->escapeHtml(__('Search')) ?>
+    </button>
+</form>

@@ -13,9 +13,6 @@ $importMap = json_encode(
     [
         'imports' => [
             'vue' => $block->getViewLibFileUrl('vue'),
-            'mainStore' => $block->resolvePathByName('js/store/main.js'),
-            '@vueuse/core' => $block->getViewLibFileUrl('@vueuse/core'),
-            'mini-vueuse' => $block->resolvePathByName('js/lib/mini-vueuse'),
         ],
     ],
     JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
