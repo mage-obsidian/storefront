@@ -19,6 +19,7 @@ export interface BundleSelectionChangeEvent {
 
 export interface GalleryTile {
     large: string;
+    largeSrcset?: string;
     thumb: string;
     label: string;
 }
@@ -26,6 +27,7 @@ export interface GalleryTile {
 export interface ProductGalleryChangeEvent {
     reset?: boolean;
     large?: string;
+    largeSrcset?: string;
     label?: string;
     tiles?: GalleryTile[];
 }

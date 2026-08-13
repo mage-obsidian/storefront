@@ -52,6 +52,7 @@ function init(): void {
     const base = {
         thumbs: strip ? strip.innerHTML : null,
         src: main.getAttribute("src"),
+        srcset: main.getAttribute("srcset"),
         label: main.getAttribute("alt"),
     };
     const labelPattern = strip?.dataset.thumbLabel ?? "Show image %1";
@@ -66,9 +67,16 @@ function init(): void {
         return strip ? Array.from(strip.querySelectorAll<HTMLElement>("[data-gallery-thumb]")) : [];
     }
 
-    function applyMain(large: string | null, label: string | null): void {
+    function applyMain(large: string | null, label: string | null, srcset: string | null): void {
         if (large) {
             main!.setAttribute("src", large);
+            // srcset outranks src, so a stale one would keep painting the old
+            // photo. Replace it, or drop it when the new image has no candidates.
+            if (srcset) {
+                main!.setAttribute("srcset", srcset);
+            } else {
+                main!.removeAttribute("srcset");
+            }
         }
         // Keep the prior alt (the product name) when a variant image has no
         // caption, rather than blanking it.
@@ -95,11 +103,15 @@ function init(): void {
         });
     }
 
-    function swapMain(large: string | undefined, label: string | undefined): void {
+    function swapMain(
+        large: string | undefined,
+        label: string | undefined,
+        srcset: string | undefined,
+    ): void {
         if (!large || main!.getAttribute("src") === large) {
             return;
         }
-        transition(() => applyMain(large, label ?? null), [large]);
+        transition(() => applyMain(large, label ?? null, srcset ?? null), [large]);
     }
 
     function setActiveThumb(active: HTMLElement | null): void {
@@ -117,6 +129,7 @@ function init(): void {
             return null;
         }
         button.dataset.large = tile.large;
+        button.dataset.largeSrcset = tile.largeSrcset ?? "";
         button.dataset.label = tile.label ?? "";
         button.setAttribute("aria-pressed", index === 0 ? "true" : "false");
         button.setAttribute("aria-label", labelPattern.replace("%1", String(index + 1)));
@@ -142,7 +155,7 @@ function init(): void {
             if (!thumb || !strip.contains(thumb)) {
                 return;
             }
-            swapMain(thumb.dataset.large, thumb.dataset.label);
+            swapMain(thumb.dataset.large, thumb.dataset.label, thumb.dataset.largeSrcset);
             setActiveThumb(thumb);
         });
         // Roving arrow-key navigation across the thumbnail strip.
@@ -172,17 +185,18 @@ function init(): void {
                 if (strip && base.thumbs != null) {
                     strip.innerHTML = base.thumbs;
                 }
-                applyMain(base.src, base.label);
+                applyMain(base.src, base.label, base.srcset);
             }, [base.src]);
             return;
         }
 
         if (Array.isArray(detail.tiles) && detail.tiles.length) {
             const large = detail.large ?? detail.tiles[0].large;
+            const srcset = detail.largeSrcset ?? detail.tiles[0].largeSrcset;
             const label = detail.label ?? detail.tiles[0].label;
             transition(() => {
                 rebuildStrip(detail.tiles as GalleryTile[]);
-                applyMain(large, label);
+                applyMain(large, label, srcset ?? null);
                 const list = thumbs();
                 if (list.length) {
                     setActiveThumb(list[0]);
@@ -194,7 +208,7 @@ function init(): void {
         // Single-image variant: swap the hero only; the image may not match any
         // thumb, so clear the active state.
         if (detail.large) {
-            swapMain(detail.large, detail.label);
+            swapMain(detail.large, detail.label, detail.largeSrcset);
             setActiveThumb(null);
         }
     }

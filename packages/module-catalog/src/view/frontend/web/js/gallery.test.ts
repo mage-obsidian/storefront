@@ -187,3 +187,64 @@ describe("gallery enhancer under a view transition", () => {
         );
     });
 });
+
+describe("gallery enhancer and the responsive srcset", () => {
+    function setupWithSrcset() {
+        document.body.innerHTML = `
+        <div data-pdp>
+            <img data-gallery-main src="/a.jpg" srcset="/a-400.jpg 400w, /a-800.jpg 800w" alt="A">
+            <ul data-gallery-thumbs data-thumb-label="Show image %1">
+                <li><button data-gallery-thumb data-large="/a.jpg" data-large-srcset="/a-400.jpg 400w, /a-800.jpg 800w" data-label="A" aria-pressed="true"><img></button></li>
+                <li><button data-gallery-thumb data-large="/b.jpg" data-large-srcset="/b-400.jpg 400w, /b-800.jpg 800w" data-label="B" aria-pressed="false"><img></button></li>
+                <li><button data-gallery-thumb data-large="/c.jpg" data-large-srcset="" data-label="C" aria-pressed="false"><img></button></li>
+            </ul>
+        </div>`;
+        init();
+    }
+
+    beforeEach(setupWithSrcset);
+
+    it("replaces the candidate list along with the src, so the old photo cannot win", () => {
+        document.querySelectorAll("[data-gallery-thumb]")[1].click();
+
+        const main = document.querySelector("[data-gallery-main]");
+        expect(main.getAttribute("src")).toBe("/b.jpg");
+        expect(main.getAttribute("srcset")).toBe("/b-400.jpg 400w, /b-800.jpg 800w");
+    });
+
+    it("drops the candidate list when the next image has none", () => {
+        document.querySelectorAll("[data-gallery-thumb]")[2].click();
+
+        const main = document.querySelector("[data-gallery-main]");
+        expect(main.getAttribute("src")).toBe("/c.jpg");
+        expect(main.hasAttribute("srcset")).toBe(false);
+    });
+
+    it("carries the candidate list through a variant swap and restores it on reset", () => {
+        fireVariant({ large: "/red.jpg", largeSrcset: "/red-400.jpg 400w", label: "Red" });
+
+        const main = document.querySelector("[data-gallery-main]");
+        expect(main.getAttribute("srcset")).toBe("/red-400.jpg 400w");
+
+        fireVariant({ reset: true });
+        expect(main.getAttribute("src")).toBe("/a.jpg");
+        expect(main.getAttribute("srcset")).toBe("/a-400.jpg 400w, /a-800.jpg 800w");
+    });
+
+    it("puts the candidate list on the thumbs it rebuilds for a variant", () => {
+        fireVariant({
+            tiles: [
+                { large: "/red-main.jpg", largeSrcset: "/red-main-400.jpg 400w", thumb: "/red-t1.jpg", label: "Red" },
+                { large: "/red-back.jpg", thumb: "/red-t2.jpg", label: "Red back" },
+            ],
+        });
+
+        const thumbs = document.querySelectorAll("[data-gallery-thumb]");
+        expect(thumbs[0].dataset.largeSrcset).toBe("/red-main-400.jpg 400w");
+
+        thumbs[1].click();
+        const main = document.querySelector("[data-gallery-main]");
+        expect(main.getAttribute("src")).toBe("/red-back.jpg");
+        expect(main.hasAttribute("srcset")).toBe(false);
+    });
+});
