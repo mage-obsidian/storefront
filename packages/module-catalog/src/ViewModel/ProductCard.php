@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace MageObsidian\Catalog\ViewModel;
 
 use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Catalog\Helper\Image as ImageHelper;
 use Magento\Checkout\Helper\Cart as CartHelper;
 use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Url\Helper\Data as UrlHelper;
@@ -28,14 +29,74 @@ use Throwable;
  */
 class ProductCard implements ArgumentInterface
 {
+    public const array GRID_WIDTHS = [240, 320, 480];
+
     /**
      * @param CartHelper $cartHelper
      * @param UrlHelper $urlHelper
+     * @param ImageHelper $imageHelper
      */
     public function __construct(
         private readonly CartHelper $cartHelper,
-        private readonly UrlHelper $urlHelper
+        private readonly UrlHelper $urlHelper,
+        private readonly ImageHelper $imageHelper
     ) {
+    }
+
+    /**
+     * Resolved image for a card: the `view.xml` rendition as `src`, plus one
+     * resized candidate per width so the browser can pick by viewport and DPR
+     * instead of always pulling the largest.
+     *
+     * @param ProductInterface $product
+     * @param string $imageId A `view.xml` image id.
+     * @param list<int> $widths Candidate widths, or the default grid ladder.
+     *
+     * @return array{src: string, srcset: string, width: int, height: int, label: string}
+     */
+    public function getImage(ProductInterface $product, string $imageId, array $widths = []): array
+    {
+        $base = $this->imageHelper->init($product, $imageId);
+
+        $resolved = [
+            'src' => (string)$base->getUrl(),
+            'srcset' => '',
+            'width' => (int)$base->getWidth(),
+            'height' => (int)$base->getHeight(),
+            'label' => (string)$base->getLabel(),
+        ];
+
+        $resolved['srcset'] = $this->buildSrcset($product, $imageId, $widths === [] ? self::GRID_WIDTHS : $widths);
+
+        return $resolved;
+    }
+
+    /**
+     * @param list<int> $widths
+     */
+    private function buildSrcset(ProductInterface $product, string $imageId, array $widths): string
+    {
+        $candidates = [];
+        foreach ($widths as $width) {
+            $width = (int)$width;
+            if ($width <= 0 || isset($candidates[$width])) {
+                continue;
+            }
+
+            try {
+                $url = $this->imageHelper->init($product, $imageId)->resize($width)->getUrl();
+            } catch (Throwable) {
+                continue;
+            }
+
+            if ($url !== '') {
+                $candidates[$width] = $url . ' ' . $width . 'w';
+            }
+        }
+
+        ksort($candidates);
+
+        return implode(', ', $candidates);
     }
 
     /**

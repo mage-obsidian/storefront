@@ -5,6 +5,7 @@ namespace MageObsidian\Catalog\Test\Unit\ViewModel;
 
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Type\AbstractType;
+use Magento\Catalog\Helper\Image as ImageHelper;
 use Magento\Checkout\Helper\Cart as CartHelper;
 use Magento\Framework\Url\Helper\Data as UrlHelper;
 use MageObsidian\Catalog\ViewModel\ProductCard;
@@ -27,12 +28,41 @@ class ProductCardTest extends TestCase
         }
     }
 
-    private function card(?CartHelper $cartHelper = null, ?UrlHelper $urlHelper = null): ProductCard
-    {
+    private function card(
+        ?CartHelper $cartHelper = null,
+        ?UrlHelper $urlHelper = null,
+        ?ImageHelper $imageHelper = null
+    ): ProductCard {
         return new ProductCard(
             $cartHelper ?? $this->createMock(CartHelper::class),
-            $urlHelper ?? $this->createMock(UrlHelper::class)
+            $urlHelper ?? $this->createMock(UrlHelper::class),
+            $imageHelper ?? $this->createMock(ImageHelper::class)
         );
+    }
+
+    /**
+     * The helper is stateful: init() returns itself and resize() mutates it, so
+     * the double answers a fresh URL per resize call in the order they arrive.
+     *
+     * @param list<string> $resizedUrls
+     */
+    private function imageHelper(array $resizedUrls, string $baseUrl = 'https://acme.test/480.jpg'): ImageHelper
+    {
+        $helper = $this->createMock(ImageHelper::class);
+        $helper->method('init')->willReturnSelf();
+        $helper->method('resize')->willReturnSelf();
+        $helper->method('getWidth')->willReturn(480);
+        $helper->method('getHeight')->willReturn(600);
+        $helper->method('getLabel')->willReturn('Joust Duffle Bag');
+
+        $urls = $resizedUrls;
+        $helper->method('getUrl')->willReturnCallback(
+            static function () use (&$urls, $baseUrl): string {
+                return array_shift($urls) ?? $baseUrl;
+            }
+        );
+
+        return $helper;
     }
 
     private function product(bool $saleable, bool $canConfigure, string $requiredOptions = '0'): Product
@@ -98,5 +128,67 @@ class ProductCardTest extends TestCase
         $cartHelper->method('getAddUrl')->willThrowException(new \RuntimeException('boom'));
 
         $this->assertSame([], $this->card($cartHelper)->getAddToCartPostParams($this->createMock(Product::class)));
+    }
+
+    public function testGetImageReturnsTheRenditionAndOneCandidatePerWidth(): void
+    {
+        $card = $this->card(null, null, $this->imageHelper([
+            'https://acme.test/base.jpg',
+            'https://acme.test/240.jpg',
+            'https://acme.test/320.jpg',
+            'https://acme.test/480.jpg',
+        ]));
+
+        $image = $card->getImage($this->product(true, false), 'category_page_grid');
+
+        $this->assertSame('https://acme.test/base.jpg', $image['src']);
+        $this->assertSame(480, $image['width']);
+        $this->assertSame(600, $image['height']);
+        $this->assertSame('Joust Duffle Bag', $image['label']);
+        $this->assertSame(
+            'https://acme.test/240.jpg 240w, https://acme.test/320.jpg 320w, https://acme.test/480.jpg 480w',
+            $image['srcset']
+        );
+    }
+
+    public function testGetImageHonoursExplicitWidthsAndSortsThemAscending(): void
+    {
+        $card = $this->card(null, null, $this->imageHelper([
+            'https://acme.test/base.jpg',
+            'https://acme.test/800.jpg',
+            'https://acme.test/400.jpg',
+        ]));
+
+        $image = $card->getImage($this->product(true, false), 'product_page_image_large', [800, 400]);
+
+        $this->assertSame(
+            'https://acme.test/400.jpg 400w, https://acme.test/800.jpg 800w',
+            $image['srcset']
+        );
+    }
+
+    public function testGetImageDropsRepeatedAndNonPositiveWidths(): void
+    {
+        $card = $this->card(null, null, $this->imageHelper([
+            'https://acme.test/base.jpg',
+            'https://acme.test/320.jpg',
+        ]));
+
+        $image = $card->getImage($this->product(true, false), 'category_page_grid', [320, 320, 0, -100]);
+
+        $this->assertSame('https://acme.test/320.jpg 320w', $image['srcset']);
+    }
+
+    public function testGetImageSkipsACandidateWithNoUrl(): void
+    {
+        $card = $this->card(null, null, $this->imageHelper([
+            'https://acme.test/base.jpg',
+            '',
+            'https://acme.test/320.jpg',
+        ]));
+
+        $image = $card->getImage($this->product(true, false), 'category_page_grid', [240, 320]);
+
+        $this->assertSame('https://acme.test/320.jpg 320w', $image['srcset']);
     }
 }

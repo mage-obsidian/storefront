@@ -34,6 +34,8 @@ class ProductGallery implements ArgumentInterface
     /**
      * Theme view.xml image ids for each gallery role.
      */
+    public const array LARGE_WIDTHS = [400, 640, 800, 1000, 1280];
+
     private const LARGE_ID = 'product_page_image_large';
     private const THUMB_ID = 'product_page_image_small';
 
@@ -50,7 +52,7 @@ class ProductGallery implements ArgumentInterface
     /**
      * Gallery tiles for the current product.
      *
-     * @return array<int, array{large: string, thumb: string, full: string, label: string, isMain: bool}>
+     * @return array<int, array{large: string, largeSrcset: string, thumb: string, full: string, label: string, isMain: bool}>
      */
     public function getImages(): array
     {
@@ -72,7 +74,7 @@ class ProductGallery implements ArgumentInterface
      * Build a tile per visible media-gallery image.
      *
      * @param ProductInterface $product
-     * @return array<int, array{large: string, thumb: string, full: string, label: string, isMain: bool}>
+     * @return array<int, array{large: string, largeSrcset: string, thumb: string, full: string, label: string, isMain: bool}>
      */
     private function fromMediaGallery(ProductInterface $product): array
     {
@@ -90,6 +92,7 @@ class ProductGallery implements ArgumentInterface
             $file = (string)$image->getData('file');
             $tiles[] = [
                 'large' => $this->scaled($product, self::LARGE_ID, $file),
+                'largeSrcset' => $this->srcset($product, $file),
                 'thumb' => $this->scaled($product, self::THUMB_ID, $file),
                 'full' => (string)$image->getData('url'),
                 'label' => (string)($image->getData('label') ?: $product->getName()),
@@ -104,7 +107,7 @@ class ProductGallery implements ArgumentInterface
      * Single tile from the base image (or placeholder) when there is no gallery.
      *
      * @param ProductInterface $product
-     * @return array<int, array{large: string, thumb: string, full: string, label: string, isMain: bool}>
+     * @return array<int, array{large: string, largeSrcset: string, thumb: string, full: string, label: string, isMain: bool}>
      */
     private function fromBaseImage(ProductInterface $product): array
     {
@@ -115,6 +118,7 @@ class ProductGallery implements ArgumentInterface
 
         return [[
             'large' => $large,
+            'largeSrcset' => $this->srcset($product, null),
             'thumb' => (string)$this->imageHelper->init($product, self::THUMB_ID)->getUrl(),
             'full' => $large,
             'label' => (string)$product->getName(),
@@ -133,5 +137,36 @@ class ProductGallery implements ArgumentInterface
     private function scaled(ProductInterface $product, string $imageId, string $file): string
     {
         return (string)$this->imageHelper->init($product, $imageId)->setImageFile($file)->getUrl();
+    }
+
+    /**
+     * Candidate list for the large rendition, which `view.xml` leaves
+     * unconstrained: without it every viewport pulls the original upload.
+     *
+     * @param ProductInterface $product
+     * @param string|null $file Gallery file, or null for the base image.
+     * @return string
+     */
+    private function srcset(ProductInterface $product, ?string $file): string
+    {
+        $candidates = [];
+        foreach (self::LARGE_WIDTHS as $width) {
+            $helper = $this->imageHelper->init($product, self::LARGE_ID);
+            if ($file !== null) {
+                $helper = $helper->setImageFile($file);
+            }
+
+            try {
+                $url = (string)$helper->resize($width)->getUrl();
+            } catch (Throwable) {
+                continue;
+            }
+
+            if ($url !== '') {
+                $candidates[] = $url . ' ' . $width . 'w';
+            }
+        }
+
+        return implode(', ', $candidates);
     }
 }
