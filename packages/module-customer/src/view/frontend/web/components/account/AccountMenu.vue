@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, onBeforeUnmount, onMounted, nextTick, useId } from "vue";
+import { computed, ref, onMounted, nextTick, useId } from "vue";
+import { onClickOutside } from "@vueuse/core";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 
 // Before customer-data lands neither branch is true. The last branch renders the
@@ -89,15 +90,8 @@ const trigger = ref<HTMLElement | null>(null);
 const panel = ref<HTMLElement | null>(null);
 const panelId = useId();
 
-const onDocumentClick = (event: Event): void => {
-    if (root.value && !root.value.contains(event.target as Node | null)) {
-        close(false);
-    }
-};
-
 const openPanel = (): void => {
     open.value = true;
-    document.addEventListener("click", onDocumentClick, true);
     nextTick(() => panel.value?.querySelector("a")?.focus());
 };
 
@@ -106,7 +100,6 @@ const close = (returnFocus = true): void => {
         return;
     }
     open.value = false;
-    document.removeEventListener("click", onDocumentClick, true);
     if (returnFocus) {
         trigger.value?.focus();
     }
@@ -114,7 +107,7 @@ const close = (returnFocus = true): void => {
 
 const toggle = (): void => (open.value ? close(false) : openPanel());
 
-onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick, true));
+onClickOutside(root, () => close(false));
 </script>
 
 <template>

@@ -92,3 +92,65 @@ describe("AccountMenu.vue", () => {
         wrapper.unmount();
     });
 });
+
+describe("AccountMenu.vue — dismissing the disclosure", () => {
+    beforeEach(() => __reset());
+
+    const elsewhere = (): HTMLElement => {
+        const node = document.createElement("a");
+        node.href = "/elsewhere";
+        document.body.appendChild(node);
+        return node;
+    };
+
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    const openPanel = async () => {
+        __setSection("customer", { firstname: "Ada" });
+        const wrapper = mount(AccountMenu, { props: { ...URLS }, attachTo: document.body });
+        await wrapper.vm.$nextTick();
+        await wrapper.get("button").trigger("click");
+        await settle();
+        expect(wrapper.get("button").attributes("aria-expanded")).toBe("true");
+        return wrapper;
+    };
+
+    it("closes when the click lands outside", async () => {
+        const wrapper = await openPanel();
+
+        elsewhere().dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }));
+        await settle();
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.get("button").attributes("aria-expanded")).toBe("false");
+
+        wrapper.unmount();
+    });
+
+    it("stays open when the click lands inside the panel", async () => {
+        const wrapper = await openPanel();
+
+        const panel = document.getElementById(wrapper.get("button").attributes("aria-controls") as string)!;
+        panel.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }));
+        await settle();
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.get("button").attributes("aria-expanded")).toBe("true");
+
+        wrapper.unmount();
+    });
+
+    it("survives a drag that starts inside the panel and releases outside", async () => {
+        const wrapper = await openPanel();
+
+        const panel = document.getElementById(wrapper.get("button").attributes("aria-controls") as string)!;
+        panel.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+        elsewhere().dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }));
+        await settle();
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.get("button").attributes("aria-expanded")).toBe("true");
+
+        wrapper.unmount();
+    });
+});

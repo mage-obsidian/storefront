@@ -11,6 +11,7 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/test-utils": "^2.4.6",
+    "@vueuse/core": "^14.3.0",
     "happy-dom": "^16.5.3",
     "pinia": "^3.0.4",
     "vitest": "^3.2.6",
