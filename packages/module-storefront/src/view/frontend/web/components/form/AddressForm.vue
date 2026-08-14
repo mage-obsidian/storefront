@@ -140,7 +140,7 @@ defineExpose({ validate, focusField });
 </script>
 
 <template>
-    <div class="grid gap-5 sm:grid-cols-2">
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <Field
             v-model="address.firstname"
             :id="id('firstname')"
