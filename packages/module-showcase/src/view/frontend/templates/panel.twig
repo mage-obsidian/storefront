@@ -18,7 +18,7 @@
         <button type="button" class="showcase__handle" data-showcase-toggle
                 aria-expanded="false" aria-controls="showcase-panel">
             {{ hero_icon('adjustments-horizontal', 'outline', '24') }}
-            <span>{{ __('Features') }}</span>
+            <span class="showcase__handle-label">{{ __('Features') }}</span>
             {% if panel.hasOverrides() %}<span class="showcase__badge" aria-hidden="true"></span>{% endif %}
         </button>
 
