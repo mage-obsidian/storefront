@@ -107,6 +107,52 @@ describe("Checkout.vue", () => {
         expect(render().find("aside").classes()).toContain("lg:sticky");
     });
 
+    it("lays the page out in a single bounded column until the summary gets its own", () => {
+        const grid = render().find(".grid");
+
+        expect(grid.classes()).toContain("grid-cols-1");
+        expect(grid.classes()).toContain("lg:grid-cols-[minmax(0,1fr)_360px]");
+    });
+
+    it("docks the summary to the bottom of a phone instead of burying it below the form", () => {
+        const wrapper = render();
+
+        expect(wrapper.find("aside").attributes("data-docked")).toBe("");
+        expect(wrapper.find("[data-total-bar]").element.closest("aside")).not.toBeNull();
+    });
+
+    it("leaves the summary in flow when there is nothing to total", async () => {
+        const wrapper = render({ ...CONFIG, quote: { items: [], subtotal: "", grandTotal: "" } });
+        await nextTick();
+
+        expect(wrapper.find("aside").attributes("data-docked")).toBeUndefined();
+    });
+
+    it("expands the summary from the dock and folds it back", async () => {
+        const wrapper = render();
+        const bar = wrapper.find("[data-total-bar]");
+
+        expect(bar.attributes("aria-expanded")).toBe("false");
+        expect(wrapper.find("aside").attributes("data-open")).toBeUndefined();
+
+        await bar.trigger("click");
+
+        expect(bar.attributes("aria-expanded")).toBe("true");
+        expect(wrapper.find("aside").attributes("data-open")).toBe("");
+
+        await bar.trigger("click");
+
+        expect(bar.attributes("aria-expanded")).toBe("false");
+        expect(wrapper.find("aside").attributes("data-open")).toBeUndefined();
+    });
+
+    it("points the dock at the panel it opens", () => {
+        const wrapper = render();
+
+        expect(wrapper.find("[data-total-bar]").attributes("aria-controls")).toBe("checkout-summary-panel");
+        expect(wrapper.find("#checkout-summary-panel").exists()).toBe(true);
+    });
+
     it("paints the server-primed order summary without any fetch", () => {
         const wrapper = render();
         expect(wrapper.text()).toContain("Joust Duffle Bag");

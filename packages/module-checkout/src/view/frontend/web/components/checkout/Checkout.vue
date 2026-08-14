@@ -3,6 +3,7 @@ import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watchEffec
 import { useCheckout, CheckoutStep } from "MageObsidian_Checkout::js/useCheckout";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 import StepRail from "MageObsidian_Checkout::checkout/StepRail";
+import Icon from "MageObsidian_ModernFrontend::elements/Icon";
 import type { RegionData } from "MageObsidian_Storefront::js/address";
 
 const PRIVATE_SECTION = "obsidian-checkout";
@@ -180,6 +181,8 @@ const currentStepLabel = computed(
     () => steps.value.find((s) => s.key === checkout.step)?.label ?? "",
 );
 const isEmpty = computed(() => checkout.ready && checkout.itemCount === 0);
+const summaryOpen = ref(false);
+const summaryDocked = computed(() => checkout.ready && !isEmpty.value);
 const grandTotalLabel = computed(() => {
     const segment = checkout.totalSegments.find((s) => s.code === "grand_total");
     return segment?.value != null ? checkout.formatTotal(segment.value) : checkout.grandTotal;
@@ -187,7 +190,7 @@ const grandTotalLabel = computed(() => {
 </script>
 
 <template>
-    <div class="checkout-page mx-auto w-full max-w-shell px-4 py-10 md:px-8">
+    <div class="checkout-page shell pb-10 pt-6 md:pt-10">
         <StepRail
             v-if="!isOnePage"
             class="mb-10"
@@ -198,7 +201,7 @@ const grandTotalLabel = computed(() => {
             @go="(s) => checkout.goToStep(s.key)"
         />
 
-        <div class="grid gap-10 lg:grid-cols-[1fr_360px]">
+        <div class="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_360px]">
             <OnePageCheckout
                 v-if="isOnePage"
                 :directory="directory"
@@ -247,78 +250,93 @@ const grandTotalLabel = computed(() => {
                  summary in the first column and then shift it a full column over. -->
             <aside
                 aria-labelledby="checkout-summary-heading"
-                class="flex flex-col gap-6 rounded-edge border border-ash-200 bg-alabaster-raised p-6 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 lg:max-h-[calc(100dvh-8rem)] lg:self-start lg:overflow-y-auto"
+                class="checkout-summary rounded-edge border border-ash-200 bg-alabaster-raised lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 lg:max-h-[calc(100dvh-8rem)] lg:self-start lg:overflow-y-auto"
+                :data-docked="summaryDocked ? '' : null"
+                :data-open="summaryOpen ? '' : null"
             >
-                <h2 id="checkout-summary-heading" class="font-mono text-xs uppercase tracking-label text-ink-soft">
-                    {{ t('summary', 'Order summary') }}
-                </h2>
+                <div id="checkout-summary-panel" class="checkout-summary__panel flex flex-col gap-6 p-6">
+                    <h2 id="checkout-summary-heading" class="font-mono text-xs uppercase tracking-label text-ink-soft">
+                        {{ t('summary', 'Order summary') }}
+                    </h2>
 
-                <p v-if="isEmpty" class="text-ink-soft">{{ t('empty', 'Your bag is empty.') }}</p>
+                    <p v-if="isEmpty" class="text-ink-soft">{{ t('empty', 'Your bag is empty.') }}</p>
 
-                <ul v-else class="divide-y divide-ash-200 border-y border-ash-200">
-                    <li v-for="item in checkout.visibleItems" :key="item.id" class="flex gap-3 py-4">
-                        <span class="block h-16 w-14 shrink-0 overflow-hidden rounded-edge bg-ash-100">
-                            <img
-                                v-if="item.image"
-                                :src="item.image"
-                                :alt="item.name"
-                                class="h-full w-full object-cover"
-                                loading="lazy"
-                                width="56"
-                                height="64"
-                            >
-                        </span>
-                        <span class="flex min-w-0 flex-1 flex-col">
-                            <span class="truncate text-sm text-ink">{{ item.name }}</span>
-                            <ul
-                                v-if="item.options && item.options.length"
-                                data-item-options
-                                class="mt-0.5 flex flex-col gap-0.5 text-xs text-ink-soft"
-                            >
-                                <li v-for="option in item.options" :key="option.label" class="truncate">
-                                    {{ option.label }}: {{ option.value }}
-                                </li>
-                            </ul>
-                            <span class="mt-0.5 font-mono text-xs text-ink-soft">× {{ item.qty }}</span>
-                        </span>
-                        <span class="shrink-0 font-mono text-sm text-ink">{{ item.rowTotal }}</span>
-                    </li>
-                </ul>
+                    <ul v-else class="divide-y divide-ash-200 border-y border-ash-200">
+                        <li v-for="item in checkout.visibleItems" :key="item.id" class="flex gap-3 py-4">
+                            <span class="block h-16 w-14 shrink-0 overflow-hidden rounded-edge bg-ash-100">
+                                <img
+                                    v-if="item.image"
+                                    :src="item.image"
+                                    :alt="item.name"
+                                    class="h-full w-full object-cover"
+                                    loading="lazy"
+                                    width="56"
+                                    height="64"
+                                >
+                            </span>
+                            <span class="flex min-w-0 flex-1 flex-col">
+                                <span class="truncate text-sm text-ink">{{ item.name }}</span>
+                                <ul
+                                    v-if="item.options && item.options.length"
+                                    data-item-options
+                                    class="mt-0.5 flex flex-col gap-0.5 text-xs text-ink-soft"
+                                >
+                                    <li v-for="option in item.options" :key="option.label" class="truncate">
+                                        {{ option.label }}: {{ option.value }}
+                                    </li>
+                                </ul>
+                                <span class="mt-0.5 font-mono text-xs text-ink-soft">× {{ item.qty }}</span>
+                            </span>
+                            <span class="shrink-0 font-mono text-sm text-ink">{{ item.rowTotal }}</span>
+                        </li>
+                    </ul>
 
-                <p v-if="checkout.hiddenItemCount > 0" class="font-mono text-xs text-ink-soft">
-                    {{ t('moreItems', '+ {count} more item(s)').replace('{count}', String(checkout.hiddenItemCount)) }}
-                </p>
+                    <p v-if="checkout.hiddenItemCount > 0" class="font-mono text-xs text-ink-soft">
+                        {{ t('moreItems', '+ {count} more item(s)').replace('{count}', String(checkout.hiddenItemCount)) }}
+                    </p>
 
-                <dl v-if="checkout.totalSegments.length > 0" class="flex flex-col gap-2 font-mono text-sm">
-                    <div
-                        v-for="seg in checkout.totalSegments"
-                        :key="seg.code"
-                        class="flex justify-between"
-                        :class="seg.code === 'grand_total' ? 'border-t border-ash-200 pt-2 text-base text-ink' : 'text-ink-soft'"
-                    >
-                        <dt>{{ seg.title }}</dt>
-                        <dd>{{ seg.value === null ? '—' : checkout.formatTotal(seg.value) }}</dd>
-                    </div>
-                </dl>
-                <dl v-else class="flex flex-col gap-2 font-mono text-sm">
-                    <div class="flex justify-between text-ink-soft">
-                        <dt>{{ t('subtotal', 'Subtotal') }}</dt>
-                        <dd>{{ checkout.subtotal }}</dd>
-                    </div>
-                    <div class="flex justify-between border-t border-ash-200 pt-2 text-base text-ink">
-                        <dt>{{ t('total', 'Total') }}</dt>
-                        <dd>{{ checkout.grandTotal }}</dd>
-                    </div>
-                </dl>
+                    <dl v-if="checkout.totalSegments.length > 0" class="flex flex-col gap-2 font-mono text-sm">
+                        <div
+                            v-for="seg in checkout.totalSegments"
+                            :key="seg.code"
+                            class="flex justify-between"
+                            :class="seg.code === 'grand_total' ? 'border-t border-ash-200 pt-2 text-base text-ink' : 'text-ink-soft'"
+                        >
+                            <dt>{{ seg.title }}</dt>
+                            <dd>{{ seg.value === null ? '—' : checkout.formatTotal(seg.value) }}</dd>
+                        </div>
+                    </dl>
+                    <dl v-else class="flex flex-col gap-2 font-mono text-sm">
+                        <div class="flex justify-between text-ink-soft">
+                            <dt>{{ t('subtotal', 'Subtotal') }}</dt>
+                            <dd>{{ checkout.subtotal }}</dd>
+                        </div>
+                        <div class="flex justify-between border-t border-ash-200 pt-2 text-base text-ink">
+                            <dt>{{ t('total', 'Total') }}</dt>
+                            <dd>{{ checkout.grandTotal }}</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <button
+                    v-if="summaryDocked"
+                    type="button"
+                    data-total-bar
+                    class="checkout-total-bar"
+                    aria-controls="checkout-summary-panel"
+                    :aria-expanded="summaryOpen ? 'true' : 'false'"
+                    @click="summaryOpen = !summaryOpen"
+                >
+                    <span class="checkout-total-bar__label">
+                        {{ summaryOpen ? t('hideSummary', 'Hide summary') : t('showSummary', 'Show summary') }}
+                        <span class="checkout-total-bar__count">{{ t('barItems', '{count} items').replace('{count}', String(checkout.itemCount)) }}</span>
+                    </span>
+                    <span class="checkout-total-bar__value">
+                        {{ grandTotalLabel }}
+                        <Icon :name="summaryOpen ? 'chevron-down' : 'chevron-up'" :size="16" />
+                    </span>
+                </button>
             </aside>
-        </div>
-
-        <div v-if="!isEmpty && checkout.ready" class="checkout-total-bar" data-total-bar>
-            <span class="checkout-total-bar__label">
-                {{ t('total', 'Total') }}
-                <span class="checkout-total-bar__count">{{ t('barItems', '{count} items').replace('{count}', String(checkout.itemCount)) }}</span>
-            </span>
-            <span class="checkout-total-bar__value">{{ grandTotalLabel }}</span>
         </div>
     </div>
 </template>

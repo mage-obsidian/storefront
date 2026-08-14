@@ -213,7 +213,7 @@
     border: 1px solid var(--color-ash-200);
     border-radius: var(--radius-edge, 2px);
     background: var(--color-alabaster-raised);
-    padding: 0.875rem 1.25rem;
+    padding: 0.5rem 1rem;
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scrollbar-width: none;
@@ -254,6 +254,8 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    min-height: 2.75rem;
+    padding-block: 0.25rem;
     font-family: var(--font-mono);
     font-size: 0.7rem;
     text-transform: uppercase;
@@ -301,6 +303,20 @@
     box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-ink) 12%, transparent);
 }
 
+@media (width < 40rem) {
+    .step-rail__item:not([data-state="active"]) .step-rail__label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+
+    .step-rail__item + .step-rail__item::before {
+        width: 1rem;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .step-rail__item::before,
     .step-rail__button,
@@ -313,19 +329,31 @@
    Mobile total bar.
    ============================================================ */
 
+:root {
+    --obsidian-checkout-dock-height: 3.5rem;
+}
+
 .checkout-total-bar {
-    position: fixed;
-    inset-inline: 0;
-    bottom: 0;
-    z-index: 20;
+    width: 100%;
+    min-height: var(--obsidian-checkout-dock-height);
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 1rem;
-    padding: 0.875rem 1rem calc(0.875rem + env(safe-area-inset-bottom));
+    padding: 0.875rem 1rem;
     border-top: 1px solid var(--color-ash-200);
-    background: color-mix(in oklab, var(--color-alabaster) 92%, transparent);
-    backdrop-filter: blur(8px);
+}
+
+@media (width >= 48rem) {
+    .checkout-total-bar {
+        padding-inline: 2rem;
+    }
+}
+
+@media (width >= 64rem) {
+    .checkout-total-bar {
+        display: none;
+    }
 }
 
 .checkout-total-bar__label {
@@ -345,20 +373,54 @@
 }
 
 .checkout-total-bar__value {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     font-family: var(--font-mono);
     font-size: 1.05rem;
     font-variant-numeric: tabular-nums;
     color: var(--color-ink);
 }
 
-@media (width >= 64rem) {
-    .checkout-total-bar {
+@media (width < 64rem) {
+    body:has(.checkout-summary[data-docked]) {
+        --obsidian-bottom-inset: calc(var(--obsidian-checkout-dock-height) + env(safe-area-inset-bottom));
+    }
+
+    .checkout-page {
+        padding-bottom: calc(var(--obsidian-bottom-inset, 0px) + 1.5rem);
+    }
+
+    .checkout-summary[data-docked] {
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        z-index: var(--obsidian-z-dock, 50);
+        display: flex;
+        flex-direction: column;
+        max-height: 70dvh;
+        border-inline: 0;
+        border-bottom: 0;
+        border-radius: 0;
+        background: var(--color-alabaster);
+        backdrop-filter: blur(8px);
+        box-shadow: 0 -12px 32px rgb(0 0 0 / 0.1);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .checkout-summary[data-docked] .checkout-summary__panel {
         display: none;
     }
-}
 
-@media (width < 64rem) {
-    .checkout-page {
-        padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+    .checkout-summary[data-docked][data-open] .checkout-summary__panel {
+        display: flex;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .checkout-cta {
+        position: sticky;
+        bottom: calc(var(--obsidian-bottom-inset, 0px) + 0.75rem);
+        z-index: 1;
     }
 }
