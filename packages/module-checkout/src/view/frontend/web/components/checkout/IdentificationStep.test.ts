@@ -91,4 +91,12 @@ describe("IdentificationStep", () => {
 
         expect(wrapper.find("[data-signin-prompt]").exists()).toBe(false);
     });
+
+    it("gives its advance button the full width of a phone", () => {
+        const button = render().find('button[type="submit"]');
+
+        expect(button.classes()).toContain("btn--block");
+        expect(button.classes()).toContain("lg:w-fit");
+        expect(button.classes()).toContain("checkout-cta");
+    });
 });

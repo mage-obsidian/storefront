@@ -170,7 +170,7 @@ async function toPayment(): Promise<void> {
                 v-if="!hideAdvance"
                 type="button"
                 :disabled="checkout.loadingRates"
-                :class="['btn btn--outline btn--sm mt-6 w-fit', checkout.loadingRates && 'is-loading']"
+                :class="['btn btn--outline btn--sm btn--block mt-6 lg:w-fit', checkout.loadingRates && 'is-loading']"
                 @click="getRates"
             >
                 <span class="btn__label">{{ t("getRates", "Show shipping methods") }}</span>
@@ -206,9 +206,9 @@ async function toPayment(): Promise<void> {
             <div v-if="hasMethods" class="mt-4 flex flex-col gap-3" role="radiogroup" :aria-label="t('methodsHeading', 'Shipping method')">
                 <div v-for="method in checkout.shippingMethods" :key="`${method.carrier_code}_${method.method_code}`">
                     <label
-                        class="field-radio-card flex items-center justify-between gap-4"
+                        class="field-radio-card flex flex-wrap items-center justify-between gap-x-4 gap-y-1"
                     >
-                        <span class="field-radio">
+                        <span class="field-radio min-w-0">
                             <input
                                 type="radio"
                                 name="shipping-method"
@@ -230,7 +230,7 @@ async function toPayment(): Promise<void> {
                 v-if="!hideAdvance && hasMethods"
                 type="button"
                 :disabled="checkout.savingShipping || !checkout.selectedMethod"
-                :class="['btn btn--solid btn--lg mt-8 w-fit', checkout.savingShipping && 'is-loading']"
+                :class="['checkout-cta btn btn--solid btn--lg btn--block mt-8 lg:w-fit', checkout.savingShipping && 'is-loading']"
                 @click="toPayment"
             >
                 <span class="btn__label">{{ t("continue", "Continue to payment") }}</span>

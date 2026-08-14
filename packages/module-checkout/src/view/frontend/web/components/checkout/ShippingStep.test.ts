@@ -59,6 +59,20 @@ describe("ShippingStep", () => {
         expect(wrapper.find('[role="radiogroup"]').exists()).toBe(true);
     });
 
+    it("gives the continue button the full width of a phone once rates are listed", async () => {
+        mockFetch([FLATRATE]);
+        const wrapper = render();
+
+        await wrapper.find("button").trigger("click");
+        await flush();
+        await wrapper.vm.$nextTick();
+
+        const button = wrapper.find(".checkout-cta");
+        expect(button.exists()).toBe(true);
+        expect(button.classes()).toContain("btn--block");
+        expect(button.classes()).toContain("lg:w-fit");
+    });
+
     it("advances to payment after saving the chosen method", async () => {
         mockFetch([FLATRATE]);
         const wrapper = render();

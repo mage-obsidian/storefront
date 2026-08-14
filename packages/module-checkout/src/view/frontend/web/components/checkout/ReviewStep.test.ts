@@ -135,4 +135,13 @@ describe("ReviewStep", () => {
         expect(apply.classes()).toContain("btn");
         expect(apply.classes()).not.toContain("btn--sm");
     });
+
+    it("gives place order the full width of a phone and anchors it above the dock", () => {
+        const wrapper = render();
+        const button = wrapper.find("[data-place-order]");
+
+        expect(button.classes()).toContain("btn--block");
+        expect(button.classes()).toContain("lg:w-fit");
+        expect(button.element.closest(".checkout-cta")).not.toBeNull();
+    });
 });

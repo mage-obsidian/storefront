@@ -76,7 +76,7 @@ const paymentTitle = (): string =>
                     {{ t("remove", "Remove") }}
                 </button>
             </div>
-            <form v-else class="flex items-start gap-3" @submit.prevent="apply">
+            <form v-else class="flex flex-col gap-3 sm:flex-row sm:items-start" @submit.prevent="apply">
                 <div class="flex flex-1 flex-col gap-1">
                     <label for="coupon-code" class="sr-only">{{ t("couponHeading", "Discount code") }}</label>
                     <input
@@ -93,7 +93,7 @@ const paymentTitle = (): string =>
                 <button
                     type="submit"
                     :disabled="couponBusy"
-                    :class="['btn btn--outline shrink-0', couponBusy && 'is-loading']"
+                    :class="['btn btn--outline btn--block shrink-0 sm:w-fit', couponBusy && 'is-loading']"
                 >
                     <span class="btn__label">{{ t("apply", "Apply") }}</span>
                     <span v-if="couponBusy" class="btn__spinner" aria-hidden="true"></span>
@@ -123,12 +123,12 @@ const paymentTitle = (): string =>
 
         <Agreements />
 
-        <div class="flex flex-col gap-3">
+        <div class="checkout-cta flex flex-col gap-3">
             <button
                 type="button"
                 data-place-order
                 :disabled="checkout.placingOrder || shippingPending || !checkout.selectedPayment || !checkout.allRequiredAccepted"
-                class="btn btn--solid btn--lg w-fit px-10 py-3.5"
+                class="btn btn--solid btn--lg btn--block lg:w-fit"
                 @click="checkout.placeOrder()"
             >
                 {{ checkout.placingOrder ? t("placing", "Placing order…") : t("placeOrder", "Place order") }}

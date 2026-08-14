@@ -110,7 +110,7 @@ defineExpose({ submit });
             v-if="!hideAdvance"
             type="submit"
             :disabled="checking"
-            class="btn btn--solid btn--lg w-fit"
+            class="checkout-cta btn btn--solid btn--lg btn--block lg:w-fit"
         >
             {{ t("continue", "Continue") }}
         </button>

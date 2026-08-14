@@ -101,4 +101,12 @@ describe("PaymentStep", () => {
         expect(billing.exists()).toBe(true);
         expect(billing.text()).not.toContain("Check / Money order");
     });
+
+    it("gives its advance button the full width of a phone", () => {
+        const button = render().find(".checkout-cta");
+
+        expect(button.exists()).toBe(true);
+        expect(button.classes()).toContain("btn--block");
+        expect(button.classes()).toContain("lg:w-fit");
+    });
 });

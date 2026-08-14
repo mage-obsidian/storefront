@@ -148,7 +148,7 @@ function toReview(): void {
             v-if="!hideAdvance"
             type="button"
             :disabled="!checkout.selectedPayment"
-            class="btn btn--solid btn--lg w-fit"
+            class="checkout-cta btn btn--solid btn--lg btn--block lg:w-fit"
             @click="toReview"
         >
             {{ t("continue", "Review order") }}
