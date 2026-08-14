@@ -117,7 +117,7 @@ onBeforeUnmount(() => {
             <div
                 v-if="open"
                 data-drawer-backdrop
-                class="fixed inset-0 z-50 flex bg-obsidian-950/40 backdrop-blur-sm"
+                class="fixed inset-0 z-[60] flex bg-obsidian-950/40 backdrop-blur-sm"
                 :class="side === 'left' ? 'justify-start' : 'justify-end'"
                 @click="requestClose"
             >
