@@ -264,6 +264,14 @@
     padding-inline: 0;
   }
 
+  /* The rail takes 248px + a 3rem gap the moment the shell goes two-column, so
+     the content slot is narrowest at the widths a viewport query calls roomy.
+     Everything inside it sizes against this container instead. */
+  .account-content {
+    container-type: inline-size;
+    container-name: account-content;
+  }
+
   /* Hairlines drawn with the grid gap over a tinted backdrop, so the rules stay
      correct at every column count without per-breakpoint nth-child rules. */
   .account-stats {
@@ -275,9 +283,15 @@
     border-radius: var(--radius-edge);
   }
 
-  @media (min-width: 40rem) {
+  /* Four across only once a cell can hold the longest single-word label
+     ("Addresses", 72px in the mono face) plus its padding. */
+  @container account-content (min-width: 34rem) {
     .account-stats {
       grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .account-stat {
+      padding-inline: 1.5rem;
     }
   }
 
@@ -285,7 +299,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
-    padding: 1.25rem 1.5rem;
+    min-width: 0;
+    padding: 1.25rem 1rem;
     background: var(--color-paper);
   }
 
@@ -302,6 +317,7 @@
     font-size: 0.66rem;
     text-transform: uppercase;
     letter-spacing: 0.16em;
+    overflow-wrap: anywhere;
     color: var(--color-ash-500);
   }
 
