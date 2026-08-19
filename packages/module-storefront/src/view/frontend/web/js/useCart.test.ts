@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { useCart, getFormKey } from "./useCart.ts";
-import { __setSection, __reset, reload } from "MageObsidian_ModernFrontend::js/customer-data";
+import { observeSectionMessages } from "./session-messages.ts";
+import { onNotification } from "./notifications.ts";
+import {
+    __setSection,
+    __setReloadResponse,
+    __reset,
+    reload,
+} from "MageObsidian_ModernFrontend::js/customer-data";
 import events, { dispatched, __reset as __resetEvents } from "MageObsidian_ModernFrontend::js/events";
 
 // useCart reuses Magento's native session quote: POST to checkout/cart/add, then
@@ -8,6 +15,7 @@ import events, { dispatched, __reset as __resetEvents } from "MageObsidian_Moder
 beforeEach(() => {
     __reset();
     __resetEvents();
+    observeSectionMessages();
     // The provider seeds a form_key on import; clear it so a test that pins the
     // value is not reading a second cookie left over from that.
     document.cookie = "form_key=; max-age=0; path=/";
@@ -61,8 +69,10 @@ describe("useCart", () => {
     // option), so the verdict comes from the `messages` section instead.
     it("treats a 200 response carrying an error message as a failure", async () => {
         vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
-        __setSection("messages", {
-            messages: [{ type: "error", text: "The file you uploaded has an invalid extension." }],
+        __setReloadResponse({
+            messages: {
+                messages: [{ type: "error", text: "The file you uploaded has an invalid extension." }],
+            },
         });
         document.body.innerHTML = '<form action="/checkout/cart/add" data-add-to-cart></form>';
 
@@ -76,8 +86,10 @@ describe("useCart", () => {
     // the entities have to be resolved or the shopper reads "&#039;".
     it("decodes HTML entities in the message", async () => {
         vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
-        __setSection("messages", {
-            messages: [{ type: "error", text: "The file &#039;art.txt&#039; has an invalid extension." }],
+        __setReloadResponse({
+            messages: {
+                messages: [{ type: "error", text: "The file &#039;art.txt&#039; has an invalid extension." }],
+            },
         });
         document.body.innerHTML = '<form action="/checkout/cart/add" data-add-to-cart></form>';
 
@@ -88,13 +100,32 @@ describe("useCart", () => {
 
     it("ignores non-error messages so a success notice stays a success", async () => {
         vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
-        __setSection("messages", { messages: [{ type: "notice", text: "Heads up." }] });
+        __setReloadResponse({ messages: { messages: [{ type: "notice", text: "Heads up." }] } });
         document.body.innerHTML = '<form action="/checkout/cart/add" data-add-to-cart></form>';
 
         const result = await useCart().addFromForm(document.querySelector("form"));
 
         expect(result.ok).toBe(true);
         expect(result.message).toBeUndefined();
+    });
+
+    it("leaves the announcement to the caller, so a server message is not toasted twice", async () => {
+        vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
+        const shown: string[] = [];
+        const release = onNotification((event) => shown.push(event.message));
+        __setReloadResponse({
+            messages: {
+                messages: [{ type: "success", text: "You added the hoodie to your shopping cart." }],
+            },
+        });
+        document.body.innerHTML = '<form action="/checkout/cart/add" data-add-to-cart></form>';
+
+        const result = await useCart().addFromForm(document.querySelector("form"));
+
+        expect(result.ok).toBe(true);
+        expect(shown).toEqual([]);
+
+        release();
     });
 
     it("reads the form key from the cookie as a fallback", () => {
@@ -182,7 +213,11 @@ describe("cart events", () => {
 
         await useCart().addProduct({ action: "/checkout/cart/add", product: 42 });
 
-        expect(dispatched.map((d) => d.event)).toEqual(["cart_add_before", "cart_add_after"]);
+        expect(dispatched.map((d) => d.event)).toEqual([
+            "cart_add_before",
+            "section_reload_after",
+            "cart_add_after",
+        ]);
         expect(dispatched.at(-1).data.result).toEqual({ ok: true });
     });
 
@@ -193,6 +228,7 @@ describe("cart events", () => {
 
         expect(dispatched.map((d) => d.event)).toEqual([
             "cart_update_qty_before",
+            "section_reload_after",
             "cart_update_qty_after",
         ]);
         expect(dispatched[0].data.operation).toBe("update_qty");
@@ -206,6 +242,7 @@ describe("cart events", () => {
 
         expect(dispatched.map((d) => d.event)).toEqual([
             "cart_remove_item_before",
+            "section_reload_after",
             "cart_remove_item_after",
             "cart_remove_item_failed",
         ]);

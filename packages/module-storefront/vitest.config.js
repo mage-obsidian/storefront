@@ -84,6 +84,9 @@ export default defineConfig({
             "MageObsidian_Storefront::js/notifications": fileURLToPath(
                 new URL("./src/view/frontend/web/js/notifications.ts", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/session-messages": fileURLToPath(
+                new URL("./src/view/frontend/web/js/session-messages.ts", import.meta.url),
+            ),
             "MageObsidian_Storefront::js/digitNudge": fileURLToPath(
                 new URL("./src/view/frontend/web/js/digitNudge.ts", import.meta.url),
             ),

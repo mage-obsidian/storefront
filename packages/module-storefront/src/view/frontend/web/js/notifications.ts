@@ -9,6 +9,7 @@ export const NotificationTone = {
     Success: 'success',
     Error: 'error',
     Warning: 'warning',
+    Notice: 'notice',
 } as const;
 
 export type NotificationTone = (typeof NotificationTone)[keyof typeof NotificationTone];
@@ -16,6 +17,13 @@ export type NotificationTone = (typeof NotificationTone)[keyof typeof Notificati
 export interface NotificationEvent {
     message: string;
     tone: NotificationTone;
+    html?: boolean;
+    durationMs?: number;
+}
+
+export interface NotifyOptions {
+    html?: boolean;
+    durationMs?: number;
 }
 
 declare module 'mage-obsidian/runtime/eventManager.ts' {
@@ -24,9 +32,32 @@ declare module 'mage-obsidian/runtime/eventManager.ts' {
     }
 }
 
+const PENDING_LIMIT = 5;
+
+const pending: NotificationEvent[] = [];
+
+function hasSink(): boolean {
+    return events.observersOf(NOTIFICATION_EVENT).length > 0;
+}
+
+export function onNotification(handler: (event: NotificationEvent) => void): () => void {
+    const unobserve = events.observe(NOTIFICATION_EVENT, handler);
+    pending.splice(0, pending.length).forEach(handler);
+    return unobserve;
+}
+
 export function notify(
     message: string,
     tone: NotificationTone = NotificationTone.Success,
+    options: NotifyOptions = {},
 ): Promise<NotificationEvent> {
-    return events.dispatch(NOTIFICATION_EVENT, { message, tone });
+    const event: NotificationEvent = { message, tone, ...options };
+    if (!hasSink()) {
+        pending.push(event);
+        if (pending.length > PENDING_LIMIT) {
+            pending.shift();
+        }
+        return Promise.resolve(event);
+    }
+    return events.dispatch(NOTIFICATION_EVENT, event);
 }

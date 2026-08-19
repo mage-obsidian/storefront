@@ -76,7 +76,11 @@ describe("wishlist events", () => {
         mockFetch(true);
         await useWishlist().add(form());
 
-        expect(dispatched.map((d) => d.event)).toEqual(["wishlist_add_before", "wishlist_add_after"]);
+        expect(dispatched.map((d) => d.event)).toEqual([
+            "wishlist_add_before",
+            "section_reload_after",
+            "wishlist_add_after",
+        ]);
         expect(dispatched[0].data.operation).toBe(WishlistOperation.Add);
         expect(dispatched.at(-1).data.result).toBe(true);
     });
@@ -88,6 +92,7 @@ describe("wishlist events", () => {
 
         expect(dispatched.map((d) => d.event)).toEqual([
             "wishlist_remove_before",
+            "section_reload_after",
             "wishlist_remove_after",
             "wishlist_remove_failed",
         ]);

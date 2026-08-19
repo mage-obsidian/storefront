@@ -18,6 +18,12 @@ import {
 } from 'mage-obsidian/runtime/mutationEvent.ts';
 import { readUxRuntimeConfig } from 'mage-obsidian/runtime/uxConfig.ts';
 import { getFormKey } from 'MageObsidian_Storefront::js/form-key-provider';
+import {
+    MESSAGES_SECTION,
+    consumeLastBatch,
+    firstErrorText,
+    withSuppressedNotifications,
+} from 'MageObsidian_Storefront::js/session-messages';
 
 /** Outcome of a cart mutation; `message` carries Magento's own wording. */
 export interface CartResult {
@@ -46,13 +52,6 @@ declare module 'mage-obsidian/runtime/eventManager.ts' {
 const CART_SECTION = 'cart';
 const SUMMARY_COUNT = 'summary_count';
 const QTY_FIELD = 'qty';
-const MESSAGES_SECTION = 'messages';
-const ERROR_TYPE = 'error';
-
-interface SectionMessage {
-    type?: string;
-    text?: string;
-}
 
 /**
  * Read Magento's form key. Re-exported from the provider rather than reading the
@@ -101,33 +100,6 @@ export function useCart() {
     }
 
     /**
-     * Magento escapes messages for HTML output; a <textarea> resolves the
-     * entities without ever parsing them as markup, so the toast can render the
-     * result as plain text.
-     */
-    function decodeEntities(text: string): string {
-        const holder = document.createElement('textarea');
-        holder.innerHTML = text;
-        return holder.value || text;
-    }
-
-    /**
-     * First error Magento reported for the request we just made. The `messages`
-     * section is served with `getMessages(true)`, so reading it consumes them
-     * and they never pile up across requests.
-     */
-    function errorMessage(): string | undefined {
-        const items = customerData.section(MESSAGES_SECTION)?.messages;
-        if (!Array.isArray(items)) {
-            return undefined;
-        }
-        const failure = (items as SectionMessage[]).find(
-            (item) => item?.type === ERROR_TYPE && typeof item.text === 'string',
-        );
-        return failure ? decodeEntities(failure.text as string) : undefined;
-    }
-
-    /**
      * POST a prepared body to the add-to-cart endpoint and refresh the cart
      * section. Backfills the form key from the cookie if a cached page shipped
      * without it. Always reloads the sections afterwards so reactive state stays
@@ -168,8 +140,10 @@ export function useCart() {
         } catch {
             ok = false;
         }
-        await customerData.reload([CART_SECTION, MESSAGES_SECTION]);
-        const message = errorMessage();
+        await withSuppressedNotifications(() =>
+            customerData.reload([CART_SECTION, MESSAGES_SECTION]),
+        );
+        const message = firstErrorText(consumeLastBatch());
         const result: CartResult = message ? { ok: false, message } : { ok };
 
         await events.dispatch(mutationEvent(CART_DOMAIN, operation, MutationPhase.After), {

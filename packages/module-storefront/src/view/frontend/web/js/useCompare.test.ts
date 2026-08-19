@@ -75,7 +75,11 @@ describe("compare events", () => {
 
         await useCompare().add(form);
 
-        expect(dispatched.map((d) => d.event)).toEqual(["compare_add_before", "compare_add_after"]);
+        expect(dispatched.map((d) => d.event)).toEqual([
+            "compare_add_before",
+            "section_reload_after",
+            "compare_add_after",
+        ]);
         expect(dispatched[0].data.operation).toBe(CompareOperation.Add);
     });
 
@@ -87,6 +91,7 @@ describe("compare events", () => {
 
         expect(dispatched.map((d) => d.event)).toEqual([
             "compare_remove_before",
+            "section_reload_after",
             "compare_remove_after",
             "compare_remove_failed",
         ]);

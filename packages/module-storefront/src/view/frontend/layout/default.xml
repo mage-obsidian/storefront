@@ -21,6 +21,9 @@
              their own logo block and are unaffected. -->
         <referenceBlock name="logo" remove="true"/>
 
+        <referenceBlock name="messages" remove="true"/>
+        <referenceBlock name="ajax.message.placeholder" remove="true"/>
+
         <!-- Contact Us footer link. Magento_Contact's layout (which adds it) is
              suppressed, so it is re-added here to give the contact page an entry
              point in the footer. -->
@@ -47,6 +50,8 @@
         <referenceContainer name="before.body.end">
             <block class="MageObsidian\Storefront\Block\SpeculationRules"
                    name="obsidian.speculation_rules"/>
+            <block class="MageObsidian\Storefront\Block\SessionMessages"
+                   name="obsidian.session_messages"/>
         </referenceContainer>
 
         <!-- Header quick-search island. Foundation chrome (present on every page),
