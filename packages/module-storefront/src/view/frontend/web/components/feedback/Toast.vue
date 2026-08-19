@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onBeforeUnmount } from "vue";
-import events from "MageObsidian_ModernFrontend::js/events";
 import Icon from "MageObsidian_ModernFrontend::elements/Icon";
 import {
-    NOTIFICATION_EVENT,
     LEGACY_TOAST_EVENT,
     NotificationTone,
+    onNotification,
     type NotificationEvent,
 } from "MageObsidian_Storefront::js/notifications";
 
 interface ToastItem extends NotificationEvent {
     id: number;
+    duration: number;
 }
 
 interface Countdown {
@@ -26,10 +26,37 @@ const props = withDefaults(
     { labels: () => ({}) },
 );
 
-const DURATION = 3200;
+const DEFAULT_DURATION = 3200;
+const MAX_DURATION = 12000;
+const MS_PER_CHARACTER = 90;
+const MAX_VISIBLE = 4;
+
+const TONE_STYLES: Record<NotificationTone, { bar: string; ink: string; icon: string }> = {
+    [NotificationTone.Success]: {
+        bar: "bg-accent",
+        ink: "text-accent",
+        icon: "check-circle",
+    },
+    [NotificationTone.Error]: {
+        bar: "bg-danger",
+        ink: "text-danger",
+        icon: "exclamation-circle",
+    },
+    [NotificationTone.Warning]: {
+        bar: "bg-sale",
+        ink: "text-sale",
+        icon: "exclamation-triangle",
+    },
+    [NotificationTone.Notice]: {
+        bar: "bg-ash-400",
+        ink: "text-ash-500",
+        icon: "information-circle",
+    },
+};
 
 let nextId = 0;
 const toasts = ref<ToastItem[]>([]);
+const paused = ref(false);
 const countdowns = new Map<number, Countdown>();
 let unobserve: (() => void) | null = null;
 
@@ -52,6 +79,17 @@ const regions = computed<
     },
 ]);
 
+function styleFor(toast: ToastItem): { bar: string; ink: string; icon: string } {
+    return TONE_STYLES[toast.tone] ?? TONE_STYLES[NotificationTone.Notice];
+}
+
+function durationFor(message: string, requested?: number): number {
+    if (typeof requested === "number" && requested > 0) {
+        return requested;
+    }
+    return Math.min(MAX_DURATION, Math.max(DEFAULT_DURATION, message.length * MS_PER_CHARACTER));
+}
+
 function clearCountdown(id: number): void {
     const countdown = countdowns.get(id);
     if (countdown?.timer) {
@@ -65,15 +103,29 @@ function dismiss(id: number): void {
     toasts.value = toasts.value.filter((t) => t.id !== id);
 }
 
-function show({ message, tone = NotificationTone.Success }: Partial<NotificationEvent>): void {
+function show({
+    message,
+    tone = NotificationTone.Success,
+    html = false,
+    durationMs,
+}: Partial<NotificationEvent>): void {
     if (!message) {
         return;
     }
-    const id = ++nextId;
-    toasts.value = [...toasts.value, { id, message, tone }];
-    countdowns.set(id, {
-        timer: setTimeout(() => dismiss(id), DURATION),
-        remaining: DURATION,
+    const duration = durationFor(message, durationMs);
+    const toast: ToastItem = { id: ++nextId, message, tone, html, duration };
+    const next = [...toasts.value, toast];
+    while (next.length > MAX_VISIBLE) {
+        const dropped = next.shift();
+        if (dropped) {
+            clearCountdown(dropped.id);
+        }
+    }
+    toasts.value = next;
+
+    countdowns.set(toast.id, {
+        timer: setTimeout(() => dismiss(toast.id), duration),
+        remaining: duration,
         startedAt: Date.now(),
     });
 }
@@ -86,6 +138,7 @@ function close(id: number): void {
 }
 
 function pause(): void {
+    paused.value = true;
     countdowns.forEach((countdown) => {
         if (!countdown.timer) {
             return;
@@ -97,6 +150,7 @@ function pause(): void {
 }
 
 function resume(): void {
+    paused.value = false;
     countdowns.forEach((countdown, id) => {
         if (countdown.timer) {
             return;
@@ -109,7 +163,7 @@ function resume(): void {
 const onLegacyToast = (event: Event): void => show((event as CustomEvent).detail ?? {});
 
 onMounted(() => {
-    unobserve = events.observe(NOTIFICATION_EVENT, show);
+    unobserve = onNotification(show);
     window.addEventListener(LEGACY_TOAST_EVENT, onLegacyToast);
 });
 
@@ -121,45 +175,60 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="toast-host pointer-events-none fixed inset-x-0 bottom-0 flex flex-col items-center gap-2 px-4 pt-4 print:hidden">
+    <div class="toast-host pointer-events-none fixed inset-x-0 top-0 flex flex-col items-end gap-2 px-4 print:hidden">
         <div
             v-for="region in regions"
             :key="region.role"
             :role="region.role"
             :aria-live="region.live"
             aria-atomic="true"
-            class="relative flex w-full flex-col items-center gap-2"
+            class="relative flex w-full flex-col items-end gap-2"
         >
             <TransitionGroup name="obsidian-toast">
                 <div
                     v-for="toast in region.items"
                     :key="toast.id"
-                    class="pointer-events-none flex w-full justify-center"
+                    class="pointer-events-none flex w-full justify-end"
                 >
                     <div
-                        class="pointer-events-auto flex items-center gap-3 rounded-edge border py-3 pl-5 pr-3 font-mono text-eyebrow uppercase tracking-eyebrow shadow-xl backdrop-blur-md"
+                        class="obsidian-toast pointer-events-auto relative flex w-full gap-3 overflow-hidden rounded-edge border border-ash-200 bg-alabaster-raised/95 py-3 pl-4 pr-2 text-ink shadow-xl backdrop-blur-md sm:w-96"
+                        :class="{ 'obsidian-toast--paused': paused }"
+                        :style="{ '--obsidian-toast-duration': `${toast.duration}ms` }"
                         @mouseenter="pause"
                         @mouseleave="resume"
                         @focusin="pause"
                         @focusout="resume"
-                        :class="toast.tone === NotificationTone.Success
-                            ? 'border-ash-200 bg-obsidian-950/95 text-on-obsidian'
-                            : 'border-sale/40 bg-alabaster/95 text-sale'"
                     >
                         <span
-                            class="h-1.5 w-1.5 rounded-full"
-                            :class="toast.tone === NotificationTone.Success ? 'bg-accent' : 'bg-sale'"
+                            class="absolute inset-y-0 left-0 w-0.5"
+                            :class="styleFor(toast).bar"
                             aria-hidden="true"
                         ></span>
-                        {{ toast.message }}
+                        <Icon
+                            :name="styleFor(toast).icon"
+                            set="solid"
+                            :size="20"
+                            class="mt-px h-5 w-5 shrink-0"
+                            :class="styleFor(toast).ink"
+                        />
+                        <div
+                            class="min-w-0 flex-1 text-sm leading-snug [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2"
+                        >
+                            <span v-if="toast.html" v-html="toast.message"></span>
+                            <span v-else>{{ toast.message }}</span>
+                        </div>
                         <button
                             type="button"
-                            class="rounded-full p-1 opacity-60 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-current"
+                            class="h-6 w-6 shrink-0 self-start rounded-full text-ash-500 transition-colors hover:text-ink focus-visible:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-current"
                             :aria-label="dismissLabel"
                             @click="close(toast.id)"
                         >
-                            <Icon name="x-mark" set="outline" class="h-3.5 w-3.5" />
+                            <Icon name="x-mark" set="outline" class="mx-auto h-3.5 w-3.5" />
                         </button>
+                        <span
+                            class="obsidian-toast__countdown absolute inset-x-0 bottom-0 h-0.5 origin-left"
+                            aria-hidden="true"
+                        ></span>
                     </div>
                 </div>
             </TransitionGroup>
