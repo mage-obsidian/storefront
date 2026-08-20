@@ -36,9 +36,26 @@ if ($configViewModel->isHmrEnabled()): ?>
     $criticalCss = $block->getCriticalCss();
     // Defer the sheet only when critical was inlined this request; pages with no
     // critical keep it render-blocking so there is never a FOUC.
-    if ($criticalCss && $criticalCss->hasCriticalCss()): ?>
-        <link rel="preload" as="style" href="<?= $styleHref ?>" onload="this.onload=null;this.rel='stylesheet'"/>
+    if ($criticalCss && $criticalCss->hasCriticalCss()):
+        // The swap runs from a nonced tag, not an inline onload attribute: under an
+        // enforced CSP the attribute is dropped and the sheet stays a preload that
+        // never applies, leaving every deferred style missing.
+        $swapJs = <<<'JS'
+(function () {
+    var sheet = document.querySelector('link[data-obsidian-sheet]');
+    if (!sheet) {
+        return;
+    }
+    var apply = function () {
+        sheet.rel = 'stylesheet';
+    };
+    sheet.addEventListener('load', apply, { once: true });
+    document.addEventListener('DOMContentLoaded', apply, { once: true });
+})();
+JS; ?>
+        <link rel="preload" as="style" href="<?= $styleHref ?>" data-obsidian-sheet/>
         <noscript><link rel="stylesheet" href="<?= $styleHref ?>"/></noscript>
+        <?= /* @noEscape */ $secureRenderer->renderTag('script', [], $swapJs, false) ?>
     <?php else: ?>
         <link href="<?= $styleHref ?>" rel="stylesheet"/>
     <?php endif; ?>
