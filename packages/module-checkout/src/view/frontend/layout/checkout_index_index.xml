@@ -18,6 +18,19 @@
         <title>Checkout</title>
     </head>
     <body>
+        <!-- The private half of the checkout is its content, not a badge: without
+             this the request only goes out once the island graph has loaded and
+             mounted. -->
+        <referenceBlock name="head.additional">
+            <block class="MageObsidian\ModernFrontend\Block\SectionPrefetchRuntime"
+                   name="mage_obsidian.checkout_section_prefetch">
+                <arguments>
+                    <argument name="sections" xsi:type="array">
+                        <item name="checkout" xsi:type="string">obsidian-checkout</item>
+                    </argument>
+                </arguments>
+            </block>
+        </referenceBlock>
         <!-- CheckoutTitle owns the page <h1>; drop the generic page.main.title so
              there is a single heading (cart/category/PDP do the same). -->
         <referenceBlock name="page.main.title" remove="true"/>
