@@ -69,11 +69,7 @@
             <container name="page.messages" htmlTag="div" htmlClass="page messages"/>
         </referenceContainer>
         <referenceContainer name="content">
-            <container name="content.top" label="Main Content Top">
-                <block name="main_css_preloader" as="main_css_preloader"
-                       template="Magento_Theme::html/main_css_preloader.phtml"
-                       ifconfig="dev/css/use_css_critical_path"/>
-            </container>
+            <container name="content.top" label="Main Content Top"/>
         </referenceContainer>
         <referenceContainer name="footer-container" htmlClass="shadow-inner bg-white mt-4">
             <container name="footer" as="footer" label="Page Footer">
