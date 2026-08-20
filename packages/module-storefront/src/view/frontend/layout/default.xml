@@ -12,8 +12,6 @@
     <body>
         <!-- "Report All Bugs" footer link: a Luma demo affordance. -->
         <referenceBlock name="report.bugs" remove="true"/>
-        <!-- Critical-CSS-path loading spinner: superseded by the Vite asset pipeline. -->
-        <referenceBlock name="main_css_preloader" remove="true"/>
 
         <!-- Header logo block. header.twig writes the wordmark itself and never
              calls child_html('logo'), so the block only cost a LogoPathResolver
