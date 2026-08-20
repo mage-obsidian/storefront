@@ -424,3 +424,15 @@
         z-index: 1;
     }
 }
+
+/* Holds the page height the eager checkout island will need before it mounts, so
+   the footer starts below the fold instead of being shoved there on hydration.
+   Deliberately a flat class with no `:has()`: the critical-CSS extractor cannot
+   evaluate `:has()` against server HTML and drops the rule, which would land the
+   reservation with the deferred sheet — adding a shift instead of preventing one.
+   Measured: 1505px tall at 412x823 and 1209px at 1440x900, so the floor only
+   shows on a viewport taller than the checkout itself — rarer than the shift it
+   trades away. */
+.checkout-island-reserve {
+    min-height: 100svh;
+}
