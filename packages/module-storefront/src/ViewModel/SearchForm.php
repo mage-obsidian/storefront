@@ -9,8 +9,10 @@ declare(strict_types=1);
 
 namespace MageObsidian\Storefront\ViewModel;
 
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
 use Magento\Search\Helper\Data as SearchHelper;
+use Magento\Search\Model\QueryFactory;
 use Magento\Search\ViewModel\ConfigProvider;
 
 /**
@@ -26,10 +28,14 @@ class SearchForm implements ArgumentInterface
     /**
      * @param SearchHelper $searchHelper
      * @param ConfigProvider $configProvider
+     * @param QueryFactory $queryFactory
+     * @param RequestInterface $request
      */
     public function __construct(
         private readonly SearchHelper $searchHelper,
-        private readonly ConfigProvider $configProvider
+        private readonly ConfigProvider $configProvider,
+        private readonly QueryFactory $queryFactory,
+        private readonly RequestInterface $request
     ) {
     }
 
@@ -54,13 +60,26 @@ class SearchForm implements ArgumentInterface
     }
 
     /**
-     * Current, escaped query text (empty off the result page).
+     * Current query text, as the shopper typed it (empty off the result page).
+     *
+     * The value is returned unescaped on purpose: every consumer escapes it once
+     * — Twig autoescapes the input's value attribute, and the island's props are
+     * JSON-encoded. Returning the helper's pre-escaped text made an ampersand
+     * come back as &amp; in the box, the breadcrumb and the island. The query
+     * model carries the same prepared, length-capped text the helper escapes, so
+     * it is read from there rather than re-deriving core's preparation, and only
+     * when the request actually carries a query.
      *
      * @return string
      */
     public function getQueryValue(): string
     {
-        return (string)$this->searchHelper->getEscapedQueryText();
+        $queryText = $this->request->getParam($this->getQueryParam());
+        if ($queryText === null || is_array($queryText) || trim((string)$queryText) === '') {
+            return '';
+        }
+
+        return (string)$this->queryFactory->get()->getQueryText();
     }
 
     /**
