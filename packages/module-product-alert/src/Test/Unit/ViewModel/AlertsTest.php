@@ -25,14 +25,12 @@ class AlertsTest extends TestCase
 
     private function product(bool $canShowPrice, bool $available): Product
     {
-        $product = $this->getMockBuilder(Product::class)
-            ->disableOriginalConstructor()
-            ->addMethods(['getCanShowPrice'])
-            ->onlyMethods(['getId', 'isAvailable'])
-            ->getMock();
+        $product = $this->createMock(Product::class);
         $product->method('getId')->willReturn(6);
-        $product->method('getCanShowPrice')->willReturn($canShowPrice);
         $product->method('isAvailable')->willReturn($available);
+        $product->method('__call')->willReturnCallback(
+            static fn (string $method): ?bool => $method === 'getCanShowPrice' ? $canShowPrice : null
+        );
 
         return $product;
     }
