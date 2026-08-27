@@ -188,6 +188,10 @@
   mix-blend-mode: normal;
 }
 
+.cart-summary {
+  view-transition-name: cart-summary;
+}
+
 ::view-transition-group(cart-summary) {
   animation-duration: 260ms;
 }
