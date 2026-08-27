@@ -30,6 +30,12 @@ export default defineConfig({
             "MageObsidian_ModernFrontend::js/events": fileURLToPath(
                 new URL("./src/Test/Js/stubs/events.ts", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/slider": fileURLToPath(
+                new URL("./src/view/frontend/web/js/slider.ts", import.meta.url),
+            ),
+            "MageObsidian_Storefront::js/deferred-scripts": fileURLToPath(
+                new URL("./src/view/frontend/web/js/deferred-scripts.ts", import.meta.url),
+            ),
             "MageObsidian_Storefront::js/listing-events": fileURLToPath(
                 new URL("./src/view/frontend/web/js/listing-events.ts", import.meta.url),
             ),
