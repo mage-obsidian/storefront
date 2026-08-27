@@ -1,10 +1,15 @@
 <?xml version="1.0"?>
-<!-- Shipment tracking numbers in the email rendered through Twig. -->
+<!-- Shipment tracking numbers rendered through Twig. -->
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd"
-      design_abstraction="custom">
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="sales_email_order_shipment_renderers"/>
     <body>
-        <referenceBlock name="sales.order.email.shipment.track"
-                        template="Magento_Sales::email/shipment/track.twig"/>
+        <block class="Magento\Sales\Block\Order\Email\Shipment\Items"
+               name="sales.order.email.shipment.track"
+               template="Magento_Sales::email/shipment/track.twig" cacheable="false">
+            <arguments>
+                <argument name="tracking_url" xsi:type="object">Magento\Sales\Block\DataProviders\Email\Shipment\TrackingUrl</argument>
+            </arguments>
+        </block>
     </body>
 </page>

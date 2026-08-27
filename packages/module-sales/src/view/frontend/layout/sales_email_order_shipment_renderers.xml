@@ -4,7 +4,10 @@
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd"
       design_abstraction="custom">
     <body>
-        <referenceBlock name="sales.email.order.shipment.renderers.default"
-                        template="Magento_Sales::email/items/shipment/default.twig"/>
+        <referenceBlock name="sales.email.order.shipment.renderers">
+            <block class="Magento\Sales\Block\Order\Email\Items\DefaultItems"
+                   name="sales.email.order.shipment.renderers.default" as="default"
+                   template="Magento_Sales::email/items/shipment/default.twig"/>
+        </referenceBlock>
     </body>
 </page>

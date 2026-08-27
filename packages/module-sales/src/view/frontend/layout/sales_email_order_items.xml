@@ -3,11 +3,36 @@
   Render the order confirmation email items through our Twig (the engine is
   registered by .twig extension, so it works in the email area too). The block
   classes stay core; only the template changes.
+
+  The tree is declared here rather than referenced: on an Obsidian theme the
+  layout file source filters out every core module, so Magento_Sales' own copy of
+  this handle never reaches the merge and a referenceBlock would resolve to
+  nothing. The totals keep core's phtml — an email carries no design system.
 -->
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd"
       design_abstraction="custom">
+    <update handle="sales_email_order_renderers"/>
+    <update handle="sales_email_item_price"/>
     <body>
-        <referenceBlock name="items" template="Magento_Sales::email/items.twig"/>
+        <block class="Magento\Sales\Block\Order\Email\Items" name="items"
+               template="Magento_Sales::email/items.twig" cacheable="false">
+            <block class="Magento\Framework\View\Element\RendererList"
+                   name="sales.email.order.renderers" as="renderer.list"/>
+            <block class="Magento\Sales\Block\Order\Totals" name="order_totals"
+                   template="Magento_Sales::order/totals.phtml">
+                <arguments>
+                    <argument name="label_properties" xsi:type="string">colspan="2"</argument>
+                </arguments>
+                <block class="Magento\Tax\Block\Sales\Order\Tax" name="tax"
+                       template="Magento_Tax::order/tax.phtml">
+                    <action method="setIsPlaneMode">
+                        <argument name="value" xsi:type="string">1</argument>
+                    </action>
+                </block>
+            </block>
+        </block>
+        <block class="Magento\Framework\View\Element\Template" name="additional.product.info"
+               template="Magento_Theme::template.phtml"/>
     </body>
 </page>

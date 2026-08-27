@@ -1,9 +1,11 @@
 <?xml version="1.0"?>
 <!-- Order email item row total rendered through Twig. -->
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd"
-      design_abstraction="custom">
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
-        <referenceBlock name="item_price" template="Magento_Sales::email/items/price/row.twig"/>
+        <referenceBlock name="items">
+            <block class="Magento\Sales\Block\Order\Email\Items\DefaultItems" name="item_price"
+                   template="Magento_Sales::email/items/price/row.twig"/>
+        </referenceBlock>
     </body>
 </page>

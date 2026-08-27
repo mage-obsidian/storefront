@@ -1,9 +1,16 @@
 <?xml version="1.0"?>
-<!-- Shipment email items rendered through Twig. -->
+<!-- Shipment email items rendered through Twig; block classes stay core. -->
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd"
       design_abstraction="custom">
+    <update handle="sales_email_order_shipment_renderers"/>
     <body>
-        <referenceBlock name="items" template="Magento_Sales::email/shipment/items.twig"/>
+        <block class="Magento\Sales\Block\Order\Email\Shipment\Items" name="items"
+               template="Magento_Sales::email/shipment/items.twig" cacheable="false">
+            <block class="Magento\Framework\View\Element\RendererList"
+                   name="sales.email.order.shipment.renderers" as="renderer.list"/>
+        </block>
+        <block class="Magento\Framework\View\Element\Template" name="additional.product.info"
+               template="Magento_Theme::template.phtml"/>
     </body>
 </page>
