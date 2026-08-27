@@ -25,11 +25,21 @@ class WishlistSectionTest extends TestCase
 
     private function item(int $productId, int $itemId): object
     {
-        $item = $this->getMockBuilder(\stdClass::class)->addMethods(['getProductId', 'getId'])->getMock();
-        $item->method('getProductId')->willReturn($productId);
-        $item->method('getId')->willReturn($itemId);
+        return new class ($productId, $itemId) {
+            public function __construct(private readonly int $productId, private readonly int $itemId)
+            {
+            }
 
-        return $item;
+            public function getProductId(): int
+            {
+                return $this->productId;
+            }
+
+            public function getId(): int
+            {
+                return $this->itemId;
+            }
+        };
     }
 
     private function subject(array $items): WishlistSection
