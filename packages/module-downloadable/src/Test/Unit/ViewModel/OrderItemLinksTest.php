@@ -67,11 +67,10 @@ class OrderItemLinksTest extends TestCase
      */
     private function purchasedEntity(array $items): PurchasedEntity
     {
-        $entity = $this->getMockBuilder(PurchasedEntity::class)
-            ->disableOriginalConstructor()
-            ->addMethods(['getPurchasedItems'])
-            ->getMock();
-        $entity->method('getPurchasedItems')->willReturn($items);
+        $entity = $this->createMock(PurchasedEntity::class);
+        $entity->method('__call')->willReturnCallback(
+            static fn (string $method): ?array => $method === 'getPurchasedItems' ? $items : null
+        );
 
         return $entity;
     }
