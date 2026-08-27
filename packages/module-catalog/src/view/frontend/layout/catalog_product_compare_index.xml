@@ -12,7 +12,11 @@
         <referenceBlock name="page.main.title" remove="true"/>
         <referenceContainer name="content">
             <block class="Magento\Catalog\Block\Product\Compare\ListCompare" name="catalog.compare.list"
-                   template="Magento_Catalog::product/compare/list.twig" cacheable="false"/>
+                   template="Magento_Catalog::product/compare/list.twig" cacheable="false">
+                <arguments>
+                    <argument name="attribute_output" xsi:type="object">MageObsidian\Catalog\ViewModel\ProductAttributeOutput</argument>
+                </arguments>
+            </block>
         </referenceContainer>
     </body>
 </page>

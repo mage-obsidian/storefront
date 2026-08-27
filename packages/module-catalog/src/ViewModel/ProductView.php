@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace MageObsidian\Catalog\ViewModel;
 
 use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Catalog\Block\Product\View\Attributes as AttributesBlock;
 use Magento\Catalog\Helper\Output as OutputHelper;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Framework\App\Request\Http as Request;
@@ -480,6 +481,35 @@ class ProductView implements ArgumentInterface
         $start = (int)date('Y');
 
         return range($start, $start + 20);
+    }
+
+    /**
+     * Specification rows for the PDP, each value already run through the catalog
+     * output filter core applies at the same position.
+     *
+     * @return array<int, array{label: string, html: string}>
+     */
+    public function getSpecifications(): array
+    {
+        $product = $this->getProduct();
+        $attributes = $this->layout->getBlock('product.attributes');
+        if ($product === null || !$attributes instanceof AttributesBlock) {
+            return [];
+        }
+
+        $specifications = [];
+        foreach ($attributes->getAdditionalData() as $data) {
+            $specifications[] = [
+                'label' => (string)($data['label'] ?? ''),
+                'html' => (string)$this->outputHelper->productAttribute(
+                    $product,
+                    $data['value'] ?? '',
+                    (string)($data['code'] ?? '')
+                ),
+            ];
+        }
+
+        return $specifications;
     }
 
     /**

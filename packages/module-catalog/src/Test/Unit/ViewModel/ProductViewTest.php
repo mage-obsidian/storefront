@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace MageObsidian\Catalog\Test\Unit\ViewModel;
 
+use Magento\Catalog\Block\Product\View\Attributes as AttributesBlock;
 use Magento\Catalog\Helper\Output as OutputHelper;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Type\AbstractType;
@@ -312,5 +313,45 @@ class ProductViewTest extends TestCase
             ->willReturn('<p>Cut clean.</p>');
 
         $this->assertSame('<p>Cut clean.</p>', $this->viewModel($product, $output)->getDescriptionHtml());
+    }
+
+    public function testSpecificationsRunEveryValueThroughTheCatalogOutputFilter(): void
+    {
+        $product = $this->product('simple', false);
+
+        $attributes = $this->createMock(AttributesBlock::class);
+        $attributes->method('getAdditionalData')->willReturn([
+            'material' => ['label' => 'Material', 'value' => 'Cotton & linen', 'code' => 'material'],
+            'care' => ['label' => 'Care', 'value' => '<b>Hand wash</b>', 'code' => 'care'],
+        ]);
+
+        $layout = $this->createMock(LayoutInterface::class);
+        $layout->method('getBlock')->with('product.attributes')->willReturn($attributes);
+
+        $output = $this->createMock(OutputHelper::class);
+        $output->method('productAttribute')->willReturnCallback(
+            static fn (mixed $subject, mixed $value, string $code): string => "filtered($code):$value"
+        );
+
+        $this->assertSame(
+            [
+                ['label' => 'Material', 'html' => 'filtered(material):Cotton & linen'],
+                ['label' => 'Care', 'html' => 'filtered(care):<b>Hand wash</b>'],
+            ],
+            $this->viewModel($product, $output, $layout)->getSpecifications()
+        );
+    }
+
+    public function testSpecificationsAreEmptyWithoutTheAttributesBlock(): void
+    {
+        $layout = $this->createMock(LayoutInterface::class);
+        $layout->method('getBlock')->with('product.attributes')->willReturn(false);
+
+        $this->assertSame([], $this->viewModel($this->product('simple', false), null, $layout)->getSpecifications());
+    }
+
+    public function testSpecificationsAreEmptyOffAProductPage(): void
+    {
+        $this->assertSame([], $this->viewModel(null)->getSpecifications());
     }
 }
