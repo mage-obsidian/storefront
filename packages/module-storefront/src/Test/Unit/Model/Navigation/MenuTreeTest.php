@@ -12,6 +12,7 @@ use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 use MageObsidian\Storefront\Model\Category\RequestPathResolver;
 use MageObsidian\Storefront\Model\Navigation\MenuTree;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -207,8 +208,8 @@ class MenuTreeTest extends TestCase
         $this->cache->expects($this->once())
             ->method('save')
             ->with(
-                $this->isType('string'),
-                $this->isType('string'),
+                $this->isString(),
+                $this->isString(),
                 ['cat_c_10', 'cat_c_20', 'cat_c'],
                 3600
             );
@@ -262,9 +263,8 @@ class MenuTreeTest extends TestCase
     /**
      * Also covers the entries written before the payload carried `ids`: a plain list
      * of items must be treated as a miss instead of fataling on the missing key.
-     *
-     * @dataProvider unusablePayloads
      */
+    #[DataProvider('unusablePayloads')]
     public function testRebuildsWhenTheCachedPayloadIsNotUsable(mixed $payload): void
     {
         $this->cache->method('load')->willReturn($this->serializer->serialize($payload));

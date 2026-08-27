@@ -32,15 +32,35 @@ class DirectoryDataTest extends TestCase
 
     private function region(int $id, string $country, string $code, string $name): object
     {
-        $region = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['getId', 'getCountryId', 'getCode', 'getName'])
-            ->getMock();
-        $region->method('getId')->willReturn($id);
-        $region->method('getCountryId')->willReturn($country);
-        $region->method('getCode')->willReturn($code);
-        $region->method('getName')->willReturn($name);
+        return new class ($id, $country, $code, $name) {
+            public function __construct(
+                private readonly int $id,
+                private readonly string $countryId,
+                private readonly string $code,
+                private readonly string $name
+            ) {
+            }
 
-        return $region;
+            public function getId(): int
+            {
+                return $this->id;
+            }
+
+            public function getCountryId(): string
+            {
+                return $this->countryId;
+            }
+
+            public function getCode(): string
+            {
+                return $this->code;
+            }
+
+            public function getName(): string
+            {
+                return $this->name;
+            }
+        };
     }
 
     private function subject(array $overrides = []): DirectoryData

@@ -13,6 +13,7 @@ use Magento\Cms\Block\Page as CmsPage;
 use Magento\Framework\View\LayoutInterface;
 use MageObsidian\ModernFrontend\Block\Template;
 use MageObsidian\Storefront\Plugin\Cms\RenderThemeTemplate;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -59,9 +60,7 @@ class RenderThemeTemplateTest extends TestCase
         $this->assertSame('<p>From the database</p>', $this->plugin->afterToHtml($subject, '<p>From the database</p>'));
     }
 
-    /**
-     * @dataProvider unusableArguments
-     */
+    #[DataProvider('unusableArguments')]
     public function testIgnoresAnArgumentThatIsNotATemplateName(mixed $argument): void
     {
         $subject = $this->createMock(CmsPage::class);

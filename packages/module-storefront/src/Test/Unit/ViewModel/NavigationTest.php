@@ -82,7 +82,7 @@ class NavigationTest extends TestCase
     private function assertDemoItems(array $items): void
     {
         $this->assertNotEmpty($items);
-        $this->assertContainsOnly('array', $items);
+        $this->assertContainsOnlyArray($items);
         foreach ($items as $item) {
             $this->assertArrayHasKey('label', $item);
             $this->assertArrayHasKey('url', $item);
