@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!--
+  The guest form of the printable document. Core's handle is suppressed with the
+  rest of Magento_Sales, so without this the page renders its chrome and an empty
+  main: the blocks it references never exist. The document itself is identical
+  whether the shopper is signed in or not, so this pulls in sales_order_printshipment
+  rather than declaring the same tree twice.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="sales_order_printshipment"/>
+</page>

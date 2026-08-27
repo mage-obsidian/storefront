@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!--
+  Reorder hands the guest to the cart and renders nothing of its own, but the
+  handle still has to resolve: core's is suppressed, and a handle that resolves
+  to nothing leaves the page with no content block at all.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="content">
+            <block class="Magento\Sales\Block\Order\View" name="sales.order.view" cacheable="false"/>
+        </referenceContainer>
+    </body>
+</page>
