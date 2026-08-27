@@ -260,14 +260,12 @@ async function add() {
                 >
                     <span
                         v-if="swatchOf(attr.id, option.id).kind === 'color'"
-                        class="pdp__swatch-chip"
-                        :style="{ backgroundColor: swatchOf(attr.id, option.id).value }"
+                        :class="['pdp__swatch-chip', `pdp__swatch-chip--${option.id}`]"
                         aria-hidden="true"
                     ></span>
                     <span
                         v-else-if="swatchOf(attr.id, option.id).kind === 'image'"
-                        class="pdp__swatch-chip"
-                        :style="{ backgroundImage: `url(${swatchOf(attr.id, option.id).value})` }"
+                        :class="['pdp__swatch-chip', `pdp__swatch-chip--${option.id}`]"
                         aria-hidden="true"
                     ></span>
                     <span v-else>{{ option.label }}</span>
