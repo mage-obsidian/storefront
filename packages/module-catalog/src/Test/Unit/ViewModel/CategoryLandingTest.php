@@ -145,15 +145,19 @@ class CategoryLandingTest extends TestCase
         $this->assertSame('', $tiles[0]['image']);
     }
 
+    private function categoryDescribedAs(?string $description): Category
+    {
+        $category = $this->createMock(Category::class);
+        $category->method('__call')->willReturnCallback(
+            static fn (string $method): ?string => $method === 'getDescription' ? $description : null
+        );
+
+        return $category;
+    }
+
     public function testDescriptionIsRunThroughOutputFilter(): void
     {
-        // getDescription() is a magic getter on Category, so it has to be added
-        // to the mock explicitly rather than stubbed via createMock().
-        $category = $this->getMockBuilder(Category::class)
-            ->disableOriginalConstructor()
-            ->addMethods(['getDescription'])
-            ->getMock();
-        $category->method('getDescription')->willReturn('<p>Cut clean.</p>');
+        $category = $this->categoryDescribedAs('<p>Cut clean.</p>');
 
         $output = $this->createMock(OutputHelper::class);
         $output->expects($this->once())
@@ -168,11 +172,7 @@ class CategoryLandingTest extends TestCase
 
     public function testNoDescriptionYieldsEmptyString(): void
     {
-        $category = $this->getMockBuilder(Category::class)
-            ->disableOriginalConstructor()
-            ->addMethods(['getDescription'])
-            ->getMock();
-        $category->method('getDescription')->willReturn(null);
+        $category = $this->categoryDescribedAs(null);
 
         $this->assertSame('', $this->viewModel($category)->getDescriptionHtml());
     }

@@ -191,10 +191,12 @@ class ProductViewTest extends TestCase
 
     public function testCurrencyFormatComesFromTheStoreCurrency(): void
     {
-        $currency = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['getOutputFormat'])
-            ->getMock();
-        $currency->method('getOutputFormat')->willReturn('$%s');
+        $currency = new class {
+            public function getOutputFormat(): string
+            {
+                return '$%s';
+            }
+        };
 
         $registry = $this->createMock(Registry::class);
         $priceCurrency = $this->createMock(PriceCurrencyInterface::class);
