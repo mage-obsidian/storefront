@@ -26,6 +26,7 @@ use Magento\Quote\Model\QuoteIdMaskFactory;
 use Magento\Quote\Model\QuoteIdToMaskedQuoteIdInterface;
 use Magento\Quote\Model\ResourceModel\Quote\QuoteIdMask as QuoteIdMaskResource;
 use Magento\Store\Model\StoreManagerInterface;
+use MageObsidian\Storefront\ViewModel\ReCaptcha;
 use Throwable;
 
 /**
@@ -56,6 +57,11 @@ class CheckoutConfig implements ArgumentInterface
     private ?array $privateData = null;
 
     /**
+     * The key Magento configures the place-order challenge under.
+     */
+    private const string RECAPTCHA_FORM = 'place_order';
+
+    /**
      * @param CheckoutSession $checkoutSession
      * @param CustomerSession $customerSession
      * @param StoreManagerInterface $storeManager
@@ -69,6 +75,7 @@ class CheckoutConfig implements ArgumentInterface
      * @param ScopeConfigInterface $scopeConfig
      * @param AgreementsConfigProvider $agreementsConfigProvider
      * @param Gate $gate
+     * @param ReCaptcha $reCaptcha
      */
     public function __construct(
         private readonly CheckoutSession $checkoutSession,
@@ -83,7 +90,8 @@ class CheckoutConfig implements ArgumentInterface
         private readonly ConfigProvider $configProvider,
         private readonly ScopeConfigInterface $scopeConfig,
         private readonly AgreementsConfigProvider $agreementsConfigProvider,
-        private readonly Gate $gate
+        private readonly Gate $gate,
+        private readonly ReCaptcha $reCaptcha
     ) {
     }
 
@@ -180,6 +188,9 @@ class CheckoutConfig implements ArgumentInterface
             'displayBillingOnPayment' => (int)$this->scopeConfig->getValue('checkout/options/display_billing_address_on', ScopeInterface::SCOPE_STORE) === 0,
             'maxSummaryItems' => (int)$this->scopeConfig->getValue('checkout/options/max_items_display_count', ScopeInterface::SCOPE_STORE) ?: 10,
             'agreements' => $this->agreements(),
+            // Store-scoped: the site key is the same for every shopper, so it
+            // belongs in the half that may reach a cacheable page.
+            'recaptcha' => $this->reCaptcha->configFor(self::RECAPTCHA_FORM),
         ];
     }
 
@@ -519,6 +530,7 @@ class CheckoutConfig implements ArgumentInterface
             'displayBillingOnPayment' => true,
             'maxSummaryItems' => 10,
             'agreements' => ['enabled' => false, 'items' => []],
+            'recaptcha' => [],
         ];
     }
 

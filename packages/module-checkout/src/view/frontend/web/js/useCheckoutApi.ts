@@ -41,11 +41,16 @@ export function createCheckoutApi(config: CheckoutApiConfig) {
     const cartPath = isLoggedIn ? 'carts/mine' : `guest-carts/${maskedCartId}`;
 
     /** Issue a same-origin JSON request against a cart-scoped endpoint. */
-    async function request(method: HttpMethod, endpoint: string, body?: unknown): Promise<unknown> {
+    async function request(
+        method: HttpMethod,
+        endpoint: string,
+        body?: unknown,
+        headers: Record<string, string> = {},
+    ): Promise<unknown> {
         const response = await fetch(`${restBaseUrl}${cartPath}/${endpoint}`, {
             method,
             credentials: 'same-origin',
-            headers: JSON_HEADERS,
+            headers: { ...JSON_HEADERS, ...headers },
             body: body === undefined ? undefined : JSON.stringify(body),
         });
 
@@ -114,9 +119,18 @@ export function createCheckoutApi(config: CheckoutApiConfig) {
         removeCoupon() {
             return request('DELETE', 'coupons') as Promise<boolean>;
         },
-        /** Place the order: save payment + billing, returns the order id. */
-        placeOrder(payload: unknown) {
-            return request('POST', 'payment-information', payload);
+        /**
+         * Place the order: save payment + billing, returns the order id. A
+         * reCAPTCHA token travels in the header Magento's REST validator reads,
+         * not in the body — the body is the payment payload the platform parses.
+         */
+        placeOrder(payload: unknown, reCaptchaToken = '') {
+            return request(
+                'POST',
+                'payment-information',
+                payload,
+                reCaptchaToken ? { 'X-ReCaptcha': reCaptchaToken } : {},
+            );
         },
     };
 }

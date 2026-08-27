@@ -79,6 +79,30 @@ class CheckoutConfigTest extends TestCase
      * the HTML is served from the page cache to every visitor, so a single private
      * key here is a cart leaking across customers.
      */
+    /**
+     * The site key is the same for every shopper, so the place-order challenge
+     * belongs in the half that may reach a cached page. Putting it in the
+     * private half would delay the widget until the section request lands, and
+     * the shopper would meet the place-order button before the challenge.
+     */
+    public function testTheChallengeTravelsWithTheCacheableHalf(): void
+    {
+        $public = $this->viewModel(
+            isLoggedIn: false,
+            maskedId: 'guestmask123',
+            reCaptchaConfig: ['formKey' => 'place_order', 'sitekey' => 'site-key', 'invisible' => true]
+        )->getPublicConfig();
+
+        $this->assertSame('site-key', $public['recaptcha']['sitekey']);
+    }
+
+    public function testAStoreWithNoChallengeCarriesNone(): void
+    {
+        $public = $this->viewModel(isLoggedIn: false, maskedId: 'guestmask123')->getPublicConfig();
+
+        $this->assertSame([], $public['recaptcha']);
+    }
+
     public function testPublicConfigCarriesNoPrivateKeys(): void
     {
         $public = $this->viewModel(isLoggedIn: true, maskedId: 'guestmask123')->getPublicConfig();
@@ -119,7 +143,7 @@ class CheckoutConfigTest extends TestCase
         sort($whole);
         sort($halves);
         $this->assertSame($halves, $whole);
-        $this->assertCount(20, $whole);
+        $this->assertCount(21, $whole);
     }
 
     public function testPrivateDataCarriesTheShippingChoiceHeldOnTheQuote(): void
@@ -344,7 +368,8 @@ class CheckoutConfigTest extends TestCase
         bool $shellCacheable = false,
         array $addresses = [],
         ?string $defaultShippingId = null,
-        array $quoteShipping = []
+        array $quoteShipping = [],
+        array $reCaptchaConfig = []
     ): CheckoutConfig {
         return $this->checkoutConfig(
             $isLoggedIn,
@@ -355,7 +380,8 @@ class CheckoutConfigTest extends TestCase
             $shellCacheable,
             $addresses,
             $defaultShippingId,
-            $quoteShipping
+            $quoteShipping,
+            $reCaptchaConfig
         );
     }
 }

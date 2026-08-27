@@ -4,6 +4,7 @@ import { nextTick } from "vue";
 import { useCheckout, CheckoutStep, SHIPPING_SYNC_DEBOUNCE_MS } from "./useCheckout.ts";
 import { CheckoutOperation } from "./checkout-events.ts";
 import events, { dispatched, __reset as __resetEvents } from "MageObsidian_ModernFrontend::js/events";
+import { reset as resetReCaptcha, setToken } from "MageObsidian_Storefront::js/recaptcha";
 
 const GUEST_CONFIG = {
     isLoggedIn: false,
@@ -198,6 +199,7 @@ describe("useCheckout — payment, coupon and order", () => {
     beforeEach(() => {
         setActivePinia(createPinia());
         vi.restoreAllMocks();
+        resetReCaptcha();
     });
 
     function ready() {
@@ -257,6 +259,36 @@ describe("useCheckout — payment, coupon and order", () => {
         expect(body.paymentMethod).toEqual({ method: "checkmo" });
         expect(body.billingAddress).toMatchObject({ city: "Los Angeles", region_id: 12, country_id: "US" });
         expect(assign).toHaveBeenCalledWith("https://shop.test/checkout/onepage/success/");
+    });
+
+    /**
+     * The platform validates the place-order challenge on the REST call itself,
+     * reading the token from a header rather than from the payment payload. A
+     * token sent in the body would be ignored and the order refused.
+     */
+    it("sends the reCAPTCHA token in the header the platform reads", async () => {
+        Object.defineProperty(window, "location", { value: { assign: vi.fn() }, writable: true });
+        setToken("token-from-widget");
+        const fetchMock = mockFetch(424242);
+        const checkout = ready();
+        checkout.selectPayment("checkmo");
+
+        await checkout.placeOrder();
+
+        expect(fetchMock.mock.calls[0][1].headers["X-ReCaptcha"]).toBe("token-from-widget");
+    });
+
+    // A store that configured no challenge must not have a header invented for
+    // it: Magento rejects an empty token outright when validation is on.
+    it("sends no reCAPTCHA header when the store configured no challenge", async () => {
+        Object.defineProperty(window, "location", { value: { assign: vi.fn() }, writable: true });
+        const fetchMock = mockFetch(424242);
+        const checkout = ready();
+        checkout.selectPayment("checkmo");
+
+        await checkout.placeOrder();
+
+        expect(fetchMock.mock.calls[0][1].headers).not.toHaveProperty("X-ReCaptcha");
     });
 
     it("refuses to place an order with no payment method", async () => {

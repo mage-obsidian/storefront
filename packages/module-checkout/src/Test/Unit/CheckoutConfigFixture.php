@@ -31,6 +31,7 @@ use MageObsidian\Checkout\Model\Shell\Gate;
 use MageObsidian\Checkout\ViewModel\CartItems;
 use MageObsidian\Checkout\ViewModel\CheckoutConfig;
 use MageObsidian\ModernFrontend\Model\Config\ConfigProvider;
+use MageObsidian\Storefront\ViewModel\ReCaptcha;
 
 /**
  * Builds a real CheckoutConfig over mocked Magento collaborators.
@@ -50,7 +51,8 @@ trait CheckoutConfigFixture
         bool $shellCacheable = false,
         array $addresses = [],
         ?string $defaultShippingId = null,
-        array $quoteShipping = []
+        array $quoteShipping = [],
+        array $reCaptchaConfig = []
     ): CheckoutConfig {
         $quote = $this->getMockBuilder(Quote::class)
             ->disableOriginalConstructor()
@@ -131,6 +133,9 @@ trait CheckoutConfigFixture
         $gate = $this->createMock(Gate::class);
         $gate->method('isCacheable')->willReturn($shellCacheable);
 
+        $reCaptcha = $this->createMock(ReCaptcha::class);
+        $reCaptcha->method('configFor')->willReturn($reCaptchaConfig);
+
         return new CheckoutConfig(
             $checkoutSession,
             $customerSession,
@@ -144,7 +149,8 @@ trait CheckoutConfigFixture
             $configProvider,
             $scopeConfig,
             $agreementsConfigProvider,
-            $gate
+            $gate,
+            $reCaptcha
         );
     }
 

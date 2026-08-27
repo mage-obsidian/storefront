@@ -3,6 +3,7 @@ import { mount } from "@vue/test-utils";
 import { setActivePinia, createPinia } from "pinia";
 import ReviewStep from "./ReviewStep.vue";
 import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
+import { mounted, reset as resetReCaptcha } from "MageObsidian_Storefront::js/recaptcha";
 
 const CONFIG = {
     isLoggedIn: false,
@@ -32,11 +33,35 @@ describe("ReviewStep", () => {
         checkout.email = "guest@shop.test";
         checkout.paymentMethods = [{ code: "checkmo", title: "Check / Money order" }];
         checkout.selectedPayment = "checkmo";
+        resetReCaptcha();
     });
 
     function render() {
         return mount(ReviewStep, { global: { plugins: [pinia] } });
     }
+
+    /**
+     * The challenge only exists after hydration — this step is code-split and
+     * never server-rendered — so the element has to be handed to the vendor's
+     * renderer on mount rather than found on the page.
+     */
+    it("hands the challenge element over when the store configured one", () => {
+        checkout.init({ ...CONFIG, recaptcha: { formKey: "place_order", sitekey: "site-key" } });
+        const store = useCheckout();
+        store.reCaptcha = { formKey: "place_order", sitekey: "site-key" };
+
+        const wrapper = render();
+
+        expect(wrapper.find("[data-recaptcha]").exists()).toBe(true);
+        expect(mounted).toHaveLength(1);
+    });
+
+    it("renders no challenge at all when the store configured none", () => {
+        const wrapper = render();
+
+        expect(wrapper.find("[data-recaptcha]").exists()).toBe(false);
+        expect(mounted).toHaveLength(0);
+    });
 
     it("recaps the email and chosen payment", () => {
         const wrapper = render();

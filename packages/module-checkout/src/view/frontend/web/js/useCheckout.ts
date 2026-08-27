@@ -13,6 +13,7 @@ import { createCheckoutApi } from 'MageObsidian_Checkout::js/useCheckoutApi';
 import { useCustomerData } from 'MageObsidian_ModernFrontend::js/customer-data';
 import { emptyAddress, missingFields, toRestAddress, type AddressData } from 'MageObsidian_Storefront::js/address';
 import { formatCurrency } from 'MageObsidian_Storefront::js/currency';
+import { tokenFor } from 'MageObsidian_Storefront::js/recaptcha';
 import events from 'MageObsidian_ModernFrontend::js/events';
 import { MutationPhase } from 'mage-obsidian/runtime/mutationEvent.ts';
 import {
@@ -144,6 +145,8 @@ async function runFlow<Result>(
 
 ensureSharedPinia();
 
+const RECAPTCHA_FORM = 'place_order';
+
 export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const step = ref<CheckoutStep>(CheckoutStep.Identification);
     const furthestStepIndex = ref(0);
@@ -190,6 +193,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const agreementsEnabled = ref(false);
     const agreements = ref<Agreement[]>([]);
     const acceptedAgreements = ref<Array<number | string>>([]);
+    const reCaptcha = ref<Record<string, unknown> | null>(null);
 
     let publicSeeded = false;
     let restBaseUrl = '';
@@ -231,6 +235,8 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         const agreementsCfg = cfg.agreements || {};
         agreementsEnabled.value = !!agreementsCfg.enabled;
         agreements.value = Array.isArray(agreementsCfg.items) ? (agreementsCfg.items as Agreement[]) : [];
+        const captcha = cfg.recaptcha || {};
+        reCaptcha.value = captcha.sitekey ? (captcha as Record<string, unknown>) : null;
     }
 
     /**
@@ -673,7 +679,9 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
             if (!isLoggedIn.value) {
                 payload.email = email.value;
             }
-            const orderId = (await api.placeOrder(payload)) as number;
+            // The platform validates the place-order challenge on the REST
+            // call itself; an empty token means the store configured none.
+            const orderId = (await api.placeOrder(payload, (await tokenFor(RECAPTCHA_FORM)) ?? '')) as number;
             // REST place-order does not bump the section version cookie, so the
             // cart badge would stay stale; force a refresh before leaving.
             try {
@@ -839,6 +847,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         maxSummaryItems,
         agreementsEnabled,
         agreements,
+        reCaptcha,
         acceptedAgreements,
         requiredAgreementIds,
         allRequiredAccepted,

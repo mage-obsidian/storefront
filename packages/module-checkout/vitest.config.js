@@ -75,6 +75,11 @@ export default defineConfig({
             "MageObsidian_Checkout::js/useShippingEstimator": fileURLToPath(
                 new URL("./src/view/frontend/web/js/useShippingEstimator.ts", import.meta.url),
             ),
+            // The vendor's widget cannot load in a unit test; the stub records what
+            // was mounted and dictates the token the store sends.
+            "MageObsidian_Storefront::js/recaptcha": fileURLToPath(
+                new URL("./src/Test/Js/stubs/recaptcha.ts", import.meta.url),
+            ),
             "MageObsidian_Storefront::js/currency": fileURLToPath(
                 new URL("../module-storefront/src/view/frontend/web/js/currency.ts", import.meta.url),
             ),

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
 import Agreements from "MageObsidian_Checkout::checkout/Agreements";
+import { mountReCaptcha } from "MageObsidian_Storefront::js/recaptcha";
 
 interface ReviewLabels {
     couponHeading?: string;
@@ -53,6 +54,18 @@ function remove(): Promise<void> {
 
 const shippingBusy = computed(() => checkout.savingShipping || checkout.shippingSyncPending);
 const shippingPending = computed(() => checkout.shippingDirty || shippingBusy.value);
+
+// The challenge is rendered by the island rather than by the server: this step
+// only exists after hydration, and the vendor's widget has to be handed a live
+// element. The settings come down with the store-scoped half of the config.
+const reCaptchaEl = ref<HTMLElement | null>(null);
+const reCaptchaSettings = computed(() => (checkout.reCaptcha ? JSON.stringify(checkout.reCaptcha) : ""));
+
+onMounted(() => {
+    if (reCaptchaEl.value) {
+        void mountReCaptcha(reCaptchaEl.value).catch(() => undefined);
+    }
+});
 
 const paymentTitle = (): string =>
     checkout.paymentMethods.find((m) => m.code === checkout.selectedPayment)?.title ?? checkout.selectedPayment;
@@ -122,6 +135,13 @@ const paymentTitle = (): string =>
         </section>
 
         <Agreements />
+
+        <div
+            v-if="reCaptchaSettings"
+            ref="reCaptchaEl"
+            class="field-recaptcha"
+            :data-recaptcha="reCaptchaSettings"
+        ></div>
 
         <div class="checkout-cta flex flex-col gap-3">
             <button
