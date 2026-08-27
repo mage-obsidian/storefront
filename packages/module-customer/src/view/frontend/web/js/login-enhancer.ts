@@ -1,11 +1,15 @@
 import { enhanceValidation, required, email } from "MageObsidian_Storefront::js/form-validation";
 import { setButtonBusy } from "MageObsidian_Storefront::js/button-state";
-import { useAuth } from "MageObsidian_Customer::js/useAuth";
+import { useAuth, CAPTCHA_FORM_ID } from "MageObsidian_Customer::js/useAuth";
 
 // Login page entry (loaded only here, so the customer-data/Pinia cost is paid
 // only where it's used). The native <form> POSTs to loginPost without JS; this
 // adds inline validation and an AJAX sign-in that refreshes the header/cart
 // before redirecting.
+
+function captchaAnswer(form: HTMLFormElement): string {
+    return form.querySelector<HTMLInputElement>(`input[name="captcha[${CAPTCHA_FORM_ID}]"]`)?.value ?? "";
+}
 
 function init(): void {
     const form = document.querySelector<HTMLFormElement>("[data-login-form]");
@@ -38,6 +42,11 @@ function init(): void {
                     url,
                     username: values["login[username]"],
                     password: values["login[password]"],
+                    // The challenge is only in the form when the platform asked
+                    // for one, and the ajax endpoint reads it from the body: a
+                    // shopper who answers it correctly is refused if this is not
+                    // carried across, while the no-JS form would have let them in.
+                    captchaString: captchaAnswer(form),
                 });
 
                 if (result.ok) {
