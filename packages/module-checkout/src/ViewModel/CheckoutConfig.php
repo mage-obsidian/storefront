@@ -181,7 +181,7 @@ class CheckoutConfig implements ArgumentInterface
             'currencyCode' => $this->currencyCode(),
             'baseUrl' => $baseUrl,
             'restBaseUrl' => $baseUrl . 'rest/' . $storeCode . '/V1/',
-            'successUrl' => $baseUrl . 'checkout/onepage/success/',
+            'successUrl' => $baseUrl . 'mage-obsidian-checkout/onepage/handover/',
             'layoutMode' => $this->configProvider->getCheckoutLayoutMode(),
             'guestCheckout' => $this->scopeConfig->isSetFlag('checkout/options/guest_checkout', ScopeInterface::SCOPE_STORE),
             'guestCheckoutLogin' => $this->scopeConfig->isSetFlag('checkout/options/enable_guest_checkout_login', ScopeInterface::SCOPE_STORE),

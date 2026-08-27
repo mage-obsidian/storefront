@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/routes.xsd">
+    <router id="standard">
+        <route id="mage_obsidian_checkout" frontName="mage-obsidian-checkout">
+            <module name="MageObsidian_Checkout"/>
+        </route>
+    </router>
+</config>
