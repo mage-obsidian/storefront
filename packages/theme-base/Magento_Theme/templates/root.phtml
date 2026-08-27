@@ -10,7 +10,10 @@
         <?= /* @noEscape */ $headContent ?>
         <?= /* @noEscape */ $headAdditional ?>
     </head>
-    <body data-container="body"
+    <?php /* `html-body` is not decoration: Page Builder scopes every rule it
+        generates to `#html-body [data-pb-style="..."]`, so content saved in the
+        admin renders with none of its styling when the id is missing. */ ?>
+    <body id="html-body" data-container="body"
         <?= /* @noEscape */ $bodyAttributes ?>>
         <?= /* @noEscape */ $layoutContent ?>
     </body>
