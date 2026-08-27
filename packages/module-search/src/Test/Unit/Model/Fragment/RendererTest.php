@@ -57,10 +57,7 @@ class RendererTest extends TestCase
 
     private function block(string $html): AbstractBlock
     {
-        $block = $this->getMockBuilder(AbstractBlock::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['toHtml'])
-            ->getMockForAbstractClass();
+        $block = $this->createMock(AbstractBlock::class);
         $block->method('toHtml')->willReturn($html);
 
         return $block;
