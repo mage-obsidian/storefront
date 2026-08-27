@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+  The product-list widget an administrator places in a CMS page or block.
+
+  Magento_CatalogWidget's own layout is suppressed like every other core module's,
+  so the renderer list its block looks up would not exist. It is re-declared here
+  rather than dropped: the collection, the conditions and the pager are all the
+  core block's work, and only the template is this theme's — swapped at render by
+  MageObsidian\Catalog\Plugin\CatalogWidget\RenderProductListWidget, because a
+  widget instance stores the template it was placed with.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <block class="Magento\Framework\View\Element\RendererList" name="category.product.type.widget.details.renderers">
+            <block class="Magento\Framework\View\Element\Template" name="category.product.type.details.renderers.default" as="default"/>
+        </block>
+    </body>
+</page>
