@@ -35,6 +35,15 @@
                 </arguments>
                 <!-- Data source only: rating types/options + the native post URL. -->
                 <block class="Magento\Review\Block\Form" name="product.review.form" as="form"/>
+                <!-- The reCAPTCHA slot. Renders nothing unless the store configured a
+                     challenge for this form. -->
+                <block class="MageObsidian\ModernFrontend\Block\Template" name="review.recaptcha" as="recaptcha"
+                       template="Magento_ReCaptchaFrontendUi::recaptcha.twig">
+                    <arguments>
+                        <argument name="view_model" xsi:type="object">MageObsidian\Storefront\ViewModel\ReCaptcha</argument>
+                        <argument name="recaptcha_for" xsi:type="string">product_review</argument>
+                    </arguments>
+                </block>
             </block>
         </referenceBlock>
     </body>
