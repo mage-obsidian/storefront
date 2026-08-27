@@ -28,24 +28,50 @@ class ProductReviewsTest extends TestCase
 
     private function vote(int $percent): object
     {
-        $vote = $this->getMockBuilder(\stdClass::class)->addMethods(['getPercent'])->getMock();
-        $vote->method('getPercent')->willReturn($percent);
+        return new class ($percent) {
+            public function __construct(private readonly int $percent)
+            {
+            }
 
-        return $vote;
+            public function getPercent(): int
+            {
+                return $this->percent;
+            }
+        };
     }
 
     private function review(string $title, array $votePercents): object
     {
-        $review = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['getTitle', 'getDetail', 'getNickname', 'getCreatedAt', 'getRatingVotes'])
-            ->getMock();
-        $review->method('getTitle')->willReturn($title);
-        $review->method('getDetail')->willReturn('Body');
-        $review->method('getNickname')->willReturn('Ada');
-        $review->method('getCreatedAt')->willReturn('2026-06-21 00:00:00');
-        $review->method('getRatingVotes')->willReturn(array_map(fn ($p) => $this->vote($p), $votePercents));
+        return new class ($title, array_map(fn ($p) => $this->vote($p), $votePercents)) {
+            public function __construct(private readonly string $title, private readonly array $votes)
+            {
+            }
 
-        return $review;
+            public function getTitle(): string
+            {
+                return $this->title;
+            }
+
+            public function getDetail(): string
+            {
+                return 'Body';
+            }
+
+            public function getNickname(): string
+            {
+                return 'Ada';
+            }
+
+            public function getCreatedAt(): string
+            {
+                return '2026-06-21 00:00:00';
+            }
+
+            public function getRatingVotes(): array
+            {
+                return $this->votes;
+            }
+        };
     }
 
     private function subject(?object $product, array $reviews): ProductReviews
@@ -72,14 +98,22 @@ class ProductReviewsTest extends TestCase
 
     private function product(): object
     {
-        $product = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['getId', 'getName', 'getProductUrl'])
-            ->getMock();
-        $product->method('getId')->willReturn(682);
-        $product->method('getName')->willReturn('Helios Tank');
-        $product->method('getProductUrl')->willReturn('https://shop.test/helios.html');
+        return new class {
+            public function getId(): int
+            {
+                return 682;
+            }
 
-        return $product;
+            public function getName(): string
+            {
+                return 'Helios Tank';
+            }
+
+            public function getProductUrl(): string
+            {
+                return 'https://shop.test/helios.html';
+            }
+        };
     }
 
     public function testMapsApprovedReviewsWithAverageVotePercent(): void
