@@ -13,7 +13,17 @@
     <body>
         <referenceContainer name="content">
             <block class="Magento\SendFriend\Block\Send" name="sendfriend.send"
-                   template="Magento_SendFriend::send.twig"/>
+                   template="Magento_SendFriend::send.twig">
+                <!-- The reCAPTCHA slot. Renders nothing unless the store configured a
+                     challenge for this form. -->
+                <block class="MageObsidian\ModernFrontend\Block\Template" name="sendfriend.recaptcha" as="recaptcha"
+                       template="Magento_ReCaptchaFrontendUi::recaptcha.twig">
+                    <arguments>
+                        <argument name="view_model" xsi:type="object">MageObsidian\Storefront\ViewModel\ReCaptcha</argument>
+                        <argument name="recaptcha_for" xsi:type="string">sendfriend</argument>
+                    </arguments>
+                </block>
+            </block>
         </referenceContainer>
     </body>
 </page>
