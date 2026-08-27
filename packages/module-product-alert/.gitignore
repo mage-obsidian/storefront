@@ -4,3 +4,4 @@
 /package.xml
 .phpunit.result.cache
 .idea
+.phpunit.cache
