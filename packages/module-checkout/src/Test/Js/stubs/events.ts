@@ -26,6 +26,10 @@ export const events = {
         };
     },
 
+    observersOf(event: string): string[] {
+        return (observers[event] ?? []).map((observer) => observer.name);
+    },
+
     onDispatch(hook: DispatchHook): () => void {
         hooks.push(hook);
         return () => {
