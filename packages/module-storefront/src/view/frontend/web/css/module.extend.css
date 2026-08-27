@@ -720,3 +720,394 @@
 [data-mage-island]:not([data-mage-island-ready])::after {
   content: none;
 }
+
+/* The platform's human-verification challenges. Both slots are empty markup
+   until the store's configuration asks for one, so these rules only ever apply
+   on a form that is actually carrying a challenge. */
+.field-captcha {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.field-captcha__challenge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.field-captcha__image {
+  border: 1px solid var(--color-ash-200);
+  border-radius: var(--radius-edge);
+  background: var(--color-paper);
+}
+
+.field-recaptcha {
+  /* The widget is an iframe of a fixed size the vendor controls; give it room
+     without letting it push a narrow form sideways. */
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* ============================================================
+   Page Builder content.
+
+   The markup is the platform's: what a merchant saves in the admin comes out as
+   `[data-content-type]` elements whose own styling lives in the stylesheet Page
+   Builder writes beside it. What is missing on a theme that does not descend
+   from Luma is the layout those attributes assume — the row container, the
+   column flexbox, the tab and slide mechanics — so that is what is here. The
+   author's own choices are never overridden.
+   ============================================================ */
+
+[data-content-type="row"][data-appearance="contained"] {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--shell-max, 90rem);
+  padding-inline: 1rem;
+}
+
+@media (min-width: 768px) {
+  [data-content-type="row"][data-appearance="contained"] {
+    padding-inline: 2rem;
+  }
+}
+
+[data-content-type="row"][data-appearance="full-width"] > div {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--shell-max, 90rem);
+}
+
+[data-content-type="row"][data-appearance="full-bleed"] {
+  width: 100%;
+}
+
+/* A column group is a flex row of percentage-width columns; the widths
+   themselves are the author's and arrive with the content. */
+.pagebuilder-column-group,
+.pagebuilder-column-line {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+/* The width of a column is the author's, and it arrives as an id-scoped rule.
+   All this adds is the box model it assumes. */
+.pagebuilder-column {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* Stacking on a narrow screen has to beat the author's own width, and that
+   arrives as `#html-body [data-pb-style="…"]` — an id selector. There is no
+   specificity that wins it, which is why this is the one place the theme
+   overrides an authored choice by force. */
+@media (max-width: 767px) {
+  .pagebuilder-column-group,
+  .pagebuilder-column-line {
+    flex-direction: column;
+  }
+
+  .pagebuilder-column {
+    flex-basis: auto !important;
+    width: 100% !important;
+  }
+}
+
+[data-content-type="image"] {
+  display: block;
+}
+
+[data-content-type="image"] img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+[data-content-type="image"] figcaption {
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-ink-soft);
+}
+
+[data-content-type="divider"] .pagebuilder-divider {
+  border: 0;
+  border-top: 1px solid var(--color-ash-200);
+}
+
+/* Page Builder's three button appearances, expressed with this theme's own
+   button so an authored call to action does not look pasted in. */
+.pagebuilder-button-primary,
+.pagebuilder-button-secondary,
+.pagebuilder-button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-edge);
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  text-decoration: none;
+  transition:
+    color 0.15s var(--ease-obsidian),
+    background-color 0.15s var(--ease-obsidian),
+    border-color 0.15s var(--ease-obsidian);
+}
+
+.pagebuilder-button-primary {
+  border-color: var(--color-ink);
+  background-color: var(--color-ink);
+  color: var(--color-alabaster);
+}
+
+.pagebuilder-button-primary:hover {
+  background-color: transparent;
+  color: var(--color-ink);
+}
+
+.pagebuilder-button-secondary {
+  border-color: var(--color-ash-300);
+  color: var(--color-ink-soft);
+}
+
+.pagebuilder-button-secondary:hover {
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+}
+
+.pagebuilder-button-link {
+  padding-inline: 0;
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+[data-content-type="buttons"] [data-content-type="button-item"] {
+  display: inline-block;
+}
+
+/* A banner is a background with content laid over it; the overlay colour and the
+   background image are the author's, the stacking is not. */
+.pagebuilder-banner-wrapper {
+  position: relative;
+  background-clip: padding-box;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  overflow-wrap: break-word;
+}
+
+.pagebuilder-banner-wrapper .pagebuilder-overlay {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  transition: background-color 0.15s var(--ease-obsidian);
+}
+
+.pagebuilder-banner-wrapper .pagebuilder-poster-overlay {
+  justify-content: center;
+}
+
+.pagebuilder-banner-wrapper .pagebuilder-poster-content {
+  width: 100%;
+}
+
+.pagebuilder-banner-wrapper .pagebuilder-banner-button {
+  margin-top: 1.25rem;
+  max-width: 100%;
+  text-align: inherit;
+  transition: opacity 0.15s var(--ease-obsidian);
+}
+
+/* Video and map both arrive as a responsive box holding an iframe. */
+.pagebuilder-video-container {
+  position: relative;
+  display: block;
+  padding-top: max(56.25%, 1rem);
+}
+
+.pagebuilder-video-container iframe,
+.pagebuilder-video-container video,
+[data-content-type="map"] iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+[data-content-type="map"] {
+  position: relative;
+  display: block;
+  height: 300px;
+}
+
+/* Tabs. Server markup is a list of headers and a stack of panels; the enhancer
+   turns them into a tab set, and this keeps the closed panels out of the way
+   whether or not it ever runs — a panel with no `hidden` is simply visible, so
+   the content is readable with no JavaScript at all. */
+[data-content-type="tabs"] .tabs-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--color-ash-200);
+}
+
+[data-content-type="tabs"] .tab-header {
+  margin: 0;
+  background: none;
+}
+
+[data-content-type="tabs"] .tab-title {
+  display: block;
+  padding: 0.75rem 1.25rem;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+}
+
+[data-content-type="tabs"] .tab-header[aria-selected="true"] .tab-title,
+[data-content-type="tabs"] .tab-title[aria-selected="true"] {
+  color: var(--color-ink);
+  box-shadow: inset 0 -2px 0 0 var(--color-ink);
+}
+
+[data-content-type="tabs"] .tabs-content {
+  padding-block: 1.5rem;
+}
+
+[data-content-type="tabs"] [data-content-type="tab-item"][hidden] {
+  display: none;
+}
+
+/* A slider is a scroll-snapping strip: no library, no layout thrash, and it
+   still scrolls with a finger when the enhancer never loads. */
+[data-content-type="slider"] {
+  position: relative;
+}
+
+.pagebuilder-slider::-webkit-scrollbar {
+  display: none;
+}
+
+.pagebuilder-slider > [data-content-type="slide"] {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+}
+
+/* The shared carousel primitive (js/slider). Page Builder's slider is one
+   caller; a template opts in with `data-slider` on the scrolling element. The
+   strip itself is a scroll-snapping list, so it works with no script at all. */
+.slider,
+.pagebuilder-slider {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.slider::-webkit-scrollbar {
+  display: none;
+}
+
+.slider > [data-slider-slide] {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+}
+
+.slider__dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.slider__dot {
+  height: 0.5rem;
+  width: 0.5rem;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--color-ash-300);
+  padding: 0;
+  cursor: pointer;
+}
+
+.slider__dot[aria-current="true"] {
+  background: var(--color-ink);
+}
+
+.slider__arrow {
+  display: inline-flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-ash-300);
+  border-radius: 9999px;
+  background: var(--color-paper);
+  cursor: pointer;
+}
+
+/* Page Builder lets an author hide an element on one breakpoint. */
+@media (max-width: 767px) {
+  .pagebuilder-mobile-hidden {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .pagebuilder-mobile-only {
+    display: none;
+  }
+}
+
+/* The banner that says an administrator is inside this customer's session. It
+   sits above everything because it is not part of the shop: it is the only
+   thing on the page that says whose session this is. */
+.assisted-session {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: var(--color-obsidian-950);
+  padding: 0.625rem 1rem;
+  text-align: center;
+  color: var(--color-on-obsidian);
+}
+
+.assisted-session__text {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+.assisted-session__close {
+  color: var(--color-on-obsidian);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.field-check-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

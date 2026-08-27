@@ -56,4 +56,14 @@
         <plugin name="mage_obsidian_wrap_cms_block_content"
                 type="MageObsidian\Storefront\Plugin\Cms\WrapAuthoredContent"/>
     </type>
+
+    <!-- Every piece of authored content goes through this filter, so hooking it
+         rather than a block treats Page Builder content the same on a CMS page,
+         a CMS block, a product description and a widget. The high sort order
+         puts it after Page Builder's own plugin on the same method. -->
+    <type name="Magento\Framework\Filter\Template">
+        <plugin name="mage_obsidian_secure_authored_styles"
+                type="MageObsidian\Storefront\Plugin\PageBuilder\SecureAuthoredStyles"
+                sortOrder="100"/>
+    </type>
 </config>
