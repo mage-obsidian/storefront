@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+  Link preview metadata. Core's handle is suppressed with the rest of
+  Magento_Catalog, so without this a shared product previews as a bare URL. The
+  set is the one core emits; the ViewModel decides which of them there is
+  anything to say.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="head.additional">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="opengraph.general"
+                   template="Magento_Catalog::product/view/opengraph.twig">
+                <arguments>
+                    <argument name="open_graph" xsi:type="object">MageObsidian\Catalog\ViewModel\ProductOpenGraph</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+    </body>
+</page>
