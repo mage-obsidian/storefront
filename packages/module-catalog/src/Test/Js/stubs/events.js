@@ -13,6 +13,10 @@ export const events = {
         };
     },
 
+    observersOf(event) {
+        return (observers[event] ?? []).map((observer) => observer.name);
+    },
+
     async dispatch(event, data) {
         for (const observer of (observers[event] ?? []).slice()) {
             await observer(data);
