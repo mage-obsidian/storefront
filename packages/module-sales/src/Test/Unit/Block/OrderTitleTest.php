@@ -40,14 +40,17 @@ class OrderTitleTest extends TestCase
     private function invokePrepareLayout(OrderTitle $block): void
     {
         $method = new \ReflectionMethod($block, '_prepareLayout');
-        $method->setAccessible(true);
         $method->invoke($block);
     }
 
     public function testSetsTitleFromCurrentOrder(): void
     {
-        $order = $this->getMockBuilder(\stdClass::class)->addMethods(['getRealOrderId'])->getMock();
-        $order->method('getRealOrderId')->willReturn('000000123');
+        $order = new class {
+            public function getRealOrderId(): string
+            {
+                return '000000123';
+            }
+        };
 
         $title = $this->createMock(PageTitle::class);
         $title->expects($this->once())
