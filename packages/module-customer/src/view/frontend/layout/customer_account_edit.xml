@@ -17,6 +17,34 @@
             <block class="MageObsidian\ModernFrontend\Block\Template" name="account.edit"
                    as="account_content" template="Magento_Customer::account/edit.twig" cacheable="false">
                 <block class="Magento\Customer\Block\Form\Edit" name="customer_edit" as="form_data"/>
+                <!-- The customer's own decision about being assisted. The core
+                     module's layout is suppressed, so the slot is declared here. -->
+                <block class="MageObsidian\ModernFrontend\Block\Template" name="customer.edit.assistance" as="assistance"
+                       template="Magento_LoginAsCustomerAssistance::shopping-assistance.twig">
+                    <arguments>
+                        <argument name="view_model" xsi:type="object">Magento\LoginAsCustomerAssistance\ViewModel\ShoppingAssistanceViewModel</argument>
+                    </arguments>
+                </block>
+                <!-- The platform's own challenges. Both blocks render an empty string
+                     until the store's configuration demands one, and the templates
+                     put them where the form can carry their answer. `cacheable`
+                     follows core: the image challenge is per session, the
+                     reCAPTCHA site key is not. -->
+                <block class="Magento\Captcha\Block\Captcha\DefaultCaptcha" name="customer.edit.captcha" as="captcha"
+                       template="Magento_Captcha::default.twig" cacheable="false">
+                    <arguments>
+                        <argument name="form_id" xsi:type="string">user_edit</argument>
+                        <argument name="img_width" xsi:type="number">230</argument>
+                        <argument name="img_height" xsi:type="number">50</argument>
+                    </arguments>
+                </block>
+                <block class="MageObsidian\ModernFrontend\Block\Template" name="customer.edit.recaptcha" as="recaptcha"
+                       template="Magento_ReCaptchaFrontendUi::recaptcha.twig">
+                    <arguments>
+                        <argument name="view_model" xsi:type="object">MageObsidian\Storefront\ViewModel\ReCaptcha</argument>
+                        <argument name="recaptcha_for" xsi:type="string">customer_edit</argument>
+                    </arguments>
+                </block>
             </block>
         </referenceBlock>
     </body>
