@@ -6,10 +6,18 @@
 
 /**
  * @var \Magento\Theme\Block\Html\Header\CriticalCss $criticalCssViewModel
+ * @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
  *
+ * Rendered through SecureHtmlRenderer so the fragment's hash reaches the
+ * response's own policy: a hand-written <style> is invisible to the platform and
+ * an enforcing policy drops the critical CSS, which includes the cloak rule that
+ * hides every island until it mounts.
  */
 ?>
 <?php $criticalCssViewModel = $block->getData('criticalCssViewModel'); ?>
-<style type="text/css" data-type="criticalCss">
-    <?= /* @noEscape */ $criticalCssViewModel->getCriticalCssData() ?>
-</style>
+<?= /* @noEscape */ $secureRenderer->renderTag(
+    'style',
+    ['type' => 'text/css', 'data-type' => 'criticalCss'],
+    (string)$criticalCssViewModel->getCriticalCssData(),
+    false
+) ?>
