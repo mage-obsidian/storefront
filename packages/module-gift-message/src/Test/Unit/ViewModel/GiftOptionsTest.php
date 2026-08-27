@@ -81,12 +81,10 @@ class GiftOptionsTest extends TestCase
 
     public function testOrderMessageResolvesFromTheQuote(): void
     {
-        // getGiftMessageId is a magic getter on Quote → addMethods.
-        $quote = $this->getMockBuilder(Quote::class)
-            ->disableOriginalConstructor()
-            ->addMethods(['getGiftMessageId'])
-            ->getMock();
-        $quote->method('getGiftMessageId')->willReturn(5);
+        $quote = $this->createMock(Quote::class);
+        $quote->method('__call')->willReturnCallback(
+            static fn (string $method): ?int => $method === 'getGiftMessageId' ? 5 : null
+        );
         $session = $this->createMock(CheckoutSession::class);
         $session->method('getQuote')->willReturn($quote);
 
