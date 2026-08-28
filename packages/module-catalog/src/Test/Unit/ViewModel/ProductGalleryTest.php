@@ -34,6 +34,19 @@ class ProductGalleryTest extends TestCase
         return new ProductGallery($registry, $imageHelper ?? $this->createMock(ImageHelper::class));
     }
 
+    private function galleryProduct(): Product
+    {
+        $product = $this->createMock(Product::class);
+        $product->method('getName')->willReturn('Tee');
+        $product->method('getData')->with('image')->willReturn('/a.jpg');
+        $product->method('getMediaGalleryImages')->willReturn([
+            new DataObject(['file' => '/a.jpg', 'media_type' => 'image', 'label' => 'Front', 'url' => '/full/a.jpg', 'disabled' => 0]),
+            new DataObject(['file' => '/b.jpg', 'media_type' => 'image', 'label' => 'Back', 'url' => '/full/b.jpg', 'disabled' => 0]),
+        ]);
+
+        return $product;
+    }
+
     private function imageHelper(string $url): ImageHelper
     {
         $helper = $this->createMock(ImageHelper::class);
@@ -82,5 +95,38 @@ class ProductGalleryTest extends TestCase
         $this->assertTrue($tiles[0]['isMain']);
         $this->assertSame('https://img/base.jpg', $tiles[0]['large']);
         $this->assertSame('https://img/base.jpg', $tiles[0]['full']);
+    }
+
+    public function testMainImageIsTheTileTheGalleryRendersFirst(): void
+    {
+        $viewModel = $this->viewModel($this->galleryProduct(), $this->imageHelper('https://img/x.jpg'));
+
+        $this->assertSame($viewModel->getImages()[0], $viewModel->getMainImage());
+        $this->assertSame('Front', $viewModel->getMainImage()['label']);
+    }
+
+    public function testMainImageIsEmptyWithoutAProduct(): void
+    {
+        $this->assertSame([], $this->viewModel(null)->getMainImage());
+    }
+
+    public function testSizesIsTheOneHintBothTheImgAndItsPreloadCarry(): void
+    {
+        $this->assertSame(
+            ProductGallery::LARGE_SIZES,
+            $this->viewModel(null)->getLargeSizes()
+        );
+    }
+
+    public function testTilesAreBuiltOnceSoTheHeadPreloadCostsNothing(): void
+    {
+        $registry = $this->createMock(Registry::class);
+        $registry->expects($this->once())->method('registry')->willReturn($this->galleryProduct());
+        $viewModel = new ProductGallery($registry, $this->imageHelper('https://img/x.jpg'));
+
+        $first = $viewModel->getImages();
+
+        $this->assertSame($first, $viewModel->getImages());
+        $this->assertSame($first[0], $viewModel->getMainImage());
     }
 }

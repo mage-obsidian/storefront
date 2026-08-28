@@ -23,6 +23,14 @@
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <update handle="catalog_product_opengraph"/>
     <body>
+        <referenceContainer name="head.preload">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="product.gallery.preload"
+                   template="Magento_Catalog::product/view/gallery-preload.twig">
+                <arguments>
+                    <argument name="gallery" xsi:type="object">MageObsidian\Catalog\ViewModel\ProductGallery</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
         <!-- Our PDP owns the product <h1>; drop the generic page.main.title so
              there is a single heading. -->
         <referenceBlock name="page.main.title" remove="true"/>

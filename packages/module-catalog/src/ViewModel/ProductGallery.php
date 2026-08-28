@@ -36,8 +36,12 @@ class ProductGallery implements ArgumentInterface
      */
     public const array LARGE_WIDTHS = [400, 640, 800, 1000, 1280];
 
+    public const string LARGE_SIZES = '(min-width: 105rem) 608px, (min-width: 64rem) 44vw, 85vw';
+
     private const LARGE_ID = 'product_page_image_large';
     private const THUMB_ID = 'product_page_image_small';
+
+    private ?array $images = null;
 
     /**
      * @param Registry $registry
@@ -56,18 +60,32 @@ class ProductGallery implements ArgumentInterface
      */
     public function getImages(): array
     {
+        if ($this->images !== null) {
+            return $this->images;
+        }
+
         try {
             $product = $this->registry->registry('current_product');
             if (!$product instanceof ProductInterface) {
-                return [];
+                return $this->images = [];
             }
 
             $images = $this->fromMediaGallery($product);
 
-            return $images === [] ? $this->fromBaseImage($product) : $images;
+            return $this->images = $images === [] ? $this->fromBaseImage($product) : $images;
         } catch (Throwable) {
-            return [];
+            return $this->images = [];
         }
+    }
+
+    public function getMainImage(): array
+    {
+        return $this->getImages()[0] ?? [];
+    }
+
+    public function getLargeSizes(): string
+    {
+        return self::LARGE_SIZES;
     }
 
     /**
