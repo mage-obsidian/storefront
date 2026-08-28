@@ -118,4 +118,21 @@ class CheckoutVaultTokenProviderTest extends TestCase
 
         $this->assertSame([], $tokens);
     }
+
+    public function testItHandsTheCheckoutOneEntryPerVaultMethod(): void
+    {
+        $data = $this->provider(
+            true,
+            [$this->token('braintree', '{"type":"VI","maskedCC":"1111","expirationDate":"12/2030"}', 'h1')],
+            [$this->vaultMethod('braintree', 'braintree_cc_vault')]
+        )->getData();
+
+        $this->assertSame(['braintree_cc_vault'], array_keys($data));
+        $this->assertSame('h1', $data['braintree_cc_vault']['tokens'][0]['publicHash']);
+    }
+
+    public function testItHandsTheCheckoutNothingWithoutAStoredCard(): void
+    {
+        $this->assertSame([], $this->provider(false, [], [])->getData());
+    }
 }

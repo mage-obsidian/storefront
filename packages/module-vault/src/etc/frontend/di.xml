@@ -14,6 +14,17 @@
             </argument>
         </arguments>
     </type>
-    <preference for="MageObsidian\Checkout\Api\VaultTokenProviderInterface"
-                type="MageObsidian\Vault\Model\CheckoutVaultTokenProvider"/>
+    <type name="MageObsidian\Checkout\Model\Payment\MethodData">
+        <arguments>
+            <argument name="providers" xsi:type="array">
+                <item name="vault_saved_cards" xsi:type="object">MageObsidian\Vault\Model\CheckoutVaultTokenProvider</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <virtualType name="MageObsidianVaultSavedCardsRenderer" type="MageObsidian\Vault\ViewModel\VaultRenderer">
+        <arguments>
+            <argument name="component" xsi:type="string">MageObsidian_Vault::payment/SavedCards</argument>
+        </arguments>
+    </virtualType>
 </config>

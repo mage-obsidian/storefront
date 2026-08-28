@@ -17,7 +17,7 @@ use Magento\Store\Model\StoreManagerInterface;
 use Magento\Vault\Api\PaymentMethodListInterface;
 use Magento\Vault\Model\CreditCardTokenFactory;
 use Magento\Vault\Model\CustomerTokenManagement;
-use MageObsidian\Checkout\Api\VaultTokenProviderInterface;
+use MageObsidian\Checkout\Api\MethodDataProviderInterface;
 use Throwable;
 
 /**
@@ -27,7 +27,7 @@ use Throwable;
  * configured tokenizing gateway there are no active vault methods, so the list is
  * empty and the checkout is unchanged.
  */
-class CheckoutVaultTokenProvider implements VaultTokenProviderInterface
+class CheckoutVaultTokenProvider implements MethodDataProviderInterface
 {
     /**
      * @param CustomerSession $customerSession
@@ -49,6 +49,21 @@ class CheckoutVaultTokenProvider implements VaultTokenProviderInterface
 
     /**
      * @inheritDoc
+     */
+    public function getData(): array
+    {
+        $data = [];
+
+        foreach ($this->getTokens() as $token) {
+            $code = (string)$token['methodCode'];
+            $data[$code]['tokens'][] = $token;
+        }
+
+        return $data;
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
      */
     public function getTokens(): array
     {

@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="checkout.payment.methods">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.vault.saved_cards" after="-">
+                <arguments>
+                    <argument name="renderer" xsi:type="object">MageObsidianVaultSavedCardsRenderer</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>
