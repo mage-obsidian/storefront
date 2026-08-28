@@ -7,7 +7,7 @@
     ],
     "require": {
         "mage-obsidian/component-modern-frontend": "^2.4",
-        "mage-obsidian/module-catalog": "^3.6",
+        "mage-obsidian/module-catalog": "^3.8",
         "mage-obsidian/module-catalog-search": "^2.1",
         "mage-obsidian/module-checkout": "^3.6",
         "mage-obsidian/module-customer": "^2.1.2",

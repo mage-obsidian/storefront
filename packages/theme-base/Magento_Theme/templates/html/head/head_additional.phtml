@@ -19,6 +19,7 @@ $importMap = json_encode(
 );
 ?>
 
+<?= $block->getChildHtml('head_preload'); ?>
 <?= $block->getBlockHtml('critical_css_block'); ?>
 <?php $i18nDictionaryUrl = $block->getI18nRuntimeConfig()['dictionaryUrl'] ?? ''; ?>
 <?php if ($i18nDictionaryUrl): ?>
@@ -61,4 +62,4 @@ JS; ?>
     <?php endif; ?>
 <?php endif; ?>
 
-<?= $block->getChildHtmlWithExclusions(excludedBlocks: ['critical_css_block']); ?>
+<?= $block->getChildHtmlWithExclusions(excludedBlocks: ['critical_css_block', 'head.preload']); ?>

@@ -17,6 +17,7 @@
                     MageObsidian\ModernFrontend\ViewModel\CriticalCss
                 </argument>
             </arguments>
+            <container name="head.preload" as="head_preload"/>
             <block name="critical_css_block" as="critical_css" template="Magento_Theme::html/head/criticalCss.phtml"
                    ifconfig="dev/css/use_css_critical_path">
                 <arguments>
