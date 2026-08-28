@@ -145,9 +145,10 @@ const paymentTitle = (): string =>
 
         <div class="checkout-cta flex flex-col gap-3">
             <button
+                v-if="checkout.placeOrderAvailable"
                 type="button"
                 data-place-order
-                :disabled="checkout.placingOrder || shippingPending || !checkout.selectedPayment || !checkout.allRequiredAccepted"
+                :disabled="checkout.placingOrder || shippingPending || !checkout.selectedPayment || !checkout.allRequiredAccepted || !checkout.selectedMethodReady"
                 class="btn btn--solid btn--lg btn--block lg:w-fit"
                 @click="checkout.placeOrder()"
             >

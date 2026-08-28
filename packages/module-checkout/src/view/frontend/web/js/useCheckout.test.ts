@@ -308,42 +308,26 @@ describe("useCheckout — payment, coupon and order", () => {
         expiration: "12/2030",
     };
 
-    it("seeds saved cards from the config and stays empty when none are present", () => {
-        expect(useCheckout().vaultTokens).toEqual([]);
+    it("seeds what each method's own data provider contributed, and nothing when none did", () => {
+        expect(useCheckout().dataFor("braintree_cc_vault")).toEqual({});
         setActivePinia(createPinia());
         const withVault = useCheckout();
-        withVault.init({ ...GUEST_CONFIG, vault: [VAULT_TOKEN] });
-        expect(withVault.vaultTokens).toEqual([VAULT_TOKEN]);
+        withVault.init({ ...GUEST_CONFIG, paymentData: { braintree_cc_vault: { tokens: [VAULT_TOKEN] } } });
+        expect(withVault.dataFor("braintree_cc_vault")).toEqual({ tokens: [VAULT_TOKEN] });
     });
 
-    it("places the order through the vault method with the token public hash", async () => {
+    it("places the order through the vault method with what its renderer declared", async () => {
         Object.defineProperty(window, "location", { value: { assign: vi.fn() }, writable: true });
         const fetchMock = mockFetch(990099);
         const checkout = ready();
-        checkout.vaultTokens = [VAULT_TOKEN];
-        checkout.selectVaultToken("hash-visa");
+        checkout.selectPayment("braintree_cc_vault");
+        checkout.declareMethodState("braintree_cc_vault", { data: { public_hash: "hash-visa" } });
 
-        const orderId = await checkout.placeOrder();
-
-        expect(orderId).toBe(990099);
-        const body = JSON.parse(fetchMock.mock.calls[0][1].body);
-        expect(body.paymentMethod).toEqual({
+        expect(await checkout.placeOrder()).toBe(990099);
+        expect(JSON.parse(fetchMock.mock.calls[0][1].body).paymentMethod).toEqual({
             method: "braintree_cc_vault",
             additional_data: { public_hash: "hash-visa" },
         });
-    });
-
-    it("falls back to the plain method when the saved card is cleared", async () => {
-        Object.defineProperty(window, "location", { value: { assign: vi.fn() }, writable: true });
-        const fetchMock = mockFetch(1);
-        const checkout = ready();
-        checkout.vaultTokens = [VAULT_TOKEN];
-        checkout.selectVaultToken("hash-visa");
-        checkout.selectPayment("checkmo");
-
-        await checkout.placeOrder();
-
-        expect(JSON.parse(fetchMock.mock.calls[0][1].body).paymentMethod).toEqual({ method: "checkmo" });
     });
 
     it("surfaces a place-order failure without redirecting", async () => {
@@ -356,6 +340,67 @@ describe("useCheckout — payment, coupon and order", () => {
         expect(await checkout.placeOrder()).toBeNull();
         expect(checkout.orderError).toBe("Transaction declined");
         expect(assign).not.toHaveBeenCalled();
+    });
+
+    it("carries the data a renderer declared into the order", async () => {
+        Object.defineProperty(window, "location", { value: { assign: vi.fn() }, writable: true });
+        const fetchMock = mockFetch(717171);
+        const checkout = ready();
+        checkout.selectPayment("checkmo");
+        checkout.declareMethodState("checkmo", { data: { reference: "REF-1" } });
+
+        expect(await checkout.placeOrder()).toBe(717171);
+        expect(JSON.parse(fetchMock.mock.calls[0][1].body).paymentMethod).toEqual({
+            method: "checkmo",
+            additional_data: { reference: "REF-1" },
+        });
+    });
+
+    it("refuses to place the order while the selected method says it is not ready", async () => {
+        const fetchMock = mockFetch(919191);
+        const checkout = ready();
+        checkout.selectPayment("checkmo");
+        checkout.declareMethodState("checkmo", { ready: false, reason: "Enter the transfer reference." });
+
+        expect(await checkout.placeOrder()).toBeNull();
+        expect(checkout.orderError).toBe("Enter the transfer reference.");
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it("refuses to place the order for a method that took the action over", async () => {
+        const fetchMock = mockFetch(929292);
+        const checkout = ready();
+        checkout.selectPayment("checkmo");
+        checkout.declareMethodState("checkmo", { takesOver: true });
+
+        expect(checkout.placeOrderAvailable).toBe(false);
+        expect(await checkout.placeOrder()).toBeNull();
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+
+    it("refuses to select a method the checkout withdrew", () => {
+        const checkout = ready();
+        checkout.withdrawMethod("checkmo");
+
+        checkout.selectPayment("checkmo");
+
+        expect(checkout.selectedPayment).not.toBe("checkmo");
+    });
+
+    it("drops a selection the moment its method is withdrawn", async () => {
+        const checkout = ready();
+        checkout.paymentMethods = [
+            { code: "checkmo", title: "Check" },
+            { code: "free", title: "Free" },
+        ];
+        checkout.selectPayment("checkmo");
+
+        checkout.withdrawMethod("checkmo");
+        await nextTick();
+
+        expect(checkout.selectedPayment).toBe("free");
+        expect(checkout.offeredMethods.map((m) => m.code)).toEqual(["free"]);
     });
 });
 
@@ -1195,5 +1240,44 @@ describe("useCheckout — an address that stops being complete after the payment
         await nextTick();
 
         expect(checkout.paymentMethods).toEqual([]);
+    });
+
+    it("seeds the payment renderers the layout declared", () => {
+        const checkout = useCheckout();
+        checkout.initPublic({
+            paymentRenderers: { verification_probe: { component: "https://shop.test/probe.js" } },
+        });
+
+        expect(checkout.rendererFor("verification_probe")).toEqual({ component: "https://shop.test/probe.js" });
+        expect(checkout.rendererFor("checkmo")).toBeNull();
+    });
+
+    it("ignores a descriptor without a component", () => {
+        const checkout = useCheckout();
+        checkout.initPublic({
+            paymentRenderers: { verification_probe: { component: "  " }, checkmo: "nonsense" },
+        });
+
+        expect(checkout.paymentRenderers).toEqual({});
+    });
+
+    it("seeds the native config the platform publishes for a method", () => {
+        const checkout = useCheckout();
+        checkout.initPublic({ payment: { checkmo: { payableTo: "The Store" }, broken: "nonsense" } });
+
+        expect(checkout.configFor("checkmo")).toEqual({ payableTo: "The Store" });
+        expect(checkout.configFor("broken")).toEqual({});
+        expect(checkout.configFor("free")).toEqual({});
+    });
+
+    it("forgets what a method declared once the methods themselves are gone", async () => {
+        const checkout = await paid();
+        checkout.declareMethodState("checkmo", { ready: false, reason: "not yet" });
+
+        checkout.shippingAddress.telephone = "";
+        await nextTick();
+
+        expect(checkout.paymentMethods).toEqual([]);
+        expect(checkout.methodState).toEqual({});
     });
 });

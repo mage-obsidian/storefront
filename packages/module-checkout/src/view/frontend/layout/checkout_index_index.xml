@@ -35,7 +35,7 @@
              there is a single heading (cart/category/PDP do the same). -->
         <referenceBlock name="page.main.title" remove="true"/>
         <referenceContainer name="content">
-            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.checkout"
+            <block class="MageObsidian\Checkout\Block\Checkout" name="obsidian.checkout"
                    template="Magento_Checkout::checkout/page.twig">
                 <arguments>
                     <argument name="checkout_config" xsi:type="object">MageObsidian\Checkout\ViewModel\CheckoutConfig</argument>
@@ -43,6 +43,7 @@
                 </arguments>
                 <block class="MageObsidian\Checkout\Block\CheckoutTitle" name="checkout.title"
                        as="checkout_title" template="Magento_Checkout::checkout/title.twig"/>
+                <container name="checkout.payment.methods" as="payment_methods" label="Checkout payment methods"/>
             </block>
         </referenceContainer>
     </body>

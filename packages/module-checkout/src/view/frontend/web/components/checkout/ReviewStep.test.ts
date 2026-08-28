@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { nextTick } from "vue";
 import { mount } from "@vue/test-utils";
 import { setActivePinia, createPinia } from "pinia";
 import ReviewStep from "./ReviewStep.vue";
@@ -168,5 +169,34 @@ describe("ReviewStep", () => {
         expect(button.classes()).toContain("btn--block");
         expect(button.classes()).toContain("lg:w-fit");
         expect(button.element.closest(".checkout-cta")).not.toBeNull();
+    });
+
+    it("stops offering to place the order when the selected method takes the action over", async () => {
+        const wrapper = render();
+        expect(wrapper.find("[data-place-order]").exists()).toBe(true);
+
+        checkout.declareMethodState(checkout.selectedPayment, { takesOver: true });
+        await nextTick();
+
+        expect(wrapper.find("[data-place-order]").exists()).toBe(false);
+    });
+
+    it("keeps the place-order control disabled while the method says it is not ready", async () => {
+        const wrapper = render();
+
+        checkout.declareMethodState(checkout.selectedPayment, { ready: false, reason: "Enter the reference." });
+        await nextTick();
+
+        expect(wrapper.find("[data-place-order]").attributes("disabled")).toBeDefined();
+    });
+
+    it("offers no place-order control when every method has been withdrawn", async () => {
+        checkout.withdrawnMethods = [checkout.selectedPayment];
+        checkout.selectPayment("");
+        await nextTick();
+
+        const wrapper = render();
+
+        expect(wrapper.find("[data-place-order]").exists()).toBe(false);
     });
 });

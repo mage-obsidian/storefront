@@ -52,14 +52,18 @@ export interface PaymentMethod {
     title: string;
 }
 
-export interface VaultToken {
-    publicHash: string;
-    methodCode: string;
-    last4: string;
-    type: string;
-    typeLabel: string;
-    expiration: string;
+export interface PaymentRendererDescriptor {
+    component: string;
 }
+
+export interface PaymentMethodState {
+    ready: boolean;
+    reason: string;
+    data: Record<string, unknown>;
+    takesOver: boolean;
+}
+
+const emptyMethodState = (): PaymentMethodState => ({ ready: true, reason: '', data: {}, takesOver: false });
 
 export interface SavedAddress extends AddressData {
     id: number;
@@ -82,6 +86,33 @@ export interface Agreement {
 }
 
 export const AGREEMENT_MODE_MANUAL = 1;
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+    typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const asRecordMap = (value: unknown): Record<string, Record<string, unknown>> => {
+    if (!isRecord(value)) {
+        return {};
+    }
+    const map: Record<string, Record<string, unknown>> = {};
+    for (const [key, entry] of Object.entries(value)) {
+        if (isRecord(entry)) {
+            map[key] = entry;
+        }
+    }
+    return map;
+};
+
+const asDescriptorMap = (value: unknown): Record<string, PaymentRendererDescriptor> => {
+    const map: Record<string, PaymentRendererDescriptor> = {};
+    for (const [code, entry] of Object.entries(asRecordMap(value))) {
+        const component = typeof entry.component === 'string' ? entry.component.trim() : '';
+        if (component !== '') {
+            map[code] = { component };
+        }
+    }
+    return map;
+};
 
 interface QuoteTotals {
     grand_total?: number;
@@ -168,8 +199,11 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const shippingMethods = ref<ShippingMethod[]>([]);
     const selectedMethod = ref<ShippingMethod | null>(null);
     const paymentMethods = ref<PaymentMethod[]>([]);
-    const vaultTokens = ref<VaultToken[]>([]);
-    const selectedTokenHash = ref('');
+    const paymentRenderers = ref<Record<string, PaymentRendererDescriptor>>({});
+    const paymentConfig = ref<Record<string, Record<string, unknown>>>({});
+    const methodState = ref<Record<string, PaymentMethodState>>({});
+    const withdrawnMethods = ref<string[]>([]);
+    const paymentData = ref<Record<string, Record<string, unknown>>>({});
     const loadingRates = ref(false);
     const ratesRequested = ref(false);
     const savingShipping = ref(false);
@@ -235,6 +269,9 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         const agreementsCfg = cfg.agreements || {};
         agreementsEnabled.value = !!agreementsCfg.enabled;
         agreements.value = Array.isArray(agreementsCfg.items) ? (agreementsCfg.items as Agreement[]) : [];
+        paymentRenderers.value = asDescriptorMap(cfg.paymentRenderers);
+        withdrawnMethods.value = Array.isArray(cfg.withdrawnMethods) ? (cfg.withdrawnMethods as string[]) : [];
+        paymentConfig.value = asRecordMap(cfg.payment);
         const captcha = cfg.recaptcha || {};
         reCaptcha.value = captcha.sitekey ? (captcha as Record<string, unknown>) : null;
     }
@@ -259,7 +296,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         isLoggedIn.value = !!d.isLoggedIn;
         email.value = d.customerEmail || email.value;
         currencyFormat.value = d.currencyFormat || '';
-        vaultTokens.value = Array.isArray(d.vault) ? (d.vault as VaultToken[]) : [];
+        paymentData.value = asRecordMap(d.paymentData);
         api = createCheckoutApi({
             restBaseUrl,
             isLoggedIn: isLoggedIn.value,
@@ -346,7 +383,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     function clearPayment(): void {
         paymentMethods.value = [];
         selectedPayment.value = '';
-        selectedTokenHash.value = '';
+        methodState.value = {};
         shippingSaved.value = false;
     }
 
@@ -534,8 +571,8 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
                 shipping_method_code: selectedMethod.value.method_code,
             })) as ShippingInformationResult;
             paymentMethods.value = result.payment_methods ?? [];
-            if (paymentMethods.value.length > 0 && !selectedPayment.value) {
-                selectedPayment.value = paymentMethods.value[0].code;
+            if (offeredMethods.value.length > 0 && !selectedPayment.value) {
+                selectedPayment.value = offeredMethods.value[0].code;
             }
             captureTotals(result.totals);
             persistedSignature.value = signature;
@@ -551,22 +588,47 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         }
     }
 
-    function selectPayment(code: string): void {
-        selectedPayment.value = code;
-        selectedTokenHash.value = '';
+    function rendererFor(code: string): PaymentRendererDescriptor | null {
+        return paymentRenderers.value[code] ?? null;
     }
 
-    /**
-     * Pick a saved card. Selecting one routes payment through its vault method and
-     * carries the token's public hash into the order; passing '' clears it back to
-     * the plain method selection.
-     */
-    function selectVaultToken(publicHash: string): void {
-        const token = vaultTokens.value.find((t) => t.publicHash === publicHash);
-        selectedTokenHash.value = token ? publicHash : '';
-        if (token) {
-            selectedPayment.value = token.methodCode;
+    function configFor(code: string): Record<string, unknown> {
+        return paymentConfig.value[code] ?? {};
+    }
+
+    function withdrawMethod(code: string): void {
+        if (code !== '' && !withdrawnMethods.value.includes(code)) {
+            withdrawnMethods.value = [...withdrawnMethods.value, code];
         }
+        forgetMethodState(code);
+    }
+
+    function dataFor(code: string): Record<string, unknown> {
+        return paymentData.value[code] ?? {};
+    }
+
+    function stateFor(code: string): PaymentMethodState {
+        return methodState.value[code] ?? emptyMethodState();
+    }
+
+    function declareMethodState(code: string, patch: Partial<PaymentMethodState>): void {
+        if (code === '') {
+            return;
+        }
+        methodState.value = { ...methodState.value, [code]: { ...stateFor(code), ...patch } };
+    }
+
+    function forgetMethodState(code: string): void {
+        const { [code]: dropped, ...rest } = methodState.value;
+        void dropped;
+        methodState.value = rest;
+    }
+
+    function selectPayment(code: string): void {
+        if (code !== '' && withdrawnMethods.value.includes(code)) {
+            return;
+        }
+        selectedPayment.value = code;
     }
 
     function toggleAgreement(agreementId: number | string): void {
@@ -643,6 +705,10 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         if (!api || selectedPayment.value === '' || !allRequiredAccepted.value) {
             return null;
         }
+        if (!placeOrderAvailable.value || !selectedMethodReady.value) {
+            orderError.value = selectedMethodBlocker.value;
+            return null;
+        }
         if (!(await flushShippingSync())) {
             orderError.value = error.value;
             return null;
@@ -663,10 +729,11 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         try {
             const source = sameAsShipping.value ? shippingAddress.value : billingAddress.value;
             const billing = toRestAddress(source, isLoggedIn.value ? {} : { email: email.value });
-            const token = vaultTokens.value.find((t) => t.publicHash === selectedTokenHash.value);
-            const paymentMethod: Record<string, unknown> = token
-                ? { method: token.methodCode, additional_data: { public_hash: token.publicHash } }
-                : { method: selectedPayment.value };
+            const additional = stateFor(selectedPayment.value).data;
+            const paymentMethod: Record<string, unknown> = { method: selectedPayment.value };
+            if (Object.keys(additional).length > 0) {
+                paymentMethod.additional_data = additional;
+            }
             if (agreementsEnabled.value && acceptedAgreements.value.length > 0) {
                 paymentMethod.extension_attributes = {
                     agreement_ids: acceptedAgreements.value.map((id) => String(id)),
@@ -768,8 +835,28 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const allRequiredAccepted = computed(() =>
         !agreementsEnabled.value || requiredAgreementIds.value.every((id) => acceptedAgreements.value.includes(id)),
     );
+    const offeredMethods = computed(() =>
+        paymentMethods.value.filter((method) => !withdrawnMethods.value.includes(method.code)),
+    );
+    const selectedMethodState = computed(() => stateFor(selectedPayment.value));
+    const selectedMethodReady = computed(() => selectedMethodState.value.ready);
+    const selectedMethodBlocker = computed(() =>
+        selectedMethodReady.value ? '' : selectedMethodState.value.reason,
+    );
+    const placeOrderAvailable = computed(
+        () => selectedPayment.value !== '' && !selectedMethodState.value.takesOver,
+    );
     const visibleItems = computed(() => items.value.slice(0, maxSummaryItems.value));
     const hiddenItemCount = computed(() => Math.max(0, items.value.length - maxSummaryItems.value));
+
+    // A selection the checkout has since withdrawn is a selection it cannot take
+    // to a placed order, so it never survives the list it came from.
+    watch(offeredMethods, (methods) => {
+        if (selectedPayment.value === '' || methods.some((method) => method.code === selectedPayment.value)) {
+            return;
+        }
+        selectedPayment.value = methods[0]?.code ?? '';
+    });
 
     watch(rateReady, (canQuote) => {
         if (!canQuote) {
@@ -826,8 +913,22 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         selectedMethod,
         selectedMethodKey,
         paymentMethods,
-        vaultTokens,
-        selectedTokenHash,
+        offeredMethods,
+        withdrawnMethods,
+        withdrawMethod,
+        paymentRenderers,
+        paymentConfig,
+        paymentData,
+        methodState,
+        rendererFor,
+        configFor,
+        dataFor,
+        stateFor,
+        declareMethodState,
+        forgetMethodState,
+        selectedMethodReady,
+        selectedMethodBlocker,
+        placeOrderAvailable,
         loadingRates,
         ratesRequested,
         savingShipping,
@@ -869,7 +970,6 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         cancelShippingSync,
         flushShippingSync,
         selectPayment,
-        selectVaultToken,
         applyCoupon,
         removeCoupon,
         refreshTotals,

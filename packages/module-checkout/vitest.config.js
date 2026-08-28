@@ -104,6 +104,9 @@ export default defineConfig({
             "MageObsidian_Checkout::checkout/OnePageCheckout": fileURLToPath(
                 new URL("./src/view/frontend/web/components/checkout/OnePageCheckout.vue", import.meta.url),
             ),
+            "MageObsidian_Checkout::checkout/PaymentMethodRenderer": fileURLToPath(
+                new URL("./src/view/frontend/web/components/checkout/PaymentMethodRenderer.vue", import.meta.url),
+            ),
             "MageObsidian_Checkout::checkout/Agreements": fileURLToPath(
                 new URL("./src/view/frontend/web/components/checkout/Agreements.vue", import.meta.url),
             ),

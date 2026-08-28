@@ -27,6 +27,8 @@ const props = withDefaults(
     defineProps<{
         config?: Record<string, unknown>;
         directory?: DirectoryData;
+        paymentRenderers?: Record<string, { component: string }>;
+        withdrawnMethods?: string[];
         loginUrl?: string;
         labels?: Record<string, string>;
         identificationLabels?: Record<string, string>;
@@ -38,6 +40,8 @@ const props = withDefaults(
     {
         config: () => ({}),
         directory: () => ({ countries: [], regions: {}, statesRequired: [], displayAllRegions: false, defaultCountry: "" }),
+        paymentRenderers: () => ({}),
+        withdrawnMethods: () => [],
         loginUrl: "",
         labels: () => ({}),
         identificationLabels: () => ({}),
@@ -63,6 +67,8 @@ const customerData = useCustomerData();
 // customer-data; uncached, the whole config is inlined. Seed from whichever has it.
 checkout.initPublic({
     ...props.config,
+    paymentRenderers: props.paymentRenderers,
+    withdrawnMethods: props.withdrawnMethods,
     defaultCountry: props.directory.defaultCountry,
     statesRequired: props.directory.statesRequired,
 });

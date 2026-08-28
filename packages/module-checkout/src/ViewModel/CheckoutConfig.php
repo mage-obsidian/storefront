@@ -17,7 +17,8 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
-use MageObsidian\Checkout\Api\VaultTokenProviderInterface;
+use MageObsidian\Checkout\Model\Payment\MethodConfig;
+use MageObsidian\Checkout\Model\Payment\MethodData;
 use MageObsidian\Checkout\Model\Shell\Gate;
 use MageObsidian\ModernFrontend\Model\Config\ConfigProvider;
 use MageObsidian\ModernFrontend\Model\Config\Source\CheckoutLayout;
@@ -70,10 +71,11 @@ class CheckoutConfig implements ArgumentInterface
      * @param QuoteIdMaskFactory $quoteIdMaskFactory
      * @param QuoteIdMaskResource $quoteIdMaskResource
      * @param CartItems $cartItems
-     * @param VaultTokenProviderInterface $vaultTokenProvider
+     * @param MethodData $methodData
      * @param ConfigProvider $configProvider
      * @param ScopeConfigInterface $scopeConfig
      * @param AgreementsConfigProvider $agreementsConfigProvider
+     * @param MethodConfig $methodConfig
      * @param Gate $gate
      * @param ReCaptcha $reCaptcha
      */
@@ -86,10 +88,11 @@ class CheckoutConfig implements ArgumentInterface
         private readonly QuoteIdMaskFactory $quoteIdMaskFactory,
         private readonly QuoteIdMaskResource $quoteIdMaskResource,
         private readonly CartItems $cartItems,
-        private readonly VaultTokenProviderInterface $vaultTokenProvider,
+        private readonly MethodData $methodData,
         private readonly ConfigProvider $configProvider,
         private readonly ScopeConfigInterface $scopeConfig,
         private readonly AgreementsConfigProvider $agreementsConfigProvider,
+        private readonly MethodConfig $methodConfig,
         private readonly Gate $gate,
         private readonly ReCaptcha $reCaptcha
     ) {
@@ -188,6 +191,7 @@ class CheckoutConfig implements ArgumentInterface
             'displayBillingOnPayment' => (int)$this->scopeConfig->getValue('checkout/options/display_billing_address_on', ScopeInterface::SCOPE_STORE) === 0,
             'maxSummaryItems' => (int)$this->scopeConfig->getValue('checkout/options/max_items_display_count', ScopeInterface::SCOPE_STORE) ?: 10,
             'agreements' => $this->agreements(),
+            'payment' => $this->methodConfig->getConfig(),
             // Store-scoped: the site key is the same for every shopper, so it
             // belongs in the half that may reach a cacheable page.
             'recaptcha' => $this->reCaptcha->configFor(self::RECAPTCHA_FORM),
@@ -211,7 +215,7 @@ class CheckoutConfig implements ArgumentInterface
             'currencyFormat' => $this->currencyFormat(),
             'quote' => $this->quoteSummary($quote),
             'shipping' => $this->quoteShipping($quote),
-            'vault' => $this->vaultTokens(),
+            'paymentData' => $this->methodData->getData(),
             'addresses' => $isLoggedIn ? $this->addressBook() : [],
             'context' => $this->context(),
         ];
@@ -416,21 +420,6 @@ class CheckoutConfig implements ArgumentInterface
     }
 
     /**
-     * The customer's saved cards for the payment step (empty without a configured
-     * tokenizing gateway). Never blocks the checkout: failures degrade to none.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function vaultTokens(): array
-    {
-        try {
-            return $this->vaultTokenProvider->getTokens();
-        } catch (Throwable) {
-            return [];
-        }
-    }
-
-    /**
      * Existing masked cart id for the guest quote, creating one if absent (REST
      * `guest-carts` endpoints are authorised by possession of this id).
      *
@@ -530,6 +519,7 @@ class CheckoutConfig implements ArgumentInterface
             'displayBillingOnPayment' => true,
             'maxSummaryItems' => 10,
             'agreements' => ['enabled' => false, 'items' => []],
+            'payment' => [],
             'recaptcha' => [],
         ];
     }
@@ -548,7 +538,7 @@ class CheckoutConfig implements ArgumentInterface
             'currencyFormat' => '%s',
             'quote' => ['items' => [], 'itemCount' => 0, 'subtotal' => '', 'grandTotal' => ''],
             'shipping' => ['address' => null, 'method' => ['carrier_code' => '', 'method_code' => ''], 'email' => ''],
-            'vault' => [],
+            'paymentData' => [],
             'addresses' => [],
             'context' => ['storeCode' => '', 'currencyCode' => ''],
         ];

@@ -43,7 +43,7 @@ class CheckoutSectionTest extends TestCase
         $this->assertSame('guestmask123', $data['maskedCartId']);
         $this->assertSame(2, $data['quote']['itemCount']);
         $this->assertSame('$88.00', $data['quote']['grandTotal']);
-        $this->assertSame('braintree_cc_vault', $data['vault'][0]['methodCode']);
+        $this->assertSame('h1', $data['paymentData']['braintree_cc_vault']['tokens'][0]['publicHash']);
     }
 
     /**

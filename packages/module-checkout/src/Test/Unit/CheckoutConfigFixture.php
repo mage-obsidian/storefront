@@ -26,7 +26,8 @@ use Magento\Quote\Model\QuoteIdToMaskedQuoteIdInterface;
 use Magento\Quote\Model\ResourceModel\Quote\QuoteIdMask as QuoteIdMaskResource;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
-use MageObsidian\Checkout\Api\VaultTokenProviderInterface;
+use MageObsidian\Checkout\Model\Payment\MethodConfig;
+use MageObsidian\Checkout\Model\Payment\MethodData;
 use MageObsidian\Checkout\Model\Shell\Gate;
 use MageObsidian\Checkout\ViewModel\CartItems;
 use MageObsidian\Checkout\ViewModel\CheckoutConfig;
@@ -52,7 +53,8 @@ trait CheckoutConfigFixture
         array $addresses = [],
         ?string $defaultShippingId = null,
         array $quoteShipping = [],
-        array $reCaptchaConfig = []
+        array $reCaptchaConfig = [],
+        array $paymentConfig = []
     ): CheckoutConfig {
         $quote = $this->getMockBuilder(Quote::class)
             ->disableOriginalConstructor()
@@ -109,9 +111,13 @@ trait CheckoutConfigFixture
             ['id' => 2, 'name' => 'B'],
         ]);
 
-        $vaultTokenProvider = $this->createMock(VaultTokenProviderInterface::class);
-        $vaultTokenProvider->method('getTokens')->willReturn([
-            ['publicHash' => 'h1', 'methodCode' => 'braintree_cc_vault', 'last4' => '1111', 'type' => 'VI', 'typeLabel' => 'Visa', 'expiration' => '12/2030'],
+        $methodData = $this->createStub(MethodData::class);
+        $methodData->method('getData')->willReturn([
+            'braintree_cc_vault' => [
+                'tokens' => [
+                    ['publicHash' => 'h1', 'methodCode' => 'braintree_cc_vault', 'last4' => '1111', 'type' => 'VI', 'typeLabel' => 'Visa', 'expiration' => '12/2030'],
+                ],
+            ],
         ]);
 
         $configProvider = $this->createMock(ConfigProvider::class);
@@ -130,6 +136,9 @@ trait CheckoutConfigFixture
             'checkoutAgreements' => ['isEnabled' => $agreementsEnabled, 'agreements' => $agreementItems],
         ]);
 
+        $methodConfig = $this->createStub(MethodConfig::class);
+        $methodConfig->method('getConfig')->willReturn($paymentConfig);
+
         $gate = $this->createMock(Gate::class);
         $gate->method('isCacheable')->willReturn($shellCacheable);
 
@@ -145,10 +154,11 @@ trait CheckoutConfigFixture
             $this->createMock(QuoteIdMaskFactory::class),
             $this->createMock(QuoteIdMaskResource::class),
             $cartItems,
-            $vaultTokenProvider,
+            $methodData,
             $configProvider,
             $scopeConfig,
             $agreementsConfigProvider,
+            $methodConfig,
             $gate,
             $reCaptcha
         );

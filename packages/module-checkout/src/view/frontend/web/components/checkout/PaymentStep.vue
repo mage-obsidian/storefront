@@ -2,6 +2,7 @@
 import { ref, computed } from "vue";
 import { useCheckout, CheckoutStep } from "MageObsidian_Checkout::js/useCheckout";
 import AddressForm from "MageObsidian_Storefront::form/AddressForm";
+import PaymentMethodRenderer from "MageObsidian_Checkout::checkout/PaymentMethodRenderer";
 import type { RegionData } from "MageObsidian_Storefront::js/address";
 
 interface DirectoryData {
@@ -14,9 +15,6 @@ interface DirectoryData {
 
 interface PaymentLabels {
     methodsHeading?: string;
-    savedCardsHeading?: string;
-    otherMethodsHeading?: string;
-    endingIn?: string;
     billingHeading?: string;
     billingForMethod?: string;
     sameAsShipping?: string;
@@ -43,7 +41,6 @@ const props = withDefaults(
 
 const checkout = useCheckout();
 const billingForm = ref<{ validate: () => boolean } | null>(null);
-
 const t = (key: keyof PaymentLabels, fallback: string): string => props.labels?.[key] ?? fallback;
 
 // Native parity for `checkout/options/display_billing_address_on`: value 0
@@ -51,7 +48,7 @@ const t = (key: keyof PaymentLabels, fallback: string): string => props.labels?.
 // only surfaces once a method is picked; value 1 ("Payment Page") shows one
 // shared form regardless. `displayBillingOnPayment` is true for the per-method case.
 const selectedMethodTitle = computed(
-    () => checkout.paymentMethods.find((m) => m.code === checkout.selectedPayment)?.title ?? "",
+    () => checkout.offeredMethods.find((m) => m.code === checkout.selectedPayment)?.title ?? "",
 );
 const billingVisible = computed(() => !checkout.displayBillingOnPayment || checkout.selectedPayment !== "");
 
@@ -64,57 +61,40 @@ function toReview(): void {
 
 <template>
     <div class="flex flex-col gap-10">
-        <section v-if="checkout.vaultTokens.length > 0" aria-labelledby="saved-cards-heading">
-            <h3 id="saved-cards-heading" class="mb-4 font-mono text-xs uppercase tracking-label text-ink-soft">
-                {{ t("savedCardsHeading", "Saved cards") }}
+        <section aria-labelledby="payment-methods-heading">
+            <h3 id="payment-methods-heading" class="mb-4 font-mono text-xs uppercase tracking-label text-ink-soft">
+                {{ t("methodsHeading", "Payment method") }}
             </h3>
-            <div class="flex flex-col gap-3" role="radiogroup" :aria-label="t('savedCardsHeading', 'Saved cards')">
-                <label
-                    v-for="token in checkout.vaultTokens"
-                    :key="token.publicHash"
-                    class="field-radio-card flex items-center justify-between gap-3"
-                >
-                    <span class="field-radio">
+            <p v-if="checkout.offeredMethods.length === 0" class="font-mono text-sm text-ink-soft">
+                {{ t("noMethods", "No payment methods available.") }}
+            </p>
+            <div v-else class="flex flex-col gap-3" role="radiogroup" :aria-label="t('methodsHeading', 'Payment method')">
+                <template v-for="method in checkout.offeredMethods" :key="method.code">
+                    <PaymentMethodRenderer
+                        v-if="checkout.rendererFor(method.code)"
+                        :data-payment-renderer="method.code"
+                        :code="method.code"
+                        :title="method.title"
+                        :component="checkout.rendererFor(method.code).component"
+                        :selected="checkout.selectedPayment === method.code"
+                        :config="checkout.configFor(method.code)"
+                        :customer-data="checkout.dataFor(method.code)"
+                        @select="checkout.selectPayment(method.code)"
+                        @state="(patch) => checkout.declareMethodState(method.code, patch)"
+                        @failed="checkout.withdrawMethod"
+                    />
+                    <label v-else class="field-radio-card field-radio">
                         <input
                             type="radio"
                             name="payment-method"
                             class="field-radio__input"
-                            :value="`vault:${token.publicHash}`"
-                            :checked="checkout.selectedTokenHash === token.publicHash"
-                            @change="checkout.selectVaultToken(token.publicHash)"
+                            :value="method.code"
+                            :checked="checkout.selectedPayment === method.code"
+                            @change="checkout.selectPayment(method.code)"
                         >
-                        <span class="field-radio__label">
-                            {{ token.typeLabel }} {{ t("endingIn", "ending") }} {{ token.last4 }}
-                        </span>
-                    </span>
-                    <span class="font-mono text-xs text-ink-soft">{{ token.expiration }}</span>
-                </label>
-            </div>
-        </section>
-
-        <section aria-labelledby="payment-methods-heading">
-            <h3 id="payment-methods-heading" class="mb-4 font-mono text-xs uppercase tracking-label text-ink-soft">
-                {{ checkout.vaultTokens.length > 0 ? t("otherMethodsHeading", "Or pay another way") : t("methodsHeading", "Payment method") }}
-            </h3>
-            <p v-if="checkout.paymentMethods.length === 0" class="font-mono text-sm text-ink-soft">
-                {{ t("noMethods", "No payment methods available.") }}
-            </p>
-            <div v-else class="flex flex-col gap-3" role="radiogroup" :aria-label="t('methodsHeading', 'Payment method')">
-                <label
-                    v-for="method in checkout.paymentMethods"
-                    :key="method.code"
-                    class="field-radio-card field-radio"
-                >
-                    <input
-                        type="radio"
-                        name="payment-method"
-                        class="field-radio__input"
-                        :value="method.code"
-                        :checked="checkout.selectedPayment === method.code && checkout.selectedTokenHash === ''"
-                        @change="checkout.selectPayment(method.code)"
-                    >
-                    <span class="field-radio__label">{{ method.title }}</span>
-                </label>
+                        <span class="field-radio__label">{{ method.title }}</span>
+                    </label>
+                </template>
             </div>
         </section>
 
@@ -144,10 +124,19 @@ function toReview(): void {
             />
         </section>
 
+        <p
+            v-if="checkout.selectedPayment && !checkout.selectedMethodReady"
+            data-method-blocker
+            role="alert"
+            class="font-mono text-sm text-sale"
+        >
+            {{ checkout.selectedMethodBlocker }}
+        </p>
+
         <button
             v-if="!hideAdvance"
             type="button"
-            :disabled="!checkout.selectedPayment"
+            :disabled="!checkout.selectedPayment || !checkout.selectedMethodReady"
             class="checkout-cta btn btn--solid btn--lg btn--block lg:w-fit"
             @click="toReview"
         >

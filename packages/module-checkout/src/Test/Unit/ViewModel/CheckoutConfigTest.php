@@ -37,7 +37,7 @@ class CheckoutConfigTest extends TestCase
         $this->assertSame('$80.00', $config['quote']['subtotal']);
         $this->assertSame('$88.00', $config['quote']['grandTotal']);
         $this->assertSame('$%s', $config['currencyFormat']);
-        $this->assertSame('braintree_cc_vault', $config['vault'][0]['methodCode']);
+        $this->assertSame('h1', $config['paymentData']['braintree_cc_vault']['tokens'][0]['publicHash']);
         $this->assertSame('stepped', $config['layoutMode']);
     }
 
@@ -126,7 +126,7 @@ class CheckoutConfigTest extends TestCase
         $this->assertSame(2, $private['quote']['itemCount']);
         $this->assertSame('$88.00', $private['quote']['grandTotal']);
         $this->assertSame('$%s', $private['currencyFormat']);
-        $this->assertSame('braintree_cc_vault', $private['vault'][0]['methodCode']);
+        $this->assertSame('h1', $private['paymentData']['braintree_cc_vault']['tokens'][0]['publicHash']);
     }
 
     /**
@@ -143,7 +143,7 @@ class CheckoutConfigTest extends TestCase
         sort($whole);
         sort($halves);
         $this->assertSame($halves, $whole);
-        $this->assertCount(21, $whole);
+        $this->assertCount(22, $whole);
     }
 
     public function testPrivateDataCarriesTheShippingChoiceHeldOnTheQuote(): void
@@ -321,6 +321,41 @@ class CheckoutConfigTest extends TestCase
         $this->assertSame('guestmask123', $viewModel->getInlineConfig()['maskedCartId']);
     }
 
+    public function testTheMethodConfigTravelsWithTheCacheableHalf(): void
+    {
+        $paymentConfig = ['checkmo' => ['payableTo' => 'The Store'], 'ccform' => ['icons' => []]];
+        $viewModel = $this->viewModel(
+            isLoggedIn: false,
+            maskedId: 'guestmask123',
+            shellCacheable: true,
+            paymentConfig: $paymentConfig
+        );
+
+        $this->assertSame($paymentConfig, $viewModel->getPublicConfig()['payment']);
+        $this->assertSame($paymentConfig, $viewModel->getInlineConfig()['payment']);
+    }
+
+    public function testTheCacheableHalfIsTheSameForTwoShoppers(): void
+    {
+        $paymentConfig = ['checkmo' => ['payableTo' => 'The Store']];
+        $guest = $this->viewModel(
+            isLoggedIn: false,
+            maskedId: 'guestmask123',
+            shellCacheable: true,
+            paymentConfig: $paymentConfig
+        )->getPublicConfig();
+        $shopper = $this->viewModel(
+            isLoggedIn: true,
+            maskedId: 'unused',
+            shellCacheable: true,
+            addresses: self::ADDRESS_BOOK,
+            quoteShipping: self::QUOTE_SHIPPING,
+            paymentConfig: $paymentConfig
+        )->getPublicConfig();
+
+        $this->assertSame($guest, $shopper);
+    }
+
     /** Mirrors the two addresses seeded on the e2e customer in zento-obsidian. */
     private const ADDRESS_BOOK = [
         [
@@ -351,7 +386,7 @@ class CheckoutConfigTest extends TestCase
         'maskedCartId',
         'quote',
         'shipping',
-        'vault',
+        'paymentData',
         // Depends on the request currency, so it varies; keeping it out of the
         // cached shell removes a vary dimension instead of trusting one.
         'currencyFormat',
@@ -369,7 +404,8 @@ class CheckoutConfigTest extends TestCase
         array $addresses = [],
         ?string $defaultShippingId = null,
         array $quoteShipping = [],
-        array $reCaptchaConfig = []
+        array $reCaptchaConfig = [],
+        array $paymentConfig = []
     ): CheckoutConfig {
         return $this->checkoutConfig(
             $isLoggedIn,
@@ -381,7 +417,8 @@ class CheckoutConfigTest extends TestCase
             $addresses,
             $defaultShippingId,
             $quoteShipping,
-            $reCaptchaConfig
+            $reCaptchaConfig,
+            $paymentConfig
         );
     }
 }
