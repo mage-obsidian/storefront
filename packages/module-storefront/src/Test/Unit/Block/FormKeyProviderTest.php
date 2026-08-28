@@ -45,6 +45,7 @@ class FormKeyProviderTest extends TestCase
                 [
                     'type' => 'module',
                     'src' => '/static/generated/MageObsidian_Storefront/js/form-key-provider.js',
+                    'fetchpriority' => 'low',
                 ],
                 '',
                 false

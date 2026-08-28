@@ -44,6 +44,7 @@ class SessionMessagesTest extends TestCase
                 [
                     'type' => 'module',
                     'src' => '/static/generated/MageObsidian_Storefront/js/session-messages.js',
+                    'fetchpriority' => 'low',
                 ],
                 '',
                 false

@@ -72,7 +72,11 @@ class FormKeyProvider extends AbstractBlock
 
         return $this->secureRenderer->renderTag(
             'script',
-            ['type' => 'module', 'src' => $this->viteResolver->getViteFileUrl(self::ASSET)],
+            [
+                'type' => 'module',
+                'src' => $this->viteResolver->getViteFileUrl(self::ASSET),
+                'fetchpriority' => 'low',
+            ],
             '',
             false
         );
