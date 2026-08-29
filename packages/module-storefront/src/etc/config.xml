@@ -11,6 +11,9 @@
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
     <default>
         <mage_obsidian>
+            <appearance>
+                <enabled>0</enabled>
+            </appearance>
             <speculation>
                 <enabled>1</enabled>
                 <mode>prefetch</mode>

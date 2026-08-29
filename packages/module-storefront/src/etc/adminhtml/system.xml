@@ -11,6 +11,19 @@
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
     <system>
         <section id="mage_obsidian_frontend">
+            <group id="appearance" translate="label comment" type="text" sortOrder="30"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Appearance</label>
+                <comment>Lets the shopper pick a light or dark storefront, or follow their system. Off by default: a storefront only gets a dark appearance once its own catalogue imagery and brand have been checked against one.</comment>
+                <field id="enabled" translate="label comment" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Enable the Appearance Selector</label>
+                    <comment>Turned off, the control is not rendered and the storefront always uses the
+                        light appearance, whatever the shopper's system prefers.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mage_obsidian/appearance/enabled</config_path>
+                </field>
+            </group>
             <group id="speculation" translate="label comment" type="text" sortOrder="40"
                    showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Speculative Loading</label>
