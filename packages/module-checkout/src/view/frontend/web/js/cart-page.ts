@@ -49,6 +49,28 @@ const customerData = useCustomerData();
 const root = (): HTMLElement | null => document.querySelector<HTMLElement>(ROOT);
 const within = (el: Element | null | undefined): boolean => !!el && !!root()?.contains(el);
 
+const FOCUS_MARKERS = ["data-cart-step", "data-cart-qty", "data-cart-remove", "data-cart-move"];
+
+const quoted = (value: string): string => `"${value.replace(/["\\]/g, "\\$&")}"`;
+
+function focusSelector(el: Element | null): string | null {
+    if (!(el instanceof HTMLElement) || !within(el)) {
+        return null;
+    }
+    const lineId = el.closest<HTMLElement>("[data-cart-line]")?.dataset.cartLine;
+    const scope = lineId ? `[data-cart-line=${quoted(lineId)}] ` : "";
+    for (const marker of FOCUS_MARKERS) {
+        const value = el.getAttribute(marker);
+        if (value === null) {
+            continue;
+        }
+        return value === "" ? `${scope}[${marker}]` : `${scope}[${marker}=${quoted(value)}]`;
+    }
+    const name = el.getAttribute("name");
+
+    return name ? `${scope}[name=${quoted(name)}]` : null;
+}
+
 function endpoints(): { update?: string; remove?: string } {
     const el = root();
     return { update: el?.dataset.updateUrl, remove: el?.dataset.removeUrl };
@@ -80,8 +102,13 @@ async function refresh(): Promise<void> {
         return;
     }
 
+    const focused = focusSelector(document.activeElement);
+
     const swap = (): void => {
         current.replaceWith(fresh as Element);
+        if (focused) {
+            root()?.querySelector<HTMLElement>(focused)?.focus({ preventScroll: true });
+        }
     };
 
     // Each line carries its own `view-transition-name`, so the browser fades out

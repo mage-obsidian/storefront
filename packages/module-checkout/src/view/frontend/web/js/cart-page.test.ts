@@ -52,6 +52,40 @@ describe("cart-page enhancer", () => {
         });
     });
 
+    it("keeps the stepper focused across the refresh that replaces it", async () => {
+        const plus = document.querySelector('[data-cart-step="1"]');
+        plus.focus();
+        expect(document.activeElement).toBe(plus);
+
+        plus.dispatchEvent(new Event("click", { bubbles: true }));
+        await vi.waitFor(() => expect(plus.isConnected).toBe(false));
+
+        expect(document.activeElement).toBe(document.querySelector('[data-cart-step="1"]'));
+        expect(document.activeElement).not.toBe(document.body);
+    });
+
+    it("keeps the coupon field focused across a quantity refresh", async () => {
+        const coupon = document.querySelector('[name="coupon_code"]');
+        coupon.focus();
+
+        document.querySelector('[data-cart-step="1"]').dispatchEvent(new Event("click", { bubbles: true }));
+        await vi.waitFor(() => expect(coupon.isConnected).toBe(false));
+
+        expect(document.activeElement).toBe(document.querySelector('[name="coupon_code"]'));
+    });
+
+    it("leaves focus alone when it was outside the cart region", async () => {
+        const outside = document.createElement("button");
+        document.body.appendChild(outside);
+        outside.focus();
+
+        const plus = document.querySelector('[data-cart-step="1"]');
+        plus.dispatchEvent(new Event("click", { bubbles: true }));
+        await vi.waitFor(() => expect(plus.isConnected).toBe(false));
+
+        expect(document.activeElement).toBe(outside);
+    });
+
     it("applies a typed quantity on change", async () => {
         const input = document.querySelector("[data-cart-qty]");
         input.value = "5";

@@ -198,11 +198,11 @@
   animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
 
-::view-transition-old(.obsidian-cart-line) {
+::view-transition-old(.obsidian-cart-line):only-child {
   animation: 140ms both obsidian-cart-line-out;
 }
 
-::view-transition-new(.obsidian-cart-line) {
+::view-transition-new(.obsidian-cart-line):only-child {
   animation: 200ms 60ms both obsidian-cart-line-in;
   mix-blend-mode: normal;
 }
