@@ -29,6 +29,18 @@
             <exclude>src/Test/Unit/ViewModel/CookieNoticeTest.php</exclude>
             <exclude>src/Test/Unit/Plugin/Cms/WrapAuthoredContentTest.php</exclude>
             <exclude>src/Test/Unit/Plugin/Cms/RenderThemeTemplateTest.php</exclude>
+            <exclude>src/Test/Unit/Controller/Manifest/IndexTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Seo/CanonicalUrlBuilderTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Seo/CanonicalUrlTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Seo/ClaimedSocialPropertiesTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Seo/EmittedCanonicalTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Seo/MetaDescriptionTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Seo/MetaTagIntegrityTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Seo/SocialMetaBuilderTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Seo/StoreMediaUrlTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Seo/WebManifestBuilderTest.php</exclude>
+            <exclude>src/Test/Unit/Plugin/View/Page/Config/HeadMetadataTest.php</exclude>
+            <exclude>src/Test/Unit/ViewModel/Head/SeoLinksTest.php</exclude>
         </testsuite>
     </testsuites>
 </phpunit>

@@ -11,6 +11,107 @@
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
     <system>
         <section id="mage_obsidian_frontend">
+            <!--
+                Same `seo` group MageObsidian_ModernFrontend declares (groups merge
+                by id), so head metadata sits next to the JSON-LD switch instead of
+                in a tree of its own. Every field is a toggle on purpose: a store
+                that already runs an SEO extension turns off the half it duplicates.
+            -->
+            <group id="seo" translate="label" type="text" sortOrder="30"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>SEO</label>
+                <field id="canonical_enabled" translate="label comment" type="select" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Emit a Canonical URL</label>
+                    <comment>Adds a rel=canonical to every page that does not already have one. Magento only emits it for catalog pages, and only with the catalog SEO flags on; CMS pages, the home page and search results never get one. A canonical set by the core or another extension is never overwritten.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mage_obsidian/seo/canonical_enabled</config_path>
+                </field>
+                <field id="canonical_query_params" translate="label comment" type="text" sortOrder="30"
+                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Query Parameters Kept in the Canonical</label>
+                    <comment>Comma-separated. Every other parameter is dropped, tracking ones included. Leave `p` and `q` in unless pagination and search results should collapse onto a single URL.</comment>
+                    <config_path>mage_obsidian/seo/canonical_query_params</config_path>
+                    <depends>
+                        <field id="canonical_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="social_meta_enabled" translate="label comment" type="select" sortOrder="40"
+                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Emit Open Graph and Twitter Card Metadata</label>
+                    <comment>Adds og:* and twitter:* derived from the page's own title, description and imagery. Properties another block already writes are complemented, not duplicated.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mage_obsidian/seo/social_meta_enabled</config_path>
+                </field>
+                <field id="social_image" translate="label comment" type="image" sortOrder="50"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Fallback Share Image</label>
+                    <comment>Used where the page has no imagery of its own. Falls back to the store logo when empty. 1200x630 or larger.</comment>
+                    <backend_model>Magento\Config\Model\Config\Backend\Image</backend_model>
+                    <base_url type="media" scope_info="1">mage_obsidian/seo</base_url>
+                    <upload_dir config="system/filesystem/media" scope_info="1">mage_obsidian/seo</upload_dir>
+                    <config_path>mage_obsidian/seo/social_image</config_path>
+                    <depends>
+                        <field id="social_meta_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="twitter_site" translate="label comment" type="text" sortOrder="60"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Twitter Account</label>
+                    <comment>The @handle credited on the card. Left empty, twitter:site is not emitted.</comment>
+                    <config_path>mage_obsidian/seo/twitter_site</config_path>
+                    <depends>
+                        <field id="social_meta_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="meta_description_fallback" translate="label comment" type="select" sortOrder="70"
+                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Derive the Meta Description from the Page</label>
+                    <comment>When a product or category has no meta description of its own, one is summarised from its content instead of repeating the store default on every page.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mage_obsidian/seo/meta_description_fallback</config_path>
+                </field>
+                <field id="robots_directives" translate="label comment" type="text" sortOrder="80"
+                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Extra Robots Directives</label>
+                    <comment>Comma-separated, appended to the store's robots value. Skipped entirely on pages that are NOINDEX. Clear the field to leave the meta robots exactly as Magento wrote it.</comment>
+                    <config_path>mage_obsidian/seo/robots_directives</config_path>
+                </field>
+                <field id="manifest_enabled" translate="label comment" type="select" sortOrder="90"
+                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Serve a Web App Manifest</label>
+                    <comment>Publishes a manifest built from the store name, base URL, logo and favicon, and links it from the head.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mage_obsidian/seo/manifest_enabled</config_path>
+                </field>
+                <field id="manifest_display" translate="label comment" type="select" sortOrder="100"
+                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Manifest Display Mode</label>
+                    <source_model>MageObsidian\Storefront\Model\Seo\Source\ManifestDisplayOptions</source_model>
+                    <config_path>mage_obsidian/seo/manifest_display</config_path>
+                    <depends>
+                        <field id="manifest_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="manifest_theme_color" translate="label comment" type="text" sortOrder="110"
+                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Manifest Theme Colour</label>
+                    <comment>CSS colour the browser paints its own chrome with.</comment>
+                    <config_path>mage_obsidian/seo/manifest_theme_color</config_path>
+                    <depends>
+                        <field id="manifest_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="manifest_background_color" translate="label comment" type="text" sortOrder="120"
+                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Manifest Background Colour</label>
+                    <comment>CSS colour shown while the installed app starts.</comment>
+                    <config_path>mage_obsidian/seo/manifest_background_color</config_path>
+                    <depends>
+                        <field id="manifest_enabled">1</field>
+                    </depends>
+                </field>
+            </group>
             <group id="appearance" translate="label comment" type="text" sortOrder="30"
                    showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Appearance</label>

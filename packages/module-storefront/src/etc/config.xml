@@ -14,6 +14,26 @@
             <appearance>
                 <enabled>0</enabled>
             </appearance>
+            <seo>
+                <canonical_enabled>1</canonical_enabled>
+                <!--
+                    Everything else is dropped, tracking parameters included. `p`
+                    stays because a paginated listing must point at itself: pages
+                    2..n canonicalising to page 1 hides their products, and `q`
+                    because without it every search result canonicalises onto the
+                    same empty result page.
+                -->
+                <canonical_query_params>p,q</canonical_query_params>
+                <social_meta_enabled>1</social_meta_enabled>
+                <social_image/>
+                <twitter_site/>
+                <robots_directives>max-image-preview:large,max-snippet:-1,max-video-preview:-1</robots_directives>
+                <meta_description_fallback>1</meta_description_fallback>
+                <manifest_enabled>1</manifest_enabled>
+                <manifest_display>standalone</manifest_display>
+                <manifest_theme_color>#ffffff</manifest_theme_color>
+                <manifest_background_color>#ffffff</manifest_background_color>
+            </seo>
             <speculation>
                 <enabled>1</enabled>
                 <mode>prefetch</mode>

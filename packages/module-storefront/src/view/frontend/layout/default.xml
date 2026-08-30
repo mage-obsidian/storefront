@@ -82,6 +82,19 @@
                    template="Magento_GoogleGtag::ga.twig" ifconfig="google/gtag/analytics4/active"/>
         </referenceBlock>
 
+        <!-- Head links Magento has no page asset for: a canonical on the pages
+             the core never emits one for (CMS, home, search) and the web app
+             manifest. Both self-gate — the canonical stays out when the core or
+             another extension already set one. -->
+        <referenceBlock name="head.additional">
+            <block class="Magento\Framework\View\Element\Template" name="obsidian.seo_links"
+                   template="Magento_Theme::html/head/seo_links.phtml">
+                <arguments>
+                    <argument name="seo_links" xsi:type="object">MageObsidian\Storefront\ViewModel\Head\SeoLinks</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+
         <!-- Form-key provider. Same home Magento_PageCache gives its own: head,
              on every page. The tag is type="module", so it is deferred and never
              competes with the critical path. -->
