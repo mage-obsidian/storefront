@@ -68,14 +68,14 @@ const regions = computed<
     { role: string; live: "polite" | "assertive"; items: ToastItem[] }[]
 >(() => [
     {
-        role: "alert",
-        live: "assertive",
-        items: toasts.value.filter((t) => t.tone === NotificationTone.Error),
-    },
-    {
         role: "status",
         live: "polite",
         items: toasts.value.filter((t) => t.tone !== NotificationTone.Error),
+    },
+    {
+        role: "alert",
+        live: "assertive",
+        items: toasts.value.filter((t) => t.tone === NotificationTone.Error),
     },
 ]);
 
@@ -175,20 +175,20 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="toast-host pointer-events-none fixed inset-x-0 top-0 flex flex-col items-end gap-2 px-4 print:hidden">
+    <div class="toast-host pointer-events-none fixed inset-x-0 bottom-0 flex flex-col items-center gap-2 px-4 sm:items-end print:hidden">
         <div
             v-for="region in regions"
             :key="region.role"
             :role="region.role"
             :aria-live="region.live"
             aria-atomic="true"
-            class="relative flex w-full flex-col items-end gap-2"
+            class="relative flex w-full flex-col items-center gap-2 sm:items-end"
         >
             <TransitionGroup name="obsidian-toast">
                 <div
                     v-for="toast in region.items"
                     :key="toast.id"
-                    class="pointer-events-none flex w-full justify-end"
+                    class="pointer-events-none flex w-full justify-center sm:justify-end"
                 >
                     <div
                         class="obsidian-toast pointer-events-auto relative flex w-full gap-3 overflow-hidden rounded-edge border border-ash-200 bg-alabaster-raised/95 py-3 pl-4 pr-2 text-ink shadow-xl backdrop-blur-md sm:w-96"

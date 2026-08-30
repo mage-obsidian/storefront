@@ -54,9 +54,9 @@
 }
 
 /* Toast stack enter/leave: a short rise and fade. The leaving row is pulled out
-   of flow so the survivors slide up through `-move` instead of snapping once it
-   is removed; it spans the region's width (the chip inside stays centred) so
-   going absolute does not resize it. */
+   of flow so the survivors slide into its place through `-move` instead of
+   snapping once it is removed; it spans the region's width (the chip inside
+   stays centred) so going absolute does not resize it. */
 .obsidian-toast-enter-active {
   transition:
     opacity 0.22s ease,
@@ -77,14 +77,17 @@
 
 .toast-host {
   z-index: var(--obsidian-z-toast, 70);
-  padding-top: calc(1rem + var(--obsidian-top-inset, 0px));
-  padding-bottom: 1rem;
+  padding-top: 1rem;
+  padding-bottom: calc(
+    1rem + env(safe-area-inset-bottom, 0px) + var(--obsidian-bottom-inset, 0px) +
+      var(--obsidian-cookie-notice-height, 0px) + var(--obsidian-toast-inset, 0px)
+  );
 }
 
 .obsidian-toast-enter-from,
 .obsidian-toast-leave-to {
   opacity: 0;
-  transform: translateY(-0.5rem);
+  transform: translateY(0.5rem);
 }
 
 .obsidian-toast__countdown {

@@ -8,6 +8,7 @@
  */
 
 const ALLOW_EVENT = "user:allowed:save:cookie";
+const HEIGHT_VARIABLE = "--obsidian-cookie-notice-height";
 
 /** Read a cookie value (URL-decoded) from a cookie string, or null. */
 export function readCookie(name: string, cookieString: string): string | null {
@@ -38,10 +39,20 @@ export function bindCookieNotice(banner: HTMLElement, doc: Document = document):
     }
     banner.hidden = false;
 
+    const publishHeight = (): void =>
+        doc.documentElement.style.setProperty(HEIGHT_VARIABLE, `${banner.offsetHeight}px`);
+    const sizeObserver =
+        typeof ResizeObserver === "undefined" ? null : new ResizeObserver(publishHeight);
+
+    publishHeight();
+    sizeObserver?.observe(banner);
+
     banner.querySelector<HTMLElement>("[data-cookie-allow]")?.addEventListener("click", () => {
         doc.cookie = consentCookie(name, value, lifetime);
         if (readCookie(name, doc.cookie) !== null) {
             banner.hidden = true;
+            sizeObserver?.disconnect();
+            doc.documentElement.style.removeProperty(HEIGHT_VARIABLE);
             doc.dispatchEvent(new CustomEvent(ALLOW_EVENT));
         } else if (noCookiesUrl) {
             window.location.href = noCookiesUrl;

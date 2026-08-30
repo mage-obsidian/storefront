@@ -21,6 +21,38 @@ const fire = (detail) => window.dispatchEvent(new CustomEvent("obsidian:toast", 
 const rows = (wrapper) => wrapper.findAll(".pointer-events-auto");
 
 describe("Toast", () => {
+    it("anchors the stack to the bottom, clear of the header", async () => {
+        const wrapper = mount(Toast, { attachTo: document.body });
+
+        const host = wrapper.get(".toast-host");
+        expect(host.classes()).toContain("bottom-0");
+        expect(host.classes()).not.toContain("top-0");
+
+        wrapper.unmount();
+    });
+
+    it("centres a toast on narrow viewports and corners it from sm up", async () => {
+        const wrapper = mount(Toast, { attachTo: document.body });
+
+        fire({ message: "Added to cart", tone: "success" });
+        await wrapper.vm.$nextTick();
+
+        const row = wrapper.get(".pointer-events-auto").element.parentElement;
+        expect(row.classList.contains("justify-center")).toBe(true);
+        expect(row.classList.contains("sm:justify-end")).toBe(true);
+
+        wrapper.unmount();
+    });
+
+    it("renders the assertive region nearest the anchored corner", async () => {
+        const wrapper = mount(Toast, { attachTo: document.body });
+
+        const roles = wrapper.findAll("[aria-live]").map((r) => r.attributes("role"));
+        expect(roles).toEqual(["status", "alert"]);
+
+        wrapper.unmount();
+    });
+
     it("announces a toast message in a live region", async () => {
         const wrapper = mount(Toast, { attachTo: document.body });
 
@@ -242,7 +274,8 @@ describe("Toast", () => {
         await notify("Heads up", NotificationTone.Notice);
         await wrapper.vm.$nextTick();
 
-        const [error, notice] = rows(wrapper);
+        const error = wrapper.get('[role="alert"]');
+        const notice = wrapper.get('[role="status"]');
         expect(error.find(".bg-danger").exists()).toBe(true);
         expect(error.find(".text-danger").exists()).toBe(true);
         expect(notice.find(".bg-ash-400").exists()).toBe(true);

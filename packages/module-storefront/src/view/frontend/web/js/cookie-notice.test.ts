@@ -58,9 +58,47 @@ describe("bindCookieNotice", () => {
                     return true;
                 };
                 self.querySelector = banner.querySelector.bind(banner);
+                self.documentElement = document.createElement("html");
             },
         } as unknown as Document & { dispatched: string[] };
     }
+
+    const CLEARANCE = "--obsidian-cookie-notice-height";
+    const clearanceOf = (doc: any): string =>
+        doc.documentElement.style.getPropertyValue(CLEARANCE);
+
+    it("publishes a clearance for floating layers while it is on screen", () => {
+        const banner = makeBanner();
+        const doc = fakeDoc("") as any;
+        doc._install(banner);
+
+        bindCookieNotice(banner, doc);
+
+        expect(banner.hidden).toBe(false);
+        expect(clearanceOf(doc)).not.toBe("");
+    });
+
+    it("withdraws the clearance once consent is given", () => {
+        const banner = makeBanner();
+        const doc = fakeDoc("") as any;
+        doc._install(banner);
+        bindCookieNotice(banner, doc);
+
+        banner.querySelector<HTMLElement>("[data-cookie-allow]")!.click();
+
+        expect(banner.hidden).toBe(true);
+        expect(clearanceOf(doc)).toBe("");
+    });
+
+    it("publishes no clearance when consent was already given", () => {
+        const banner = makeBanner();
+        const doc = fakeDoc("user_allowed_save_cookie=%7B%221%22%3A1%7D") as any;
+        doc._install(banner);
+
+        bindCookieNotice(banner, doc);
+
+        expect(clearanceOf(doc)).toBe("");
+    });
 
     it("stays hidden when consent was already given", () => {
         const banner = makeBanner();
@@ -98,6 +136,7 @@ describe("bindCookieNotice", () => {
         doc.querySelector = banner.querySelector.bind(banner);
         Object.defineProperty(doc, "cookie", { get: () => "", set: () => {}, configurable: true });
         doc.dispatchEvent = () => true;
+        doc.documentElement = document.createElement("html");
         const hrefs: string[] = [];
         const original = window.location;
         Object.defineProperty(window, "location", { value: { ...original, set href(v: string) { hrefs.push(v); } }, configurable: true });
