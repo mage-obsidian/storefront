@@ -19,8 +19,8 @@ export function __reset() {
     result = { ok: true };
 }
 
-export function __setResult(value, message) {
-    result = { ok: value, message };
+export function __setResult(value, message, announced) {
+    result = { ok: value, message, announced };
 }
 
 export function useCart() {

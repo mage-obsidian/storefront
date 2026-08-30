@@ -37,6 +37,7 @@ function submit(form: HTMLFormElement): Promise<void> {
 
 beforeEach(() => {
     __reset();
+    events.reset();
     document.body.innerHTML = "";
 });
 
@@ -79,6 +80,21 @@ describe("product-options-form enhancer", () => {
         expect(__formCalls[0]).toBe(form);
         expect(toast.mock.calls.at(-1)?.[0].message).toBe("Added");
         
+    });
+
+    it("stays quiet when the bag already announced the add", async () => {
+        const toast = vi.fn();
+        events.observe(NOTIFICATION_EVENT, toast);
+        __setResult(true, undefined, true);
+        const form = buildForm({ required: true });
+        setup(form);
+        (form.querySelector("select") as HTMLSelectElement).value = "11";
+
+        await submit(form);
+        await Promise.resolve();
+
+        expect(__formCalls).toHaveLength(1);
+        expect(toast).not.toHaveBeenCalled();
     });
 
     // A file option is the most common source of a server-side rejection, and

@@ -51,11 +51,13 @@ export function setup(form: HTMLFormElement): void {
 
         // Magento's own wording wins when it explains the failure (bad file
         // extension, missing required option); the data-msg-* copy is the fallback.
-        const { ok, message } = await cart.addFromForm(form);
-        announce(
-            message ?? (ok ? form.dataset.msgAdded ?? "Added to cart" : form.dataset.msgFailed ?? "Could not add to cart"),
-            ok ? NotificationTone.Success : NotificationTone.Error,
-        );
+        const { ok, message, announced } = await cart.addFromForm(form);
+        if (!announced) {
+            announce(
+                message ?? (ok ? form.dataset.msgAdded ?? "Added to cart" : form.dataset.msgFailed ?? "Could not add to cart"),
+                ok ? NotificationTone.Success : NotificationTone.Error,
+            );
+        }
 
         setButtonBusy(button, false);
     });

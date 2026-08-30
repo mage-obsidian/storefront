@@ -150,6 +150,21 @@ describe("ProductForm", () => {
         expect(__rawCalls).toHaveLength(1);
         expect(toast.mock.calls.at(-1)[0].message).toBe("Failed");
     });
+
+    it("stays quiet when the bag already announced the add", async () => {
+        __setResult(true, undefined, true);
+        const toast = vi.fn();
+        events.observe(NOTIFICATION_EVENT, toast);
+
+        const wrapper = build();
+        await wrapper.find('[data-option-id="6"]').trigger("click");
+        await wrapper.find('[data-option-id="8"]').trigger("click");
+        await wrapper.find("form").trigger("submit");
+        await flushPromises();
+
+        expect(__rawCalls).toHaveLength(1);
+        expect(toast).not.toHaveBeenCalled();
+    });
 });
 
 describe("variant announcements", () => {
