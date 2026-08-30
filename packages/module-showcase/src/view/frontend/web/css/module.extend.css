@@ -3,6 +3,14 @@
  * belongs to the shop and what belongs to the demo.
  */
 
+:root {
+  --obsidian-showcase-handle-height: 2.5rem;
+}
+
+:root:has(.showcase) {
+  --obsidian-toast-inset: calc(1rem + var(--obsidian-showcase-handle-height));
+}
+
 .showcase {
   position: fixed;
   right: 1rem;
@@ -17,6 +25,7 @@
 
 .showcase__handle {
   display: inline-flex;
+  min-height: var(--obsidian-showcase-handle-height);
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 0.875rem;
