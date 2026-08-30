@@ -29,6 +29,7 @@ import {
 export interface CartResult {
     ok: boolean;
     message?: string;
+    announced?: boolean;
 }
 
 export const CART_DOMAIN = 'cart';

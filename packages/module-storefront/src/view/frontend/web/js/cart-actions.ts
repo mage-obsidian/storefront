@@ -26,11 +26,13 @@ function init(): void {
         const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
         setButtonBusy(button, true);
 
-        const { ok, message } = await cart.addFromForm(form);
-        void notify(
-            message ?? (ok ? i18n.$t('Added to cart') : i18n.$t('Could not add to cart')),
-            ok ? NotificationTone.Success : NotificationTone.Error,
-        );
+        const { ok, message, announced } = await cart.addFromForm(form);
+        if (!announced) {
+            void notify(
+                message ?? (ok ? i18n.$t('Added to cart') : i18n.$t('Could not add to cart')),
+                ok ? NotificationTone.Success : NotificationTone.Error,
+            );
+        }
 
         setButtonBusy(button, false);
     });

@@ -221,6 +221,17 @@ describe("cart events", () => {
         expect(dispatched.at(-1).data.result).toEqual({ ok: true });
     });
 
+    it("hands the caller back what an after observer claimed", async () => {
+        stubOk();
+        events.observe("cart_add_after", (data) => {
+            data.result.announced = true;
+        });
+
+        const result = await useCart().addProduct({ action: "/checkout/cart/add", product: 42 });
+
+        expect(result).toEqual({ ok: true, announced: true });
+    });
+
     it("names the operation for a sidebar mutation", async () => {
         stubOk();
 
