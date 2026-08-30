@@ -21,6 +21,9 @@ const LABELS = {
     close: "Close",
     open: "Open bag",
     items: "items in your bag",
+    added: "Added to your bag",
+    itemsOne: "%1 item in your bag",
+    itemsOther: "%1 items in your bag",
 };
 
 const PROPS = {
@@ -312,5 +315,224 @@ describe("MiniCart optimistic mutations", () => {
         const wrapper = await openBag();
 
         expect(wrapper.get(".minicart-remove svg").attributes("data-icon")).toBe("trash");
+    });
+});
+
+describe("MiniCart add-to-cart flow", () => {
+    const ADD_BEFORE = "cart_add_before";
+    const ADD_AFTER = "cart_add_after";
+
+    beforeEach(() => {
+        __reset();
+        __resetCart();
+        __resetEvents();
+        delete window.__MAGE_OBSIDIAN_UX__;
+    });
+
+    function mountBag(items = [ITEM], summary = 2) {
+        __setSection("cart", { items, summary_count: summary, subtotal: "$104.00" });
+        addTrigger();
+        return mount(MiniCart, { props: PROPS, attachTo: document.body });
+    }
+
+    async function add(result: Record<string, unknown>, grow?: () => void) {
+        await events.dispatch(ADD_BEFORE, { operation: "add" });
+        grow?.();
+        await events.dispatch(ADD_AFTER, { operation: "add", result });
+        await nextTick();
+    }
+
+    it("opens the bag when an add succeeds", async () => {
+        mountBag();
+        await nextTick();
+
+        await add({ ok: true });
+
+        expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+    });
+
+    it("leaves the bag closed when the add fails", async () => {
+        mountBag();
+        await nextTick();
+
+        await add({ ok: false, message: "Not enough items for sale" });
+
+        expect(document.querySelector('[role="dialog"]')).toBeNull();
+    });
+
+    it("claims the announcement so the caller drops its success toast", async () => {
+        mountBag();
+        await nextTick();
+        const result: Record<string, unknown> = { ok: true };
+
+        await add(result);
+
+        expect(result.announced).toBe(true);
+    });
+
+    it("leaves a failed add unclaimed so it still reaches a toast", async () => {
+        mountBag();
+        await nextTick();
+        const result: Record<string, unknown> = { ok: false, message: "Out of stock" };
+
+        await add(result);
+
+        expect(result.announced).toBeUndefined();
+    });
+
+    it("marks the line whose quantity grew, and only that one", async () => {
+        const other = { ...ITEM, item_id: 16, product_name: "Aero Pant", qty: 1 };
+        mountBag([ITEM, other], 3);
+        await nextTick();
+
+        await add({ ok: true }, () =>
+            __setSection("cart", {
+                items: [{ ...ITEM, qty: 3 }, other],
+                summary_count: 4,
+                subtotal: "$156.00",
+            }),
+        );
+
+        const rows = document.querySelectorAll("li.minicart-item");
+        expect(rows[0].classList.contains("is-added")).toBe(true);
+        expect(rows[1].classList.contains("is-added")).toBe(false);
+    });
+
+    it("marks a line that was not in the bag before", async () => {
+        mountBag([], 0);
+        await nextTick();
+
+        await add({ ok: true }, () =>
+            __setSection("cart", { items: [ITEM], summary_count: 2, subtotal: "$104.00" }),
+        );
+
+        expect(document.querySelector("li.minicart-item")?.classList.contains("is-added")).toBe(true);
+    });
+
+    it("clears the mark once the highlight window closes", async () => {
+        vi.useFakeTimers();
+        try {
+            mountBag([], 0);
+            await nextTick();
+
+            await add({ ok: true }, () =>
+                __setSection("cart", { items: [ITEM], summary_count: 2, subtotal: "$104.00" }),
+            );
+            expect(document.querySelector("li.minicart-item")?.classList.contains("is-added")).toBe(true);
+
+            vi.advanceTimersByTime(1800);
+            await nextTick();
+
+            expect(document.querySelector("li.minicart-item")?.classList.contains("is-added")).toBe(false);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it("announces the add in a live region that outlives the drawer", async () => {
+        mountBag();
+        await nextTick();
+        const live = document.querySelector("[data-minicart-live]");
+        expect(live).not.toBeNull();
+        expect(live?.textContent).toBe("");
+
+        await add({ ok: true });
+        await nextTick();
+
+        expect(document.querySelector("[data-minicart-live]")?.textContent).toBe("Added to your bag");
+    });
+
+    it("says nothing in the live region when the add failed", async () => {
+        mountBag();
+        await nextTick();
+
+        await add({ ok: false, message: "Out of stock" });
+        await nextTick();
+
+        expect(document.querySelector("[data-minicart-live]")?.textContent).toBe("");
+    });
+
+    function setQty(qty: number) {
+        __setSection("cart", {
+            items: [{ ...ITEM, qty }],
+            summary_count: qty,
+            subtotal: "$52.00",
+        });
+    }
+
+    it("settles a landing add against the snapshot taken before it, not the newest", async () => {
+        mountBag([ITEM], 2);
+        await nextTick();
+
+        await events.dispatch(ADD_BEFORE, { operation: "add" });
+        setQty(3);
+        await events.dispatch(ADD_BEFORE, { operation: "add" });
+        await events.dispatch(ADD_AFTER, { operation: "add", result: { ok: true } });
+        await nextTick();
+
+        expect(document.querySelector("li.minicart-item")?.classList.contains("is-added")).toBe(true);
+    });
+
+    it("keeps no snapshot for an add a before observer cancelled", async () => {
+        mountBag([ITEM], 2);
+        await nextTick();
+
+        await events.dispatch(ADD_BEFORE, { operation: "add", cancelled: true });
+        setQty(3);
+        await events.dispatch(ADD_BEFORE, { operation: "add" });
+        await events.dispatch(ADD_AFTER, { operation: "add", result: { ok: true } });
+        await nextTick();
+
+        expect(document.querySelector("li.minicart-item")?.classList.contains("is-added")).toBe(false);
+    });
+
+    it("counts one bag item without saying items", async () => {
+        __setSection("cart", { items: [{ ...ITEM, qty: 1 }], summary_count: 1, subtotal: "$52.00" });
+        const trigger = addTrigger();
+        mount(MiniCart, { props: PROPS, attachTo: document.body });
+        await nextTick();
+        trigger.click();
+        await nextTick();
+
+        const inDrawer = document.querySelector('[role="dialog"] [role="status"]');
+        expect(inDrawer?.textContent?.trim()).toBe("1 item in your bag");
+    });
+
+    it("leaves the drawer out of it when the bag page is already showing", async () => {
+        const bagPage = document.createElement("div");
+        bagPage.setAttribute("data-cart-root", "");
+        document.body.appendChild(bagPage);
+        mountBag();
+        await nextTick();
+        const result: Record<string, unknown> = { ok: true };
+
+        await add(result, () => setQty(3));
+
+        expect(document.querySelector('[role="dialog"]')).toBeNull();
+        expect(result.announced).toBeUndefined();
+        expect(document.querySelector("[data-minicart-live]")?.textContent).toBe("");
+    });
+
+    it("still opens on a successful add away from the bag page", async () => {
+        mountBag();
+        await nextTick();
+        const result: Record<string, unknown> = { ok: true };
+
+        await add(result);
+
+        expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+        expect(result.announced).toBe(true);
+    });
+
+    it("stops reacting to adds once unmounted", async () => {
+        const wrapper = mountBag();
+        await nextTick();
+        wrapper.unmount();
+
+        const result: Record<string, unknown> = { ok: true };
+        await add(result);
+
+        expect(result.announced).toBeUndefined();
+        expect(document.querySelector('[role="dialog"]')).toBeNull();
     });
 });

@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onBeforeUnmount, useId } from "vue";
+import { computed, nextTick, ref, watch, onMounted, onBeforeUnmount, useId } from "vue";
 import Drawer from "MageObsidian_Storefront::elements/Drawer";
 import Icon from "MageObsidian_ModernFrontend::elements/Icon";
+import events from "MageObsidian_ModernFrontend::js/events";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
-import { useCart } from "MageObsidian_Storefront::js/useCart";
+import { CART_DOMAIN, CartOperation, useCart, type CartEvent } from "MageObsidian_Storefront::js/useCart";
+import { MutationPhase, mutationEvent } from "mage-obsidian/runtime/mutationEvent.ts";
 import { useValueFlash } from "MageObsidian_Storefront::js/useValueFlash";
 import { notify, NotificationTone } from "MageObsidian_Storefront::js/notifications";
 import { readUxRuntimeConfig } from "mage-obsidian/runtime/uxConfig.ts";
@@ -39,6 +41,12 @@ interface CartSection {
 }
 
 const CART_SECTION = "cart";
+const CART_PAGE_ROOT = "[data-cart-root]";
+const ADD_BEFORE = mutationEvent(CART_DOMAIN, CartOperation.Add, MutationPhase.Before);
+const ADD_AFTER = mutationEvent(CART_DOMAIN, CartOperation.Add, MutationPhase.After);
+const ADDED_HIGHLIGHT_MS = 1800;
+const LIVE_MESSAGE_MS = 4000;
+const MAX_PENDING_ADDS = 4;
 
 const props = withDefaults(
     defineProps<{
@@ -64,6 +72,8 @@ const isEmpty = computed(() => items.value.length === 0);
 const open = ref(false);
 const pending = ref<Array<number | string>>([]);
 const bumped = ref<number | string | null>(null);
+const added = ref<Set<string>>(new Set());
+const liveMessage = ref("");
 
 const syncing = computed(() => pending.value.length > 0);
 const subtotalFlashing = useValueFlash(() => subtotal.value);
@@ -71,6 +81,15 @@ const subtotalFlashing = useValueFlash(() => subtotal.value);
 const drawerId = `minicart-${useId()}`;
 
 const isPending = (item: CartItem): boolean => pending.value.includes(item.item_id);
+const isAdded = (item: CartItem): boolean => added.value.has(String(item.item_id));
+
+const itemsSummary = computed(() => {
+    const template =
+        count.value === 1
+            ? (props.labels.itemsOne ?? "%1 item in your bag")
+            : (props.labels.itemsOther ?? "%1 items in your bag");
+    return template.replace("%1", String(count.value));
+});
 
 // Flatten the option value (array for bundle/downloadable) and drop any price
 // markup to a plain, escaped string — same as the bag page does server-side.
@@ -177,15 +196,81 @@ function remove(item: CartItem): void {
     );
 }
 
+const quantitiesBeforeAdd: Array<Map<string, number>> = [];
+let addedTimer: ReturnType<typeof setTimeout> | null = null;
+let liveTimer: ReturnType<typeof setTimeout> | null = null;
+
+function quantitiesByItem(): Map<string, number> {
+    return new Map(items.value.map((item) => [String(item.item_id), Number(item.qty) || 0]));
+}
+
+function markGrown(before: Map<string, number>): void {
+    const grown = items.value
+        .filter((item) => (Number(item.qty) || 0) > (before.get(String(item.item_id)) ?? 0))
+        .map((item) => String(item.item_id));
+    if (grown.length === 0) {
+        return;
+    }
+    added.value = new Set(grown);
+    if (addedTimer) {
+        clearTimeout(addedTimer);
+    }
+    addedTimer = setTimeout(() => {
+        added.value = new Set();
+        addedTimer = null;
+    }, ADDED_HIGHLIGHT_MS);
+}
+
+async function announceAdded(): Promise<void> {
+    liveMessage.value = "";
+    await nextTick();
+    liveMessage.value = props.labels.added ?? "Added to your bag";
+    if (liveTimer) {
+        clearTimeout(liveTimer);
+    }
+    liveTimer = setTimeout(() => {
+        liveMessage.value = "";
+        liveTimer = null;
+    }, LIVE_MESSAGE_MS);
+}
+
+const onAddBefore = (event: CartEvent): void => {
+    if (event.cancelled) {
+        return;
+    }
+    quantitiesBeforeAdd.push(quantitiesByItem());
+    if (quantitiesBeforeAdd.length > MAX_PENDING_ADDS) {
+        quantitiesBeforeAdd.shift();
+    }
+};
+
+const bagPageIsShowing = (): boolean => document.querySelector(CART_PAGE_ROOT) !== null;
+
+const onAddAfter = (event: CartEvent): void => {
+    const before = quantitiesBeforeAdd.shift() ?? new Map<string, number>();
+    if (!event.result?.ok || bagPageIsShowing()) {
+        return;
+    }
+    open.value = true;
+    event.result.announced = true;
+    markGrown(before);
+    void announceAdded();
+};
+
 // Bind every header trigger: wire dialog semantics and open the drawer instead of
 // navigating. Kept on the document so the island can mount anywhere.
 const triggers: Element[] = [];
+const unobserve: Array<() => void> = [];
 const onTriggerClick = (event: Event): void => {
     event.preventDefault();
     open.value = true;
 };
 
 onMounted(() => {
+    unobserve.push(
+        events.observe(ADD_BEFORE, onAddBefore, { name: "minicart", sortOrder: 1000 }),
+    );
+    unobserve.push(events.observe(ADD_AFTER, onAddAfter, { name: "minicart" }));
     document.querySelectorAll("[data-minicart-trigger]").forEach((trigger) => {
         trigger.setAttribute("aria-haspopup", "dialog");
         trigger.setAttribute("aria-controls", drawerId);
@@ -197,6 +282,13 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     triggers.forEach((trigger) => trigger.removeEventListener("click", onTriggerClick));
+    unobserve.forEach((off) => off());
+    if (addedTimer) {
+        clearTimeout(addedTimer);
+    }
+    if (liveTimer) {
+        clearTimeout(liveTimer);
+    }
 });
 
 watch(open, (isOpen) => {
@@ -205,6 +297,7 @@ watch(open, (isOpen) => {
 </script>
 
 <template>
+    <p class="sr-only" role="status" aria-live="polite" data-minicart-live>{{ liveMessage }}</p>
     <Drawer :id="drawerId" :open="open" side="right" :label="labels.title" @close="open = false">
         <header class="flex items-center justify-between border-b border-ash-200 px-5 py-4">
             <h2 class="font-display text-xl tracking-mono text-ink">
@@ -221,7 +314,7 @@ watch(open, (isOpen) => {
             </button>
         </header>
 
-        <p class="sr-only" role="status" aria-live="polite">{{ count }} {{ labels.items }}</p>
+        <p class="sr-only" role="status" aria-live="polite">{{ itemsSummary }}</p>
 
         <Transition name="minicart-panel" mode="out-in">
             <div v-if="isEmpty" key="empty" class="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
@@ -235,6 +328,7 @@ watch(open, (isOpen) => {
                         v-for="item in items"
                         :key="item.item_id"
                         class="minicart-item grid grid-cols-[4.5rem_1fr] gap-4 px-5 py-5"
+                        :class="{ 'is-added': isAdded(item) }"
                     >
                         <a :href="item.product_url" class="minicart-thumb">
                             <img

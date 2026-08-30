@@ -5,6 +5,11 @@ interface DispatchOptions {
     mirror?: boolean;
 }
 
+interface ObserverOptions {
+    name?: string;
+    sortOrder?: number;
+}
+
 interface DispatchHook {
     start?(event: string, data: object, options: DispatchOptions): void;
     end?(event: string, data: object, options: DispatchOptions): void;
@@ -16,7 +21,7 @@ const hooks: DispatchHook[] = [];
 export const dispatched: Array<{ event: string; data: Record<string, unknown> }> = [];
 
 export const events = {
-    observe(event: string, observer: Observer): () => void {
+    observe(event: string, observer: Observer, _options?: ObserverOptions): () => void {
         (observers[event] ??= []).push(observer);
         return () => {
             const at = observers[event].indexOf(observer);

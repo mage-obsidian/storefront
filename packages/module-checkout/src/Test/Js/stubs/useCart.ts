@@ -23,6 +23,14 @@ export function __setResult(value: boolean, message?: string): void {
     result = { ok: value, message };
 }
 
+export const CART_DOMAIN = "cart";
+
+export const CartOperation = {
+    Add: "add",
+    UpdateQty: "update_qty",
+    RemoveItem: "remove_item",
+} as const;
+
 export function getFormKey(): string {
     return "test-form-key";
 }
