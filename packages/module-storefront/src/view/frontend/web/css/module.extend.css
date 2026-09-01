@@ -763,6 +763,19 @@
    author's own choices are never overridden.
    ============================================================ */
 
+/* A CMS page holds its content to a reading measure, which is right for prose
+   and wrong for layout: clamped to it, all three of Page Builder's row
+   appearances collapse to the same narrow left-hugging column and the rules
+   below can never apply. Content that carries rows is layout, so it is let out;
+   a page of prose keeps the measure it was given.
+
+   The selector mirrors the theme's own — `.cms-page-view .columns > .content` —
+   with the `:has()` on top, because anything shorter ties with it and loses on
+   order. */
+.cms-page-view .columns > .content:has([data-content-type="row"]) {
+  max-width: none;
+}
+
 [data-content-type="row"][data-appearance="contained"] {
   margin-inline: auto;
   width: 100%;
@@ -946,7 +959,7 @@
   border: 0;
 }
 
-[data-content-type="map"] {
+[data-content-type="map"]:has(iframe) {
   position: relative;
   display: block;
   height: 300px;
