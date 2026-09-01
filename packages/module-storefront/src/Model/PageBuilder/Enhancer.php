@@ -10,36 +10,33 @@ declare(strict_types=1);
 namespace MageObsidian\Storefront\Model\PageBuilder;
 
 use Magento\Framework\View\Helper\SecureHtmlRenderer;
+use MageObsidian\Storefront\Model\PageBuilder\Detector\DetectorInterface;
 use MageObsidian\ModernFrontend\ViewModel\ViteResolver;
 use Throwable;
 
 /**
  * Loads the behaviour Page Builder content needs, and only where it needs it.
  *
- * Two of the content types a merchant can save are inert without script: a tab
- * set shows every panel at once, and a slider is a column of stacked slides.
- * Everything else Page Builder renders is finished markup. So the module is
- * pulled in by the content that asks for it rather than by every page — a store
- * whose authors never used a tab set never pays for one.
+ * Most of what a merchant can save is finished markup; a handful of content
+ * types are inert without script — a tab set shows every panel at once, a slider
+ * is a column of stacked slides. So the behaviour is pulled in by the content
+ * that asks for it rather than by every page.
+ *
+ * Which content asks for what is not written here. It arrives as a collection of
+ * detectors declared in `di.xml`, so a module or a theme adds its own without
+ * editing this class, and a page that matches none of them downloads nothing.
  */
 class Enhancer
 {
-    private const string ENHANCER = 'MageObsidian_Storefront::js/page-builder';
-
-    /**
-     * The content types whose behaviour lives in script.
-     *
-     * @var string[]
-     */
-    private const array INTERACTIVE = ['data-content-type="tabs"', 'data-content-type="slider"'];
-
     /**
      * @param ViteResolver $viteResolver
      * @param SecureHtmlRenderer $secureRenderer
+     * @param DetectorInterface[] $detectors
      */
     public function __construct(
         private readonly ViteResolver $viteResolver,
-        private readonly SecureHtmlRenderer $secureRenderer
+        private readonly SecureHtmlRenderer $secureRenderer,
+        private readonly array $detectors = []
     ) {
     }
 
@@ -50,38 +47,40 @@ class Enhancer
      */
     public function enhance(string $html): string
     {
-        if (!$this->needsEnhancing($html)) {
-            return $html;
+        $behaviours = '';
+        foreach ($this->modulesFor($html) as $module) {
+            try {
+                $url = $this->viteResolver->getViteFileUrl($module);
+            } catch (Throwable) {
+                // A build that has not run is not a reason to lose the content.
+                continue;
+            }
+
+            $behaviours .= $this->secureRenderer->renderTag(
+                'script',
+                ['type' => 'module', 'src' => $url],
+                '',
+                false
+            );
         }
 
-        try {
-            $url = $this->viteResolver->getViteFileUrl(self::ENHANCER);
-        } catch (Throwable) {
-            // A build that has not run is not a reason to lose the content.
-            return $html;
-        }
-
-        return $html . $this->secureRenderer->renderTag(
-            'script',
-            ['type' => 'module', 'src' => $url],
-            '',
-            false
-        );
+        return $html . $behaviours;
     }
 
     /**
      * @param string $html
      *
-     * @return bool
+     * @return string[] Each behaviour once, in the order the map declares them.
      */
-    private function needsEnhancing(string $html): bool
+    private function modulesFor(string $html): array
     {
-        foreach (self::INTERACTIVE as $marker) {
-            if (str_contains($html, $marker)) {
-                return true;
+        $modules = [];
+        foreach ($this->detectors as $detector) {
+            if ($detector instanceof DetectorInterface && $detector->matches($html)) {
+                $modules[$detector->getModule()] = true;
             }
         }
 
-        return false;
+        return array_keys($modules);
     }
 }

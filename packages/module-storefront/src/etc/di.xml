@@ -66,4 +66,5 @@
                 type="MageObsidian\Storefront\Plugin\PageBuilder\SecureAuthoredStyles"
                 sortOrder="100"/>
     </type>
+
 </config>

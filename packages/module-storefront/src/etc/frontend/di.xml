@@ -33,4 +33,60 @@
             </argument>
         </arguments>
     </type>
+
+    <!-- Which authored content asks for which behaviour. A module or a theme
+         adds a virtual type of its own and one item to the map below; nothing
+         in PHP has to change. The map is a flat array of objects on purpose:
+         nested array items compile empty here, with no error to notice. -->
+    <virtualType name="MageObsidian\Storefront\Model\PageBuilder\Detector\Tabs"
+                 type="MageObsidian\Storefront\Model\PageBuilder\Detector\MarkerDetector">
+        <arguments>
+            <argument name="marker" xsi:type="string">data-content-type="tabs"</argument>
+            <argument name="module" xsi:type="string">MageObsidian_Storefront::js/page-builder</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="MageObsidian\Storefront\Model\PageBuilder\Detector\Slider"
+                 type="MageObsidian\Storefront\Model\PageBuilder\Detector\MarkerDetector">
+        <arguments>
+            <argument name="marker" xsi:type="string">data-content-type="slider"</argument>
+            <argument name="module" xsi:type="string">MageObsidian_Storefront::js/page-builder</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="MageObsidian\Storefront\Model\PageBuilder\Detector\Parallax"
+                 type="MageObsidian\Storefront\Model\PageBuilder\Detector\MarkerDetector">
+        <arguments>
+            <argument name="marker" xsi:type="string">data-enable-parallax="1"</argument>
+            <argument name="module" xsi:type="string">MageObsidian_Storefront::js/parallax</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="MageObsidian\Storefront\Model\PageBuilder\Detector\VideoBackground"
+                 type="MageObsidian\Storefront\Model\PageBuilder\Detector\MarkerDetector">
+        <arguments>
+            <argument name="marker" xsi:type="string">data-background-type="video"</argument>
+            <argument name="module" xsi:type="string">MageObsidian_Storefront::js/video-background</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="MageObsidian\Storefront\Model\PageBuilder\Detector\SameWidthButtons"
+                 type="MageObsidian\Storefront\Model\PageBuilder\Detector\MarkerDetector">
+        <arguments>
+            <argument name="marker" xsi:type="string">data-same-width="true"</argument>
+            <argument name="module" xsi:type="string">MageObsidian_Storefront::js/buttons</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="MageObsidian\Storefront\Model\PageBuilder\Enhancer">
+        <arguments>
+            <argument name="detectors" xsi:type="array">
+                <item name="tabs" xsi:type="object">MageObsidian\Storefront\Model\PageBuilder\Detector\Tabs</item>
+                <item name="slider" xsi:type="object">MageObsidian\Storefront\Model\PageBuilder\Detector\Slider</item>
+                <item name="parallax" xsi:type="object">MageObsidian\Storefront\Model\PageBuilder\Detector\Parallax</item>
+                <item name="video_background" xsi:type="object">MageObsidian\Storefront\Model\PageBuilder\Detector\VideoBackground</item>
+                <item name="same_width_buttons" xsi:type="object">MageObsidian\Storefront\Model\PageBuilder\Detector\SameWidthButtons</item>
+            </argument>
+        </arguments>
+    </type>
 </config>
