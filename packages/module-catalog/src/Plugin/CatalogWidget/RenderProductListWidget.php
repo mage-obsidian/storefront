@@ -25,12 +25,20 @@ use MageObsidian\Catalog\ViewModel\ProductCard;
  * layout supplies on the category listing and cannot supply here — the widget
  * block is built by the widget system, not by a layout. So it is handed over
  * with the template.
+ *
+ * Page Builder's carousel appearance pins a template of its own, which expects
+ * slick; it is swapped for the scroll-snapping strip this storefront enhances,
+ * so the two appearances render the same card.
  */
 class RenderProductListWidget
 {
     public const string CORE_TEMPLATE = 'Magento_CatalogWidget::product/widget/content/grid.phtml';
 
     public const string OBSIDIAN_TEMPLATE = 'Magento_CatalogWidget::product/widget/content/grid.twig';
+
+    public const string CORE_CAROUSEL_TEMPLATE = 'Magento_PageBuilder::catalog/product/widget/content/carousel.phtml';
+
+    public const string OBSIDIAN_CAROUSEL_TEMPLATE = 'Magento_CatalogWidget::product/widget/content/carousel.twig';
 
     /**
      * @param ProductCard $card
@@ -51,8 +59,13 @@ class RenderProductListWidget
             $subject->setData('card', $this->card);
         }
 
-        if ($subject->getTemplate() === self::CORE_TEMPLATE || (string)$subject->getTemplate() === '') {
+        $template = (string)$subject->getTemplate();
+        if ($template === self::CORE_TEMPLATE || $template === '') {
             $subject->setTemplate(self::OBSIDIAN_TEMPLATE);
+            return;
+        }
+        if ($template === self::CORE_CAROUSEL_TEMPLATE) {
+            $subject->setTemplate(self::OBSIDIAN_CAROUSEL_TEMPLATE);
         }
     }
 }

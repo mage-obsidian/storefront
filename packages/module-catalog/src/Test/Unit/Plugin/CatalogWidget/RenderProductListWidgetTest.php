@@ -76,6 +76,40 @@ class RenderProductListWidgetTest extends TestCase
         $this->assertSame($theirs, $widget->getData('card'));
     }
 
+    /**
+     * Page Builder's carousel appearance pins a template that expects slick, so
+     * without this the carousel is the one appearance that keeps Luma's markup.
+     */
+    public function testSwapsThePageBuilderCarouselTemplateToo(): void
+    {
+        $widget = $this->widget(RenderProductListWidget::CORE_CAROUSEL_TEMPLATE);
+
+        $this->plugin()->beforeToHtml($widget);
+
+        $this->assertSame(RenderProductListWidget::OBSIDIAN_CAROUSEL_TEMPLATE, $widget->getTemplate());
+    }
+
+    public function testKeepsTheTwoAppearancesApart(): void
+    {
+        $grid = $this->widget(RenderProductListWidget::CORE_TEMPLATE);
+        $carousel = $this->widget(RenderProductListWidget::CORE_CAROUSEL_TEMPLATE);
+
+        $this->plugin()->beforeToHtml($grid);
+        $this->plugin()->beforeToHtml($carousel);
+
+        $this->assertNotSame($grid->getTemplate(), $carousel->getTemplate());
+    }
+
+    public function testHandsTheCardOverToTheCarouselAsWell(): void
+    {
+        $widget = $this->widget(RenderProductListWidget::CORE_CAROUSEL_TEMPLATE);
+        $card = $this->createMock(ProductCard::class);
+
+        (new RenderProductListWidget($card))->beforeToHtml($widget);
+
+        $this->assertSame($card, $widget->getData('card'));
+    }
+
     private function plugin(): RenderProductListWidget
     {
         return new RenderProductListWidget($this->createMock(ProductCard::class));
