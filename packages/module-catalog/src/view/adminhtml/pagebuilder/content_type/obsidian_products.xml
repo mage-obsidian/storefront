@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * This file is part of the MageObsidian - Catalog project.
+ *
+ * @license MIT License - See the LICENSE file in the root directory for details.
+ * © 2026 Jeanmarcos Juarez
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_PageBuilder:etc/content_type.xsd">
+    <type name="obsidian_products"
+          label="Obsidian Product Carousel"
+          component="Magento_PageBuilder/js/content-type"
+          preview_component="Magento_PageBuilder/js/content-type/products/preview"
+          form="pagebuilder_obsidian_products_form"
+          menu_section="add_content"
+          icon="icon-pagebuilder-products"
+          sortOrder="31"
+          translate="label">
+        <parents default_policy="deny">
+            <parent name="root-container" policy="allow"/>
+            <parent name="row" policy="allow"/>
+            <parent name="column" policy="allow"/>
+            <parent name="column-line" policy="allow"/>
+            <parent name="tab-item" policy="allow"/>
+        </parents>
+        <children default_policy="deny"/>
+        <appearances>
+            <appearance default="true"
+                        name="carousel"
+                        preview_template="Magento_PageBuilder/content-type/products/grid/preview"
+                        master_template="Magento_PageBuilder/content-type/products/grid/master"
+                        reader="Magento_PageBuilder/js/master-format/read/configurable">
+                <elements>
+                    <element name="main">
+                        <style name="text_align" source="text_align"/>
+                        <style name="margins" storage_key="margins_and_padding" reader="Magento_PageBuilder/js/property/margins" converter="Magento_PageBuilder/js/converter/style/margins"/>
+                        <style name="padding" storage_key="margins_and_padding" reader="Magento_PageBuilder/js/property/paddings" converter="Magento_PageBuilder/js/converter/style/paddings"/>
+                        <attribute name="name" source="data-content-type"/>
+                        <attribute name="appearance" source="data-appearance"/>
+                        <static_attribute source="data-appearance" value="carousel"/>
+                        <html name="html" preview_converter="Magento_PageBuilder/js/converter/attribute/preview/store-id"/>
+                        <css name="css_classes"/>
+                    </element>
+                </elements>
+                <converters>
+                    <converter component="MageObsidian_Catalog/js/mass-converter/obsidian-carousel-widget-directive" name="widget_directive">
+                        <config>
+                            <item name="html_variable" value="html"/>
+                        </config>
+                    </converter>
+                </converters>
+            </appearance>
+        </appearances>
+    </type>
+</config>
