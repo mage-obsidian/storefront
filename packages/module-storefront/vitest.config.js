@@ -110,7 +110,18 @@ export default defineConfig({
     test: {
         environment: "happy-dom",
         environmentOptions: {
-            happyDOM: { settings: { disableIframePageLoading: true } },
+            happyDOM: {
+                settings: {
+                    disableJavaScriptFileLoading: true,
+                    handleDisabledFileLoadingAsSuccess: true,
+                    navigation: {
+                        disableMainFrameNavigation: true,
+                        disableChildFrameNavigation: true,
+                        disableChildPageNavigation: true,
+                        disableFallbackToSetURL: true,
+                    },
+                },
+            },
         },
         globals: true,
         include: ["src/view/frontend/web/**/*.test.{js,ts}"],
