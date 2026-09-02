@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { createFragmentStyleAdopter } from "./fragment-styles.ts";
+import { createFragmentStyleAdopter, declaredValues } from "./fragment-styles.ts";
 
 const SWATCHES = ".ln__swatch-color--000000{background-color: #000000}";
 const NAMES = ".product-item--1594{view-transition-name: product-1594}";
@@ -93,5 +93,38 @@ describe("createFragmentStyleAdopter", () => {
 
         expect(createFragmentStyleAdopter(legacy).adopt(holder, "filters")).toBe(0);
         expect(holder.querySelector("style")).not.toBeNull();
+    });
+});
+
+describe("declaredValues", () => {
+    const NAME = "view-transition-name";
+
+    it("reads every value a stylesheet declares for the property", () => {
+        const css =
+            ".product-item--1{view-transition-name: product-1}" +
+            ".product-item--2{view-transition-name: product-2; view-transition-class: obsidian-card}";
+
+        expect(declaredValues(css, NAME)).toEqual(new Set(["product-1", "product-2"]));
+    });
+
+    it("ignores rules that declare nothing for it", () => {
+        const css = ".a{color:red}.b{view-transition-name: kept}";
+
+        expect(declaredValues(css, NAME)).toEqual(new Set(["kept"]));
+    });
+
+    it("treats an explicit none as no name at all", () => {
+        expect(declaredValues(".a{view-transition-name: none}", NAME)).toEqual(new Set());
+    });
+
+    it("collapses a value two selectors declare", () => {
+        const css = ".a{view-transition-name: same}.b{view-transition-name: same}";
+
+        expect(declaredValues(css, NAME).size).toBe(1);
+    });
+
+    it("answers empty for css it cannot parse as rules", () => {
+        expect(declaredValues("", NAME)).toEqual(new Set());
+        expect(declaredValues("not css at all {{{", NAME)).toEqual(new Set());
     });
 });

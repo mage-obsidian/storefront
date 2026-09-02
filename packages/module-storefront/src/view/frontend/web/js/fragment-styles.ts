@@ -58,3 +58,26 @@ export function createFragmentStyleAdopter(doc: Document): FragmentStyleAdopter 
         },
     };
 }
+
+export function declaredValues(css: string, property: string): Set<string> {
+    const found = new Set<string>();
+    if (typeof CSSStyleSheet !== 'function' || typeof CSSStyleSheet.prototype?.replaceSync !== 'function') {
+        return found;
+    }
+
+    const sheet = new CSSStyleSheet();
+    try {
+        sheet.replaceSync(css);
+    } catch {
+        return found;
+    }
+
+    Array.from(sheet.cssRules).forEach((rule) => {
+        const value = (rule as CSSStyleRule).style?.getPropertyValue(property) ?? '';
+        if (value !== '' && value !== 'none') {
+            found.add(value);
+        }
+    });
+
+    return found;
+}

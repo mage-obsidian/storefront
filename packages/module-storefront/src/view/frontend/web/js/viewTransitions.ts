@@ -55,6 +55,7 @@ const CARD_SELECTOR = ".product-item";
 const GALLERY_SELECTOR = ".pdp__gallery-main";
 const NAME_PROPERTY = "view-transition-name";
 const NAME_NONE = "none";
+const SILENCE_CLASS = "obsidian-hero-swap";
 
 const parse = (url: string, base?: string): URL | null => {
     try {
@@ -100,17 +101,23 @@ export function classifyNavigation(facts: NavigationFacts): NavigationKind {
     return samePage(from, to) ? NavigationKind.Listing : null;
 }
 
+export function cardName(card: Element, doc: Document): string {
+    const value = doc.defaultView?.getComputedStyle(card).getPropertyValue(NAME_PROPERTY) ?? "";
+
+    return value === NAME_NONE ? "" : value;
+}
+
 export function dedupeCardNames(doc: Document): number {
     const seen = new Set<string>();
     let dropped = 0;
 
     doc.querySelectorAll<HTMLElement>(CARD_SELECTOR).forEach((card) => {
-        const name = card.style.getPropertyValue(NAME_PROPERTY);
+        const name = cardName(card, doc);
         if (!name) {
             return;
         }
         if (seen.has(name)) {
-            card.style.removeProperty(NAME_PROPERTY);
+            card.style.setProperty(NAME_PROPERTY, NAME_NONE);
             dropped += 1;
             return;
         }
@@ -121,9 +128,11 @@ export function dedupeCardNames(doc: Document): number {
 }
 
 export function clearCardNames(doc: Document): void {
-    doc.querySelectorAll<HTMLElement>(CARD_SELECTOR).forEach((card) => {
-        card.style.removeProperty(NAME_PROPERTY);
-    });
+    doc.documentElement.classList.add(SILENCE_CLASS);
+}
+
+export function restoreCardNames(doc: Document): void {
+    doc.documentElement.classList.remove(SILENCE_CLASS);
 }
 
 /**
@@ -198,6 +207,8 @@ export function bindViewTransitions(win: Window & typeof globalThis): () => void
             return;
         }
 
+        restoreCardNames(doc);
+
         const from = doc.location.href;
         const to = swap.activation?.entry?.url ?? "";
         const kind = classifyNavigation({
@@ -230,6 +241,7 @@ export function bindViewTransitions(win: Window & typeof globalThis): () => void
     // on a bfcache restore, where this script is already resident to hear it.
     const onPageReveal = (event: Event): void => {
         const reveal = event as Event & { viewTransition?: SkippableTransition | null };
+        restoreCardNames(doc);
         if (reveal.viewTransition) {
             silenceTransition(reveal.viewTransition);
         }
@@ -243,6 +255,7 @@ export function bindViewTransitions(win: Window & typeof globalThis): () => void
         doc.removeEventListener("click", onClick, true);
         win.removeEventListener(ViewTransitionEvent.Swap, onPageSwap);
         win.removeEventListener(ViewTransitionEvent.Reveal, onPageReveal);
+        restoreCardNames(doc);
     };
 }
 

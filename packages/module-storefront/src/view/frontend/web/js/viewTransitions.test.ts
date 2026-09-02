@@ -4,6 +4,8 @@ import {
     markProductHero,
     dedupeCardNames,
     clearCardNames,
+    restoreCardNames,
+    cardName,
     bindViewTransitions,
     silenceTransition,
 } from "MageObsidian_Storefront::js/viewTransitions";
@@ -166,42 +168,74 @@ describe("markProductHero", () => {
 
 describe("card names", () => {
     const grid = (...names: string[]) => {
+        const rules = names
+            .map((name, at) => `.product-item--${at}{view-transition-name:${name}}`)
+            .join("");
+        document.head.innerHTML = `<style>${rules}</style>`;
         document.body.innerHTML = `<ol>${names
-            .map((name, at) => `<li class="product-item" id="c${at}" style="view-transition-name:${name}"></li>`)
+            .map((_, at) => `<li class="product-item product-item--${at}" id="c${at}"></li>`)
             .join("")}</ol>`;
         return names.map((_, at) => document.getElementById(`c${at}`) as HTMLElement);
     };
 
     afterEach(() => {
+        document.head.innerHTML = "";
         document.body.innerHTML = "";
+        restoreCardNames(document);
+    });
+
+    it("reads the name the theme declared in a rule, not a style attribute", () => {
+        const [card] = grid("product-1");
+
+        expect(nameOf(card)).toBe("");
+        expect(cardName(card, document)).toBe("product-1");
     });
 
     it("keeps the first of a repeated name and releases the rest", () => {
         const [first, second, other] = grid("product-1", "product-1", "product-2");
 
         expect(dedupeCardNames(document)).toBe(1);
-        expect(nameOf(first)).toBe("product-1");
-        expect(nameOf(second)).toBe("");
-        expect(nameOf(other)).toBe("product-2");
+        expect(cardName(first, document)).toBe("product-1");
+        expect(cardName(second, document)).toBe("");
+        expect(cardName(other, document)).toBe("product-2");
+    });
+
+    it("silences a duplicate with a value a rule cannot outrank", () => {
+        const [, second] = grid("product-1", "product-1");
+
+        dedupeCardNames(document);
+
+        expect(second.style.getPropertyValue("view-transition-name")).toBe("none");
     });
 
     it("leaves a grid of unique names untouched", () => {
         const cards = grid("product-1", "product-2", "product-3");
 
         expect(dedupeCardNames(document)).toBe(0);
-        expect(cards.map(nameOf)).toEqual([
+        expect(cards.map((card) => cardName(card, document))).toEqual([
             "product-1",
             "product-2",
             "product-3",
         ]);
     });
 
-    it("releases every card at once", () => {
-        const cards = grid("product-1", "product-2");
+    it("releases every card at once through a class on the root", () => {
+        grid("product-1", "product-2");
 
         clearCardNames(document);
+        expect(document.documentElement.classList.contains("obsidian-hero-swap")).toBe(true);
 
-        expect(cards.every((c) => nameOf(c) === "")).toBe(true);
+        restoreCardNames(document);
+        expect(document.documentElement.classList.contains("obsidian-hero-swap")).toBe(false);
+    });
+
+    it("leaves no card silenced on a document that keeps living", () => {
+        grid("product-1");
+        clearCardNames(document);
+
+        restoreCardNames(document);
+
+        expect(document.documentElement.className).toBe("");
     });
 });
 
@@ -254,16 +288,19 @@ describe("bindViewTransitions", () => {
         expect(document.getElementById("card")!.style.viewTransitionName).toBe("pdp-hero");
     });
 
-    it("strips the grid's card names on the way to a product page", () => {
-        document.body.insertAdjacentHTML(
-            "beforeend",
-            `<li class="product-item" id="sibling" style="view-transition-name:product-9"></li>`,
-        );
-
+    it("silences the grid on the way to a product page", () => {
         (document.getElementById("card-img") as HTMLElement).click();
         dispatchSwap(PRODUCT);
 
-        expect(nameOf(document.getElementById("sibling") as HTMLElement)).toBe("");
+        expect(document.documentElement.classList.contains("obsidian-hero-swap")).toBe(true);
+    });
+
+    it("lifts a silencing a previous navigation left behind", () => {
+        clearCardNames(document);
+
+        dispatchSwap(`${LISTING}?product_list_order=name`);
+
+        expect(document.documentElement.classList.contains("obsidian-hero-swap")).toBe(false);
     });
 
     it("keeps the card names of a listing move, which is what reorders them", () => {
@@ -274,6 +311,7 @@ describe("bindViewTransitions", () => {
 
         const transition = dispatchSwap(`${LISTING}?product_list_order=name`);
 
+        expect(document.documentElement.classList.contains("obsidian-hero-swap")).toBe(false);
         expect(transition.skipTransition).not.toHaveBeenCalled();
         expect(nameOf(document.getElementById("kept") as HTMLElement)).toBe("product-9");
     });
