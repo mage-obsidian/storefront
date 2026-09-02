@@ -1,2 +1,11 @@
 allowBuilds:
   esbuild: true
+
+minimumReleaseAgeExclude:
+  - happy-dom@20.13.1
+
+overrides:
+  postcss: '^8.5.23'
+  brace-expansion: '^2.1.2'
+  esbuild: '^0.28.1'
+  nanoid: '^3.3.18'
