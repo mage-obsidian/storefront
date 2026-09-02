@@ -78,6 +78,38 @@
         </arguments>
     </virtualType>
 
+    <virtualType name="MageObsidian\Storefront\Model\PageBuilder\Detector\ProductCarousel"
+                 type="MageObsidian\Storefront\Model\PageBuilder\Detector\MarkerDetector">
+        <arguments>
+            <argument name="marker" xsi:type="string">data-appearance="carousel"</argument>
+            <argument name="module" xsi:type="string">MageObsidian_Storefront::js/product-carousel</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="MageObsidian\Storefront\Model\PageBuilder\Detector\Map"
+                 type="MageObsidian\Storefront\Model\PageBuilder\Detector\MarkerDetector">
+        <arguments>
+            <argument name="marker" xsi:type="string">data-content-type="map"</argument>
+            <argument name="module" xsi:type="string">MageObsidian_Storefront::js/map</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="MageObsidian\Storefront\Model\PageBuilder\Detector\RevealOverlay"
+                 type="MageObsidian\Storefront\Model\PageBuilder\Detector\MarkerDetector">
+        <arguments>
+            <argument name="marker" xsi:type="string">data-show-overlay="hover"</argument>
+            <argument name="module" xsi:type="string">MageObsidian_Storefront::js/reveal-on-interaction</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="MageObsidian\Storefront\Model\PageBuilder\Detector\RevealButton"
+                 type="MageObsidian\Storefront\Model\PageBuilder\Detector\MarkerDetector">
+        <arguments>
+            <argument name="marker" xsi:type="string">data-show-button="hover"</argument>
+            <argument name="module" xsi:type="string">MageObsidian_Storefront::js/reveal-on-interaction</argument>
+        </arguments>
+    </virtualType>
+
     <type name="MageObsidian\Storefront\Model\PageBuilder\Enhancer">
         <arguments>
             <argument name="detectors" xsi:type="array">
@@ -86,6 +118,10 @@
                 <item name="parallax" xsi:type="object">MageObsidian\Storefront\Model\PageBuilder\Detector\Parallax</item>
                 <item name="video_background" xsi:type="object">MageObsidian\Storefront\Model\PageBuilder\Detector\VideoBackground</item>
                 <item name="same_width_buttons" xsi:type="object">MageObsidian\Storefront\Model\PageBuilder\Detector\SameWidthButtons</item>
+                <item name="product_carousel" xsi:type="object">MageObsidian\Storefront\Model\PageBuilder\Detector\ProductCarousel</item>
+                <item name="map" xsi:type="object">MageObsidian\Storefront\Model\PageBuilder\Detector\Map</item>
+                <item name="reveal_overlay" xsi:type="object">MageObsidian\Storefront\Model\PageBuilder\Detector\RevealOverlay</item>
+                <item name="reveal_button" xsi:type="object">MageObsidian\Storefront\Model\PageBuilder\Detector\RevealButton</item>
             </argument>
         </arguments>
     </type>

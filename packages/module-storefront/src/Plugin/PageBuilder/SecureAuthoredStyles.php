@@ -12,6 +12,7 @@ namespace MageObsidian\Storefront\Plugin\PageBuilder;
 use Magento\Framework\Filter\Template;
 use MageObsidian\Storefront\Model\PageBuilder\Enhancer;
 use MageObsidian\Storefront\Model\PageBuilder\ImageDimensions;
+use MageObsidian\Storefront\Model\PageBuilder\MapProvider;
 use MageObsidian\Storefront\Model\PageBuilder\StyleBlock;
 
 /**
@@ -31,11 +32,13 @@ class SecureAuthoredStyles
      * @param StyleBlock $styleBlock
      * @param Enhancer $enhancer
      * @param ImageDimensions $imageDimensions
+     * @param MapProvider $mapProvider
      */
     public function __construct(
         private readonly StyleBlock $styleBlock,
         private readonly Enhancer $enhancer,
-        private readonly ImageDimensions $imageDimensions
+        private readonly ImageDimensions $imageDimensions,
+        private readonly MapProvider $mapProvider
     ) {
     }
 
@@ -49,7 +52,9 @@ class SecureAuthoredStyles
     public function afterFilter(Template $subject, $result): string
     {
         return $this->enhancer->enhance(
-            $this->imageDimensions->inject($this->styleBlock->rewrite((string)$result))
+            $this->mapProvider->inject(
+                $this->imageDimensions->inject($this->styleBlock->rewrite((string)$result))
+            )
         );
     }
 }
