@@ -1,0 +1,10 @@
+<div class="pagebuilder-content-type pagebuilder-obsidian-banner" event="{ mouseover: onMouseOver, mouseout: onMouseOut }, mouseoverBubble: false"
+     css="$data.getCss('main'), 'pagebuilder-content-type-active': focused"
+     attr="$data.getAttributes('main')">
+    <render args="contentType.preview.getOptions().template"/>
+    <div class="pagebuilder-obsidian-placeholder">
+        <strong translate="'Obsidian Banner'"></strong>
+        <span text="data.main.attributes()['data-heading'] || $t('No heading set yet')"></span>
+        <span text="data.main.attributes()['data-message']"></span>
+    </div>
+</div>

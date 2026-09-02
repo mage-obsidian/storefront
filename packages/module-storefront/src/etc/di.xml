@@ -67,4 +67,40 @@
                 sortOrder="100"/>
     </type>
 
+    <!-- The islands this module allows to be placed from content. The Page
+         Builder content types write the same components into their saved
+         markup, so registering them here is what also makes them reachable by
+         the island widget and the {{island}} directive. -->
+    <type name="MageObsidian\ModernFrontend\Service\Cms\IslandRegistry">
+        <arguments>
+            <argument name="islands" xsi:type="array">
+                <item name="obsidian_map" xsi:type="array">
+                    <item name="component" xsi:type="string">MageObsidian_Storefront::pagebuilder/ObsidianMap</item>
+                    <item name="label" xsi:type="string" translate="true">Obsidian Map</item>
+                    <item name="description" xsi:type="string" translate="true">A location shown without calling a map provider; the interactive map loads only when the visitor asks. Set "latitude" and "longitude", and optionally "locationName", "address" and "phone".</item>
+                    <item name="props" xsi:type="array">
+                        <item name="latitude" xsi:type="string"></item>
+                        <item name="longitude" xsi:type="string"></item>
+                        <item name="locationName" xsi:type="string"></item>
+                        <item name="address" xsi:type="string"></item>
+                        <item name="phone" xsi:type="string"></item>
+                    </item>
+                </item>
+                <item name="obsidian_banner" xsi:type="array">
+                    <item name="component" xsi:type="string">MageObsidian_Storefront::pagebuilder/ObsidianBanner</item>
+                    <item name="label" xsi:type="string" translate="true">Obsidian Banner</item>
+                    <item name="description" xsi:type="string" translate="true">A banner whose button can be revealed on interaction, reachable by keyboard and on screens with no pointer. Set "heading", and optionally "message", "buttonLabel", "buttonUrl", "overlayColor" and "reveal".</item>
+                    <item name="props" xsi:type="array">
+                        <item name="heading" xsi:type="string"></item>
+                        <item name="message" xsi:type="string"></item>
+                        <item name="buttonLabel" xsi:type="string"></item>
+                        <item name="buttonUrl" xsi:type="string"></item>
+                        <item name="overlayColor" xsi:type="string">transparent</item>
+                        <item name="reveal" xsi:type="string">always</item>
+                    </item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
+
 </config>

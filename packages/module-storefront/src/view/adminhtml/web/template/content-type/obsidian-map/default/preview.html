@@ -1,0 +1,10 @@
+<div class="pagebuilder-content-type pagebuilder-obsidian-map" event="{ mouseover: onMouseOver, mouseout: onMouseOut }, mouseoverBubble: false"
+     css="$data.getCss('main'), 'pagebuilder-content-type-active': focused"
+     attr="$data.getAttributes('main')">
+    <render args="contentType.preview.getOptions().template"/>
+    <div class="pagebuilder-obsidian-placeholder">
+        <strong translate="'Obsidian Map'"></strong>
+        <span text="data.main.attributes()['data-location-name'] || $t('No location set yet')"></span>
+        <span text="data.main.attributes()['data-address']"></span>
+    </div>
+</div>

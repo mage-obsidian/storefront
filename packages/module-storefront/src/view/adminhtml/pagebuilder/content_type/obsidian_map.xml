@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * This file is part of the MageObsidian - Storefront project.
+ *
+ * @license MIT License - See the LICENSE file in the root directory for details.
+ * © 2026 Jeanmarcos Juarez
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_PageBuilder:etc/content_type.xsd">
+    <type name="obsidian_map"
+          label="Obsidian Map"
+          component="Magento_PageBuilder/js/content-type"
+          preview_component="Magento_PageBuilder/js/content-type/preview"
+          form="pagebuilder_obsidian_map_form"
+          menu_section="media"
+          icon="icon-pagebuilder-map"
+          sortOrder="51"
+          translate="label">
+        <parents default_policy="deny">
+            <parent name="row" policy="allow"/>
+            <parent name="column" policy="allow"/>
+            <parent name="column-line" policy="allow"/>
+            <parent name="tab-item" policy="allow"/>
+        </parents>
+        <children default_policy="deny"/>
+        <appearances>
+            <appearance default="true"
+                        name="default"
+                        preview_template="MageObsidian_Storefront/content-type/obsidian-map/default/preview"
+                        master_template="MageObsidian_Storefront/content-type/obsidian-map/default/master"
+                        reader="Magento_PageBuilder/js/master-format/read/configurable">
+                <elements>
+                    <element name="main">
+                        <style name="margins" storage_key="margins_and_padding" reader="Magento_PageBuilder/js/property/margins" converter="Magento_PageBuilder/js/converter/style/margins"/>
+                        <style name="padding" storage_key="margins_and_padding" reader="Magento_PageBuilder/js/property/paddings" converter="Magento_PageBuilder/js/converter/style/paddings"/>
+                        <style name="min_height" source="min_height"/>
+                        <attribute name="name" source="data-content-type"/>
+                        <attribute name="appearance" source="data-appearance"/>
+                        <attribute name="island" source="data-mage-island"/>
+                        <attribute name="component" source="data-component"/>
+                        <attribute name="strategy" source="data-strategy"/>
+                        <attribute name="props" source="data-props" converter="MageObsidian_Storefront/js/converter/attribute/island-props"/>
+                        <attribute name="prop_locationName" source="data-location-name"/>
+                        <attribute name="prop_address" source="data-address"/>
+                        <css name="css_classes"/>
+                    </element>
+                </elements>
+            </appearance>
+        </appearances>
+    </type>
+</config>

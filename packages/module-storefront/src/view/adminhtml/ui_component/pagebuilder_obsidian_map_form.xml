@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * This file is part of the MageObsidian - Storefront project.
+ *
+ * @license MIT License - See the LICENSE file in the root directory for details.
+ * © 2026 Jeanmarcos Juarez
+ */
+-->
+<form xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd"
+      extends="pagebuilder_base_form">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">pagebuilder_obsidian_map_form.pagebuilder_obsidian_map_form_data_source</item>
+        </item>
+        <item name="label" xsi:type="string" translate="true">Obsidian Map</item>
+    </argument>
+    <settings>
+        <deps>
+            <dep>pagebuilder_obsidian_map_form.pagebuilder_obsidian_map_form_data_source</dep>
+        </deps>
+        <namespace>pagebuilder_obsidian_map_form</namespace>
+    </settings>
+    <dataSource name="pagebuilder_obsidian_map_form_data_source">
+        <argument name="data" xsi:type="array">
+            <item name="js_config" xsi:type="array">
+                <item name="component" xsi:type="string">Magento_PageBuilder/js/form/provider</item>
+            </item>
+        </argument>
+        <dataProvider name="pagebuilder_obsidian_map_form_data_source" class="Magento\PageBuilder\Model\ContentType\DataProvider">
+            <settings>
+                <requestFieldName/>
+                <primaryFieldName/>
+            </settings>
+        </dataProvider>
+    </dataSource>
+    <fieldset name="island" sortOrder="5">
+        <settings>
+            <label/>
+            <visible>false</visible>
+        </settings>
+        <field name="island" formElement="hidden" sortOrder="10">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="default" xsi:type="string">true</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <dataScope>island</dataScope>
+                <visible>false</visible>
+            </settings>
+        </field>
+        <field name="component" formElement="hidden" sortOrder="20">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="default" xsi:type="string">/generated/MageObsidian_Storefront/components/pagebuilder/ObsidianMap.js</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <dataScope>component</dataScope>
+                <visible>false</visible>
+            </settings>
+        </field>
+        <field name="strategy" formElement="hidden" sortOrder="30">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="default" xsi:type="string">visible</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <dataScope>strategy</dataScope>
+                <visible>false</visible>
+            </settings>
+        </field>
+    </fieldset>
+    <fieldset name="general" sortOrder="20">
+        <settings>
+            <label/>
+        </settings>
+        <field name="min_height" formElement="input" sortOrder="5">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="default" xsi:type="string">260px</item>
+                </item>
+            </argument>
+            <settings>
+                <label translate="true">Minimum Height</label>
+                <notice translate="true">The box this reserves before it is hydrated, so nothing below it moves. A single number with any valid CSS unit.</notice>
+                <dataType>text</dataType>
+                <dataScope>min_height</dataScope>
+                <additionalClasses>
+                    <class name="admin__field-medium">true</class>
+                </additionalClasses>
+                <validation>
+                    <rule name="validate-calc" xsi:type="boolean">true</rule>
+                </validation>
+            </settings>
+        </field>
+        <field name="prop_locationName" formElement="input" sortOrder="10">
+            <settings>
+                <label translate="true">Location name</label>
+                <dataType>text</dataType>
+                <dataScope>prop_locationName</dataScope>
+            </settings>
+        </field>
+        <field name="prop_address" formElement="input" sortOrder="20">
+            <settings>
+                <label translate="true">Address</label>
+                <dataType>text</dataType>
+                <dataScope>prop_address</dataScope>
+            </settings>
+        </field>
+        <field name="prop_phone" formElement="input" sortOrder="30">
+            <settings>
+                <label translate="true">Phone</label>
+                <dataType>text</dataType>
+                <dataScope>prop_phone</dataScope>
+            </settings>
+        </field>
+        <field name="prop_latitude" formElement="input" sortOrder="40">
+            <settings>
+                <label translate="true">Latitude</label>
+                <dataType>text</dataType>
+                <dataScope>prop_latitude</dataScope>
+                <validation>
+                    <rule name="required-entry" xsi:type="boolean">true</rule>
+                    <rule name="validate-number" xsi:type="boolean">true</rule>
+                </validation>
+            </settings>
+        </field>
+        <field name="prop_longitude" formElement="input" sortOrder="50">
+            <settings>
+                <label translate="true">Longitude</label>
+                <dataType>text</dataType>
+                <dataScope>prop_longitude</dataScope>
+                <validation>
+                    <rule name="required-entry" xsi:type="boolean">true</rule>
+                    <rule name="validate-number" xsi:type="boolean">true</rule>
+                </validation>
+            </settings>
+        </field>
+    </fieldset>
+</form>
