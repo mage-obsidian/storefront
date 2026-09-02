@@ -15,6 +15,10 @@ import {
     type ListingNavigateEvent,
 } from 'MageObsidian_Storefront::js/listing-events';
 import {
+    createFragmentStyleAdopter,
+    type FragmentStyleAdopter,
+} from 'MageObsidian_Storefront::js/fragment-styles';
+import {
     CardRole,
     cardNames,
     createListingTransition,
@@ -50,6 +54,7 @@ export interface NavigatorDeps {
     history?: Pick<History, 'pushState'>;
     location?: Pick<Location, 'href' | 'assign'>;
     transition?: SwapRunner;
+    styles?: FragmentStyleAdopter;
 }
 
 export function readConfig(root: ParentNode = document): NavigatorConfig | null {
@@ -67,6 +72,7 @@ export function bindListingNavigator(config: NavigatorConfig, deps: NavigatorDep
     const past = deps.history ?? window.history;
     const here = deps.location ?? window.location;
     const animate = deps.transition ?? createListingTransition(doc);
+    const styles = deps.styles ?? createFragmentStyleAdopter(doc);
 
     const sectionSelector = `[${config.attribute}]`;
     let token = 0;
@@ -123,7 +129,11 @@ export function bindListingNavigator(config: NavigatorConfig, deps: NavigatorDep
         }
 
         return targets.map(([name, target]) => {
-            (target as Element).outerHTML = sections[name];
+            const parsed = doc.createElement('template');
+            parsed.innerHTML = sections[name];
+            styles.adopt(parsed.content, name);
+            (target as Element).replaceWith(parsed.content);
+
             return name;
         });
     };

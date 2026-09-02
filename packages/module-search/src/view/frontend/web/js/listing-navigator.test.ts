@@ -103,6 +103,7 @@ describe("bindListingNavigator", () => {
     beforeEach(() => {
         events.reset();
         document.body.innerHTML = LISTING;
+        document.adoptedStyleSheets = [];
     });
 
     const teardown = (): void => harness?.teardown();
@@ -120,6 +121,56 @@ describe("bindListingNavigator", () => {
         expect(document.querySelector('[data-obsidian-section="listing"]')?.textContent)
             .toBe("fresh listing");
         expect(harness.pushState).toHaveBeenCalledWith({}, "", `${PAGE}?color=59`);
+        teardown();
+    });
+
+    it("republishes the styles the fragment carries so the policy cannot refuse them", async () => {
+        harness = mount(
+            jsonResponse({
+                sections: {
+                    listing:
+                        '<div data-obsidian-section="listing">' +
+                        "<style>.product-item--1594{view-transition-name: product-1594}</style>" +
+                        "fresh listing</div>",
+                },
+            }),
+        );
+
+        click("page-two");
+        await settle();
+
+        expect(document.querySelectorAll("style")).toHaveLength(0);
+        expect(
+            document.adoptedStyleSheets
+                .flatMap((sheet) => Array.from(sheet.cssRules).map((rule) => rule.cssText))
+                .join(""),
+        ).toContain("product-item--1594");
+        teardown();
+    });
+
+    it("lifts the styles before the fragment reaches the document, so the policy never sees them", async () => {
+        const adopt = vi.fn().mockImplementation((root: ParentNode) => {
+            expect(root.querySelector('[data-obsidian-section="listing"]')?.isConnected).toBe(false);
+            return 0;
+        });
+        harness = mount(
+            jsonResponse({
+                sections: {
+                    listing:
+                        '<div data-obsidian-section="listing">' +
+                        "<style>.a{color:red}</style>fresh listing</div>",
+                },
+            }),
+            { styles: { adopt } },
+        );
+
+        click("page-two");
+        await settle();
+
+        expect(adopt).toHaveBeenCalledTimes(1);
+        expect(adopt.mock.calls[0][1]).toBe("listing");
+        expect(document.querySelector('[data-obsidian-section="listing"]')?.textContent)
+            .toContain("fresh listing");
         teardown();
     });
 
