@@ -19,7 +19,7 @@
     ],
     "require": {
         "mage-obsidian/module-modern-frontend": "^2.13",
-        "mage-obsidian/module-storefront": "^3.19",
+        "mage-obsidian/module-storefront": "^3.20",
         "mage-obsidian/module-catalog": "^3.5.1"
     },
     "suggest": {

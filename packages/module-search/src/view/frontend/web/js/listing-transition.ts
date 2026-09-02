@@ -10,11 +10,14 @@
  * holds on the root for the length of the transition.
  */
 
+import { declaredValues } from 'MageObsidian_Storefront::js/fragment-styles';
+
 const CARD_SELECTOR = '.product-item';
 const MODAL_SELECTOR = 'dialog[open]';
 const NAME_PROPERTY = 'view-transition-name';
 const CLASS_PROPERTY = 'view-transition-class';
 const CARD_CLASS = 'obsidian-card';
+const NAME_NONE = 'none';
 
 export const SWAP_CLASS = 'obsidian-listing-swap';
 
@@ -35,21 +38,27 @@ export type TransitionStarter = (update: () => void) => ViewTransitionLike;
 
 export type SwapRunner = <T>(update: () => T) => Promise<T>;
 
+function nameOf(card: Element, doc: Document): string {
+    const value = doc.defaultView?.getComputedStyle(card).getPropertyValue(NAME_PROPERTY) ?? '';
+
+    return value === NAME_NONE ? '' : value;
+}
+
 /**
  * Collects the card names in a subtree and strips repeats as it goes: a name
  * that appears twice in one document aborts the whole transition, and a listing
  * can legitimately show the same product as a related-products widget.
  */
-export function cardNames(root: ParentNode): Set<string> {
+export function cardNames(doc: Document): Set<string> {
     const seen = new Set<string>();
 
-    root.querySelectorAll<HTMLElement>(CARD_SELECTOR).forEach((card) => {
-        const name = card.style.getPropertyValue(NAME_PROPERTY);
+    doc.querySelectorAll<HTMLElement>(CARD_SELECTOR).forEach((card) => {
+        const name = nameOf(card, doc);
         if (!name) {
             return;
         }
         if (seen.has(name)) {
-            card.style.removeProperty(NAME_PROPERTY);
+            card.style.setProperty(NAME_PROPERTY, NAME_NONE);
             return;
         }
         seen.add(name);
@@ -63,11 +72,11 @@ export function cardNames(root: ParentNode): Set<string> {
  * sides of the swap keeps the bare class and gets the default cross-fade while
  * its group morphs; only the ones arriving or leaving earn their own animation.
  */
-export function tagCards(root: ParentNode, survivors: Set<string>, role: CardRole): number {
+export function tagCards(doc: Document, survivors: Set<string>, role: CardRole): number {
     let tagged = 0;
 
-    root.querySelectorAll<HTMLElement>(CARD_SELECTOR).forEach((card) => {
-        const name = card.style.getPropertyValue(NAME_PROPERTY);
+    doc.querySelectorAll<HTMLElement>(CARD_SELECTOR).forEach((card) => {
+        const name = nameOf(card, doc);
         if (!name || survivors.has(name)) {
             return;
         }
@@ -82,8 +91,11 @@ export function tagCards(root: ParentNode, survivors: Set<string>, role: CardRol
 export function incomingCardNames(doc: Document, sections: Record<string, string>): Set<string> {
     const template = doc.createElement('template');
     template.innerHTML = Object.values(sections).join('');
+    const css = Array.from(template.content.querySelectorAll('style'))
+        .map((block) => block.textContent ?? '')
+        .join('\n');
 
-    return cardNames(template.content);
+    return declaredValues(css, NAME_PROPERTY);
 }
 
 const starter = (doc: Document): TransitionStarter | null => {

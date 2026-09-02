@@ -10,10 +10,14 @@ import {
 } from "MageObsidian_Search::js/listing-transition";
 
 const card = (name: string, id = name): string =>
-    `<li class="product-item" id="${id}" style="view-transition-name: ${name}; view-transition-class: obsidian-card"></li>`;
+    `<style>#${id}{view-transition-name: ${name}; view-transition-class: obsidian-card}</style>` +
+    `<li class="product-item" id="${id}"></li>`;
 
 const styleOf = (id: string): string =>
     document.getElementById(id)!.style.getPropertyValue("view-transition-class");
+
+const classOf = (id: string): string =>
+    getComputedStyle(document.getElementById(id)!).getPropertyValue("view-transition-class");
 
 const nameOf = (id: string): string =>
     document.getElementById(id)!.style.getPropertyValue("view-transition-name");
@@ -89,8 +93,8 @@ describe("cardNames", () => {
         document.body.innerHTML = card("product-1", "first") + card("product-1", "second");
 
         expect([...cardNames(document)]).toEqual(["product-1"]);
-        expect(nameOf("first")).toBe("product-1");
-        expect(nameOf("second")).toBe("");
+        expect(nameOf("first")).toBe("");
+        expect(nameOf("second")).toBe("none");
     });
 });
 
@@ -99,7 +103,8 @@ describe("tagCards", () => {
         document.body.innerHTML = card("product-1", "stays") + card("product-2", "goes");
 
         expect(tagCards(document, new Set(["product-1"]), CardRole.Exit)).toBe(1);
-        expect(styleOf("stays")).toBe("obsidian-card");
+        expect(styleOf("stays")).toBe("");
+        expect(classOf("stays")).toBe("obsidian-card");
         expect(styleOf("goes")).toBe("obsidian-card obsidian-card-exit");
     });
 
@@ -120,19 +125,31 @@ describe("tagCards", () => {
 });
 
 describe("incomingCardNames", () => {
-    it("reads the names out of fragment html without touching the page", () => {
+    it("reads the names the fragment declares without touching the page", () => {
         document.body.innerHTML = card("product-1", "live");
 
         const names = incomingCardNames(document, {
             listing: `<div>${card("product-2")}${card("product-3")}</div>`,
         });
 
-        expect([...names]).toEqual(["product-2", "product-3"]);
-        expect(nameOf("live")).toBe("product-1");
+        expect([...names].sort()).toEqual(["product-2", "product-3"]);
+        expect(document.getElementById("live")).not.toBeNull();
     });
 
     it("survives fragment html with no cards in it", () => {
         expect(incomingCardNames(document, { listing: "<div>empty</div>" }).size).toBe(0);
+    });
+
+    it("reads a fragment whose names live in one block for the whole grid", () => {
+        const names = incomingCardNames(document, {
+            listing:
+                "<div><style>.product-item--7{view-transition-name: product-7}" +
+                ".product-item--8{view-transition-name: product-8}</style>" +
+                '<li class="product-item product-item--7"></li>' +
+                '<li class="product-item product-item--8"></li></div>',
+        });
+
+        expect([...names].sort()).toEqual(["product-7", "product-8"]);
     });
 });
 
