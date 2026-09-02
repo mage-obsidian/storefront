@@ -369,6 +369,10 @@
     animation: none;
 }
 
+:root.obsidian-hero-swap .products-grid .product-item {
+    view-transition-name: none;
+}
+
 /* ── Catalog: product card media. Magento's native <img> (anti-CLS width/height
    + lazy); we cover-fit it and add the hover scale here since the helper image()
    is unavailable in the core ListProduct render context. ── */
