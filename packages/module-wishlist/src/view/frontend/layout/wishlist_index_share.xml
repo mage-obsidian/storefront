@@ -16,6 +16,9 @@
         <referenceBlock name="account.shell">
             <block class="MageObsidian\ModernFrontend\Block\Template" name="account.wishlist.share"
                    as="account_content" template="Magento_Wishlist::sharing.twig" cacheable="false">
+                <arguments>
+                    <argument name="rss_allowed" xsi:type="helper" helper="Magento\Wishlist\Helper\Rss::isRssAllow"/>
+                </arguments>
                 <block class="Magento\Wishlist\Block\Customer\Sharing" name="customer.wishlist.sharing" as="sharing"/>
             </block>
         </referenceBlock>
