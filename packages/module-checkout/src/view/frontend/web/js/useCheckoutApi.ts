@@ -113,6 +113,15 @@ export function createCheckoutApi(config: CheckoutApiConfig) {
         getTotals() {
             return request('GET', 'totals');
         },
+        /**
+         * Assign the chosen payment method to the cart so the server recollects
+         * totals with it. Methods whose price depends on how the shopper pays —
+         * a surcharge, a tax on one tender, a payment-conditioned cart rule —
+         * only surface in the summary once the cart carries the method.
+         */
+        setSelectedPaymentMethod(method: unknown) {
+            return request('PUT', 'selected-payment-method', { method });
+        },
         applyCoupon(code: string) {
             return request('PUT', `coupons/${encodeURIComponent(code)}`) as Promise<boolean>;
         },

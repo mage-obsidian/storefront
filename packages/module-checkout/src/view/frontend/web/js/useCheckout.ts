@@ -631,6 +631,25 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         selectedPayment.value = code;
     }
 
+    async function syncSelectedPaymentMethod(code: string): Promise<void> {
+        if (!api || code === '' || step.value !== CheckoutStep.Payment) {
+            return;
+        }
+        const payload: Record<string, unknown> = { method: code };
+        const additional = stateFor(code).data;
+        if (Object.keys(additional).length > 0) {
+            payload.additional_data = additional;
+        }
+        try {
+            await api.setSelectedPaymentMethod(payload);
+            await refreshTotals();
+        } catch {
+            // A method the cart cannot carry yet (an incomplete address, a
+            // renderer still gathering its data) leaves the summary as it was;
+            // place order reports the real reason.
+        }
+    }
+
     function toggleAgreement(agreementId: number | string): void {
         const index = acceptedAgreements.value.indexOf(agreementId);
         if (index === -1) {
@@ -863,6 +882,17 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
             clearRates();
         }
     });
+
+    // A total that depends on how the shopper pays — a surcharge, a tax on one
+    // tender, a payment-conditioned cart rule — only exists once the cart carries
+    // the method. Assigning it on selection is what lets the summary answer
+    // "why is this number different" before the order is placed.
+    watch(
+        () => [step.value, selectedPayment.value, JSON.stringify(stateFor(selectedPayment.value).data)],
+        () => {
+            void syncSelectedPaymentMethod(selectedPayment.value);
+        },
+    );
 
     // The payment methods only exist as the answer to a shipment the quote
     // accepted. The moment the address stops being persistable they describe a

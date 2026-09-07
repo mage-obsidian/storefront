@@ -231,6 +231,58 @@ describe("useCheckout — payment, coupon and order", () => {
         expect(checkout.grandTotal).toBe("$54.00");
     });
 
+    it("assigns the chosen method to the cart so the summary can show what it changed", async () => {
+        const fetchMock = mockFetch({
+            grand_total: 37,
+            total_segments: [
+                { code: "subtotal", title: "Subtotal", value: 34 },
+                { code: "surcharge", title: "Surcharge", value: 3 },
+                { code: "grand_total", title: "Grand Total", value: 37 },
+            ],
+        });
+        const checkout = ready();
+        checkout.goToStep(CheckoutStep.Payment);
+        checkout.declareMethodState("checkmo", { data: { reference: "42" } });
+        checkout.selectPayment("checkmo");
+        await nextTick();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        const assigned = fetchMock.mock.calls.find(
+            ([url]) => String(url).endsWith("selected-payment-method"),
+        );
+
+        expect(assigned).toBeDefined();
+        expect(assigned[1].method).toBe("PUT");
+        expect(JSON.parse(assigned[1].body)).toEqual({
+            method: { method: "checkmo", additional_data: { reference: "42" } },
+        });
+        expect(checkout.totalSegments.map((s) => s.code)).toContain("surcharge");
+    });
+
+    it("leaves the summary alone when the cart refuses the chosen method", async () => {
+        mockFetch({ message: "The shipping address is missing" }, false, 400);
+        const checkout = ready();
+        checkout.goToStep(CheckoutStep.Payment);
+        checkout.selectPayment("checkmo");
+        await nextTick();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(checkout.selectedPayment).toBe("checkmo");
+        expect(checkout.orderError).toBe("");
+    });
+
+    it("does not assign a method before the shopper reaches the payment step", async () => {
+        const fetchMock = mockFetch({});
+        const checkout = ready();
+        checkout.selectPayment("checkmo");
+        await nextTick();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(
+            fetchMock.mock.calls.some(([url]) => String(url).endsWith("selected-payment-method")),
+        ).toBe(false);
+    });
+
     it("surfaces a rejected coupon without applying it", async () => {
         mockFetch({ message: "Code is not valid" }, false, 404);
         const checkout = ready();
