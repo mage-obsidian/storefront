@@ -16,6 +16,7 @@
                 <arguments>
                     <argument name="item_options" xsi:type="object">MageObsidian\Sales\ViewModel\ItemOptions</argument>
                     <argument name="order_presentation" xsi:type="object">MageObsidian\Sales\ViewModel\OrderPresentation</argument>
+                    <argument name="tracking_url" xsi:type="object">Magento\Sales\Block\DataProviders\Email\Shipment\TrackingUrl</argument>
                 </arguments>
                 <block class="MageObsidian\Sales\Block\OrderTitle" name="account.shipment.title"/>
                 <block class="Magento\Shipping\Block\Order\Shipment" name="sales.order.shipment" as="shipment"/>
