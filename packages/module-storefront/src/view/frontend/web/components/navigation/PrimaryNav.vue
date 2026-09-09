@@ -117,7 +117,7 @@ const onFlyoutEscape = (event: KeyboardEvent): void => {
                     />
                 </a>
 
-                <div v-show="flyoutIndex === i" class="absolute left-0 top-full z-40 pt-3">
+                <div :class="['absolute left-0 top-full z-40 pt-3', flyoutIndex === i ? '' : 'hidden']">
                     <ul
                         :aria-label="link.label"
                         class="max-h-[calc(100dvh-9rem)] min-w-[12rem] overflow-y-auto overscroll-contain rounded-edge border border-ash-200 bg-alabaster py-1 shadow-xl"

@@ -137,6 +137,36 @@ describe("PrimaryNav — subcategory flyouts", () => {
         wrapper.unmount();
     });
 
+    it("carries the hidden class while closed and drops it when open", async () => {
+        const wrapper = mount(PrimaryNav, { props: { links: withChildren }, attachTo: document.body });
+        await flushPromises();
+
+        const item = wrapper.get("[data-nav-item]:first-child");
+        const panel = item.element.querySelector(".absolute") as HTMLElement;
+
+        expect([...panel.classList]).toContain("hidden");
+        expect(panel.getAttribute("style") ?? "").not.toContain("display");
+
+        await item.trigger("mouseenter");
+        expect([...panel.classList]).not.toContain("hidden");
+
+        await item.trigger("mouseleave");
+        expect([...panel.classList]).toContain("hidden");
+
+        wrapper.unmount();
+    });
+
+    it("emits the exact class string the theme's server markup ships, so hydration matches", async () => {
+        const wrapper = mount(PrimaryNav, { props: { links: withChildren }, attachTo: document.body });
+        await flushPromises();
+
+        const panel = wrapper.get("[data-nav-item]:first-child").element.querySelector(".absolute") as HTMLElement;
+
+        expect(panel.className).toBe("absolute left-0 top-full z-40 pt-3 hidden");
+
+        wrapper.unmount();
+    });
+
     it("opens on keyboard focus and closes on Escape", async () => {
         const wrapper = mount(PrimaryNav, { props: { links: withChildren }, attachTo: document.body });
         await flushPromises();
