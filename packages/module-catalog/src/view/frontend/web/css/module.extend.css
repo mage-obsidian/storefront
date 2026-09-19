@@ -19,6 +19,18 @@
         gap: 2.5rem;
         align-items: start;
     }
+
+    .page-layout-2columns-right .columns:has(.sidebar-main) {
+        grid-template-columns: 1fr 16rem;
+    }
+
+    .page-layout-3columns .columns:has(.sidebar-additional:has(> *)) {
+        grid-template-columns: 16rem 1fr 16rem;
+    }
+}
+
+.sidebar-additional:not(:has(> *)) {
+    display: none;
 }
 
 /* Desktop: the dialog is just a box in the sidebar column. `display` overrides the
