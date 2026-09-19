@@ -2,6 +2,7 @@
     "name": "mage-obsidian/module-customer",
     "description": "Customer domain compatibility for MageObsidian: account auth (login, register, password reset) and the header account state, built on the storefront foundation with progressive-enhancement Vue islands.",
     "require": {
+        "php": ">=8.3",
         "mage-obsidian/module-modern-frontend": "^2.0",
         "mage-obsidian/module-storefront": "^3.4"
     },
