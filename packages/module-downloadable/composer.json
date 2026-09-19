@@ -2,6 +2,7 @@
     "name": "mage-obsidian/module-downloadable",
     "description": "Downloadable domain compatibility for MageObsidian: the customer \"My Downloadable Products\" area and purchased-link rendering inside order documents, server-rendered on the account shell.",
     "require": {
+        "php": ">=8.3",
         "mage-obsidian/module-modern-frontend": "^2.0"
     },
     "type": "magento2-module",
