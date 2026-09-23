@@ -7,6 +7,8 @@ import { useAuth, CAPTCHA_FORM_ID } from "MageObsidian_Customer::js/useAuth";
 // adds inline validation and an AJAX sign-in that refreshes the header/cart
 // before redirecting.
 
+const REFERER_IN_ACTION = /\/referer\/[^/]+/;
+
 function captchaAnswer(form: HTMLFormElement): string {
     return form.querySelector<HTMLInputElement>(`input[name="captcha[${CAPTCHA_FORM_ID}]"]`)?.value ?? "";
 }
@@ -32,6 +34,11 @@ function init(): void {
         },
         {
             onValidSubmit: async (values) => {
+                if (REFERER_IN_ACTION.test(form.action)) {
+                    setButtonBusy(submit, true);
+                    form.submit();
+                    return;
+                }
                 const url = form.dataset.ajaxLogin || form.action;
                 if (errorRegion) {
                     errorRegion.textContent = "";

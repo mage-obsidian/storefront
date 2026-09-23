@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const render = (withChallenge: boolean): HTMLFormElement => {
+const render = (withChallenge: boolean, action = "/customer/account/loginPost"): HTMLFormElement => {
     document.body.innerHTML = `
-        <form data-login-form action="/customer/account/loginPost"
+        <form data-login-form action="${action}"
               data-ajax-login="/customer/ajax/login" data-redirect="/customer/account">
             <div class="field">
                 <label class="field__label" for="login-email">Email</label>
@@ -81,5 +81,16 @@ describe("login-enhancer", () => {
         await signIn(form);
 
         expect(bodyOf(globalThis.fetch as ReturnType<typeof vi.fn>).captcha_string).toBe("");
+    });
+
+    it("hands a sign-in that carries a referer to the native form, so Magento sends it back", async () => {
+        const form = render(false, "/customer/account/loginPost/referer/aHR0cHM6Ly9zaG9wLnRlc3QvY2hlY2tvdXQv/");
+        const submit = vi.spyOn(form, "submit").mockImplementation(() => {});
+        await import("./login-enhancer.ts");
+
+        await signIn(form);
+
+        expect(globalThis.fetch).not.toHaveBeenCalled();
+        expect(submit).toHaveBeenCalledOnce();
     });
 });
