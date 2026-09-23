@@ -10,6 +10,7 @@ import { useValueFlash } from "MageObsidian_Storefront::js/useValueFlash";
 import { notify, NotificationTone } from "MageObsidian_Storefront::js/notifications";
 import { readUxRuntimeConfig } from "mage-obsidian/runtime/uxConfig.ts";
 import { createCartQueue } from "MageObsidian_Checkout::js/cart-queue";
+import { checkoutDestination } from "MageObsidian_Checkout::js/guest-checkout-gate";
 
 // Off-canvas mini-cart. Presentation reuses the foundation's shared Drawer; the
 // contents come from Magento's `cart` customer-data section (reactive, FPC-safe),
@@ -54,6 +55,7 @@ const props = withDefaults(
         checkoutUrl: string;
         updateUrl: string;
         removeUrl: string;
+        signInUrl?: string;
         labels?: Record<string, string>;
     }>(),
     { labels: () => ({}) },
@@ -68,6 +70,7 @@ const items = computed(() => section.value.items ?? []);
 const count = computed(() => Number(section.value.summary_count ?? 0));
 const subtotal = computed(() => section.value.subtotal ?? "");
 const isEmpty = computed(() => items.value.length === 0);
+const checkoutHref = computed(() => checkoutDestination(props.checkoutUrl, props.signInUrl));
 
 const open = ref(false);
 const pending = ref<Array<number | string>>([]);
@@ -421,7 +424,7 @@ watch(open, (isOpen) => {
                     </div>
                     <div class="flex flex-col gap-2">
                         <a
-                            :href="checkoutUrl"
+                            :href="checkoutHref"
                             class="btn btn--solid"
                         >
                             {{ labels.checkout }}

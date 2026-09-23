@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { __calls, __reset } from "MageObsidian_Storefront::js/useCart";
-import { reload, __reset as __resetData } from "MageObsidian_ModernFrontend::js/customer-data";
+import { reload, __reset as __resetData, __setSection } from "MageObsidian_ModernFrontend::js/customer-data";
+import { signInUrl } from "./guest-checkout-gate.ts";
 
 // The enhancer binds delegated listeners on the document at import time, so it is
 // imported once and the DOM/stubs are reset per test (the realistic page setup).
@@ -129,5 +130,42 @@ describe("cart-page enhancer", () => {
         expect(postCall).toBeDefined();
         expect(postCall[1].method).toBe("POST");
         expect(reload.calls.at(-1)).toEqual([["cart"]]);
+    });
+});
+
+describe("checkout button", () => {
+    const CHECKOUT = "https://shop.test/checkout/";
+    const LOGIN = "https://shop.test/customer/account/login/";
+
+    function clickCheckout(): MouseEvent {
+        document.body.insertAdjacentHTML(
+            "beforeend",
+            `<a data-checkout-link data-sign-in-url="${LOGIN}" href="${CHECKOUT}">Proceed to checkout</a>`,
+        );
+        const click = new MouseEvent("click", { bubbles: true, cancelable: true });
+        document.querySelector("[data-checkout-link]")!.dispatchEvent(click);
+        return click;
+    }
+
+    it("sends a guest to sign in when the cart refuses guest checkout", () => {
+        __setSection("cart", { isGuestCheckoutAllowed: false });
+        const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+
+        const click = clickCheckout();
+
+        expect(click.defaultPrevented).toBe(true);
+        expect(assign).toHaveBeenCalledWith(signInUrl(LOGIN, CHECKOUT));
+        assign.mockRestore();
+    });
+
+    it("lets the link navigate when guest checkout is allowed", () => {
+        __setSection("cart", { isGuestCheckoutAllowed: true });
+        const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+
+        const click = clickCheckout();
+
+        expect(click.defaultPrevented).toBe(false);
+        expect(assign).not.toHaveBeenCalled();
+        assign.mockRestore();
     });
 });

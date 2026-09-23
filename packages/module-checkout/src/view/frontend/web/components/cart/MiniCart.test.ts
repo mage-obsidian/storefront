@@ -196,6 +196,35 @@ describe("MiniCart", () => {
         expect(hrefs).toContain("/checkout/cart");
     });
 
+    it("points a guest at sign-in when the cart refuses guest checkout", async () => {
+        __setSection("cart", { summary_count: 1, subtotal: "$14.00", items: [ITEM], isGuestCheckoutAllowed: false });
+        const trigger = addTrigger();
+        const wrapper = mount(MiniCart, {
+            props: { ...PROPS, checkoutUrl: "https://shop.test/checkout/", signInUrl: "https://shop.test/customer/account/login/" },
+            attachTo: document.body,
+        });
+        trigger.dispatchEvent(new Event("click", { bubbles: true, cancelable: true }));
+        await nextTick();
+
+        const hrefs = wrapper.findAll("a").map((a) => a.attributes("href"));
+        expect(hrefs).toContain("https://shop.test/customer/account/login/referer/aHR0cHM6Ly9zaG9wLnRlc3QvY2hlY2tvdXQv/");
+        expect(hrefs).not.toContain("https://shop.test/checkout/");
+    });
+
+    it("sends a signed-in customer straight to checkout", async () => {
+        __setSection("cart", { summary_count: 1, subtotal: "$14.00", items: [ITEM], isGuestCheckoutAllowed: false });
+        __setSection("customer", { firstname: "Ana" });
+        const trigger = addTrigger();
+        const wrapper = mount(MiniCart, {
+            props: { ...PROPS, checkoutUrl: "https://shop.test/checkout/", signInUrl: "https://shop.test/customer/account/login/" },
+            attachTo: document.body,
+        });
+        trigger.dispatchEvent(new Event("click", { bubbles: true, cancelable: true }));
+        await nextTick();
+
+        expect(wrapper.findAll("a").map((a) => a.attributes("href"))).toContain("https://shop.test/checkout/");
+    });
+
     it("dresses the CTAs from the shared button contract, not a local recipe", async () => {
         __setSection("cart", { summary_count: 2, subtotal: "$104.00", items: [ITEM] });
         const trigger = addTrigger();

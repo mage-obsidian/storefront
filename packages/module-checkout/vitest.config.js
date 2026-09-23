@@ -28,6 +28,9 @@ export default defineConfig({
             "MageObsidian_Checkout::js/checkout-events": fileURLToPath(
                 new URL("./src/view/frontend/web/js/checkout-events.ts", import.meta.url),
             ),
+            "MageObsidian_Checkout::js/guest-checkout-gate": fileURLToPath(
+                new URL("./src/view/frontend/web/js/guest-checkout-gate.ts", import.meta.url),
+            ),
             "MageObsidian_ModernFrontend::elements/Icon": fileURLToPath(
                 new URL("./src/Test/Js/stubs/Icon.vue", import.meta.url),
             ),

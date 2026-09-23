@@ -20,6 +20,7 @@ import {
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 import { ensureFormKey } from "MageObsidian_Storefront::js/form-key-provider";
 import { createCartQueue } from "MageObsidian_Checkout::js/cart-queue";
+import { checkoutDestination } from "MageObsidian_Checkout::js/guest-checkout-gate";
 
 const ROOT = "[data-cart-root]";
 
@@ -155,6 +156,16 @@ function applyQty(input: HTMLInputElement): void {
 }
 
 document.addEventListener("click", (event) => {
+    const checkout = (event.target as HTMLElement | null)?.closest?.<HTMLAnchorElement>("a[data-checkout-link]");
+    if (checkout) {
+        const destination = checkoutDestination(checkout.href, checkout.dataset.signInUrl);
+        if (destination !== checkout.href) {
+            event.preventDefault();
+            window.location.assign(destination);
+        }
+        return;
+    }
+
     const step = (event.target as HTMLElement | null)?.closest?.<HTMLElement>("[data-cart-step]");
     if (within(step)) {
         const input = step!.closest("[data-cart-line]")?.querySelector<HTMLInputElement>("[data-cart-qty]");
