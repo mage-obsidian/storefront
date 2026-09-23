@@ -87,10 +87,19 @@ describe("cookie channel", () => {
 
     it("does not repeat a batch a failed cookie deletion left behind", () => {
         setCookie([{ type: "success", text: "Saved." }]);
+        const refuseDeletion = vi.spyOn(document, "cookie", "set").mockImplementation(() => {});
+
+        expect(readCookieMessages()).toHaveLength(1);
+        expect(readCookieMessages()).toEqual([]);
+        refuseDeletion.mockRestore();
+    });
+
+    it("shows the same message again when a later redirect sends it anew", () => {
+        setCookie([{ type: "error", text: "Guest checkout is disabled." }]);
         expect(readCookieMessages()).toHaveLength(1);
 
-        setCookie([{ type: "success", text: "Saved." }]);
-        expect(readCookieMessages()).toEqual([]);
+        setCookie([{ type: "error", text: "Guest checkout is disabled." }]);
+        expect(readCookieMessages()).toEqual([{ type: "error", text: "Guest checkout is disabled." }]);
     });
 
     it("caps a backlog the cookie accumulated, keeping the most recent", () => {

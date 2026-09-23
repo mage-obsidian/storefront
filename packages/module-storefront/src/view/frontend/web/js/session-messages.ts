@@ -118,6 +118,14 @@ function rememberShown(mark: string): void {
     }
 }
 
+function forgetShown(): void {
+    try {
+        sessionStorage.removeItem(SHOWN_STORAGE_KEY);
+    } catch {
+        return;
+    }
+}
+
 export function readCookieMessages(): SessionMessage[] {
     if (typeof document === 'undefined') {
         return [];
@@ -140,11 +148,13 @@ export function readCookieMessages(): SessionMessage[] {
 
     const messages = parsed.slice(-BATCH_LIMIT) as SessionMessage[];
     const mark = fingerprint(messages);
-    if (wasAlreadyShown(mark)) {
-        return [];
+    const leftover = wasAlreadyShown(mark);
+    if (readCookie(document.cookie, MESSAGES_COOKIE)) {
+        rememberShown(mark);
+    } else {
+        forgetShown();
     }
-    rememberShown(mark);
-    return messages;
+    return leftover ? [] : messages;
 }
 
 export async function drainSectionMessages(): Promise<SessionMessage[]> {
