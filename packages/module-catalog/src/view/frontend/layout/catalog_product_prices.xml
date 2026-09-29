@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Catalog project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Price-renderer pool. The engine suppresses Magento_Catalog's frontend/base
   layout, so its own catalog_product_prices.xml (which defines render.product.prices)
   never loads and product.price.render.default has no pool to render with. This

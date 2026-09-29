@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Catalog project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * Custom product options logic, shared by the simple add-to-cart form and the
  * configurable Vue island (one logic module, two hosts). It is framework-free

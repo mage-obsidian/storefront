@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Catalog project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 // Test stub for the storefront's useCart composable
 // (`MageObsidian_Storefront::js/useCart`), aliased in vitest.config.js. Records
 // addProduct/addFromForm calls so the configurable island's contract — the

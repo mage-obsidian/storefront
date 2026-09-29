@@ -2,8 +2,8 @@
 /**
  * This file is part of the MageObsidian - Catalog project.
  *
- * @license MIT License - See the LICENSE file in the root directory for details.
- * © 2026 Jeanmarcos Juarez
+ * SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
  */
 
 use Magento\Framework\Component\ComponentRegistrar;

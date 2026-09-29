@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Catalog project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * Turns the layered-navigation sidebar into an off-canvas panel on narrow
  * viewports. The panel is a native <dialog>: `showModal` brings the focus trap,

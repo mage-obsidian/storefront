@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Catalog project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 export const CatalogEvent = {
     ProductVariantChange: "product_variant_change",
     BundleSelectionChange: "bundle_selection_change",

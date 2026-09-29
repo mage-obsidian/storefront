@@ -1,3 +1,9 @@
+<!--
+ This file is part of the MageObsidian - Catalog project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import events from "MageObsidian_ModernFrontend::js/events";

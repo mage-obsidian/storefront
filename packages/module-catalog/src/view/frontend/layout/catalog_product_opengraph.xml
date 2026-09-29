@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Catalog project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Link preview metadata. Core's handle is suppressed with the rest of
   Magento_Catalog, so without this a shared product previews as a bare URL. The
   set is the one core emits; the ViewModel decides which of them there is

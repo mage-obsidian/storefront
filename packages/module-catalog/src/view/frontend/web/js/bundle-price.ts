@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Catalog project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * Bundle live-total logic, framework-free and DOM-driven. It reads the native
  * bundle option controls (bundle_option[...] / bundle_option_qty[...]) plus the

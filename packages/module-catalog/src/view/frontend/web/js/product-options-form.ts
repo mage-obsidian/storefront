@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Catalog project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * Add-to-cart enhancer for non-configurable products that carry custom options
  * (a `<form data-product-form>` with a server-rendered options block). It owns

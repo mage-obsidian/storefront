@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Catalog project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Re-declares the suppressed compare page, reusing the native ListCompare block
   (items + comparable attributes) through our Twig. Not cacheable: visitor-specific.
 -->

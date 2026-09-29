@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Catalog project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Restores the price-render bridge on every storefront page. AbstractProduct's
   getProductPrice() resolves the unassigned product.price.render.default block to
   render special/tier/range pricing; it lives in Magento_Catalog's base layout,

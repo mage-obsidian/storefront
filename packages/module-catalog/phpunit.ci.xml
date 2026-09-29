@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+ This file is part of the MageObsidian - Catalog project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
     CI unit suite: pure-logic tests that run on a vanilla PHP runner without a
     Magento install. Every catalog ViewModel/Block test mocks Magento Catalog
     types, so they all run in a real Magento root (see phpunit.xml) and are

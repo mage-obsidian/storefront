@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Catalog project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { setup } from "./product-options-form";
 import { __formCalls, __reset, __setResult } from "MageObsidian_Storefront::js/useCart";

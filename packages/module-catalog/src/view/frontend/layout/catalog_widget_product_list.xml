@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Catalog project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   The product-list widget an administrator places in a CMS page or block.
 
   Magento_CatalogWidget's own layout is suppressed like every other core module's,

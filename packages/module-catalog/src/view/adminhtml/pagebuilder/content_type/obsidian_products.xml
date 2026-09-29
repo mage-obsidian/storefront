@@ -1,11 +1,9 @@
 <?xml version="1.0"?>
 <!--
-/**
- * This file is part of the MageObsidian - Catalog project.
- *
- * @license MIT License - See the LICENSE file in the root directory for details.
- * © 2026 Jeanmarcos Juarez
- */
+ This file is part of the MageObsidian - Catalog project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_PageBuilder:etc/content_type.xsd">

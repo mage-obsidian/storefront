@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Catalog project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * Product gallery enhancer. The gallery is server-rendered (LCP-friendly,
  * crawlable); this only adds interactivity: clicking a thumb swaps the main

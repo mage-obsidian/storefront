@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Catalog project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 define([
     'Magento_PageBuilder/js/content-type/products/mass-converter/carousel-widget-directive',
     'Magento_PageBuilder/js/utils/object'
