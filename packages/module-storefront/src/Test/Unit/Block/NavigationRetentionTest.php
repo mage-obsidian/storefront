@@ -12,6 +12,7 @@ namespace MageObsidian\Storefront\Test\Unit\Block;
 use Magento\Framework\Module\Dir\Reader;
 use Magento\Framework\View\Element\Context;
 use Magento\Framework\View\Helper\SecureHtmlRenderer;
+use MageObsidian\ModernFrontend\Service\RuntimeScriptReader;
 use MageObsidian\Storefront\Block\NavigationRetention;
 use MageObsidian\Storefront\ViewModel\NavigationContinuity;
 use PHPUnit\Framework\TestCase;
@@ -74,7 +75,7 @@ class NavigationRetentionTest extends TestCase
             $this->createStub(Context::class),
             $continuity,
             $renderer,
-            $reader
+            new RuntimeScriptReader($reader)
         );
 
         return (string)(new ReflectionMethod($block, '_toHtml'))->invoke($block);

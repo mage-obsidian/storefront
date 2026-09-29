@@ -9,10 +9,10 @@ declare(strict_types=1);
 
 namespace MageObsidian\Storefront\Block;
 
-use Magento\Framework\Module\Dir\Reader;
 use Magento\Framework\View\Element\AbstractBlock;
 use Magento\Framework\View\Element\Context;
 use Magento\Framework\View\Helper\SecureHtmlRenderer;
+use MageObsidian\ModernFrontend\Service\RuntimeScriptReader;
 use MageObsidian\Storefront\ViewModel\NavigationContinuity;
 
 class NavigationRetention extends AbstractBlock
@@ -21,13 +21,11 @@ class NavigationRetention extends AbstractBlock
 
     private const string SCRIPT_PATH = '/frontend/runtime/navigation-retention.head.js';
 
-    private const string LEADING_LINE_COMMENTS = '~\A(?:[ \t]*//[^\n]*\n)+~';
-
     public function __construct(
         Context $context,
         private readonly NavigationContinuity $navigationContinuity,
         private readonly SecureHtmlRenderer $secureRenderer,
-        private readonly Reader $moduleReader,
+        private readonly RuntimeScriptReader $scriptReader,
         array $data = []
     ) {
         parent::__construct($context, $data);
@@ -39,7 +37,7 @@ class NavigationRetention extends AbstractBlock
             return '';
         }
 
-        $script = $this->readScript();
+        $script = $this->scriptReader->read(self::MODULE_NAME, self::SCRIPT_PATH);
         if ($script === '') {
             return '';
         }
@@ -50,15 +48,5 @@ class NavigationRetention extends AbstractBlock
             $script,
             false
         );
-    }
-
-    private function readScript(): string
-    {
-        $path = $this->moduleReader->getModuleDir('view', self::MODULE_NAME) . self::SCRIPT_PATH;
-        if (!is_file($path) || !is_readable($path)) {
-            return '';
-        }
-
-        return (string)preg_replace(self::LEADING_LINE_COMMENTS, '', (string)file_get_contents($path));
     }
 }

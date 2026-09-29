@@ -3,7 +3,7 @@
     "description": "Storefront logic for MageObsidian: ViewModels, legacy layout neutralization and shared Vue islands that bring Luma-level functionality to the modern frontend.",
     "require": {
         "php": ">=8.3",
-        "mage-obsidian/module-modern-frontend": "^2.19"
+        "mage-obsidian/module-modern-frontend": "^2.22"
     },
     "type": "magento2-module",
     "license": [
