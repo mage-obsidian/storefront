@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Checkout project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Re-declares the suppressed core success page, reusing the native Onepage\Success
   block (order id + URLs) through our Twig. Order-specific, so not cacheable.
 -->

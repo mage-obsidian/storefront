@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Checkout project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * Progressive enhancement for the shopping bag page. The page is fully
  * server-rendered and its forms POST to Magento's native cart controllers, so it

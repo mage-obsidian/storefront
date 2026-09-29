@@ -1,3 +1,9 @@
+<!--
+ This file is part of the MageObsidian - Checkout project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
 <script setup lang="ts">
 // Test stub for the storefront's shared Drawer
 // (`MageObsidian_Storefront::elements/Drawer`), aliased in vitest.config.js.

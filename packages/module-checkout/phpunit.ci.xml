@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+ This file is part of the MageObsidian - Checkout project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
     CI unit suite: pure-logic tests that run on a vanilla PHP runner without a
     Magento install. The CartTitle block test mocks Magento framework types, so it
     runs in a real Magento root (see phpunit.xml) and is excluded here.

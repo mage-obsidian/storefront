@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Checkout project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 // Test stub for MageObsidian_Storefront::js/address, aliased in vitest.config.js.
 // Mirrors the surface the checkout store uses (the address shape, a blank-address
 // factory and the REST mapping) so the store tests run in isolation without the

@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Checkout project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 // Test stub for the storefront's useCart composable
 // (`MageObsidian_Storefront::js/useCart`), aliased in vitest.config.js. Records
 // updateItemQty/removeItem calls so the mini-cart's mutation contract can be

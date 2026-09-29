@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Checkout project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * `useShippingEstimator` — the cart-page "Estimate Shipping and Tax" logic, the
  * Luma estimator ported off Knockout. It reuses `createCheckoutApi` (same native

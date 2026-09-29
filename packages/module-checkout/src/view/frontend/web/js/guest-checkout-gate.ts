@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Checkout project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 
 export interface GateCartSection {

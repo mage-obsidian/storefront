@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Checkout project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 // Test stub for the engine's customer-data bridge
 // (`MageObsidian_ModernFrontend::js/customer-data`), aliased in vitest.config.js.
 // Holds a reactive section map so the mini-cart reacts to `__setSection`, and

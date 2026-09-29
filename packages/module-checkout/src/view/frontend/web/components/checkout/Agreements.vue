@@ -1,3 +1,9 @@
+<!--
+ This file is part of the MageObsidian - Checkout project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
 <script setup lang="ts">
 import { useCheckout, AGREEMENT_MODE_MANUAL } from "MageObsidian_Checkout::js/useCheckout";
 

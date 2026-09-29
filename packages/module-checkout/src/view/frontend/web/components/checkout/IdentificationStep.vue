@@ -1,3 +1,9 @@
+<!--
+ This file is part of the MageObsidian - Checkout project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import Field from "MageObsidian_Storefront::form/Field";

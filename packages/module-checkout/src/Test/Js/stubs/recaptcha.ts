@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Checkout project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * The foundation's reCAPTCHA runtime, stubbed so this repo tests itself without
  * the sibling — and without the vendor's script. `token` is what `tokenFor`

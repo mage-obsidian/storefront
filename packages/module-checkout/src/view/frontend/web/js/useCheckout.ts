@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Checkout project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * `useCheckout` — the checkout island's central state (a Pinia store so the step
  * components share one source of truth). It is seeded once from the server-primed

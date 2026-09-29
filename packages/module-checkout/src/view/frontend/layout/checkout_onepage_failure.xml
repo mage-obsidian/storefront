@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Checkout project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Re-declares the suppressed core failure page, reusing the native Onepage\Failure
   block (real order id + error message + continue URL) through our Twig.
   Order-specific, so not cacheable.

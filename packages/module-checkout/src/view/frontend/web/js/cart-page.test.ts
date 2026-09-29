@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Checkout project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { __calls, __reset } from "MageObsidian_Storefront::js/useCart";
 import { reload, __reset as __resetData, __setSection } from "MageObsidian_ModernFrontend::js/customer-data";

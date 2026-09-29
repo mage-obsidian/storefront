@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Checkout project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * `createCheckoutApi` — a thin wrapper over Magento's native checkout REST
  * endpoints, the same ones the Knockout one-page uses. It resolves the cart path
