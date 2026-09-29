@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - SendFriend project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   "Email to a Friend" share form (sendfriend/product/send/id/X). Standalone
   (1column). Reuses the core Block\Send as the data source (post URL, prefilled
   sender, max recipients) rendered by our Twig. Recipient rows are static (no JS

@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - SendFriend project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   "Email to a Friend" link on the PDP. The SendToFriend ViewModel is injected as
   an argument the product-view Twig reads as block.getSendfriend(); it self-gates
   on the native enable flag, so Magento_Catalog stays unaware of the feature.
