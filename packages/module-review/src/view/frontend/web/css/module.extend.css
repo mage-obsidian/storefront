@@ -1,4 +1,10 @@
 /*
+ * This file is part of the MageObsidian - Review project.
+ *
+ * SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */
+/*
  * Star-rating display for the reviews UI (see review/stars.twig). A gold fill
  * layer is clipped over a muted track so fractional ratings render precisely.
  */

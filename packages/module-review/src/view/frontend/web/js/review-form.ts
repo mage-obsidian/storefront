@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Review project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 // The rating groups are validated here and not by the shared engine: a radio
 // group has no `.field__error` node of its own, and `required` on sr-only radios
 // cannot host the browser's validation bubble.

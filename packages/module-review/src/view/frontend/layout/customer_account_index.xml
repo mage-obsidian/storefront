@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Review project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Recent reviews on the account dashboard. Adds the core Customer\Recent block as
   the dashboard's `recent_reviews` slot (rendered by dashboard.twig's child_html),
   keeping the widget owned by Review while the Customer dashboard stays generic.

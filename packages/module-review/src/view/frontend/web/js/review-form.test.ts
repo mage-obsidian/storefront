@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Review project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { findUnratedGroup, setup } from "./review-form";
 
