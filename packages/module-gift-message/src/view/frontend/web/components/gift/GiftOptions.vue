@@ -1,3 +1,9 @@
+<!--
+ This file is part of the MageObsidian - GiftMessage project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
 <script setup lang="ts">
 import { ref } from "vue";
 import GiftMessageForm from "MageObsidian_GiftMessage::components/gift/GiftMessageForm";

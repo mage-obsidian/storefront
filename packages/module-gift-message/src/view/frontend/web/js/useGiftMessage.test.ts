@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - GiftMessage project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { useGiftMessage } from "./useGiftMessage.js";
 

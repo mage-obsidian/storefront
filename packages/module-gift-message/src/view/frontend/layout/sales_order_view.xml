@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - GiftMessage project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Shows the saved gift message on the customer order view (order-level and per
   item). The OrderGiftMessage ViewModel is injected as an optional argument the
   shared order-view / item-options Twig reads when present, so the display lives

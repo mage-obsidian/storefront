@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - GiftMessage project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * `useGiftMessage` — thin wrapper over Magento's native gift-message REST
  * endpoints (the same ones the Knockout cart used). It resolves the cart path by
