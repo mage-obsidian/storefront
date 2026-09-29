@@ -103,6 +103,16 @@
                    name="obsidian.form_key_provider"/>
         </referenceBlock>
 
+        <referenceBlock name="head.additional">
+            <block class="MageObsidian\Storefront\Block\NavigationRetention"
+                   name="obsidian.navigation_retention"/>
+        </referenceBlock>
+
+        <referenceContainer name="main.content">
+            <block class="MageObsidian\Storefront\Block\NavigationMarker"
+                   name="obsidian.navigation_marker" after="-"/>
+        </referenceContainer>
+
         <!-- Speculation rules. End of body on purpose: the ruleset is a hint for
              the next navigation, so it must never compete with this page's own
              critical path. -->
@@ -111,6 +121,8 @@
                    name="obsidian.speculation_rules"/>
             <block class="MageObsidian\Storefront\Block\SessionMessages"
                    name="obsidian.session_messages"/>
+            <block class="MageObsidian\Storefront\Block\NavigationProgress"
+                   name="obsidian.navigation_progress"/>
         </referenceContainer>
 
         <!-- Header quick-search island. Foundation chrome (present on every page),

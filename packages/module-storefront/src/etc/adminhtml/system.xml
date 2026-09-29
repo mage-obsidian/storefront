@@ -187,6 +187,15 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
+                <field id="retain" translate="label comment" type="select" sortOrder="70"
+                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Hold the Previous Page Until the Next Is Ready</label>
+                    <comment>Between two pages of this store, the browser keeps the previous page on
+                        screen until the next one has its main content, instead of showing it half
+                        built. A first visit still paints progressively.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mage_obsidian/navigation/retain</config_path>
+                </field>
             </group>
         </section>
     </system>

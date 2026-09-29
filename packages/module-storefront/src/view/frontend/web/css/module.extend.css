@@ -1203,3 +1203,50 @@
   flex-direction: column;
   gap: 0.5rem;
 }
+
+.navigation-progress {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: var(--obsidian-z-toast);
+  height: 3px;
+  overflow: hidden;
+  pointer-events: none;
+  font-size: 0;
+  color: transparent;
+  white-space: nowrap;
+}
+
+.navigation-progress::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  opacity: 0;
+}
+
+.navigation-progress:dir(rtl)::before {
+  transform-origin: right center;
+}
+
+.navigation-progress[data-active]::before {
+  opacity: 1;
+  animation: obsidian-navigation-progress 8s cubic-bezier(0.1, 0.7, 0.2, 1) forwards;
+}
+
+.navigation-progress[data-active][data-still]::before {
+  animation: none;
+  transform: scaleX(1);
+  opacity: 0.6;
+}
+
+@keyframes obsidian-navigation-progress {
+  from {
+    transform: scaleX(0.08);
+  }
+  to {
+    transform: scaleX(0.9);
+  }
+}

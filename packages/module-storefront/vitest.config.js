@@ -124,6 +124,6 @@ export default defineConfig({
             },
         },
         globals: true,
-        include: ["src/view/frontend/web/**/*.test.{js,ts}"],
+        include: ["src/view/frontend/web/**/*.test.{js,ts}", "src/view/frontend/runtime/**/*.test.{js,ts}"],
     },
 });
