@@ -1,4 +1,10 @@
 <?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Downloadable project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
 <!-- Purchased-link list on downloadable lines in the guest order view. -->
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">

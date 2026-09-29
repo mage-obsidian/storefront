@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Downloadable project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   "My Downloadable Products" account page. The native downloadable layout is
   suppressed (Magento_Downloadable not opted-in), so this re-declares it on the
   account shell, reusing the core Customer\Products\ListProducts block as the data

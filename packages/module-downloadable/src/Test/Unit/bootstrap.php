@@ -1,4 +1,10 @@
 <?php
+/**
+ * This file is part of the MageObsidian - Downloadable project.
+ *
+ * SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */
 declare(strict_types=1);
 
 /**
