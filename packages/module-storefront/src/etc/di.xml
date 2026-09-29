@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Storefront project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
     Registers the commerce Twig extension on the engine's shared environment by
     adding an item to its `extensions` array. The array merges across modules by
     item key, so this contributes `storefront_price` alongside the engine's own

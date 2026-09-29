@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * The behaviour Page Builder content assumes, without the library it assumes it
  * from. A merchant's saved content carries the markup and the data attributes;

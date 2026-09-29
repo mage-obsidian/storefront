@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 const SAME_WIDTH = '[data-content-type="buttons"][data-same-width="true"]';
 const BUTTON_ITEM = '[data-content-type="button-item"]';
 const BUTTON = '[data-element="link"], [data-element="empty_link"], a, button';

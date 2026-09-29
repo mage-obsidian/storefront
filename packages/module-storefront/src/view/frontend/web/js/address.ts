@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * Address value type + pure helpers shared by every address island (checkout
  * shipping/billing today, the customer address book later). The foundation owns

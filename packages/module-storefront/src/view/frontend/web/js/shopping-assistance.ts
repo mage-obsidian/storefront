@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * The opt-in a customer gives — or takes back — for an administrator to browse
  * inside their session.

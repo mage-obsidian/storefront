@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 const FIELD = "[data-captcha]";
 const IMAGE = "[data-captcha-image]";
 const RELOAD = "[data-captcha-reload]";

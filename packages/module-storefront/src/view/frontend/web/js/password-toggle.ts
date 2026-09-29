@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 const WRAPPER_CLASS = "field-password";
 const BUTTON_CLASS = "field-password__toggle";
 const ICON_BASE = "__MAGE_OBSIDIAN_ICONS__";

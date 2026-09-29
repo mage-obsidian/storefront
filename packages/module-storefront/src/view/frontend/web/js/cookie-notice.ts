@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * Cookie-restriction consent banner enhancer. The server renders the banner
  * hidden; this reveals it only when the `user_allowed_save_cookie` cookie is

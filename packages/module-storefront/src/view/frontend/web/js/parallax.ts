@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 const PARALLAX = '[data-enable-parallax="1"]';
 const DEFAULT_SPEED = 0.3;
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";

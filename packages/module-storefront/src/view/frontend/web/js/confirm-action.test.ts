@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 // The import is what binds the document, so the delegated tests below need no setup.
 import { bindConfirmForms, confirmAction } from "./confirm-action.ts";

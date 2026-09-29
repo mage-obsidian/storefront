@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * Delegated add-to-compare toggle for the product cards / PDP. Each ships a real
  * `<form data-add-to-compare>` that POSTs to catalog/product_compare/add and

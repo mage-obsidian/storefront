@@ -1,3 +1,9 @@
+<!--
+ This file is part of the MageObsidian - Storefront project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { enhanceReveal } from "MageObsidian_Storefront::js/reveal-on-interaction";

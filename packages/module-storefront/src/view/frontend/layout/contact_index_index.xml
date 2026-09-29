@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Storefront project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Contact Us page. Magento_Contact's frontend layout is suppressed (module not
   opted-in), so this storefront module re-declares the form, reusing the native
   ContactForm block (form action + UserDataProvider prefill) with our Twig. The

@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 const VIDEO_BACKGROUND = '[data-background-type="video"]';
 const REMOTE_HOSTS = ["youtube.com", "youtu.be", "player.vimeo.com", "vimeo.com"];
 

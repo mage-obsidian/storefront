@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import events from 'MageObsidian_ModernFrontend::js/events';
 
 export const NOTIFICATION_EVENT = 'notification_add';

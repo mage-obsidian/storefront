@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 const HOVER_REVEAL = '[data-show-overlay="hover"], [data-show-button="hover"]';
 const OVERLAY = ".pagebuilder-overlay";
 const BUTTON = ".pagebuilder-banner-button, .pagebuilder-slide-button, [data-element='button']";

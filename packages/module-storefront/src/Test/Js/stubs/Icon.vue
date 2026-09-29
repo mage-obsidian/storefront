@@ -1,3 +1,9 @@
+<!--
+ This file is part of the MageObsidian - Storefront project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
 <script setup lang="ts">
 // Test stub for the engine's Icon component
 // (`MageObsidian_ModernFrontend::elements/Icon`), aliased in vitest.config.js.

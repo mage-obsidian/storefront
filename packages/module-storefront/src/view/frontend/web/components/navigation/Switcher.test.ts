@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
 import Switcher from "./Switcher.vue";

@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 // Accessible inline validation for the auth forms — the progressive layer over
 // the native HTML5-validated <form>. The validators are pure (unit-tested in
 // isolation); enhanceValidation only wires them to the DOM: it toggles

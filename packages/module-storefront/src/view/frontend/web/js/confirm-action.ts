@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * Confirmation before a destructive native POST (delete an address, remove a
  * wish list item, drop a stored card). A native <dialog> rather than a component:

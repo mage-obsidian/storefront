@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * Add/remove against Magento's native product-compare controllers on top of the
  * customer-data bridge. The `compare-products` section already lists every item

@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 // Test stub for the engine's customer-data bridge
 // (`MageObsidian_ModernFrontend::js/customer-data`), aliased in vitest.config.js.
 // Holds a reactive section map so cart components react to `__setSection`, and

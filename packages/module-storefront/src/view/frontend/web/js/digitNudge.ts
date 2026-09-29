@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 // Optical centering for single-glyph count badges. A circular badge centers the
 // digit's advance box, but each glyph's ink sits slightly off within that box
 // (font side-bearings). These per-digit horizontal corrections (px, measured from

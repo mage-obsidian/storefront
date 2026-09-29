@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * Ensures a `form_key` cookie exists and that every rendered `form_key` input
  * carries its value. Magento's RegisterFormKeyFromCookie plugin syncs this

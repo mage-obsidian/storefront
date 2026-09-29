@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { i18n } from "mage-obsidian/runtime/i18nCore.ts";
 
 export interface CarouselLabels {

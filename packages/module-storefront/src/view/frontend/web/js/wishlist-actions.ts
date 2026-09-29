@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * Delegated heart toggle for the product cards / PDP. Each ships a real
  * `<form data-add-to-wishlist>` that POSTs to wishlist/index/add and works with

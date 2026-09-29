@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * `useCart` — thin add-to-cart action on top of the engine's `useCustomerData`
  * bridge. We deliberately reuse Magento's native session quote (POST to

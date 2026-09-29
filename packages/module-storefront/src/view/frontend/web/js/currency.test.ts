@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { describe, expect, it } from "vitest";
 import { DEFAULT_CURRENCY_FORMAT, formatCurrency } from "./currency";
 

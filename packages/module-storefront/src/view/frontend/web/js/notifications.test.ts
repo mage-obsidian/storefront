@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach } from "vitest";
 import { NotificationTone, notify, onNotification } from "./notifications.ts";
 import { __reset as __resetEvents } from "MageObsidian_ModernFrontend::js/events";

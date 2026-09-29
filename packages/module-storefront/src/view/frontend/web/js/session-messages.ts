@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import events from 'MageObsidian_ModernFrontend::js/events';
 import { readCookie } from 'mage-obsidian/runtime/sectionStoreCore.ts';
 import { LifecycleEvent } from 'mage-obsidian/runtime/lifecycleEvents.ts';

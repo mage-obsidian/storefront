@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { describe, it, expect, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import Drawer from "./Drawer.vue";

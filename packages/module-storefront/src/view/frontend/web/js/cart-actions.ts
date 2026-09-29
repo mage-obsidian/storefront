@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * Progressive enhancement for add-to-cart. The product card ships a real
  * `<form data-add-to-cart>` that POSTs to checkout/cart/add and works with no
