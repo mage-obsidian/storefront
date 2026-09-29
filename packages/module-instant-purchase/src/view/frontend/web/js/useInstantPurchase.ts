@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - InstantPurchase project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * `useInstantPurchase` — Vue-free logic for the PDP instant-purchase button.
  *

@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - InstantPurchase project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * Test stub for the customer-data section store. The composable always receives
  * an explicit store in tests, so this only needs to satisfy the import specifier.

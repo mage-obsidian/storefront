@@ -1,3 +1,9 @@
+<!--
+ This file is part of the MageObsidian - InstantPurchase project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { createInstantPurchase } from "MageObsidian_InstantPurchase::js/useInstantPurchase";

@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - InstantPurchase project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createInstantPurchase, type InstantPurchaseSection } from "./useInstantPurchase";
 

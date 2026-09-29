@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - InstantPurchase project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Instant Purchase one-click button on the PDP. The native Magento_InstantPurchase
   layout (Knockout button block) is suppressed; this injects our InstantPurchase
   ViewModel into the product-view block (read as block.getInstantPurchase()), and
