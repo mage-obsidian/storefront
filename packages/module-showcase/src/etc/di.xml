@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Showcase project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   The registry is the allowlist. A visitor's cookie can only reach a config path
   that appears here, with a value the feature declares — everything else is
   dropped, so a hand-written cookie cannot flip payment methods or anything else

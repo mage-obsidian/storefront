@@ -1,11 +1,12 @@
 <?php
-declare(strict_types=1);
 /**
  * This file is part of the MageObsidian - Showcase project.
  *
- * @license MIT License - See the LICENSE file in the root directory for details.
- * © 2026 Jeanmarcos Juarez
- *
+ * SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */
+declare(strict_types=1);
+/**
  * Measures what class loading costs, for `MageObsidian\Showcase\Model\Telemetry\AutoloadTimer`
  * to report. Install by pointing PHP's `auto_prepend_file` at this file:
  *
