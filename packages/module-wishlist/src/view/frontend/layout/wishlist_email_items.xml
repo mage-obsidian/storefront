@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Wishlist project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Item list for the "Share Wish List" email. The engine suppresses the core
   module's own wishlist_email_items handle (Magento_Wishlist ships no
   compatibility.xml), so we re-declare the wishlist.email.items block the Send

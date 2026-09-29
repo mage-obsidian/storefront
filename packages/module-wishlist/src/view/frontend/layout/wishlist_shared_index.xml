@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Wishlist project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Public shared wish list (opened from a share link). Standalone — no account
   shell, since the viewer is not necessarily the owner. Renders our Twig over the
   core Share\Wishlist block (data source for the shared item collection and the

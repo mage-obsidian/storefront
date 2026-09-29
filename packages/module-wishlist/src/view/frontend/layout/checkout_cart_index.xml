@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Wishlist project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Adds the "Move to wish list" action to the cart lines without coupling
   Magento_Checkout to wish lists: the CartMove ViewModel is attached to the cart
   block as an argument, read from the shared cart Twig as block.getWishlist().

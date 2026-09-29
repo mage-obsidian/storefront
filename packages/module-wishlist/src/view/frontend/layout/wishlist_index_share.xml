@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Wishlist project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Wish list sharing form. Pulls in the account shell, then renders our Twig over
   the core Customer\Sharing block (kept as the data source for the send URL,
   previously entered values and the back link). The form is a native POST to
