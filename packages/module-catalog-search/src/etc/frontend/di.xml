@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - CatalogSearch project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   The shared filter-state ViewModel reads a layered-navigation block by name, and
   the results page names its sidebar differently from the category one.
 -->

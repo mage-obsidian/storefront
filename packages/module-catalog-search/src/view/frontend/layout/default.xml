@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - CatalogSearch project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   "Advanced Search" footer link. Magento_CatalogSearch's native layout (which adds
   it) is suppressed, so it is re-added here to give the advanced search form an
   entry point in the footer — the same pattern as the Orders and Returns link.

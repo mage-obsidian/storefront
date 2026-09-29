@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - CatalogSearch project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Advanced search form. MageObsidian suppresses the core CatalogSearch frontend
   layout, so we re-declare the Advanced\Form block (kept as the data source for
   the searchable attributes, labels, input types and the GET post URL) with our

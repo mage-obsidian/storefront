@@ -1,3 +1,9 @@
+/*
+ * This file is part of the MageObsidian - CatalogSearch project.
+ *
+ * SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */
 /* Popular search terms cloud. `--term-weight` comes off each item (0 → 1, the
    core's popularity ratio) and drives the type scale here rather than in the
    markup, which is what the native phtml does with an inline font-size. */
