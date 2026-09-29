@@ -1,3 +1,9 @@
+/*
+ * This file is part of the MageObsidian - Base Theme project.
+ *
+ * SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */
 header.header_container {
     @apply bg-gray-50 shadow-md;
 

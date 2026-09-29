@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Base Theme project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Media image configuration for the whole MageObsidian theme chain.
 
   The theme chain (theme-base -> default) declares no Luma/blank parent, so it
