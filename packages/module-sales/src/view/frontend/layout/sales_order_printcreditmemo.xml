@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Sales project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Printable credit memo. Standalone like sales_order_print; data source is the
   core PrintOrder\Creditmemo block (single credit memo or the whole collection
   on "print all"). OrderTitle restores the <title>.

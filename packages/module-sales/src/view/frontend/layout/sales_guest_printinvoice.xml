@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Sales project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   The guest form of the printable document. Core's handle is suppressed with the
   rest of Magento_Sales, so without this the page renders its chrome and an empty
   main: the blocks it references never exist. The document itself is identical

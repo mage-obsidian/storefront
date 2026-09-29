@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Sales project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   The "My Orders" link itself is declared by MageObsidian_Customer (it is one of
   the baseline account entries); this only attaches the badge, because the count
   is sales' business. The \Proxy keeps the collection factory and the COUNT out

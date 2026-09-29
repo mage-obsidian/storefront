@@ -1,3 +1,9 @@
+<!--
+ This file is part of the MageObsidian - Sales project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
 <script setup lang="ts">
 import { ref, useId } from "vue";
 import Field from "MageObsidian_Storefront::form/Field";

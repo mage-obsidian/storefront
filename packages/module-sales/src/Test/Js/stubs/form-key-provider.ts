@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Sales project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 // Test stub for the storefront's form-key provider
 // (`MageObsidian_Storefront::js/form-key-provider`), aliased in vitest.config.js.
 // The real one seeds the form_key cookie and registers a submit listener; here it

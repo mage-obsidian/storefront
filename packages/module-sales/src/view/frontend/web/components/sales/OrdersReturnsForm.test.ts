@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Sales project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { describe, it, expect } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import OrdersReturnsForm from "./OrdersReturnsForm.vue";

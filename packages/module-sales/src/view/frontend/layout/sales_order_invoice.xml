@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Sales project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Customer invoice view. Same shape as sales_order_view: account shell + our Twig
   over the core Order\Invoice block (data source for the order and its invoice
   collection) and Order\Info (formatted addresses). OrderTitle restores the

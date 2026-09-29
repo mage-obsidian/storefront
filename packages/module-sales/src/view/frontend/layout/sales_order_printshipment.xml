@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Sales project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Printable shipment. Standalone like sales_order_print; data source is the core
   PrintOrder\Shipment block (order + shipment collection, with tracking).
   OrderTitle restores the <title>.

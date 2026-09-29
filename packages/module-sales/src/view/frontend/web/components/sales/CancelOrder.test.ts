@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Sales project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import CancelOrder from "./CancelOrder.vue";

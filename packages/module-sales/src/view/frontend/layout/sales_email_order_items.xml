@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Sales project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Render the order confirmation email items through our Twig (the engine is
   registered by .twig extension, so it works in the email area too). The block
   classes stay core; only the template changes.

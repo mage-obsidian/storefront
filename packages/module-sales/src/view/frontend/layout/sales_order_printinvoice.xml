@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Sales project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Printable invoice. Standalone (no account shell), like sales_order_print: the
   theme header/footer carry print:hidden so the browser prints just the document.
   Data source is the core PrintOrder\Invoice block (single invoice when printing

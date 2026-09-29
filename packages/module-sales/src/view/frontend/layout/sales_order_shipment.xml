@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Sales project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Customer shipment view. The shipment block lives in Magento_Shipping (not
   Magento_Sales): it is the data source for the order and its shipment
   collection (with tracking). Account shell + our Twig + Order\Info. OrderTitle

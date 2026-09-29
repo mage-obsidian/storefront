@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Sales project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Order detail. Pulls in the account shell, then renders our Twig over the core
   Order\View / Items / Totals / Info blocks (kept as data sources for the order,
   line items, totals, addresses and payment HTML). OrderTitle restores the

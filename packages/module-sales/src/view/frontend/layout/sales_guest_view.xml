@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Sales project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Guest order view. Standalone (no account shell) — reuses the customer
   order-view Twig with route_prefix=sales/guest and is_guest=true so its cross
   links and back link target the guest routes. Same core Order\* data sources.

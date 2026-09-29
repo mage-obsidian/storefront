@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Sales project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Guest "Orders and Returns" lookup form. Standalone (a guest has no account
   shell). The OrdersReturnsForm ViewModel feeds the Vue island its action URL and
   form key. The controller sets the page title.

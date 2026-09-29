@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Sales project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Printable order. The native print layout is suppressed (Magento_Sales not
   opted-in), so this re-declares it standalone (no account shell) and reuses the
   order-view Twig over the same Order\View / Items / Totals / Info data sources.
