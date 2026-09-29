@@ -1,3 +1,9 @@
+<!--
+ This file is part of the MageObsidian - Vault project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 

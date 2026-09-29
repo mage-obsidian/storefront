@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Vault project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   "Stored Payment Methods" account page. The native Vault layout is suppressed
   (Magento_Vault not opted-in), so this re-declares it on the account shell. The
   StoredCards ViewModel reads the customer's visible card tokens directly, so the
