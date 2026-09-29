@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Search project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 /**
  * Same-document view transition for a fragment swap.
  *

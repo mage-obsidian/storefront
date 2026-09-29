@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Search project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Two wires only: which blocks make up a servable listing, and the plugin that
   turns those blocks into the response. No preference — the page keeps rendering
   through its own controller, its own blocks and its own templates.

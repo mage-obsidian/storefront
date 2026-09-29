@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Search project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Added by the fragment plugin before the layout is built. Generating the whole
   page's block tree costs real time even when only two of its blocks are ever
   rendered, so the containers a fragment can never need are dropped before

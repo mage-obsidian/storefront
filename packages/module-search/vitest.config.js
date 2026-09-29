@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Search project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
 

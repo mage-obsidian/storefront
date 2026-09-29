@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Search project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import events from "MageObsidian_ModernFrontend::js/events";
 import { listingEvent } from "MageObsidian_Storefront::js/listing-events";
