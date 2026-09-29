@@ -21,6 +21,8 @@ class NavigationRetention extends AbstractBlock
 
     private const string SCRIPT_PATH = '/frontend/runtime/navigation-retention.head.js';
 
+    private const string LEADING_LINE_COMMENTS = '~\A(?:[ \t]*//[^\n]*\n)+~';
+
     public function __construct(
         Context $context,
         private readonly NavigationContinuity $navigationContinuity,
@@ -57,6 +59,6 @@ class NavigationRetention extends AbstractBlock
             return '';
         }
 
-        return (string)file_get_contents($path);
+        return (string)preg_replace(self::LEADING_LINE_COMMENTS, '', (string)file_get_contents($path));
     }
 }

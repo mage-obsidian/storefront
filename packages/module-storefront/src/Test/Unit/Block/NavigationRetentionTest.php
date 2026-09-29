@@ -30,12 +30,14 @@ class NavigationRetentionTest extends TestCase
 
     public function testEmitsTheRetentionScriptWithTheMarkerItWaitsFor(): void
     {
-        $script = (string)file_get_contents(self::VIEW_DIR . '/frontend/runtime/navigation-retention.head.js');
-
         $renderer = $this->createMock(SecureHtmlRenderer::class);
         $renderer->expects($this->once())
             ->method('renderTag')
-            ->with('script', ['data-marker' => 'obsidian-main-end'], $script, false)
+            ->with('script', ['data-marker' => 'obsidian-main-end'], $this->callback(
+                static fn(string $script): bool => str_starts_with($script, '(function (doc, nav) {')
+                    && !str_contains($script, 'SPDX')
+                    && !str_contains($script, 'This file is part of')
+            ), false)
             ->willReturn('<script data-marker="obsidian-main-end" nonce="abc">…</script>');
 
         $html = $this->render($renderer, enabled: true, viewDir: self::VIEW_DIR);
