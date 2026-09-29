@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Customer project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Sign-out confirmation page. The core layout is suppressed; we re-declare the
   block on the MageObsidian Template so the Twig can build the homepage URL. The
   native JS redirect is replaced with a no-JS <meta refresh> plus a link.

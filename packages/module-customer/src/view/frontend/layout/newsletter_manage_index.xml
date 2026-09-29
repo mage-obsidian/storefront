@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Customer project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Newsletter subscriptions. Pulls in the account shell, then renders our Twig
   over the core Customer\Newsletter block (kept as data source for the current
   subscription state and the save URL). The controller sets the title and the

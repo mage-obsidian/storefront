@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Customer project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { enhanceValidation, required, email, minLength, matches } from "MageObsidian_Storefront::js/form-validation";
 
 // Registration page entry. Inline validation only — account creation runs the

@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Customer project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { revealActiveRailLink } from "./account-rail.ts";
 

@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Customer project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { enhanceValidation, required, minLength, matches } from "MageObsidian_Storefront::js/form-validation";
 
 // Reset-password page entry (reached from the emailed link). Inline length/match

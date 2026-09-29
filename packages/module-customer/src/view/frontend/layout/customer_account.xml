@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Customer project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Account shell, shared by every account page (pages pull it in with
   <update handle="customer_account"/>). Renders the sidebar nav (AccountNav
   ViewModel, since the native Account\Navigation links come from suppressed

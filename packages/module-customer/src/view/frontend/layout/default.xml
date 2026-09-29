@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Customer project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Header account state, present on every page. The static "Account" link in the
   theme header is replaced by an island child block: AccountMenu reads the
   client-side `customer` customer-data section (FPC-safe — the name is never

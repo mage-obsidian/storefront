@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Customer project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useAuth, CAPTCHA_FORM_ID } from "./useAuth.ts";
 import { reload, __reset } from "../../../../Test/Js/stubs/customerData.ts";

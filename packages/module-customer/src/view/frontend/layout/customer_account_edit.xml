@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Customer project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Edit account information. The wrapper is a MageObsidian Template (so vite_url is
   available for the enhancer); the core Form\Edit block is its child data source
   and MUST keep the name `customer_edit` — the Edit controller looks it up by that

@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Customer project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Account dashboard. Pulls in the shell, then adds the dashboard content to its
   slot, reusing the core Dashboard\Info and Dashboard\Address blocks as data
   sources behind our Twig.

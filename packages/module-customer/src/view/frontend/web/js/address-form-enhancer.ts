@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Customer project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 // Progressive enhancement for the address form. The form is fully usable without
 // JS (the region select is rendered server-side for the current country); this
 // layer swaps the region control when the country changes and wires accessible

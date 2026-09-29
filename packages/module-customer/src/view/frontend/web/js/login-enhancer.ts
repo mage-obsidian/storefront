@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Customer project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { enhanceValidation, required, email } from "MageObsidian_Storefront::js/form-validation";
 import { setButtonBusy } from "MageObsidian_Storefront::js/button-state";
 import { useAuth, CAPTCHA_FORM_ID } from "MageObsidian_Customer::js/useAuth";

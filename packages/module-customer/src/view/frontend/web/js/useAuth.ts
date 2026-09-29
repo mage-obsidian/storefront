@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Customer project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 import ensureFormKey from "MageObsidian_Storefront::js/form-key-provider";
 

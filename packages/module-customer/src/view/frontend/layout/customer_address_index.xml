@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Customer project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Address book. Pulls in the shell, then renders our Twig over the native
   Address\Book and Address\Grid blocks (kept as data sources). The Book block
   MUST keep the name `address_book` — the Index controller looks it up by name.

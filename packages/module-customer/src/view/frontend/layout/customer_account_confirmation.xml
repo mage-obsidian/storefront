@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Customer project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Resend account-confirmation email form. The core layout is suppressed; we
   re-declare the block on the MageObsidian Template and render our Twig. The form
   POSTs natively to customer/account/confirmation (the controller resends the

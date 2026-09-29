@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Customer project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 import { enhanceValidation, required, email, minLength, matches, when } from "MageObsidian_Storefront::js/form-validation";
 
 // Edit-account page entry. Toggles the email / password fieldsets from their

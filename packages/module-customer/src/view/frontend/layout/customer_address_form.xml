@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Customer project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Add / edit address. Pulls in the shell, then renders our Twig over the native
   Address\Edit block (kept as data source for URLs, the saved address, region
   JSON and default flags). The block MUST keep the name `customer_address_edit`

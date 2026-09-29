@@ -1,3 +1,7 @@
+// This file is part of the MageObsidian - Customer project.
+//
+// SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
 // Below md the account rail is a horizontal scroll strip. The active entry can
 // sit anywhere in it, including off-screen, so bring it into view on load. Purely
 // cosmetic: without JS the strip still scrolls by hand.

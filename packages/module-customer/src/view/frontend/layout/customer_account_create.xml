@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Customer project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Registration page structure (see customer_account_login.xml for why the core
   layout is re-declared). Reuses Magento\Customer\Block\Form\Register as a data
   source (post URL, persisted form data, region/country config). The form POSTs
