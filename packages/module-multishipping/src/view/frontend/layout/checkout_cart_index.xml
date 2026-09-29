@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Multishipping project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Inject the multishipping cart entry point. Magento_Multishipping's own
   checkout_cart_index (which adds the link to checkout.cart.methods) is
   suppressed; this module (opted-in) instead hands the MultishippingLink

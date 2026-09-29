@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Multishipping project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Step 2 — pick a shipping method per address. Reuses the native Shipping block
   (rates per address) behind our Twig; native POST to the shipping controller.
 -->

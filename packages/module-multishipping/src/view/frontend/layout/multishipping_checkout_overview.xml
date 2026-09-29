@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Multishipping project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Step 4 — review and place order. Reuses the native Overview block (per-address
   items, totals, payment info) behind our Twig; native POST places the orders.
   The Totals + Payment\Info child blocks are data sources for the recap.

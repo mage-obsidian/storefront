@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Multishipping project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Step 1 — assign items to shipping addresses. Re-declares the suppressed core
   handle, reusing the native Addresses block as a data source behind our Twig.
   The form POSTs to the native controller (works without JS); item info is

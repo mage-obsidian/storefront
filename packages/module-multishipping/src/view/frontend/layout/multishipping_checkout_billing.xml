@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Multishipping project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Step 3 — payment method. Reuses the native Billing block (available methods +
   selected billing address) behind our Twig. The Knockout payment UI is dropped;
   offline methods are native radios that POST to the billing controller. The
