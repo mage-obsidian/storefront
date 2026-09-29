@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
 <!--
+ This file is part of the MageObsidian - Persistent project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
   Remember-me checkbox on the sign-in form. The Remember ViewModel is injected
   into the login block (read as block.getRemember()); it self-gates on the native
   persistent + remember-me flags, so Magento_Customer stays unaware of Persistent.
