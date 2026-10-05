@@ -1,0 +1,150 @@
+<?php
+/**
+ * This file is part of the MageObsidian - Checkout project.
+ *
+ * SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */
+declare(strict_types=1);
+
+namespace MageObsidian\Checkout\Test\Unit\ViewModel;
+
+use Magento\Catalog\Helper\Image as ImageHelper;
+use Magento\Catalog\Helper\Product\Configuration\ConfigurationInterface;
+use Magento\Catalog\Helper\Product\ConfigurationPool;
+use Magento\Catalog\Model\Product;
+use Magento\Catalog\Model\Product\Type\AbstractType;
+use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\Framework\Pricing\PriceCurrencyInterface;
+use Magento\Framework\UrlInterface;
+use Magento\Quote\Model\Quote;
+use Magento\Quote\Model\Quote\Item as QuoteItem;
+use MageObsidian\Checkout\ViewModel\CartItems;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Normalises the session quote's visible items into render-ready rows. We assert
+ * the mapping (thumbnail, options, unit price, row total) and graceful empties;
+ * needs Magento Catalog/Quote types, so it runs in a Magento root.
+ */
+class CartItemsTest extends TestCase
+{
+    protected function setUp(): void
+    {
+        if (!class_exists(Product::class)) {
+            $this->markTestSkipped('Magento Catalog is not available in this runtime.');
+        }
+    }
+
+    public function testMapsVisibleQuoteItemsToRows(): void
+    {
+        $type = $this->createMock(AbstractType::class);
+        $type->method('canConfigure')->willReturn(true);
+        $product = $this->createMock(Product::class);
+        $product->method('getProductUrl')->willReturn('https://shop.test/chaz.html');
+        $product->method('getId')->willReturn(42);
+        $product->method('getTypeInstance')->willReturn($type);
+
+        $item = $this->getMockBuilder(QuoteItem::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getItemId', 'getName', 'getQty', 'getCalculationPrice', 'getProduct', 'getProductType'])
+            ->getMock();
+        $item->method('getItemId')->willReturn(15);
+        $item->method('getName')->willReturn('Chaz Hoodie');
+        $item->method('getQty')->willReturn(2.0);
+        $item->method('getCalculationPrice')->willReturn(52.0);
+        $item->setData(['row_total_incl_tax' => 104.0, 'weee_tax_applied_row_amount' => 0.0]);
+        $item->method('getProduct')->willReturn($product);
+        $item->method('getProductType')->willReturn('configurable');
+
+        $configuration = $this->createMock(ConfigurationInterface::class);
+        $configuration->method('getOptions')->with($item)->willReturn([
+            ['label' => 'Size', 'value' => 'M'],
+            ['label' => 'Color', 'value' => ['Gray']],
+        ]);
+        $pool = $this->createMock(ConfigurationPool::class);
+        $pool->method('getByProductType')->with('configurable')->willReturn($configuration);
+
+        $rows = $this->viewModel([$item], $pool)->getItems();
+
+        $this->assertCount(1, $rows);
+        $this->assertSame([
+            'id' => 15,
+            'name' => 'Chaz Hoodie',
+            'url' => 'https://shop.test/chaz.html',
+            'image' => 'https://shop.test/media/chaz.jpg',
+            'qty' => 2.0,
+            'price' => '$52.00',
+            'rowTotal' => '$104.00',
+            'fpt' => '',
+            'options' => [
+                ['label' => 'Size', 'value' => 'M'],
+                ['label' => 'Color', 'value' => 'Gray'],
+            ],
+            'configureUrl' => 'https://shop.test/checkout/cart/configure/id/15/product_id/42/',
+        ], $rows[0]);
+    }
+
+    public function testExposesFixedProductTaxWhenTheLineCarriesWeee(): void
+    {
+        $product = $this->createMock(Product::class);
+        $product->method('getTypeInstance')->willReturn($this->createMock(AbstractType::class));
+
+        $item = $this->getMockBuilder(QuoteItem::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getItemId', 'getName', 'getQty', 'getCalculationPrice', 'getProduct', 'getProductType'])
+            ->getMock();
+        $item->method('getItemId')->willReturn(7);
+        $item->method('getName')->willReturn('Strive Shoulder Pack');
+        $item->method('getQty')->willReturn(1.0);
+        $item->method('getCalculationPrice')->willReturn(32.0);
+        $item->setData(['row_total_incl_tax' => 37.0, 'weee_tax_applied_row_amount' => 5.0]);
+        $item->method('getProduct')->willReturn($product);
+        $item->method('getProductType')->willReturn('simple');
+
+        $rows = $this->viewModel([$item])->getItems();
+
+        $this->assertSame('$5.00', $rows[0]['fpt']);
+    }
+
+    public function testReturnsEmptyListForAnEmptyCart(): void
+    {
+        $this->assertSame([], $this->viewModel([])->getItems());
+    }
+
+    /**
+     * @param array<int, QuoteItem> $items
+     * @param ConfigurationPool|null $pool
+     * @return CartItems
+     */
+    private function viewModel(array $items, ?ConfigurationPool $pool = null): CartItems
+    {
+        $quote = $this->createMock(Quote::class);
+        $quote->method('getAllVisibleItems')->willReturn($items);
+        $session = $this->createMock(CheckoutSession::class);
+        $session->method('getQuote')->willReturn($quote);
+
+        $image = $this->createMock(ImageHelper::class);
+        $image->method('init')->willReturnSelf();
+        $image->method('getUrl')->willReturn('https://shop.test/media/chaz.jpg');
+
+        $priceCurrency = $this->createMock(PriceCurrencyInterface::class);
+        $priceCurrency->method('format')->willReturnCallback(
+            static fn ($amount): string => '$' . number_format((float)$amount, 2)
+        );
+
+        $url = $this->createMock(UrlInterface::class);
+        $url->method('getUrl')->willReturnCallback(
+            static fn (string $route, array $params): string =>
+                "https://shop.test/$route/id/{$params['id']}/product_id/{$params['product_id']}/"
+        );
+
+        return new CartItems(
+            $session,
+            $pool ?? $this->createMock(ConfigurationPool::class),
+            $image,
+            $priceCurrency,
+            $url
+        );
+    }
+}

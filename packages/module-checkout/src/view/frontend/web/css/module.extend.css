@@ -1,0 +1,475 @@
+/*
+ * This file is part of the MageObsidian - Checkout project.
+ *
+ * SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */
+/* ============================================================
+   MageObsidian Checkout — mini-cart motion.
+   Plain selectors, not Tailwind utilities: nothing references these class
+   names statically, so the tree-shaker would drop them otherwise.
+   ============================================================ */
+
+/* The leaving row slides past the right edge, and a scroll container with
+   `overflow-y: auto` resolves the other axis to `auto` too — which is a
+   horizontal scrollbar for the length of the animation. */
+.minicart-list {
+    position: relative;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+}
+
+.minicart-item-move,
+.minicart-item-enter-active,
+.minicart-item-leave-active {
+    transition:
+        transform 0.32s var(--ease-obsidian),
+        opacity 0.24s var(--ease-obsidian);
+}
+
+.minicart-item-enter-from,
+.minicart-item-leave-to {
+    opacity: 0;
+    transform: translateX(1.5rem);
+}
+
+/* Out of flow, so the rows below glide up into the gap instead of jumping. */
+.minicart-item-leave-active {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.minicart-panel-enter-active,
+.minicart-panel-leave-active {
+    transition: opacity 0.25s var(--ease-obsidian);
+}
+
+.minicart-panel-enter-from,
+.minicart-panel-leave-to {
+    opacity: 0;
+}
+
+.minicart-value {
+    border-radius: var(--radius-edge);
+    transition: background-color 0.45s var(--ease-obsidian);
+}
+
+.minicart-value.is-flashing {
+    background-color: var(--color-accent-soft);
+    transition-duration: 0.1s;
+}
+
+.minicart-value.is-syncing {
+    opacity: 0.5;
+    animation: minicart-pulse 1.1s ease-in-out infinite;
+}
+
+.minicart-item.is-added {
+    animation: minicart-added 1.8s var(--ease-obsidian);
+}
+
+.minicart-qty {
+    transition: transform 0.25s var(--ease-obsidian);
+}
+
+.minicart-qty.is-bumped {
+    transform: scale(1.08);
+}
+
+.minicart-remove {
+    color: var(--color-danger);
+    opacity: 0.72;
+    transition:
+        opacity 0.2s var(--ease-obsidian),
+        transform 0.2s var(--ease-obsidian);
+}
+
+.minicart-remove:hover:not(:disabled) {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+@keyframes minicart-pulse {
+    50% {
+        opacity: 0.85;
+    }
+}
+
+@keyframes minicart-added {
+    0%,
+    25% {
+        background-color: var(--color-accent-soft);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .minicart-item-move,
+    .minicart-item-enter-active,
+    .minicart-item-leave-active,
+    .minicart-panel-enter-active,
+    .minicart-panel-leave-active,
+    .minicart-value,
+    .minicart-qty,
+    .minicart-remove {
+        transition: none;
+    }
+
+    .minicart-value.is-syncing {
+        animation: none;
+    }
+
+    .minicart-item.is-added {
+        animation: none;
+        background-color: var(--color-accent-soft);
+    }
+}
+
+/* The sample catalogue (and most catalogues) ships product shots on white, so
+   the tile is white with a hairline instead of a grey fill, and the image is
+   contained rather than cropped — a cover crop cuts the garment in half. */
+.minicart-thumb {
+    display: block;
+    aspect-ratio: 4 / 5;
+    padding: 0.3rem;
+    background: var(--color-paper);
+    border: 1px solid var(--color-ash-200);
+    border-radius: var(--radius-edge);
+    overflow: hidden;
+    transition: border-color 0.2s var(--ease-obsidian);
+}
+
+.minicart-thumb:hover {
+    border-color: var(--color-ash-400);
+}
+
+/* `product_price` is Magento's own markup and can carry a second amount (fixed
+   product tax, tax breakdown) that would otherwise widen the row. Named
+   `minicart-line-price`, not `minicart-price`: that one is Magento's. */
+.minicart-line-price .price-excluding-tax,
+.minicart-line-price .price-including-tax {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.1rem;
+    line-height: 1.25;
+}
+
+.minicart-line-price .minicart-tax-info {
+    max-width: 6rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    line-height: 1.3;
+    text-align: right;
+    color: var(--color-ash-500);
+}
+
+.minicart-line-price .weee[data-label]::before {
+    content: attr(data-label) " ";
+}
+
+.minicart-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    line-height: 1.5;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ash-500);
+}
+
+.minicart-options li:not(:last-child)::after {
+    content: "·";
+    margin-left: 0.5rem;
+    color: var(--color-ash-300);
+}
+
+[data-cart-enhanced] [data-cart-update] {
+  display: none;
+}
+
+[data-cart-line] {
+  view-transition-class: obsidian-cart-line;
+}
+
+::view-transition-group(.obsidian-cart-line) {
+  animation-duration: 260ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+::view-transition-old(.obsidian-cart-line):only-child {
+  animation: 140ms both obsidian-cart-line-out;
+}
+
+::view-transition-new(.obsidian-cart-line):only-child {
+  animation: 200ms 60ms both obsidian-cart-line-in;
+  mix-blend-mode: normal;
+}
+
+.cart-summary {
+  view-transition-name: cart-summary;
+}
+
+::view-transition-group(cart-summary) {
+  animation-duration: 260ms;
+}
+
+@keyframes obsidian-cart-line-out {
+  to {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
+@keyframes obsidian-cart-line-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ============================================================
+   Checkout step rail.
+   ============================================================ */
+
+.step-rail {
+    border: 1px solid var(--color-ash-200);
+    border-radius: var(--radius-edge, 2px);
+    background: var(--color-alabaster-raised);
+    padding: 0.5rem 1rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+}
+
+.step-rail::-webkit-scrollbar {
+    display: none;
+}
+
+.step-rail__list {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: max-content;
+}
+
+.step-rail__item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.step-rail__item + .step-rail__item::before {
+    content: "";
+    display: block;
+    width: 2.5rem;
+    height: 1px;
+    background: var(--color-ash-300);
+    transition: background 0.3s var(--ease-obsidian);
+}
+
+.step-rail__item[data-state="done"]::before,
+.step-rail__item[data-state="active"]::before {
+    background: var(--color-ink);
+}
+
+.step-rail__button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding-block: 0.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-ink-soft);
+    white-space: nowrap;
+    transition: color 0.3s var(--ease-obsidian);
+}
+
+.step-rail__button:not(:disabled) {
+    cursor: pointer;
+}
+
+.step-rail__item[data-state="done"] .step-rail__button,
+.step-rail__item[data-state="active"] .step-rail__button {
+    color: var(--color-ink);
+}
+
+.step-rail__mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    flex-shrink: 0;
+    border: 1px solid var(--color-ash-300);
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    letter-spacing: 0;
+    transition:
+        background 0.3s var(--ease-obsidian),
+        border-color 0.3s var(--ease-obsidian),
+        color 0.3s var(--ease-obsidian);
+}
+
+.step-rail__item[data-state="done"] .step-rail__mark {
+    border-color: var(--color-ink);
+    background: var(--color-ink);
+    color: var(--color-alabaster);
+}
+
+.step-rail__item[data-state="active"] .step-rail__mark {
+    border-color: var(--color-ink);
+    color: var(--color-ink);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-ink) 12%, transparent);
+}
+
+@media (width < 40rem) {
+    .step-rail__item:not([data-state="active"]) .step-rail__label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+
+    .step-rail__item + .step-rail__item::before {
+        width: 1rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .step-rail__item::before,
+    .step-rail__button,
+    .step-rail__mark {
+        transition: none;
+    }
+}
+
+/* ============================================================
+   Mobile total bar.
+   ============================================================ */
+
+:root {
+    --obsidian-checkout-dock-height: 3.5rem;
+}
+
+.checkout-total-bar {
+    width: 100%;
+    min-height: var(--obsidian-checkout-dock-height);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.875rem 1rem;
+    border-top: 1px solid var(--color-ash-200);
+}
+
+@media (width >= 48rem) {
+    .checkout-total-bar {
+        padding-inline: 2rem;
+    }
+}
+
+@media (width >= 64rem) {
+    .checkout-total-bar {
+        display: none;
+    }
+}
+
+.checkout-total-bar__label {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-ink-soft);
+}
+
+.checkout-total-bar__count {
+    letter-spacing: 0.08em;
+    opacity: 0.75;
+}
+
+.checkout-total-bar__value {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink);
+}
+
+@media (width < 64rem) {
+    body.checkout-index-index {
+        --obsidian-bottom-inset: calc(var(--obsidian-checkout-dock-height) + env(safe-area-inset-bottom));
+    }
+
+    .checkout-page {
+        padding-bottom: calc(var(--obsidian-bottom-inset, 0px) + 1.5rem);
+    }
+
+    .checkout-summary {
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        z-index: var(--obsidian-z-dock, 50);
+        display: flex;
+        flex-direction: column;
+        max-height: 70dvh;
+        border-inline: 0;
+        border-bottom: 0;
+        border-radius: 0;
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .checkout-summary:not([data-docked]) {
+        visibility: hidden;
+        border-block: 0;
+    }
+
+    .checkout-summary[data-docked] {
+        background: var(--color-alabaster);
+        backdrop-filter: blur(8px);
+        box-shadow: 0 -12px 32px rgb(0 0 0 / 0.1);
+    }
+
+    .checkout-summary[data-docked] .checkout-summary__panel {
+        display: none;
+    }
+
+    .checkout-summary[data-docked][data-open] .checkout-summary__panel {
+        display: flex;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .checkout-cta {
+        position: sticky;
+        bottom: calc(var(--obsidian-bottom-inset, 0px) + 0.75rem);
+        z-index: 1;
+    }
+}
+
+/* Holds the page height the eager checkout island will need before it mounts, so
+   the footer starts below the fold instead of being shoved there on hydration.
+   Deliberately a flat class with no `:has()`: the critical-CSS extractor cannot
+   evaluate `:has()` against server HTML and drops the rule, which would land the
+   reservation with the deferred sheet — adding a shift instead of preventing one.
+   Measured: 1505px tall at 412x823 and 1209px at 1440x900, so the floor only
+   shows on a viewport taller than the checkout itself — rarer than the shift it
+   trades away. */
+.checkout-island-reserve {
+    min-height: 100svh;
+}

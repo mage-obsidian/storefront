@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Checkout project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
+  Re-declares the suppressed core success page, reusing the native Onepage\Success
+  block (order id + URLs) through our Twig. Order-specific, so not cacheable.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Thank you for your purchase</title>
+    </head>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+
+        <!-- The one page that may not wait for an interaction: a purchase
+             reported when the shopper first moves is a purchase never reported,
+             because most of them close the tab. The bypass is declared here so
+             it reads as a decision rather than as an oversight. -->
+        <referenceBlock name="google_gtag_analytics">
+            <arguments>
+                <argument name="defer_until" xsi:type="string">now</argument>
+                <argument name="defer_reason" xsi:type="string">a purchase reported on the shopper's next move is a purchase never reported</argument>
+            </arguments>
+        </referenceBlock>
+        <referenceContainer name="content">
+            <block class="Magento\Checkout\Block\Onepage\Success" name="checkout.success"
+                   template="Magento_Checkout::checkout/success.twig" cacheable="false"/>
+        </referenceContainer>
+    </body>
+</page>

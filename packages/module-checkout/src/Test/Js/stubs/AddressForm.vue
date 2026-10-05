@@ -1,0 +1,46 @@
+<!--
+ This file is part of the MageObsidian - Checkout project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<script setup lang="ts">
+// Test stub for the storefront's shared AddressForm
+// (`MageObsidian_Storefront::form/AddressForm`), aliased in vitest.config.js.
+// It v-models an address and exposes a `validate()` the checkout step calls; here
+// validity is driven by a prop so a test can force the valid/invalid branch
+// without filling fields. The real form (fields, region reactivity, a11y) is
+// covered in module-storefront's AddressForm.test.ts.
+import type { AddressData } from "MageObsidian_Storefront::js/address";
+
+const props = withDefaults(
+    defineProps<{
+        countries?: unknown[];
+        regions?: Record<string, unknown>;
+        statesRequired?: string[];
+        displayAllRegions?: boolean;
+        labels?: Record<string, string>;
+        invalidFields?: string[];
+        valid?: boolean;
+    }>(),
+    { valid: true, invalidFields: () => [] },
+);
+
+defineModel<AddressData>({ required: true });
+
+const focused: string[] = [];
+
+function validate(): boolean {
+    return props.valid;
+}
+
+function focusField(field: string): void {
+    focused.push(field);
+}
+
+defineExpose({ validate, focusField, focused });
+</script>
+
+<template>
+    <div data-address-form-stub :data-invalid-fields="props.invalidFields.join(',')" />
+</template>
