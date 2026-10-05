@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  monorepo:
+    name: Monorepo consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - run: composer install --no-interaction --no-progress
+      - run: vendor/bin/monorepo-builder validate
+      - run: vendor/bin/phpunit
+      - run: bin/precommit-config --check
+      - name: Package manifests are valid
+        run: for manifest in packages/*/composer.json; do composer validate --no-check-publish --no-check-lock "$manifest"; done
+
+  php:
+    name: PHP lint (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.3', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: ctype, dom, json, libxml, mbstring, tokenizer, xml, xmlwriter
+          coverage: none
+      - name: Lint PHP sources
+        run: find packages/*/src -name '*.php' -print0 | xargs -0 -n1 -P4 php -l
+
+  islands:
+    name: Island harnesses
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: storefront
+      - uses: actions/checkout@v4
+        with:
+          repository: mage-obsidian/framework
+          path: framework
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+        working-directory: framework/packages/js-package-utils
+      - name: Vitest per package
+        working-directory: storefront
+        run: |
+          for config in packages/*/vitest.config.js; do
+            (cd "$(dirname "$config")" && pnpm install --frozen-lockfile && pnpm exec vitest run)
+          done

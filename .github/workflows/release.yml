@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags: ['*']
+
+jobs:
+  guard:
+    name: Release guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - run: composer install --no-interaction --no-progress
+      - run: bin/release-guard "${{ github.ref_name }}"
+
+  split:
+    name: Tag ${{ matrix.package }}
+    needs: guard
+    runs-on: ubuntu-latest
+    concurrency:
+      group: split-${{ matrix.package }}
+      cancel-in-progress: false
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - module-catalog
+          - module-catalog-search
+          - module-checkout
+          - module-customer
+          - module-downloadable
+          - module-gift-message
+          - module-instant-purchase
+          - module-multishipping
+          - module-persistent
+          - module-product-alert
+          - module-review
+          - module-sales
+          - module-search
+          - module-send-friend
+          - module-showcase
+          - module-storefront
+          - module-vault
+          - module-wishlist
+          - theme-base
+    steps:
+      - uses: actions/checkout@v4
+      - uses: danharrin/monorepo-split-github-action@v2.4.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.SPLIT_TOKEN }}
+        with:
+          tag: ${{ github.ref_name }}
+          package_directory: packages/${{ matrix.package }}
+          repository_organization: mage-obsidian
+          repository_name: ${{ matrix.package }}
+          branch: master
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
+
+  github-release:
+    name: GitHub Release
+    needs: [split]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - run: gh release create "${{ github.ref_name }}" --repo "${{ github.repository }}" --title "${{ github.ref_name }}" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
