@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - SendFriend project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
+  "Email to a Friend" share form (sendfriend/product/send/id/X). Standalone
+  (1column). Reuses the core Block\Send as the data source (post URL, prefilled
+  sender, max recipients) rendered by our Twig. Recipient rows are static (no JS
+  row-builder); empty rows are ignored server-side.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Email to a Friend</title>
+    </head>
+    <body>
+        <referenceContainer name="content">
+            <block class="Magento\SendFriend\Block\Send" name="sendfriend.send"
+                   template="Magento_SendFriend::send.twig">
+                <!-- The reCAPTCHA slot. Renders nothing unless the store configured a
+                     challenge for this form. -->
+                <block class="MageObsidian\ModernFrontend\Block\Template" name="sendfriend.recaptcha" as="recaptcha"
+                       template="Magento_ReCaptchaFrontendUi::recaptcha.twig">
+                    <arguments>
+                        <argument name="view_model" xsi:type="object">MageObsidian\Storefront\ViewModel\ReCaptcha</argument>
+                        <argument name="recaptcha_for" xsi:type="string">sendfriend</argument>
+                    </arguments>
+                </block>
+            </block>
+        </referenceContainer>
+    </body>
+</page>
