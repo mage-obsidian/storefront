@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Search project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="before.body.end">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.listing.navigation"
+                   template="MageObsidian_Search::listing/navigation.twig">
+                <arguments>
+                    <argument name="navigation" xsi:type="object">MageObsidian\Search\ViewModel\ListingNavigation</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>
