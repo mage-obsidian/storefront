@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - CatalogSearch project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
+  Popular search terms.
+
+  MageObsidian suppresses the frontend layout of non-opted-in core modules, and
+  Magento_Search is one of them — which left this page with no content, no <h1>
+  and no <title> at all. The structure is re-declared here, reusing the core Term
+  block with our Twig. The <h1> needs no block of its own: page.main.title emits
+  it from the page title set below.
+
+  cacheable="false" mirrors the core layout: the term list moves with every search
+  the storefront serves.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Popular Search Terms</title>
+    </head>
+    <body>
+        <referenceContainer name="content">
+            <block class="Magento\Search\Block\Term" name="seo.searchterm"
+                   template="Magento_Search::term.twig" cacheable="false"/>
+        </referenceContainer>
+    </body>
+</page>

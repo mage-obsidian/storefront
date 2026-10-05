@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - CatalogSearch project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
+  The shared filter-state ViewModel reads a layered-navigation block by name, and
+  the results page names its sidebar differently from the category one.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <virtualType name="MageObsidian\CatalogSearch\ViewModel\SearchFilterState"
+                 type="MageObsidian\Catalog\ViewModel\LayeredFilterState">
+        <arguments>
+            <argument name="blockName" xsi:type="string">catalogsearch.leftnav</argument>
+        </arguments>
+    </virtualType>
+</config>
