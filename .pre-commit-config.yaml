@@ -1,0 +1,565 @@
+exclude: '(^|/)(generated|\.precompiled|dist|node_modules|vendor|\.artifacts|playwright-report|__mocks__|fixtures)/|/web/critical/|__tests__/magento_scenarios/|^packages/theme-base/(Magento_Directory/layout/default\.xml|Magento_Newsletter/templates/subscribe\.phtml|Magento_Search/layout/default\.xml|Magento_Search/templates/form\.mini\.phtml|Magento_Theme/templates/html/absolute_footer\.phtml|Magento_Theme/templates/html/block\.phtml|Magento_Theme/templates/html/bugreport\.phtml|Magento_Theme/templates/html/collapsible\.phtml|Magento_Theme/templates/html/container\.phtml|Magento_Theme/templates/html/copyright\.phtml|Magento_Theme/templates/html/head/criticalCss\.phtml|Magento_Theme/templates/html/print\.phtml|Magento_Theme/templates/html/sections\.phtml|Magento_Theme/templates/root\.phtml)$'
+repos:
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.6
+    hooks:
+      - id: insert-license
+        name: SPDX header (PHP) packages/module-catalog-search
+        files: '^packages/module-catalog-search/.*\.php$'
+        args: [--license-filepath, packages/module-catalog-search/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-catalog-search
+        files: '^packages/module-catalog-search/.*\.phtml$'
+        args: [--license-filepath, packages/module-catalog-search/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-catalog-search
+        files: '^packages/module-catalog-search/.*\.twig$'
+        args: [--license-filepath, packages/module-catalog-search/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-catalog-search
+        files: '^packages/module-catalog-search/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-catalog-search/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-catalog-search
+        files: '^packages/module-catalog-search/.*\.xml$'
+        args: [--license-filepath, packages/module-catalog-search/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-catalog-search
+        files: '^packages/module-catalog-search/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-catalog-search/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-catalog-search
+        files: '^packages/module-catalog-search/.*\.css$'
+        args: [--license-filepath, packages/module-catalog-search/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) packages/module-catalog
+        files: '^packages/module-catalog/.*\.php$'
+        args: [--license-filepath, packages/module-catalog/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-catalog
+        files: '^packages/module-catalog/.*\.phtml$'
+        args: [--license-filepath, packages/module-catalog/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-catalog
+        files: '^packages/module-catalog/.*\.twig$'
+        args: [--license-filepath, packages/module-catalog/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-catalog
+        files: '^packages/module-catalog/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-catalog/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-catalog
+        files: '^packages/module-catalog/.*\.xml$'
+        args: [--license-filepath, packages/module-catalog/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-catalog
+        files: '^packages/module-catalog/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-catalog/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-catalog
+        files: '^packages/module-catalog/.*\.css$'
+        args: [--license-filepath, packages/module-catalog/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) packages/module-checkout
+        files: '^packages/module-checkout/.*\.php$'
+        args: [--license-filepath, packages/module-checkout/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-checkout
+        files: '^packages/module-checkout/.*\.phtml$'
+        args: [--license-filepath, packages/module-checkout/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-checkout
+        files: '^packages/module-checkout/.*\.twig$'
+        args: [--license-filepath, packages/module-checkout/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-checkout
+        files: '^packages/module-checkout/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-checkout/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-checkout
+        files: '^packages/module-checkout/.*\.xml$'
+        args: [--license-filepath, packages/module-checkout/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-checkout
+        files: '^packages/module-checkout/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-checkout/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-checkout
+        files: '^packages/module-checkout/.*\.css$'
+        args: [--license-filepath, packages/module-checkout/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) packages/module-customer
+        files: '^packages/module-customer/.*\.php$'
+        args: [--license-filepath, packages/module-customer/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-customer
+        files: '^packages/module-customer/.*\.phtml$'
+        args: [--license-filepath, packages/module-customer/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-customer
+        files: '^packages/module-customer/.*\.twig$'
+        args: [--license-filepath, packages/module-customer/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-customer
+        files: '^packages/module-customer/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-customer/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-customer
+        files: '^packages/module-customer/.*\.xml$'
+        args: [--license-filepath, packages/module-customer/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-customer
+        files: '^packages/module-customer/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-customer/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-customer
+        files: '^packages/module-customer/.*\.css$'
+        args: [--license-filepath, packages/module-customer/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) packages/module-downloadable
+        files: '^packages/module-downloadable/.*\.php$'
+        args: [--license-filepath, packages/module-downloadable/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-downloadable
+        files: '^packages/module-downloadable/.*\.phtml$'
+        args: [--license-filepath, packages/module-downloadable/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-downloadable
+        files: '^packages/module-downloadable/.*\.twig$'
+        args: [--license-filepath, packages/module-downloadable/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-downloadable
+        files: '^packages/module-downloadable/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-downloadable/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-downloadable
+        files: '^packages/module-downloadable/.*\.xml$'
+        args: [--license-filepath, packages/module-downloadable/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-downloadable
+        files: '^packages/module-downloadable/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-downloadable/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-downloadable
+        files: '^packages/module-downloadable/.*\.css$'
+        args: [--license-filepath, packages/module-downloadable/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) packages/module-gift-message
+        files: '^packages/module-gift-message/.*\.php$'
+        args: [--license-filepath, packages/module-gift-message/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-gift-message
+        files: '^packages/module-gift-message/.*\.phtml$'
+        args: [--license-filepath, packages/module-gift-message/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-gift-message
+        files: '^packages/module-gift-message/.*\.twig$'
+        args: [--license-filepath, packages/module-gift-message/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-gift-message
+        files: '^packages/module-gift-message/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-gift-message/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-gift-message
+        files: '^packages/module-gift-message/.*\.xml$'
+        args: [--license-filepath, packages/module-gift-message/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-gift-message
+        files: '^packages/module-gift-message/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-gift-message/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-gift-message
+        files: '^packages/module-gift-message/.*\.css$'
+        args: [--license-filepath, packages/module-gift-message/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) packages/module-instant-purchase
+        files: '^packages/module-instant-purchase/.*\.php$'
+        args: [--license-filepath, packages/module-instant-purchase/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-instant-purchase
+        files: '^packages/module-instant-purchase/.*\.phtml$'
+        args: [--license-filepath, packages/module-instant-purchase/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-instant-purchase
+        files: '^packages/module-instant-purchase/.*\.twig$'
+        args: [--license-filepath, packages/module-instant-purchase/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-instant-purchase
+        files: '^packages/module-instant-purchase/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-instant-purchase/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-instant-purchase
+        files: '^packages/module-instant-purchase/.*\.xml$'
+        args: [--license-filepath, packages/module-instant-purchase/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-instant-purchase
+        files: '^packages/module-instant-purchase/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-instant-purchase/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-instant-purchase
+        files: '^packages/module-instant-purchase/.*\.css$'
+        args: [--license-filepath, packages/module-instant-purchase/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) packages/module-multishipping
+        files: '^packages/module-multishipping/.*\.php$'
+        args: [--license-filepath, packages/module-multishipping/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-multishipping
+        files: '^packages/module-multishipping/.*\.phtml$'
+        args: [--license-filepath, packages/module-multishipping/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-multishipping
+        files: '^packages/module-multishipping/.*\.twig$'
+        args: [--license-filepath, packages/module-multishipping/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-multishipping
+        files: '^packages/module-multishipping/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-multishipping/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-multishipping
+        files: '^packages/module-multishipping/.*\.xml$'
+        args: [--license-filepath, packages/module-multishipping/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-multishipping
+        files: '^packages/module-multishipping/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-multishipping/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-multishipping
+        files: '^packages/module-multishipping/.*\.css$'
+        args: [--license-filepath, packages/module-multishipping/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) packages/module-persistent
+        files: '^packages/module-persistent/.*\.php$'
+        args: [--license-filepath, packages/module-persistent/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-persistent
+        files: '^packages/module-persistent/.*\.phtml$'
+        args: [--license-filepath, packages/module-persistent/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-persistent
+        files: '^packages/module-persistent/.*\.twig$'
+        args: [--license-filepath, packages/module-persistent/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-persistent
+        files: '^packages/module-persistent/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-persistent/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-persistent
+        files: '^packages/module-persistent/.*\.xml$'
+        args: [--license-filepath, packages/module-persistent/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-persistent
+        files: '^packages/module-persistent/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-persistent/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-persistent
+        files: '^packages/module-persistent/.*\.css$'
+        args: [--license-filepath, packages/module-persistent/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) packages/module-product-alert
+        files: '^packages/module-product-alert/.*\.php$'
+        args: [--license-filepath, packages/module-product-alert/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-product-alert
+        files: '^packages/module-product-alert/.*\.phtml$'
+        args: [--license-filepath, packages/module-product-alert/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-product-alert
+        files: '^packages/module-product-alert/.*\.twig$'
+        args: [--license-filepath, packages/module-product-alert/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-product-alert
+        files: '^packages/module-product-alert/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-product-alert/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-product-alert
+        files: '^packages/module-product-alert/.*\.xml$'
+        args: [--license-filepath, packages/module-product-alert/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-product-alert
+        files: '^packages/module-product-alert/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-product-alert/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-product-alert
+        files: '^packages/module-product-alert/.*\.css$'
+        args: [--license-filepath, packages/module-product-alert/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) packages/module-review
+        files: '^packages/module-review/.*\.php$'
+        args: [--license-filepath, packages/module-review/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-review
+        files: '^packages/module-review/.*\.phtml$'
+        args: [--license-filepath, packages/module-review/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-review
+        files: '^packages/module-review/.*\.twig$'
+        args: [--license-filepath, packages/module-review/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-review
+        files: '^packages/module-review/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-review/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-review
+        files: '^packages/module-review/.*\.xml$'
+        args: [--license-filepath, packages/module-review/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-review
+        files: '^packages/module-review/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-review/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-review
+        files: '^packages/module-review/.*\.css$'
+        args: [--license-filepath, packages/module-review/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) packages/module-sales
+        files: '^packages/module-sales/.*\.php$'
+        args: [--license-filepath, packages/module-sales/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-sales
+        files: '^packages/module-sales/.*\.phtml$'
+        args: [--license-filepath, packages/module-sales/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-sales
+        files: '^packages/module-sales/.*\.twig$'
+        args: [--license-filepath, packages/module-sales/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-sales
+        files: '^packages/module-sales/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-sales/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-sales
+        files: '^packages/module-sales/.*\.xml$'
+        args: [--license-filepath, packages/module-sales/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-sales
+        files: '^packages/module-sales/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-sales/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-sales
+        files: '^packages/module-sales/.*\.css$'
+        args: [--license-filepath, packages/module-sales/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) packages/module-search
+        files: '^packages/module-search/.*\.php$'
+        args: [--license-filepath, packages/module-search/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-search
+        files: '^packages/module-search/.*\.phtml$'
+        args: [--license-filepath, packages/module-search/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-search
+        files: '^packages/module-search/.*\.twig$'
+        args: [--license-filepath, packages/module-search/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-search
+        files: '^packages/module-search/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-search/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-search
+        files: '^packages/module-search/.*\.xml$'
+        args: [--license-filepath, packages/module-search/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-search
+        files: '^packages/module-search/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-search/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-search
+        files: '^packages/module-search/.*\.css$'
+        args: [--license-filepath, packages/module-search/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) packages/module-send-friend
+        files: '^packages/module-send-friend/.*\.php$'
+        args: [--license-filepath, packages/module-send-friend/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-send-friend
+        files: '^packages/module-send-friend/.*\.phtml$'
+        args: [--license-filepath, packages/module-send-friend/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-send-friend
+        files: '^packages/module-send-friend/.*\.twig$'
+        args: [--license-filepath, packages/module-send-friend/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-send-friend
+        files: '^packages/module-send-friend/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-send-friend/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-send-friend
+        files: '^packages/module-send-friend/.*\.xml$'
+        args: [--license-filepath, packages/module-send-friend/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-send-friend
+        files: '^packages/module-send-friend/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-send-friend/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-send-friend
+        files: '^packages/module-send-friend/.*\.css$'
+        args: [--license-filepath, packages/module-send-friend/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) packages/module-showcase
+        files: '^packages/module-showcase/.*\.php$'
+        args: [--license-filepath, packages/module-showcase/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-showcase
+        files: '^packages/module-showcase/.*\.phtml$'
+        args: [--license-filepath, packages/module-showcase/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-showcase
+        files: '^packages/module-showcase/.*\.twig$'
+        args: [--license-filepath, packages/module-showcase/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-showcase
+        files: '^packages/module-showcase/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-showcase/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-showcase
+        files: '^packages/module-showcase/.*\.xml$'
+        args: [--license-filepath, packages/module-showcase/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-showcase
+        files: '^packages/module-showcase/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-showcase/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-showcase
+        files: '^packages/module-showcase/.*\.css$'
+        args: [--license-filepath, packages/module-showcase/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) packages/module-storefront
+        files: '^packages/module-storefront/.*\.php$'
+        args: [--license-filepath, packages/module-storefront/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-storefront
+        files: '^packages/module-storefront/.*\.phtml$'
+        args: [--license-filepath, packages/module-storefront/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-storefront
+        files: '^packages/module-storefront/.*\.twig$'
+        args: [--license-filepath, packages/module-storefront/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-storefront
+        files: '^packages/module-storefront/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-storefront/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-storefront
+        files: '^packages/module-storefront/.*\.xml$'
+        args: [--license-filepath, packages/module-storefront/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-storefront
+        files: '^packages/module-storefront/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-storefront/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-storefront
+        files: '^packages/module-storefront/.*\.css$'
+        args: [--license-filepath, packages/module-storefront/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) packages/module-vault
+        files: '^packages/module-vault/.*\.php$'
+        args: [--license-filepath, packages/module-vault/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-vault
+        files: '^packages/module-vault/.*\.phtml$'
+        args: [--license-filepath, packages/module-vault/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-vault
+        files: '^packages/module-vault/.*\.twig$'
+        args: [--license-filepath, packages/module-vault/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-vault
+        files: '^packages/module-vault/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-vault/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-vault
+        files: '^packages/module-vault/.*\.xml$'
+        args: [--license-filepath, packages/module-vault/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-vault
+        files: '^packages/module-vault/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-vault/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-vault
+        files: '^packages/module-vault/.*\.css$'
+        args: [--license-filepath, packages/module-vault/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) packages/module-wishlist
+        files: '^packages/module-wishlist/.*\.php$'
+        args: [--license-filepath, packages/module-wishlist/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-wishlist
+        files: '^packages/module-wishlist/.*\.phtml$'
+        args: [--license-filepath, packages/module-wishlist/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-wishlist
+        files: '^packages/module-wishlist/.*\.twig$'
+        args: [--license-filepath, packages/module-wishlist/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-wishlist
+        files: '^packages/module-wishlist/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-wishlist/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-wishlist
+        files: '^packages/module-wishlist/.*\.xml$'
+        args: [--license-filepath, packages/module-wishlist/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-wishlist
+        files: '^packages/module-wishlist/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-wishlist/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-wishlist
+        files: '^packages/module-wishlist/.*\.css$'
+        args: [--license-filepath, packages/module-wishlist/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) packages/theme-base
+        files: '^packages/theme-base/.*\.php$'
+        args: [--license-filepath, packages/theme-base/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/theme-base
+        files: '^packages/theme-base/.*\.phtml$'
+        args: [--license-filepath, packages/theme-base/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/theme-base
+        files: '^packages/theme-base/.*\.twig$'
+        args: [--license-filepath, packages/theme-base/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/theme-base
+        files: '^packages/theme-base/.*\.(vue|html)$'
+        args: [--license-filepath, packages/theme-base/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/theme-base
+        files: '^packages/theme-base/.*\.xml$'
+        args: [--license-filepath, packages/theme-base/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/theme-base
+        files: '^packages/theme-base/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/theme-base/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/theme-base
+        files: '^packages/theme-base/.*\.css$'
+        args: [--license-filepath, packages/theme-base/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
+        name: SPDX header (PHP) tools
+        files: '^tools/.*\.php$'
+        args: [--license-filepath, .license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) tools
+        files: '^tools/.*\.phtml$'
+        args: [--license-filepath, .license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) tools
+        files: '^tools/.*\.twig$'
+        args: [--license-filepath, .license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) tools
+        files: '^tools/.*\.(vue|html)$'
+        args: [--license-filepath, .license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) tools
+        files: '^tools/.*\.xml$'
+        args: [--license-filepath, .license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) tools
+        files: '^tools/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, .license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) tools
+        files: '^tools/.*\.css$'
+        args: [--license-filepath, .license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']

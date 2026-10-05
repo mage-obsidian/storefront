@@ -6,27 +6,32 @@
         "MIT"
     ],
     "require": {
-        "mage-obsidian/component-modern-frontend": "^2.4",
-        "mage-obsidian/module-catalog": "^3.8",
-        "mage-obsidian/module-catalog-search": "^2.1",
-        "mage-obsidian/module-checkout": "^3.6",
-        "mage-obsidian/module-customer": "^2.3",
-        "mage-obsidian/module-downloadable": "^2.0",
-        "mage-obsidian/module-gift-message": "^2.1",
-        "mage-obsidian/module-instant-purchase": "^2.1",
-        "mage-obsidian/module-multishipping": "^2.0",
-        "mage-obsidian/module-persistent": "^2.0",
-        "mage-obsidian/module-product-alert": "^2.0",
-        "mage-obsidian/module-review": "^2.0.2",
-        "mage-obsidian/module-sales": "^2.3",
-        "mage-obsidian/module-send-friend": "^2.0",
-        "mage-obsidian/module-storefront": "^3.21",
-        "mage-obsidian/module-vault": "^2.0",
-        "mage-obsidian/module-wishlist": "^2.2"
+        "mage-obsidian/component-modern-frontend": "^4.0",
+        "mage-obsidian/module-catalog": "^4.0",
+        "mage-obsidian/module-catalog-search": "^4.0",
+        "mage-obsidian/module-checkout": "^4.0",
+        "mage-obsidian/module-customer": "^4.0",
+        "mage-obsidian/module-downloadable": "^4.0",
+        "mage-obsidian/module-gift-message": "^4.0",
+        "mage-obsidian/module-instant-purchase": "^4.0",
+        "mage-obsidian/module-multishipping": "^4.0",
+        "mage-obsidian/module-persistent": "^4.0",
+        "mage-obsidian/module-product-alert": "^4.0",
+        "mage-obsidian/module-review": "^4.0",
+        "mage-obsidian/module-sales": "^4.0",
+        "mage-obsidian/module-send-friend": "^4.0",
+        "mage-obsidian/module-storefront": "^4.0",
+        "mage-obsidian/module-vault": "^4.0",
+        "mage-obsidian/module-wishlist": "^4.0"
     },
     "autoload": {
         "files": [
             "registration.php"
         ]
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "4.x-dev"
+        }
     }
 }

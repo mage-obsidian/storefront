@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+VERSION="${1:-}"
+[[ "$VERSION" =~ ^([0-9]+)\.([0-9]+)\.[0-9]+$ ]] || { echo "usage: bin/release X.Y.Z" >&2; exit 2; }
+CONSTRAINT="^${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+
+git fetch -q origin master --tags
+[[ -z "$(git status --porcelain)" ]] || { echo "working tree is dirty" >&2; exit 1; }
+[[ "$(git rev-parse HEAD)" == "$(git rev-parse origin/master)" ]] || { echo "HEAD is not origin/master" >&2; exit 1; }
+if git rev-parse -q --verify "refs/tags/$VERSION" >/dev/null; then
+    echo "tag $VERSION already exists" >&2
+    exit 1
+fi
+[[ "$(git symbolic-ref --short -q HEAD)" == "master" ]] || { echo "HEAD must be the master branch" >&2; exit 1; }
+
+restore() { git checkout -q -- packages; }
+trap restore ERR
+
+vendor/bin/monorepo-builder bump-interdependency "$CONSTRAINT"
+for manifest in packages/*/package.json; do
+    [[ "$(jq -r '.private // false' "$manifest")" == "true" ]] && continue
+    (cd "$(dirname "$manifest")" && npm version "$VERSION" --no-git-tag-version --allow-same-version >/dev/null)
+done
+
+bin/release-guard "$VERSION"
+
+git --no-pager diff --stat packages
+read -r -p "Commit, tag and push $VERSION? [y/N] " reply </dev/tty || reply=""
+if [[ ! "$reply" =~ ^[Yy]$ ]]; then
+    restore
+    echo "aborted; nothing committed" >&2
+    exit 1
+fi
+
+trap - ERR
+git add -A packages
+git commit -q --allow-empty -m "chore(release): $VERSION"
+git tag "$VERSION"
+git push --atomic origin master "$VERSION"
+echo "Pushed $VERSION. Do not push to master until the Release workflow finishes."

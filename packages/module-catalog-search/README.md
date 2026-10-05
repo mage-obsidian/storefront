@@ -1,3 +1,5 @@
+> **Read-only mirror.** This package is developed in [mage-obsidian/storefront](https://github.com/mage-obsidian/storefront) and copied here automatically. Open issues and pull requests there.
+
 # MageObsidian — Catalog Search
 
 [![Latest Version](https://img.shields.io/packagist/v/mage-obsidian/module-catalog-search.svg?style=flat-square)](https://packagist.org/packages/mage-obsidian/module-catalog-search)

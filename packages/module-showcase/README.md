@@ -1,3 +1,5 @@
+> **Read-only mirror.** This package is developed in [mage-obsidian/storefront](https://github.com/mage-obsidian/storefront) and copied here automatically. Open issues and pull requests there.
+
 # MageObsidian — Showcase
 
 Lets a visitor turn MageObsidian features on and off for their own visit, so a

@@ -1,3 +1,5 @@
+> **Read-only mirror.** This package is developed in [mage-obsidian/storefront](https://github.com/mage-obsidian/storefront) and copied here automatically. Open issues and pull requests there.
+
 # MageObsidian — Product Alert
 
 [![Latest Version](https://img.shields.io/packagist/v/mage-obsidian/module-product-alert.svg?style=flat-square)](https://packagist.org/packages/mage-obsidian/module-product-alert)

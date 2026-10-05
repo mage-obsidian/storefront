@@ -1,0 +1,3 @@
+{
+    "theme-base": "(Magento_Directory/layout/default\\.xml|Magento_Newsletter/templates/subscribe\\.phtml|Magento_Search/layout/default\\.xml|Magento_Search/templates/form\\.mini\\.phtml|Magento_Theme/templates/html/absolute_footer\\.phtml|Magento_Theme/templates/html/block\\.phtml|Magento_Theme/templates/html/bugreport\\.phtml|Magento_Theme/templates/html/collapsible\\.phtml|Magento_Theme/templates/html/container\\.phtml|Magento_Theme/templates/html/copyright\\.phtml|Magento_Theme/templates/html/head/criticalCss\\.phtml|Magento_Theme/templates/html/print\\.phtml|Magento_Theme/templates/html/sections\\.phtml|Magento_Theme/templates/root\\.phtml)$"
+}
