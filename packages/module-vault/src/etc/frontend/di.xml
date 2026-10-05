@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Vault project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="MageObsidian\Customer\ViewModel\AccountNav">
+        <arguments>
+            <argument name="links" xsi:type="array">
+                <item name="vault_cards" xsi:type="array">
+                    <item name="route" xsi:type="string">vault/cards/listaction</item>
+                    <item name="match" xsi:type="string">vault_cards_listaction</item>
+                    <item name="label" xsi:type="string" translate="true">Stored Payment Methods</item>
+                    <item name="icon" xsi:type="string">credit-card</item>
+                    <item name="sortOrder" xsi:type="string">160</item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="MageObsidian\Checkout\Model\Payment\MethodData">
+        <arguments>
+            <argument name="providers" xsi:type="array">
+                <item name="vault_saved_cards" xsi:type="object">MageObsidian\Vault\Model\CheckoutVaultTokenProvider</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <virtualType name="MageObsidianVaultSavedCardsRenderer" type="MageObsidian\Vault\ViewModel\VaultRenderer">
+        <arguments>
+            <argument name="component" xsi:type="string">MageObsidian_Vault::payment/SavedCards</argument>
+        </arguments>
+    </virtualType>
+</config>
