@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Storefront project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <mage_obsidian>
+            <appearance>
+                <enabled>0</enabled>
+            </appearance>
+            <seo>
+                <canonical_enabled>1</canonical_enabled>
+                <!--
+                    Everything else is dropped, tracking parameters included. `p`
+                    stays because a paginated listing must point at itself: pages
+                    2..n canonicalising to page 1 hides their products, and `q`
+                    because without it every search result canonicalises onto the
+                    same empty result page.
+                -->
+                <canonical_query_params>p,q</canonical_query_params>
+                <social_meta_enabled>1</social_meta_enabled>
+                <social_image/>
+                <twitter_site/>
+                <robots_directives>max-image-preview:large,max-snippet:-1,max-video-preview:-1</robots_directives>
+                <meta_description_fallback>1</meta_description_fallback>
+                <manifest_enabled>1</manifest_enabled>
+                <manifest_display>standalone</manifest_display>
+                <manifest_theme_color>#ffffff</manifest_theme_color>
+                <manifest_background_color>#ffffff</manifest_background_color>
+            </seo>
+            <navigation>
+                <retain>1</retain>
+            </navigation>
+            <speculation>
+                <enabled>1</enabled>
+                <mode>prefetch</mode>
+                <eagerness>moderate</eagerness>
+                <!--
+                    One token per line, each confined to a single path segment.
+                    `logout` is the one that must never go: it is a plain GET
+                    link, so preloading it would sign the visitor out. The rest
+                    are destinations that are private, uncacheable, or expensive
+                    to produce for a page nobody may open.
+                -->
+                <exclude_paths>customer
+checkout
+wishlist
+logout
+auth
+search
+download
+redirect
+rewrite
+stores
+productalert</exclude_paths>
+                <exclude_extensions>pdf,zip</exclude_extensions>
+                <exclude_selectors>.no-prefetch</exclude_selectors>
+            </speculation>
+        </mage_obsidian>
+    </default>
+</config>

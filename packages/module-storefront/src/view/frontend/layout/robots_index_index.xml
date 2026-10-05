@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Storefront project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<page layout="robots" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="root">
+            <block class="Magento\Robots\Block\Data" name="robotsData"/>
+            <block class="Magento\Sitemap\Block\Robots" name="sitemapRobotsLinks"/>
+        </referenceContainer>
+    </body>
+</page>

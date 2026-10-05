@@ -1,0 +1,163 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Storefront project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
+  Storefront neutralization of legacy Magento_Theme markup.
+
+  Lives in module-storefront (sequenced over Magento_Theme), so these removals
+  win the layout merge and are inherited by every theme using this module —
+  versioned and testable, never re-done per theme. Only Theme-owned legacy is
+  touched here; other modules' legacy is removed in their own migration wave.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <!-- "Report All Bugs" footer link: a Luma demo affordance. -->
+        <referenceBlock name="report.bugs" remove="true"/>
+
+        <!-- Header logo block. header.twig writes the wordmark itself and never
+             calls child_html('logo'), so the block only cost a LogoPathResolver
+             and a LogoSizeResolver on every request. The print layouts declare
+             their own logo block and are unaffected. -->
+        <referenceBlock name="logo" remove="true"/>
+
+        <referenceBlock name="messages" remove="true"/>
+        <referenceBlock name="ajax.message.placeholder" remove="true"/>
+
+        <!-- The newsletter form is core's, in the footer of every page, so its
+             slot is declared here rather than beside a form this project owns.
+             It renders nothing until the store configures a challenge for it. -->
+        <referenceBlock name="form.subscribe">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="newsletter.recaptcha" as="recaptcha"
+                   template="Magento_ReCaptchaFrontendUi::recaptcha.twig">
+                <arguments>
+                    <argument name="view_model" xsi:type="object">MageObsidian\Storefront\ViewModel\ReCaptcha</argument>
+                    <argument name="recaptcha_for" xsi:type="string">newsletter</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+
+        <!-- Contact Us footer link. Magento_Contact's layout (which adds it) is
+             suppressed, so it is re-added here to give the contact page an entry
+             point in the footer. -->
+        <referenceBlock name="footer_links">
+            <block class="Magento\Framework\View\Element\Html\Link\Current" name="contact-us-link">
+                <arguments>
+                    <argument name="label" xsi:type="string" translate="true">Contact Us</argument>
+                    <argument name="path" xsi:type="string">contact</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+
+        <!-- An administrator assisting a customer. Magento_LoginAsCustomerFrontendUi's
+             own layout is suppressed with every other core module's, so the
+             banner is re-declared here over the platform's own configuration
+             and its own authorization link.
+
+             The gate is the store's flag, not the platform's own view model:
+             that one also asks whether this visitor is being assisted right now,
+             which decides the markup of a page the platform then caches and
+             serves to everybody. So the shell ships empty and hidden on every
+             page and the private content decides whether it is ever shown. -->
+        <referenceContainer name="after.body.start">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="login-as-customer-notice"
+                   template="Magento_LoginAsCustomerFrontendUi::html/notices.twig">
+                <arguments>
+                    <argument name="config" xsi:type="object">MageObsidian\Storefront\ViewModel\AssistedSession</argument>
+                </arguments>
+                <container name="login-as-customer-notice-links" as="login-as-customer-notice-links">
+                    <block class="Magento\Customer\Block\Account\AuthorizationLink" name="login-as-customer-logout-link"
+                           template="Magento_LoginAsCustomerFrontendUi::html/notices/logout-link.twig"/>
+                </container>
+            </block>
+        </referenceContainer>
+
+        <!-- Analytics. Magento_GoogleGtag's own layout is suppressed like every
+             other core module's, so the block is re-declared here as a data
+             source: the measurement id, the store's consent rule and the order
+             on the success page all still come from it. What this theme decides
+             is when the tag loads, and the template holds it until the shopper
+             interacts. The name is not ours to choose — Magento's success-page
+             observer looks the block up by it to hand over the order. -->
+        <referenceBlock name="head.additional">
+            <block class="Magento\GoogleGtag\Block\Ga" name="google_gtag_analytics" as="google_gtag_analytics"
+                   template="Magento_GoogleGtag::ga.twig" ifconfig="google/gtag/analytics4/active"/>
+        </referenceBlock>
+
+        <!-- Head links Magento has no page asset for: a canonical on the pages
+             the core never emits one for (CMS, home, search) and the web app
+             manifest. Both self-gate — the canonical stays out when the core or
+             another extension already set one. -->
+        <referenceBlock name="head.additional">
+            <block class="Magento\Framework\View\Element\Template" name="obsidian.seo_links"
+                   template="Magento_Theme::html/head/seo_links.phtml">
+                <arguments>
+                    <argument name="seo_links" xsi:type="object">MageObsidian\Storefront\ViewModel\Head\SeoLinks</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+
+        <!-- Form-key provider. Same home Magento_PageCache gives its own: head,
+             on every page. The tag is type="module", so it is deferred and never
+             competes with the critical path. -->
+        <referenceBlock name="head.additional">
+            <block class="MageObsidian\Storefront\Block\FormKeyProvider"
+                   name="obsidian.form_key_provider"/>
+        </referenceBlock>
+
+        <referenceBlock name="head.additional">
+            <block class="MageObsidian\Storefront\Block\NavigationRetention"
+                   name="obsidian.navigation_retention"/>
+        </referenceBlock>
+
+        <referenceContainer name="main.content">
+            <block class="MageObsidian\Storefront\Block\NavigationMarker"
+                   name="obsidian.navigation_marker" after="-"/>
+        </referenceContainer>
+
+        <!-- Speculation rules. End of body on purpose: the ruleset is a hint for
+             the next navigation, so it must never compete with this page's own
+             critical path. -->
+        <referenceContainer name="before.body.end">
+            <block class="MageObsidian\Storefront\Block\SpeculationRules"
+                   name="obsidian.speculation_rules"/>
+            <block class="MageObsidian\Storefront\Block\SessionMessages"
+                   name="obsidian.session_messages"/>
+            <block class="MageObsidian\Storefront\Block\NavigationProgress"
+                   name="obsidian.navigation_progress"/>
+        </referenceContainer>
+
+        <!-- Header quick-search island. Foundation chrome (present on every page),
+             so it mounts from the storefront layout — the same way the customer
+             domain adds its account menu child. MageObsidian Template child so
+             render_vue is available; the SearchForm ViewModel wraps the native
+             search helper (store-aware URLs + length limits). -->
+        <referenceBlock name="header-content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.search"
+                   as="search" template="Magento_Search::search-form.twig">
+                <arguments>
+                    <argument name="search_form" xsi:type="object">MageObsidian\Storefront\ViewModel\SearchForm</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+
+        <!-- Cookie-restriction (e-Privacy) consent banner. Magento_Cookie's own
+             default.xml (after.body.start) is suppressed, so it is re-declared
+             here as a MageObsidian Template; the CookieNotice ViewModel self-gates
+             on the restriction-mode flag and the cookie-notice enhancer shows it
+             only when consent is missing. Foundation chrome, present on every
+             page — same home as the header search island. -->
+        <referenceContainer name="after.body.start">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.cookie.notice"
+                   template="Magento_Cookie::html/notices.twig">
+                <arguments>
+                    <argument name="cookie_notice" xsi:type="object">MageObsidian\Storefront\ViewModel\CookieNotice</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

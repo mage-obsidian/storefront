@@ -1,0 +1,52 @@
+<?php
+/**
+ * This file is part of the MageObsidian - Storefront project.
+ *
+ * SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */
+declare(strict_types=1);
+
+namespace MageObsidian\Storefront\Block;
+
+use Magento\Framework\View\Element\AbstractBlock;
+use Magento\Framework\View\Element\Context;
+use Magento\Framework\View\Helper\SecureHtmlRenderer;
+use MageObsidian\ModernFrontend\Service\RuntimeScriptReader;
+use MageObsidian\Storefront\ViewModel\NavigationContinuity;
+
+class NavigationRetention extends AbstractBlock
+{
+    private const string MODULE_NAME = 'MageObsidian_Storefront';
+
+    private const string SCRIPT_PATH = '/frontend/runtime/navigation-retention.head.js';
+
+    public function __construct(
+        Context $context,
+        private readonly NavigationContinuity $navigationContinuity,
+        private readonly SecureHtmlRenderer $secureRenderer,
+        private readonly RuntimeScriptReader $scriptReader,
+        array $data = []
+    ) {
+        parent::__construct($context, $data);
+    }
+
+    protected function _toHtml(): string
+    {
+        if (!$this->navigationContinuity->isEnabled()) {
+            return '';
+        }
+
+        $script = $this->scriptReader->read(self::MODULE_NAME, self::SCRIPT_PATH);
+        if ($script === '') {
+            return '';
+        }
+
+        return $this->secureRenderer->renderTag(
+            'script',
+            ['data-marker' => $this->navigationContinuity->getMarkerId()],
+            $script,
+            false
+        );
+    }
+}

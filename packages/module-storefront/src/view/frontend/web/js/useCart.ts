@@ -1,0 +1,229 @@
+// This file is part of the MageObsidian - Storefront project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
+/**
+ * `useCart` — thin add-to-cart action on top of the engine's `useCustomerData`
+ * bridge. We deliberately reuse Magento's native session quote (POST to
+ * `checkout/cart/add` with the form key) instead of a separate GraphQL/masked
+ * cart, so the cart page, mini-cart and checkout (later waves) all see ONE cart.
+ * After a successful add, Magento invalidates the `cart` section, so we reload
+ * it — the reactive `count` (and everything else reading `section('cart')`)
+ * updates everywhere, FPC-safe.
+ */
+import { computed } from 'vue';
+import { useCustomerData } from 'MageObsidian_ModernFrontend::js/customer-data';
+import events from 'MageObsidian_ModernFrontend::js/events';
+import {
+    MutationPhase,
+    mutationEvent,
+    type MutationEvent,
+    type MutationEventName,
+} from 'mage-obsidian/runtime/mutationEvent.ts';
+import { readUxRuntimeConfig } from 'mage-obsidian/runtime/uxConfig.ts';
+import { getFormKey } from 'MageObsidian_Storefront::js/form-key-provider';
+import {
+    MESSAGES_SECTION,
+    consumeLastBatch,
+    firstErrorText,
+    withSuppressedNotifications,
+} from 'MageObsidian_Storefront::js/session-messages';
+
+/** Outcome of a cart mutation; `message` carries Magento's own wording. */
+export interface CartResult {
+    ok: boolean;
+    message?: string;
+    announced?: boolean;
+}
+
+export const CART_DOMAIN = 'cart';
+
+export const CartOperation = {
+    Add: 'add',
+    UpdateQty: 'update_qty',
+    RemoveItem: 'remove_item',
+} as const;
+
+export type CartOperation = (typeof CartOperation)[keyof typeof CartOperation];
+
+export type CartEvent = MutationEvent<CartOperation, CartResult>;
+
+export type CartEventName = MutationEventName<typeof CART_DOMAIN, CartOperation>;
+
+declare module 'mage-obsidian/runtime/eventManager.ts' {
+    interface StorefrontEventMap extends Record<CartEventName, CartEvent> {}
+}
+
+const CART_SECTION = 'cart';
+const SUMMARY_COUNT = 'summary_count';
+const QTY_FIELD = 'qty';
+
+/**
+ * Read Magento's form key. Re-exported from the provider rather than reading the
+ * cookie here, so a request never goes out with an empty key just because the
+ * provider had not run yet — it creates the cookie on demand.
+ */
+export { getFormKey };
+
+/**
+ * Flatten a fields object into FormData, expanding one nested level into
+ * `parent[child]` keys (how Magento expects `super_attribute[attrId]`).
+ */
+function toFormData(fields: Record<string, unknown>): FormData {
+    const body = new FormData();
+    for (const [key, value] of Object.entries(fields)) {
+        if (value === undefined || value === null) {
+            continue;
+        }
+        if (typeof value === 'object') {
+            for (const [childKey, childValue] of Object.entries(value)) {
+                body.set(`${key}[${childKey}]`, String(childValue));
+            }
+        } else {
+            body.set(key, String(value));
+        }
+    }
+    return body;
+}
+
+export function useCart() {
+    const customerData = useCustomerData();
+    const ux = readUxRuntimeConfig();
+
+    const count = computed(() => Number(customerData.section(CART_SECTION)?.[SUMMARY_COUNT] ?? 0));
+
+    /**
+     * Move the badge before the server answers. No rollback: `post` always
+     * reloads the `cart` section, and that authoritative value replaces this one
+     * whether the add succeeded or not.
+     */
+    function projectAdd(body: FormData): void {
+        const qty = Math.max(1, Number(body.get(QTY_FIELD)) || 1);
+        customerData.patch(CART_SECTION, {
+            [SUMMARY_COUNT]: count.value + (ux.summaryCountsQty ? qty : 1),
+        });
+    }
+
+    /**
+     * POST a prepared body to the add-to-cart endpoint and refresh the cart
+     * section. Backfills the form key from the cookie if a cached page shipped
+     * without it. Always reloads the sections afterwards so reactive state stays
+     * consistent even on failure.
+     *
+     * The HTTP status alone cannot be trusted: Magento answers an AJAX cart
+     * mutation through `Cart::goBack()`, which returns 200 with a `{backUrl}`
+     * payload whether the mutation succeeded or threw — the reason is left in
+     * the message manager. So the verdict comes from the `messages` section,
+     * which we reload alongside `cart`, and its text is handed back to the
+     * caller so the toast can say what actually went wrong.
+     */
+    async function post(operation: CartOperation, action: string, body: FormData): Promise<CartResult> {
+        if (!body.get('form_key')) {
+            body.set('form_key', getFormKey());
+        }
+
+        const request = await events.dispatch(
+            mutationEvent(CART_DOMAIN, operation, MutationPhase.Before),
+            { operation, action, body, cancelled: false },
+        );
+        if (request.cancelled) {
+            return { ok: false, message: request.message };
+        }
+        if (operation === CartOperation.Add) {
+            projectAdd(request.body);
+        }
+
+        let ok = false;
+        try {
+            const response = await fetch(request.action, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: request.body,
+                credentials: 'same-origin',
+            });
+            ok = response.ok;
+        } catch {
+            ok = false;
+        }
+        await withSuppressedNotifications(() =>
+            customerData.reload([CART_SECTION, MESSAGES_SECTION]),
+        );
+        const message = firstErrorText(consumeLastBatch());
+        const result: CartResult = message ? { ok: false, message } : { ok };
+
+        await events.dispatch(mutationEvent(CART_DOMAIN, operation, MutationPhase.After), {
+            ...request,
+            result,
+        });
+        if (!result.ok) {
+            await events.dispatch(mutationEvent(CART_DOMAIN, operation, MutationPhase.Failed), {
+                ...request,
+                result,
+            });
+        }
+
+        return result;
+    }
+
+    /**
+     * Add from a server-rendered add-to-cart form (simple/virtual/downloadable).
+     */
+    function addFromForm(form: HTMLFormElement): Promise<CartResult> {
+        return post(CartOperation.Add, form.action, new FormData(form));
+    }
+
+    /**
+     * Add a product by explicit fields — used by the configurable island, which
+     * builds `super_attribute` from the chosen swatches.
+     *
+     * The form key is backfilled from the cookie by post() (kept fresh by the
+     * form-key provider), so it is not threaded through here.
+     */
+    function addProduct({ action, product, qty = 1, uenc, superAttribute }: {
+        action: string;
+        product: number | string;
+        qty?: number;
+        uenc?: string;
+        superAttribute?: Record<string, number | string>;
+    }): Promise<CartResult> {
+        return post(CartOperation.Add, action, toFormData({
+            product,
+            qty,
+            uenc,
+            super_attribute: superAttribute,
+        }));
+    }
+
+    /**
+     * Add from a pre-built FormData body — used by the configurable island when
+     * the product also has custom options: it assembles super_attribute plus the
+     * option fields (including file uploads, which need multipart) and posts the
+     * lot. The form key is backfilled by post().
+     */
+    function addRaw(action: string, body: FormData): Promise<CartResult> {
+        return post(CartOperation.Add, action, body);
+    }
+
+    /**
+     * Change a line item's quantity from the mini-cart, via Magento's native
+     * sidebar endpoint (which invalidates the `cart` section; we reload it so the
+     * lines, subtotal and badge update reactively). The endpoint URL is provided
+     * by the server (`checkout/sidebar/updateItemQty`) so store-code/secure-base
+     * resolution stays correct.
+     */
+    function updateItemQty(itemId: number | string, qty: number | string, action: string): Promise<CartResult> {
+        return post(CartOperation.UpdateQty, action, toFormData({ item_id: itemId, item_qty: qty }));
+    }
+
+    /**
+     * Remove a line item from the mini-cart, via Magento's native sidebar
+     * endpoint (`checkout/sidebar/removeItem`). Reloads the `cart` section after.
+     */
+    function removeItem(itemId: number | string, action: string): Promise<CartResult> {
+        return post(CartOperation.RemoveItem, action, toFormData({ item_id: itemId }));
+    }
+
+    return { count, addFromForm, addProduct, addRaw, updateItemQty, removeItem };
+}
+
+export default useCart;

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ This file is part of the MageObsidian - Storefront project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
+    CI unit suite: pure-logic tests that run on a vanilla PHP runner without a
+    Magento install or the Twig library. PriceExtensionTest needs both (Twig +
+    Magento Pricing types) and is excluded here; it runs in a real Magento root
+    (see phpunit.xml).
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+         bootstrap="src/Test/Unit/bootstrap.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache"
+         failOnWarning="true"
+         failOnRisky="true">
+    <testsuites>
+        <testsuite name="MageObsidian Storefront Standalone Unit">
+            <directory>src/Test/Unit</directory>
+            <exclude>src/Test/Unit/Model/Template/Extension/PriceExtensionTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Category/RequestPathResolverTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Navigation/MenuTreeTest.php</exclude>
+            <exclude>src/Test/Unit/Block/NavigationTest.php</exclude>
+            <exclude>src/Test/Unit/Block/FormKeyProviderTest.php</exclude>
+            <exclude>src/Test/Unit/ViewModel/NavigationTest.php</exclude>
+            <exclude>src/Test/Unit/ViewModel/StoreSwitcherTest.php</exclude>
+            <exclude>src/Test/Unit/ViewModel/CurrencySwitcherTest.php</exclude>
+            <exclude>src/Test/Unit/ViewModel/FeaturedCategoriesTest.php</exclude>
+            <exclude>src/Test/Unit/ViewModel/DirectoryDataTest.php</exclude>
+            <exclude>src/Test/Unit/ViewModel/SearchFormTest.php</exclude>
+            <exclude>src/Test/Unit/ViewModel/CookieNoticeTest.php</exclude>
+            <exclude>src/Test/Unit/Plugin/Cms/WrapAuthoredContentTest.php</exclude>
+            <exclude>src/Test/Unit/Plugin/Cms/RenderThemeTemplateTest.php</exclude>
+            <exclude>src/Test/Unit/Controller/Manifest/IndexTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Seo/CanonicalUrlBuilderTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Seo/CanonicalUrlTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Seo/ClaimedSocialPropertiesTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Seo/EmittedCanonicalTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Seo/MetaDescriptionTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Seo/MetaTagIntegrityTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Seo/SocialMetaBuilderTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Seo/StoreMediaUrlTest.php</exclude>
+            <exclude>src/Test/Unit/Model/Seo/WebManifestBuilderTest.php</exclude>
+            <exclude>src/Test/Unit/Plugin/View/Page/Config/HeadMetadataTest.php</exclude>
+            <exclude>src/Test/Unit/ViewModel/Head/SeoLinksTest.php</exclude>
+        </testsuite>
+    </testsuites>
+</phpunit>

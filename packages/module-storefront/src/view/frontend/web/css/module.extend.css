@@ -1,0 +1,1258 @@
+/*
+ * This file is part of the MageObsidian - Storefront project.
+ *
+ * SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */
+/* ============================================================
+   MageObsidian Storefront — shared island styles.
+   Picked up by the engine (module.extend.css) and merged into the
+   theme build ahead of the theme's own CSS.
+   ============================================================ */
+
+:root {
+  --obsidian-header-height: 68px;
+  --obsidian-z-raised: 10;
+  --obsidian-z-sticky: 30;
+  --obsidian-z-chrome: 40;
+  --obsidian-z-devtool: 45;
+  --obsidian-z-dock: 50;
+  --obsidian-z-overlay: 60;
+  --obsidian-z-toast: 70;
+}
+
+/* Drawer (off-canvas) enter/leave: backdrop fades, panel slides from its side.
+   Vue applies these classes to the backdrop (the v-if root), which also carries
+   the justify-start/justify-end side class. Plain selectors, not Tailwind
+   utilities, so the tree-shaker keeps them. */
+.obsidian-drawer-enter-active,
+.obsidian-drawer-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.obsidian-drawer-enter-active [role="dialog"],
+.obsidian-drawer-leave-active [role="dialog"] {
+  transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.obsidian-drawer-enter-from,
+.obsidian-drawer-leave-to {
+  opacity: 0;
+}
+
+.obsidian-drawer-enter-from.justify-start [role="dialog"],
+.obsidian-drawer-leave-to.justify-start [role="dialog"] {
+  transform: translateX(-100%);
+}
+
+.obsidian-drawer-enter-from.justify-end [role="dialog"],
+.obsidian-drawer-leave-to.justify-end [role="dialog"] {
+  transform: translateX(100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .obsidian-drawer-enter-active,
+  .obsidian-drawer-leave-active,
+  .obsidian-drawer-enter-active [role="dialog"],
+  .obsidian-drawer-leave-active [role="dialog"] {
+    transition: none;
+  }
+}
+
+/* Toast stack enter/leave: a short rise and fade. The leaving row is pulled out
+   of flow so the survivors slide into its place through `-move` instead of
+   snapping once it is removed; it spans the region's width (the chip inside
+   stays centred) so going absolute does not resize it. */
+.obsidian-toast-enter-active {
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s var(--ease-obsidian);
+}
+
+.obsidian-toast-leave-active {
+  position: absolute;
+  inset-inline: 0;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s var(--ease-obsidian);
+}
+
+.obsidian-toast-move {
+  transition: transform 0.22s var(--ease-obsidian);
+}
+
+.toast-host {
+  z-index: var(--obsidian-z-toast, 70);
+  padding-top: 1rem;
+  padding-bottom: calc(
+    1rem + env(safe-area-inset-bottom, 0px) + var(--obsidian-bottom-inset, 0px) +
+      var(--obsidian-cookie-notice-height, 0px) + var(--obsidian-toast-inset, 0px)
+  );
+}
+
+.obsidian-toast-enter-from,
+.obsidian-toast-leave-to {
+  opacity: 0;
+  transform: translateY(0.5rem);
+}
+
+.obsidian-toast__countdown {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-sheen-violet),
+    var(--color-sheen-teal),
+    var(--color-sheen-bronze)
+  );
+  animation: obsidian-toast-countdown var(--obsidian-toast-duration, 3200ms) linear forwards;
+}
+
+.obsidian-toast--paused .obsidian-toast__countdown {
+  animation-play-state: paused;
+}
+
+@keyframes obsidian-toast-countdown {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .obsidian-toast-enter-active,
+  .obsidian-toast-leave-active,
+  .obsidian-toast-move {
+    transition: none;
+  }
+
+  .obsidian-toast__countdown {
+    animation: none;
+    transform: scaleX(1);
+    opacity: 0.4;
+  }
+}
+
+.cart-count__ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  border: 1.5px solid transparent;
+  border-top-color: var(--color-accent);
+  animation: obsidian-spin 0.7s linear infinite;
+}
+
+.cart-count.is-syncing .cart-count__badge {
+  opacity: 0.45;
+  transition: opacity 0.2s var(--ease-obsidian);
+}
+
+.btn__spinner {
+  display: block;
+  width: 1em;
+  height: 1em;
+  border-radius: 9999px;
+  border: 1.5px solid currentColor;
+  border-top-color: transparent;
+  animation: obsidian-spin 0.7s linear infinite;
+}
+
+.is-loading {
+  position: relative;
+  cursor: progress;
+}
+
+.is-loading .btn__label {
+  visibility: hidden;
+}
+
+.is-loading .btn__spinner {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+
+@keyframes obsidian-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cart-count__ring,
+  .btn__spinner {
+    animation: none;
+  }
+}
+
+/* Design-system primitives. Layered so a call site can still override with a
+   Tailwind utility — unlayered rules beat every layer, which is why the states
+   above (drawer transitions, .is-loading, the pre-paint badge below) stay out:
+   those must win over whatever the component declares. */
+@layer components {
+  /* The border is always present, transparent at rest, because --solid inverts
+     to a ghost on hover: declaring it only on hover would shift the box by 1px. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.75rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-edge);
+    padding-inline: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    text-align: center;
+    transition:
+      color 0.15s var(--ease-obsidian),
+      background-color 0.15s var(--ease-obsidian),
+      border-color 0.15s var(--ease-obsidian);
+  }
+
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    opacity: 0.6;
+  }
+
+  .btn--lg {
+    height: auto;
+    padding-block: 0.75rem;
+    padding-inline: 2rem;
+    font-size: 0.72rem;
+  }
+
+  .btn--sm {
+    height: auto;
+    padding-block: 0.625rem;
+    padding-inline: 1.25rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+  }
+
+  .btn--icon {
+    height: 2.25rem;
+    width: 2.25rem;
+    gap: 0;
+    padding-inline: 0;
+  }
+
+  .btn--block {
+    width: 100%;
+  }
+
+  .btn--solid {
+    border-color: var(--color-ink);
+    background-color: var(--color-ink);
+    color: var(--color-alabaster);
+  }
+
+  .btn--solid:hover:not(:disabled, [aria-disabled="true"]) {
+    background-color: transparent;
+    color: var(--color-ink);
+  }
+
+  .btn--outline {
+    border-color: var(--color-ash-300);
+    color: var(--color-ink-soft);
+  }
+
+  .btn--outline:hover:not(:disabled, [aria-disabled="true"]) {
+    border-color: var(--color-ink);
+    color: var(--color-ink);
+  }
+
+  /* The --solid/--outline pair transposed onto a dark surface (the footer, the
+     hero, the showcase sections). Same inversion on hover, same always-present
+     border. */
+  .btn--invert {
+    border-color: var(--color-on-obsidian);
+    background-color: var(--color-on-obsidian);
+    color: var(--color-obsidian-950);
+  }
+
+  .btn--invert:hover:not(:disabled, [aria-disabled="true"]) {
+    background-color: transparent;
+    color: var(--color-on-obsidian);
+  }
+
+  .btn--invert-outline {
+    border-color: color-mix(in oklab, var(--color-on-obsidian) 30%, transparent);
+    color: var(--color-on-obsidian);
+  }
+
+  .btn--invert-outline:hover:not(:disabled, [aria-disabled="true"]) {
+    border-color: var(--color-on-obsidian);
+    background-color: var(--color-on-obsidian);
+    color: var(--color-obsidian-950);
+  }
+
+  /* Confirmation modal (js/confirm-action). A native <dialog>, so the top layer,
+     the backdrop, Escape and the focus trap are the browser's job. */
+  .confirm-dialog {
+    /* Preflight zeroes every margin, which also takes out the `margin: auto` the
+       UA stylesheet uses to centre a modal dialog in its inset-0 box. */
+    margin: auto;
+    width: min(26rem, calc(100vw - 2rem));
+    padding: 0;
+    background: var(--color-paper);
+    border: 1px solid var(--color-ash-200);
+    border-radius: var(--radius-edge);
+    color: var(--color-ink);
+  }
+
+  .confirm-dialog::backdrop {
+    background: color-mix(in srgb, var(--color-obsidian-950) 55%, transparent);
+  }
+
+  .confirm-dialog__title {
+    padding: 1.5rem 1.5rem 0;
+    font-family: var(--font-display);
+    font-size: var(--text-lead);
+    line-height: 1.25;
+  }
+
+  .confirm-dialog__body {
+    padding: 0.75rem 1.5rem 0;
+    font-size: 0.875rem;
+    color: var(--color-ink-soft);
+  }
+
+  .confirm-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1.5rem;
+  }
+
+  /* A text link, not a button: no box, so it inherits the size and colour of the
+     text it sits in unless a modifier or a utility says otherwise. */
+  .link {
+    text-underline-offset: 4px;
+    transition: color 0.15s var(--ease-obsidian);
+  }
+
+  .link:hover {
+    color: var(--color-accent);
+    text-decoration-line: underline;
+  }
+
+  .link--meta {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-ink-soft);
+  }
+
+  /* Shared form field. One definition for the label/control/error trio the Twig
+     macro and Field.vue both emit, so a change lands everywhere at once. */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .field__label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-ink-soft);
+  }
+
+  .field__required {
+    margin-left: 0.3em;
+    color: var(--color-danger);
+  }
+
+  .field__control,
+  .field-slot :is(input, select, textarea) {
+    height: 2.75rem;
+    border: 1px solid var(--color-ash-300);
+    border-radius: var(--radius-edge);
+    background: transparent;
+    padding-inline: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-ink);
+    transition: border-color 0.15s var(--ease-obsidian);
+  }
+
+  .field__control--compact {
+    height: 2.25rem;
+    padding-inline: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+  }
+
+  textarea.field__control,
+  .field-slot textarea {
+    height: auto;
+    min-height: 6rem;
+    padding-block: 0.625rem;
+  }
+
+  .field__control:focus,
+  .field-slot :is(input, select, textarea):focus {
+    border-color: var(--color-ink);
+    outline: none;
+  }
+
+  /* Put the ring back for keyboard users: `outline: none` above is there to keep
+     the mouse-focus chrome off, not to strip the affordance. */
+  .field__control:focus-visible,
+  .field-slot :is(input, select, textarea):focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .field__control[aria-invalid="true"],
+  .field-slot :is(input, select, textarea)[aria-invalid="true"] {
+    border-color: var(--color-danger);
+  }
+
+  .field-password {
+    position: relative;
+    display: flex;
+  }
+
+  .field-password .field__control {
+    flex: 1;
+    min-width: 0;
+    padding-inline-end: 2.75rem;
+  }
+
+  .field-password__toggle {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    color: var(--color-ink-soft);
+    cursor: pointer;
+    transition: color 0.15s var(--ease-obsidian);
+  }
+
+  .field-password__toggle:hover {
+    color: var(--color-ink);
+  }
+
+  .field-password__toggle:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
+  }
+
+  .field__hint {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.04em;
+    color: var(--color-ash-500);
+  }
+
+  .field__error {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.04em;
+    color: var(--color-danger);
+  }
+
+  .field__error:empty {
+    display: none;
+  }
+
+  .field-check {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+  }
+
+  .field-check__input {
+    height: 1rem;
+    width: 1rem;
+    flex-shrink: 0;
+    border: 1px solid var(--color-ash-300);
+    border-radius: var(--radius-edge);
+    accent-color: var(--color-accent);
+  }
+
+  .field-check__label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-ink-soft);
+  }
+
+  .field-qty {
+    width: 5rem;
+    text-align: center;
+    font-family: var(--font-mono);
+  }
+
+  /* The whole control reads as one box, so focus shows on the container rather
+     than on the input alone — otherwise the ring would sit inside the border. */
+  .field-stepper {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--color-ash-300);
+    border-radius: var(--radius-edge);
+    transition: border-color 0.15s var(--ease-obsidian);
+  }
+
+  .field-stepper:hover {
+    border-color: var(--color-ash-400);
+  }
+
+  .field-stepper:focus-within {
+    border-color: var(--color-ink);
+  }
+
+  .field-stepper__button {
+    display: flex;
+    height: 2.25rem;
+    width: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-ink-soft);
+    transition: color 0.15s var(--ease-obsidian);
+  }
+
+  .field-stepper__button:hover {
+    color: var(--color-ink);
+  }
+
+  .field-stepper__button:disabled {
+    opacity: 0.4;
+  }
+
+  .field-stepper__input {
+    height: 2.25rem;
+    width: 3rem;
+    border-inline: 1px solid var(--color-ash-300);
+    background: transparent;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: var(--color-ink);
+    appearance: textfield;
+  }
+
+  .field-stepper__input:focus {
+    outline: none;
+  }
+
+  .field-stepper__input::-webkit-inner-spin-button {
+    appearance: none;
+  }
+
+  .field-stepper--compact .field-stepper__button {
+    height: 1.75rem;
+    width: 1.75rem;
+  }
+
+  .field-stepper--compact .field-stepper__input {
+    height: 1.75rem;
+    width: 2rem;
+    font-size: 0.78rem;
+  }
+
+  .field-radio {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+  }
+
+  .field-radio__input {
+    height: 1rem;
+    width: 1rem;
+    flex-shrink: 0;
+    accent-color: var(--color-ink);
+  }
+
+  .field-radio__label {
+    font-size: 0.875rem;
+    color: var(--color-ink);
+  }
+
+  /* The selected chrome comes from :has() instead of a class the caller toggles,
+     so the card cannot disagree with the input it wraps. Layout is left to the
+     call site: some cards are a plain row, others space a price out to the end. */
+  .field-radio-card {
+    cursor: pointer;
+    border: 1px solid var(--color-ash-300);
+    border-radius: var(--radius-edge);
+    padding: 0.75rem 1rem;
+    transition:
+      border-color 0.15s var(--ease-obsidian),
+      background-color 0.15s var(--ease-obsidian);
+  }
+
+  .field-radio-card:hover {
+    border-color: var(--color-ink);
+  }
+
+  .field-radio-card:has(input:checked) {
+    border-color: var(--color-ink);
+    background: var(--color-alabaster-raised);
+  }
+
+  .field-note {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-ash-500);
+  }
+
+  .field-note__marker {
+    color: var(--color-danger);
+  }
+
+  .form-banner {
+    border: 1px solid var(--color-danger);
+    border-radius: var(--radius-edge);
+    background: color-mix(in oklab, var(--color-danger) 8%, transparent);
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: var(--color-danger);
+  }
+
+  .form-banner:empty {
+    display: none;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 4rem 1.5rem;
+    border: 1px dashed var(--color-ash-300);
+    border-radius: var(--radius-edge);
+  }
+
+  .empty-state__icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--color-ash-400);
+  }
+
+  .empty-state__title {
+    margin-top: 1rem;
+    font-family: var(--font-display);
+    font-size: var(--text-lead);
+    color: var(--color-ink);
+  }
+
+  .empty-state__body {
+    margin-top: 0.5rem;
+    max-width: 44ch;
+    font-size: 0.875rem;
+    color: var(--color-ink-soft);
+  }
+
+  /* Class recipes: the utility strings the templates repeated verbatim, named.
+     Written as the utilities' own declarations rather than @apply — a module's
+     CSS is compiled into EVERY theme, and @apply on a token the current theme
+     does not define fails the build instead of degrading. */
+  .shell {
+    margin-inline: auto;
+    width: 100%;
+    max-width: var(--container-shell);
+    padding-inline: calc(var(--spacing) * 4);
+  }
+
+  @media (min-width: 48rem) {
+    .shell {
+      padding-inline: calc(var(--spacing) * 8);
+    }
+  }
+
+  .page-heading {
+    font-family: var(--font-display);
+    font-size: var(--text-3xl);
+    line-height: var(--tw-leading, var(--text-3xl--line-height));
+    --tw-tracking: var(--tracking-fine);
+    letter-spacing: var(--tracking-fine);
+    color: var(--color-ink);
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--text-eyebrow);
+    text-transform: uppercase;
+    --tw-tracking: var(--tracking-label);
+    letter-spacing: var(--tracking-label);
+    color: var(--color-ink-soft);
+  }
+
+  .table-label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: var(--tw-leading, var(--text-xs--line-height));
+    text-transform: uppercase;
+    --tw-tracking: var(--tracking-eyebrow);
+    letter-spacing: var(--tracking-eyebrow);
+    color: var(--color-ink-soft);
+  }
+}
+
+.mo-badge,
+[data-mage-island]:not([data-mage-island-ready])::after {
+  --mo-badge-nudge: 0.6px;
+  pointer-events: none;
+  position: absolute;
+  right: -0.5rem;
+  top: -0.375rem;
+  display: inline-flex;
+  height: 1rem;
+  min-width: 1rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  padding-top: calc(var(--mo-badge-nudge) * 2);
+  padding-inline: 0.25rem;
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--color-alabaster);
+}
+
+[data-mage-island]:not([data-mage-island-ready])::after {
+  content: none;
+}
+
+/* The platform's human-verification challenges. Both slots are empty markup
+   until the store's configuration asks for one, so these rules only ever apply
+   on a form that is actually carrying a challenge. */
+.field-captcha {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.field-captcha__challenge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.field-captcha__image {
+  border: 1px solid var(--color-ash-200);
+  border-radius: var(--radius-edge);
+  background: var(--color-paper);
+}
+
+.field-recaptcha {
+  /* The widget is an iframe of a fixed size the vendor controls; give it room
+     without letting it push a narrow form sideways. */
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* ============================================================
+   Page Builder content.
+
+   The markup is the platform's: what a merchant saves in the admin comes out as
+   `[data-content-type]` elements whose own styling lives in the stylesheet Page
+   Builder writes beside it. What is missing on a theme that does not descend
+   from Luma is the layout those attributes assume — the row container, the
+   column flexbox, the tab and slide mechanics — so that is what is here. The
+   author's own choices are never overridden.
+   ============================================================ */
+
+/* A CMS page holds its content to a reading measure, which is right for prose
+   and wrong for layout: clamped to it, all three of Page Builder's row
+   appearances collapse to the same narrow left-hugging column and the rules
+   below can never apply. Content that carries rows is layout, so it is let out;
+   a page of prose keeps the measure it was given.
+
+   The selector mirrors the theme's own — `.cms-page-view .columns > .content` —
+   with the `:has()` on top, because anything shorter ties with it and loses on
+   order. */
+.cms-page-view .columns > .content:has([data-content-type="row"]) {
+  max-width: none;
+}
+
+[data-content-type="row"][data-appearance="contained"] {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--shell-max, 90rem);
+  padding-inline: 1rem;
+}
+
+@media (min-width: 768px) {
+  [data-content-type="row"][data-appearance="contained"] {
+    padding-inline: 2rem;
+  }
+}
+
+[data-content-type="row"][data-appearance="full-width"] > div {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--shell-max, 90rem);
+}
+
+[data-content-type="row"][data-appearance="full-bleed"] {
+  width: 100%;
+}
+
+/* A column group is a flex row of percentage-width columns; the widths
+   themselves are the author's and arrive with the content. */
+.pagebuilder-column-group,
+.pagebuilder-column-line {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+/* The width of a column is the author's, and it arrives as an id-scoped rule.
+   All this adds is the box model it assumes. */
+.pagebuilder-column {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* Stacking on a narrow screen has to beat the author's own width, and that
+   arrives as `#html-body [data-pb-style="…"]` — an id selector. There is no
+   specificity that wins it, which is why this is the one place the theme
+   overrides an authored choice by force. */
+@media (max-width: 767px) {
+  .pagebuilder-column-group,
+  .pagebuilder-column-line {
+    flex-direction: column;
+  }
+
+  .pagebuilder-column {
+    flex-basis: auto !important;
+    width: 100% !important;
+  }
+}
+
+[data-content-type="image"] {
+  display: block;
+}
+
+[data-content-type="image"] img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+[data-content-type="image"] figcaption {
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-ink-soft);
+}
+
+[data-content-type="divider"] .pagebuilder-divider {
+  border: 0;
+  border-top: 1px solid var(--color-ash-200);
+}
+
+/* Page Builder's three button appearances, expressed with this theme's own
+   button so an authored call to action does not look pasted in. */
+.pagebuilder-button-primary,
+.pagebuilder-button-secondary,
+.pagebuilder-button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-edge);
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  text-decoration: none;
+  transition:
+    color 0.15s var(--ease-obsidian),
+    background-color 0.15s var(--ease-obsidian),
+    border-color 0.15s var(--ease-obsidian);
+}
+
+.pagebuilder-button-primary {
+  border-color: var(--color-ink);
+  background-color: var(--color-ink);
+  color: var(--color-alabaster);
+}
+
+.pagebuilder-button-primary:hover {
+  background-color: transparent;
+  color: var(--color-ink);
+}
+
+.pagebuilder-button-secondary {
+  border-color: var(--color-ash-300);
+  color: var(--color-ink-soft);
+}
+
+.pagebuilder-button-secondary:hover {
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+}
+
+.pagebuilder-button-link {
+  padding-inline: 0;
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+[data-content-type="buttons"] [data-content-type="button-item"] {
+  display: inline-block;
+}
+
+/* A banner is a background with content laid over it; the overlay colour and the
+   background image are the author's, the stacking is not. */
+.pagebuilder-banner-wrapper {
+  position: relative;
+  background-clip: padding-box;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  overflow-wrap: break-word;
+}
+
+.pagebuilder-banner-wrapper .pagebuilder-overlay {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  transition: background-color 0.15s var(--ease-obsidian);
+}
+
+.pagebuilder-banner-wrapper .pagebuilder-poster-overlay {
+  justify-content: center;
+}
+
+.pagebuilder-banner-wrapper .pagebuilder-poster-content {
+  width: 100%;
+}
+
+.pagebuilder-banner-wrapper .pagebuilder-banner-button {
+  margin-top: 1.25rem;
+  max-width: 100%;
+  text-align: inherit;
+  transition: opacity 0.15s var(--ease-obsidian);
+}
+
+/* Video and map both arrive as a responsive box holding an iframe. */
+.pagebuilder-video-container {
+  position: relative;
+  display: block;
+  padding-top: max(56.25%, 1rem);
+}
+
+.pagebuilder-video-container iframe,
+.pagebuilder-video-container video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* A map says where the place is before anything is fetched from a provider, and
+   the provider's frame is added underneath that only if the visitor asks. Both
+   states are in flow, so nothing here reserves a box that stays empty. */
+[data-map-summary] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+[data-map-name] {
+  font-weight: 600;
+}
+
+[data-map-directions],
+[data-map-request] {
+  align-self: flex-start;
+  margin-top: 0.5rem;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+[data-content-type="map"] iframe[data-map-frame] {
+  display: block;
+  width: 100%;
+  height: 300px;
+  margin-top: 0.75rem;
+  border: 0;
+}
+
+/* A product carousel whose markup this theme did not render — a merchant kept a
+   template of their own — still scrolls, because the strip is CSS and the
+   behaviour only adds the keyboard and the announcements on top. */
+[data-content-type="products"][data-appearance="carousel"] .product-items {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding-bottom: 1rem;
+  margin: 0;
+  list-style: none;
+}
+
+[data-content-type="products"][data-appearance="carousel"] .product-items > .product-item {
+  flex: 0 0 70%;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 640px) {
+  [data-content-type="products"][data-appearance="carousel"] .product-items > .product-item {
+    flex-basis: 45%;
+  }
+}
+
+@media (min-width: 1024px) {
+  [data-content-type="products"][data-appearance="carousel"] .product-items > .product-item {
+    flex-basis: 23%;
+  }
+}
+
+/* The way past a carousel: out of the way until it takes focus. */
+[data-carousel-skip],
+[data-carousel-status] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+[data-carousel-skip]:focus-visible {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+}
+
+/* Tabs. Server markup is a list of headers and a stack of panels; the enhancer
+   turns them into a tab set, and this keeps the closed panels out of the way
+   whether or not it ever runs — a panel with no `hidden` is simply visible, so
+   the content is readable with no JavaScript at all. */
+[data-content-type="tabs"] .tabs-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--color-ash-200);
+}
+
+[data-content-type="tabs"] .tab-header {
+  margin: 0;
+  background: none;
+}
+
+[data-content-type="tabs"] .tab-title {
+  display: block;
+  padding: 0.75rem 1.25rem;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+}
+
+[data-content-type="tabs"] .tab-header[aria-selected="true"] .tab-title,
+[data-content-type="tabs"] .tab-title[aria-selected="true"] {
+  color: var(--color-ink);
+  box-shadow: inset 0 -2px 0 0 var(--color-ink);
+}
+
+[data-content-type="tabs"] .tabs-content {
+  padding-block: 1.5rem;
+}
+
+[data-content-type="tabs"] [data-content-type="tab-item"][hidden] {
+  display: none;
+}
+
+/* A slider is a scroll-snapping strip: no library, no layout thrash, and it
+   still scrolls with a finger when the enhancer never loads. */
+[data-content-type="slider"] {
+  position: relative;
+}
+
+.pagebuilder-slider::-webkit-scrollbar {
+  display: none;
+}
+
+.pagebuilder-slider > [data-content-type="slide"] {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+}
+
+/* The shared carousel primitive (js/slider). Page Builder's slider is one
+   caller; a template opts in with `data-slider` on the scrolling element. The
+   strip itself is a scroll-snapping list, so it works with no script at all. */
+.slider,
+.pagebuilder-slider {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.slider::-webkit-scrollbar {
+  display: none;
+}
+
+.slider > [data-slider-slide] {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+}
+
+.slider__dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.slider__dot {
+  height: 0.5rem;
+  width: 0.5rem;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--color-ash-300);
+  padding: 0;
+  cursor: pointer;
+}
+
+.slider__dot[aria-current="true"] {
+  background: var(--color-ink);
+}
+
+.slider__arrow {
+  display: inline-flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-ash-300);
+  border-radius: 9999px;
+  background: var(--color-paper);
+  cursor: pointer;
+}
+
+/* Page Builder lets an author hide an element on one breakpoint. */
+@media (max-width: 767px) {
+  .pagebuilder-mobile-hidden {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .pagebuilder-mobile-only {
+    display: none;
+  }
+}
+
+/* The banner that says an administrator is inside this customer's session. It
+   sits above everything because it is not part of the shop: it is the only
+   thing on the page that says whose session this is. */
+.assisted-session {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: var(--color-obsidian-950);
+  padding: 0.625rem 1rem;
+  text-align: center;
+  color: var(--color-on-obsidian);
+}
+
+.assisted-session__text {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+.assisted-session__close {
+  color: var(--color-on-obsidian);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.field-check-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.navigation-progress {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: var(--obsidian-z-toast);
+  height: 3px;
+  overflow: hidden;
+  pointer-events: none;
+  font-size: 0;
+  color: transparent;
+  white-space: nowrap;
+}
+
+.navigation-progress::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  opacity: 0;
+}
+
+.navigation-progress:dir(rtl)::before {
+  transform-origin: right center;
+}
+
+.navigation-progress[data-active]::before {
+  opacity: 1;
+  animation: obsidian-navigation-progress 8s cubic-bezier(0.1, 0.7, 0.2, 1) forwards;
+}
+
+.navigation-progress[data-active][data-still]::before {
+  animation: none;
+  transform: scaleX(1);
+  opacity: 0.6;
+}
+
+@keyframes obsidian-navigation-progress {
+  from {
+    transform: scaleX(0.08);
+  }
+  to {
+    transform: scaleX(0.9);
+  }
+}

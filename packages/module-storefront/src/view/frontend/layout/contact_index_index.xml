@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Storefront project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
+  Contact Us page. Magento_Contact's frontend layout is suppressed (module not
+  opted-in), so this storefront module re-declares the form, reusing the native
+  ContactForm block (form action + UserDataProvider prefill) with our Twig. The
+  form POSTs to contact/index/post natively — it works with no JS.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Contact Us</title>
+    </head>
+    <body>
+        <referenceContainer name="content">
+            <block class="Magento\Contact\Block\ContactForm" name="contactForm"
+                   template="Magento_Contact::form.twig">
+                <!-- Core's own image challenge; cacheable follows core, the image is
+                     per session. -->
+                <block class="Magento\Captcha\Block\Captcha\DefaultCaptcha" name="contact.captcha" as="captcha"
+                       template="Magento_Captcha::default.twig" cacheable="false">
+                    <arguments>
+                        <argument name="form_id" xsi:type="string">contact_us</argument>
+                        <argument name="img_width" xsi:type="number">230</argument>
+                        <argument name="img_height" xsi:type="number">50</argument>
+                    </arguments>
+                </block>
+                <!-- The reCAPTCHA slot. Renders nothing unless the store configured a
+                     challenge for this form. -->
+                <block class="MageObsidian\ModernFrontend\Block\Template" name="contact.recaptcha" as="recaptcha"
+                       template="Magento_ReCaptchaFrontendUi::recaptcha.twig">
+                    <arguments>
+                        <argument name="view_model" xsi:type="object">MageObsidian\Storefront\ViewModel\ReCaptcha</argument>
+                        <argument name="recaptcha_for" xsi:type="string">contact</argument>
+                    </arguments>
+                </block>
+            </block>
+        </referenceContainer>
+    </body>
+</page>
