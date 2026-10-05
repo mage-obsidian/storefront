@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Review project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="MageObsidian\Customer\ViewModel\AccountNav">
+        <arguments>
+            <argument name="links" xsi:type="array">
+                <item name="reviews" xsi:type="array">
+                    <item name="route" xsi:type="string">review/customer</item>
+                    <item name="match" xsi:type="string">review_customer</item>
+                    <item name="label" xsi:type="string" translate="true">My Product Reviews</item>
+                    <item name="icon" xsi:type="string">star</item>
+                    <item name="sortOrder" xsi:type="string">45</item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
+
+    <!-- The rating lives on the page's single Product node; see the plugin. -->
+    <type name="MageObsidian\ModernFrontend\Model\SchemaOrg\CurrentPageSchemaProvider">
+        <plugin name="mage_obsidian_review_product_rating"
+                type="MageObsidian\Review\Plugin\SchemaOrg\AddProductRating"/>
+    </type>
+</config>
