@@ -1,0 +1,24 @@
+<?php /**
+ * This file is part of the MageObsidian - Base Theme project.
+ *
+ * SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */ ?>
+<?php
+declare(strict_types=1);
+
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+
+/**
+ * Cart link. A plain anchor so it works with no JavaScript and stays safe under
+ * full-page cache — the item count is private data and belongs to a skin that
+ * reads customer-data, not to the base theme.
+ *
+ * @var Template $block
+ * @var Escaper $escaper
+ */
+?>
+<a class="cart-link" href="<?= $escaper->escapeUrl($block->getUrl('checkout/cart')) ?>">
+    <?= $escaper->escapeHtml(__('My Cart')) ?>
+</a>

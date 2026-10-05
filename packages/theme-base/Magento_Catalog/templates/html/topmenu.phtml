@@ -1,0 +1,26 @@
+<?php /**
+ * This file is part of the MageObsidian - Base Theme project.
+ *
+ * SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */ ?>
+<?php
+declare(strict_types=1);
+
+use Magento\Theme\Block\Html\Topmenu;
+
+/**
+ * @var Topmenu $block
+ */
+
+$columnsLimit = $block->getColumnsLimit() ?: 0;
+$_menuHtml = $block->getHtml('level-top', 'submenu', $columnsLimit)
+?>
+
+<nav class="navigation" data-action="navigation">
+    <ul class="menu">
+        <?= /* @noEscape */
+        $_menuHtml ?>
+        <?= $block->getChildHtml() ?>
+    </ul>
+</nav>

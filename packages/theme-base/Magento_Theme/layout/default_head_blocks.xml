@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Base Theme project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    </head>
+    <body>
+        <block
+                name="head.additional"
+                class="MageObsidian\ModernFrontend\Block\Template"
+                template="Magento_Theme::html/head/head_additional.phtml"
+        >
+            <arguments>
+                <!-- Same ViewModel the critical block uses, so head_additional can
+                     couple the style.css defer to whether critical was inlined. -->
+                <argument name="critical_css" xsi:type="object">
+                    MageObsidian\ModernFrontend\ViewModel\CriticalCss
+                </argument>
+            </arguments>
+            <container name="head.preload" as="head_preload"/>
+            <block name="critical_css_block" as="critical_css" template="Magento_Theme::html/head/criticalCss.phtml"
+                   ifconfig="dev/css/use_css_critical_path">
+                <arguments>
+                    <argument name="criticalCssViewModel" xsi:type="object">
+                        MageObsidian\ModernFrontend\ViewModel\CriticalCss
+                    </argument>
+                </arguments>
+            </block>
+        </block>
+    </body>
+</page>

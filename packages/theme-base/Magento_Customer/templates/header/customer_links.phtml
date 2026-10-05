@@ -1,0 +1,24 @@
+<?php /**
+ * This file is part of the MageObsidian - Base Theme project.
+ *
+ * SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */ ?>
+<?php
+declare(strict_types=1);
+
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+
+/**
+ * Account link. `customer/account` sends a guest to the login screen, so one
+ * anchor covers both states without branching on the session — which a base
+ * theme must not do, or the signed-in markup is what full-page cache stores.
+ *
+ * @var Template $block
+ * @var Escaper $escaper
+ */
+?>
+<a class="account-link" href="<?= $escaper->escapeUrl($block->getUrl('customer/account')) ?>">
+    <?= $escaper->escapeHtml(__('My Account')) ?>
+</a>

@@ -1,0 +1,19 @@
+/*
+ * This file is part of the MageObsidian - Base Theme project.
+ *
+ * SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */
+@import "./header.css";
+
+[v-cloak] {
+    display: none !important;
+}
+
+#page_wrapper {
+    @apply bg-background flex min-h-screen flex-col;
+}
+
+main#maincontent {
+    @apply container mx-auto grow p-4 ;
+}

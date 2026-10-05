@@ -1,0 +1,43 @@
+<?php /**
+ * This file is part of the MageObsidian - Base Theme project.
+ *
+ * SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */ ?>
+<?php
+declare(strict_types=1);
+
+use Magento\Directory\Block\Currency;
+use Magento\Framework\Escaper;
+
+/**
+ * Currency switcher. `directory/currency/switch` is a GET action, so plain links
+ * switch without JavaScript — the previous markup posted through Luma's
+ * `data-post` helper, which this stack does not ship, so nothing happened.
+ *
+ * @var Currency $block
+ * @var Escaper $escaper
+ */
+if ($block->getCurrencyCount() <= 1) {
+    return;
+}
+$currencies = $block->getCurrencies();
+$current = $block->getCurrentCurrencyCode();
+?>
+<div class="currency-switcher">
+    <span class="currency-switcher__label"><?= $escaper->escapeHtml(__('Currency')) ?></span>
+    <ul class="currency-switcher__list">
+        <?php foreach ($currencies as $code => $name): ?>
+            <li>
+                <?php if ($code === $current): ?>
+                    <span aria-current="true"><?= $escaper->escapeHtml($code) ?></span>
+                <?php else: ?>
+                    <a href="<?= $escaper->escapeUrl($block->getUrl(
+                        'directory/currency/switch',
+                        ['currency' => $code]
+                    )) ?>"><?= $escaper->escapeHtml($code) ?></a>
+                <?php endif; ?>
+            </li>
+        <?php endforeach; ?>
+    </ul>
+</div>

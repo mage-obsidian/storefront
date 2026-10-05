@@ -1,0 +1,71 @@
+<?php /**
+ * This file is part of the MageObsidian - Base Theme project.
+ *
+ * SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */ ?>
+<?php
+
+use MageObsidian\ModernFrontend\Model\Config\ConfigProvider;
+use MageObsidian\ModernFrontend\Block\Template;
+use Magento\Framework\View\Helper\SecureHtmlRenderer;
+
+/** @var Template $block */
+/** @var ConfigProvider $configViewModel */
+/** @var SecureHtmlRenderer $secureRenderer */
+$configViewModel = $block->getConfigProvider();
+
+$importMap = json_encode(
+    [
+        'imports' => [
+            'vue' => $block->getViewLibFileUrl('vue'),
+        ],
+    ],
+    JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
+);
+?>
+
+<?= $block->getChildHtml('head_preload'); ?>
+<?= $block->getBlockHtml('critical_css_block'); ?>
+<?php $i18nDictionaryUrl = $block->getI18nRuntimeConfig()['dictionaryUrl'] ?? ''; ?>
+<?php if ($i18nDictionaryUrl): ?>
+    <?php // Starts the i18n dictionary fetch during head parse, off the island bootstrap's import chain. ?>
+    <link rel="preload" as="fetch" href="<?= $block->escapeUrl($i18nDictionaryUrl) ?>" crossorigin="anonymous"/>
+<?php endif; ?>
+<?php // Rendered through SecureHtmlRenderer so the tag carries the CSP nonce: without it
+      // every inline module on the page dies wherever the policy is enforced. ?>
+<?= /* @noEscape */ $secureRenderer->renderTag('script', ['type' => 'importmap'], $importMap, false) ?>
+<?php
+if ($configViewModel->isHmrEnabled()): ?>
+    <script type="module" src="/@vite/client"></script>
+<?php else:
+    $styleHref = $block->escapeUrl($block->getViewFileUrl($configViewModel->getViteGeneratedPath() . '/css/style.css'));
+    $criticalCss = $block->getCriticalCss();
+    // Defer the sheet only when critical was inlined this request; pages with no
+    // critical keep it render-blocking so there is never a FOUC.
+    if ($criticalCss && $criticalCss->hasCriticalCss()):
+        // The swap runs from a nonced tag, not an inline onload attribute: under an
+        // enforced CSP the attribute is dropped and the sheet stays a preload that
+        // never applies, leaving every deferred style missing.
+        $swapJs = <<<'JS'
+(function () {
+    var sheet = document.querySelector('link[data-obsidian-sheet]');
+    if (!sheet) {
+        return;
+    }
+    var apply = function () {
+        sheet.rel = 'stylesheet';
+    };
+    sheet.addEventListener('load', apply, { once: true });
+    document.addEventListener('DOMContentLoaded', apply, { once: true });
+})();
+JS; ?>
+        <link rel="preload" as="style" href="<?= $styleHref ?>" data-obsidian-sheet/>
+        <noscript><link rel="stylesheet" href="<?= $styleHref ?>"/></noscript>
+        <?= /* @noEscape */ $secureRenderer->renderTag('script', [], $swapJs, false) ?>
+    <?php else: ?>
+        <link href="<?= $styleHref ?>" rel="stylesheet"/>
+    <?php endif; ?>
+<?php endif; ?>
+
+<?= $block->getChildHtmlWithExclusions(excludedBlocks: ['critical_css_block', 'head.preload']); ?>

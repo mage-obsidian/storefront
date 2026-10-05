@@ -1,0 +1,24 @@
+<?php /**
+ * This file is part of the MageObsidian - Base Theme project.
+ *
+ * SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */ ?>
+<?php
+declare(strict_types=1);
+
+use Magento\Framework\View\Element\Template;
+use MageObsidian\Storefront\ViewModel\Head\SeoLinks;
+
+/** @var Template $block */
+/** @var SeoLinks $seoLinks */
+$seoLinks = $block->getData('seo_links');
+$canonicalUrl = $seoLinks->getCanonicalUrl();
+$manifestUrl = $seoLinks->getManifestUrl();
+?>
+<?php if ($canonicalUrl !== ''): ?>
+<link rel="canonical" href="<?= $block->escapeUrl($canonicalUrl) ?>"/>
+<?php endif; ?>
+<?php if ($manifestUrl !== ''): ?>
+<link rel="manifest" href="<?= $block->escapeUrl($manifestUrl) ?>"/>
+<?php endif; ?>

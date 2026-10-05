@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Base Theme project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
+  Sidebar-left layout. `content` (from 1column) stays the main column; sidebar.main
+  is added before it inside `columns`. The two-column grid is applied via CSS on
+  `.page-with-filter .columns`, so 1column pages are unaffected.
+-->
+<layout xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_layout.xsd">
+    <update handle="1column"/>
+    <referenceContainer name="columns">
+        <container name="sidebar.main" htmlTag="aside" htmlClass="sidebar-main" before="content"/>
+    </referenceContainer>
+</layout>

@@ -1,0 +1,41 @@
+<?php /**
+ * This file is part of the MageObsidian - Base Theme project.
+ *
+ * SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */ ?>
+<?php
+declare(strict_types=1);
+
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+use Magento\Search\ViewModel\ConfigProvider;
+
+/**
+ * Quick search. A real GET form to the native results route, so search works
+ * before — and without — any JavaScript. A skin can enhance or replace it.
+ *
+ * @var Template $block
+ * @var Escaper $escaper
+ */
+/** @var ConfigProvider $configProvider */
+$configProvider = $block->getData('configProvider');
+$helper = $configProvider->getSearchHelperData();
+?>
+<form class="search-form" action="<?= $escaper->escapeUrl($helper->getResultUrl()) ?>" method="get" role="search">
+    <label class="search-form__label" for="search">
+        <?= $escaper->escapeHtml(__('Search')) ?>
+    </label>
+    <input
+        id="search"
+        class="search-form__input"
+        type="text"
+        name="<?= $escaper->escapeHtmlAttr($helper->getQueryParamName()) ?>"
+        value="<?= /* @noEscape */ $helper->getEscapedQueryText() ?>"
+        maxlength="<?= $escaper->escapeHtmlAttr((string)$helper->getMaxQueryLength()) ?>"
+        autocomplete="off"
+    >
+    <button class="search-form__submit" type="submit">
+        <?= $escaper->escapeHtml(__('Search')) ?>
+    </button>
+</form>
