@@ -1,0 +1,61 @@
+// This file is part of the MageObsidian - Catalog project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
+import { defineConfig } from "vitest/config";
+import vue from "@vitejs/plugin-vue";
+import { fileURLToPath } from "node:url";
+
+// Component unit tests for the catalog islands. The `Vendor_Module::path` import
+// specifier is resolved by the engine's Vite plugins at runtime; for tests we
+// alias the storefront's useCart composable (the configurable island's only
+// cross-module dependency) to a controllable stub so we assert the island's own
+// behaviour — building super_attribute and delegating to the cart — without the
+// live Magento session quote. The cart POST itself is covered in module-storefront.
+export default defineConfig({
+    plugins: [vue()],
+    resolve: {
+        alias: {
+            "mage-obsidian/runtime": fileURLToPath(
+                new URL("../js-package-utils/src/runtime", import.meta.url),
+            ),
+            "MageObsidian_Storefront::js/currency": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/js/currency.ts", import.meta.url),
+            ),
+            "MageObsidian_Storefront::js/button-state": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/js/button-state.ts", import.meta.url),
+            ),
+            "MageObsidian_Storefront::js/notifications": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/js/notifications.ts", import.meta.url),
+            ),
+            "MageObsidian_Storefront::js/listing-events": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/js/listing-events.ts", import.meta.url),
+            ),
+            "MageObsidian_Storefront::js/scroll-lock": fileURLToPath(
+                new URL("../module-storefront/src/view/frontend/web/js/scroll-lock.ts", import.meta.url),
+            ),
+            "MageObsidian_Catalog::js/filter-drawer": fileURLToPath(
+                new URL("./src/view/frontend/web/js/filter-drawer.ts", import.meta.url),
+            ),
+            "MageObsidian_Catalog::js/catalog-events": fileURLToPath(
+                new URL("./src/view/frontend/web/js/catalog-events.ts", import.meta.url),
+            ),
+            "MageObsidian_Storefront::js/useCart": fileURLToPath(
+                new URL("./src/Test/Js/stubs/useCart.js", import.meta.url),
+            ),
+            "MageObsidian_ModernFrontend::js/events": fileURLToPath(
+                new URL("./src/Test/Js/stubs/events.js", import.meta.url),
+            ),
+            // Intra-module specifier (kept as Vendor_Module::path so the resolver's
+            // inheritance applies at build time) pointed at the real source here.
+            "MageObsidian_Catalog::js/product-options": fileURLToPath(
+                new URL("./src/view/frontend/web/js/product-options.ts", import.meta.url),
+            ),
+        },
+    },
+    test: {
+        environment: "happy-dom",
+        globals: true,
+        include: ["src/view/frontend/web/**/*.test.{js,ts}"],
+    },
+});

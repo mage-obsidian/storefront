@@ -1,0 +1,78 @@
+// This file is part of the MageObsidian - Catalog project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
+/**
+ * Add-to-cart enhancer for non-configurable products that carry custom options
+ * (a `<form data-product-form>` with a server-rendered options block). It owns
+ * the whole form rather than the generic cart-actions listener so it can: show a
+ * live total (base price + option deltas), validate required options accessibly
+ * before submitting, and AJAX-add via the form (FormData captures every option
+ * field, including file uploads). With JS off the native POST still works.
+ *
+ * The configurable buy box reuses the same product-options logic from inside its
+ * Vue island; this enhancer is the simple-product host.
+ */
+import { useCart } from "MageObsidian_Storefront::js/useCart";
+import { createProductOptions } from "MageObsidian_Catalog::js/product-options";
+import { notify, NotificationTone } from "MageObsidian_Storefront::js/notifications";
+import { setButtonBusy } from "MageObsidian_Storefront::js/button-state";
+import { formatCurrency } from "MageObsidian_Storefront::js/currency";
+
+function announce(message: string, tone: NotificationTone): void {
+    if (message) {
+        void notify(message, tone);
+    }
+}
+
+export function setup(form: HTMLFormElement): void {
+    const root = form.querySelector<HTMLElement>("[data-product-options]");
+    const options = root ? createProductOptions(root) : null;
+    const base = Number(form.dataset.basePrice ?? "0");
+    const format = form.dataset.currencyFormat ?? "%s";
+    const totalEl = form.querySelector<HTMLElement>("[data-options-total]");
+
+    const renderTotal = (): void => {
+        if (totalEl) {
+            totalEl.textContent = formatCurrency(format, base + (options?.delta() ?? 0));
+        }
+    };
+    options?.onChange(renderTotal);
+    renderTotal();
+
+    // With JS active we validate; the native required attributes still guard the
+    // no-JS path.
+    form.noValidate = true;
+    const cart = useCart();
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (options && !options.validate()) {
+            return;
+        }
+        const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+        setButtonBusy(button, true);
+
+        // Magento's own wording wins when it explains the failure (bad file
+        // extension, missing required option); the data-msg-* copy is the fallback.
+        const { ok, message, announced } = await cart.addFromForm(form);
+        if (!announced) {
+            announce(
+                message ?? (ok ? form.dataset.msgAdded ?? "Added to cart" : form.dataset.msgFailed ?? "Could not add to cart"),
+                ok ? NotificationTone.Success : NotificationTone.Error,
+            );
+        }
+
+        setButtonBusy(button, false);
+    });
+}
+
+export function init(): void {
+    document.querySelectorAll<HTMLFormElement>("[data-product-form]").forEach(setup);
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init, { once: true });
+} else {
+    init();
+}

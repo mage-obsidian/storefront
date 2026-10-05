@@ -1,0 +1,190 @@
+<?php
+/**
+ * This file is part of the MageObsidian - Catalog project.
+ *
+ * SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */
+declare(strict_types=1);
+
+namespace MageObsidian\Catalog\ViewModel;
+
+use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Catalog\Helper\Image as ImageHelper;
+use Magento\Framework\Registry;
+use Magento\Framework\View\Element\Block\ArgumentInterface;
+use Throwable;
+
+/**
+ * Media-gallery data for the product detail page, consumed from Twig as
+ * `block.getGallery().getImages()`.
+ *
+ * The core catalog gallery is suppressed with the rest of the module layout, so
+ * the PDP renders its own server-side gallery (LCP-friendly, indexable, lazy
+ * thumbs). This ViewModel turns the product's media gallery into a flat list of
+ * tiles — a large display URL, a thumb URL and the original full-size URL per
+ * image — sized through the theme view.xml ids. When a product has no gallery,
+ * it degrades to a single base-image tile (the image helper yields the
+ * placeholder if even that is missing) so the template always has something to
+ * show. The per-variant image swap on configurables is driven client-side from
+ * the configurable island; this only owns the initial, crawlable set.
+ */
+class ProductGallery implements ArgumentInterface
+{
+    /**
+     * Theme view.xml image ids for each gallery role.
+     */
+    public const array LARGE_WIDTHS = [400, 640, 800, 1000, 1280];
+
+    public const string LARGE_SIZES = '(min-width: 105rem) 608px, (min-width: 64rem) 44vw, 85vw';
+
+    private const LARGE_ID = 'product_page_image_large';
+    private const THUMB_ID = 'product_page_image_small';
+
+    private ?array $images = null;
+
+    /**
+     * @param Registry $registry
+     * @param ImageHelper $imageHelper
+     */
+    public function __construct(
+        private readonly Registry $registry,
+        private readonly ImageHelper $imageHelper
+    ) {
+    }
+
+    /**
+     * Gallery tiles for the current product.
+     *
+     * @return array<int, array{large: string, largeSrcset: string, thumb: string, full: string, label: string, isMain: bool}>
+     */
+    public function getImages(): array
+    {
+        if ($this->images !== null) {
+            return $this->images;
+        }
+
+        try {
+            $product = $this->registry->registry('current_product');
+            if (!$product instanceof ProductInterface) {
+                return $this->images = [];
+            }
+
+            $images = $this->fromMediaGallery($product);
+
+            return $this->images = $images === [] ? $this->fromBaseImage($product) : $images;
+        } catch (Throwable) {
+            return $this->images = [];
+        }
+    }
+
+    public function getMainImage(): array
+    {
+        return $this->getImages()[0] ?? [];
+    }
+
+    public function getLargeSizes(): string
+    {
+        return self::LARGE_SIZES;
+    }
+
+    /**
+     * Build a tile per visible media-gallery image.
+     *
+     * @param ProductInterface $product
+     * @return array<int, array{large: string, largeSrcset: string, thumb: string, full: string, label: string, isMain: bool}>
+     */
+    private function fromMediaGallery(ProductInterface $product): array
+    {
+        $gallery = $product->getMediaGalleryImages();
+        if ($gallery === null) {
+            return [];
+        }
+
+        $baseFile = (string)$product->getData('image');
+        $tiles = [];
+        foreach ($gallery as $image) {
+            if ((string)$image->getData('media_type') !== 'image' || (int)$image->getData('disabled') === 1) {
+                continue;
+            }
+            $file = (string)$image->getData('file');
+            $tiles[] = [
+                'large' => $this->scaled($product, self::LARGE_ID, $file),
+                'largeSrcset' => $this->srcset($product, $file),
+                'thumb' => $this->scaled($product, self::THUMB_ID, $file),
+                'full' => (string)$image->getData('url'),
+                'label' => (string)($image->getData('label') ?: $product->getName()),
+                'isMain' => $file === $baseFile,
+            ];
+        }
+
+        return $tiles;
+    }
+
+    /**
+     * Single tile from the base image (or placeholder) when there is no gallery.
+     *
+     * @param ProductInterface $product
+     * @return array<int, array{large: string, largeSrcset: string, thumb: string, full: string, label: string, isMain: bool}>
+     */
+    private function fromBaseImage(ProductInterface $product): array
+    {
+        $large = (string)$this->imageHelper->init($product, self::LARGE_ID)->getUrl();
+        if ($large === '') {
+            return [];
+        }
+
+        return [[
+            'large' => $large,
+            'largeSrcset' => $this->srcset($product, null),
+            'thumb' => (string)$this->imageHelper->init($product, self::THUMB_ID)->getUrl(),
+            'full' => $large,
+            'label' => (string)$product->getName(),
+            'isMain' => true,
+        ]];
+    }
+
+    /**
+     * Resolve a sized URL for one gallery file under the given view.xml id.
+     *
+     * @param ProductInterface $product
+     * @param string $imageId
+     * @param string $file
+     * @return string
+     */
+    private function scaled(ProductInterface $product, string $imageId, string $file): string
+    {
+        return (string)$this->imageHelper->init($product, $imageId)->setImageFile($file)->getUrl();
+    }
+
+    /**
+     * Candidate list for the large rendition, which `view.xml` leaves
+     * unconstrained: without it every viewport pulls the original upload.
+     *
+     * @param ProductInterface $product
+     * @param string|null $file Gallery file, or null for the base image.
+     * @return string
+     */
+    private function srcset(ProductInterface $product, ?string $file): string
+    {
+        $candidates = [];
+        foreach (self::LARGE_WIDTHS as $width) {
+            $helper = $this->imageHelper->init($product, self::LARGE_ID);
+            if ($file !== null) {
+                $helper = $helper->setImageFile($file);
+            }
+
+            try {
+                $url = (string)$helper->resize($width)->getUrl();
+            } catch (Throwable) {
+                continue;
+            }
+
+            if ($url !== '') {
+                $candidates[] = $url . ' ' . $width . 'w';
+            }
+        }
+
+        return implode(', ', $candidates);
+    }
+}

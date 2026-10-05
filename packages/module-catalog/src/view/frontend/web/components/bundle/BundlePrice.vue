@@ -1,0 +1,55 @@
+<!--
+ This file is part of the MageObsidian - Catalog project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import events from "MageObsidian_ModernFrontend::js/events";
+import { CatalogEvent } from "MageObsidian_Catalog::js/catalog-events";
+import { createBundlePrice, type BundleConfig } from "MageObsidian_Catalog::js/bundle-price";
+import { formatCurrency } from "MageObsidian_Storefront::js/currency";
+
+// Live selection total for a bundle. The option controls are server-rendered
+// (getOptionHtml) and POST without JS; this island only reads them plus the
+// embedded config to show a running estimate. The cart computes the real total.
+const props = defineProps<{
+    config: string;
+    formSelector: string;
+    currencyFormat: string;
+    label: string;
+}>();
+
+const total = ref("");
+
+function parse(json: string): BundleConfig {
+    try {
+        return (JSON.parse(json) as BundleConfig) ?? {};
+    } catch {
+        return {};
+    }
+}
+
+const format = (amount: number): string => formatCurrency(props.currencyFormat, amount);
+
+onMounted(() => {
+    const form = document.querySelector<HTMLElement>(props.formSelector);
+    if (!form) {
+        return;
+    }
+    const bundle = createBundlePrice(form, parse(props.config));
+    const sync = () => {
+        total.value = format(bundle.total());
+        void events.dispatch(CatalogEvent.BundleSelectionChange, { selections: bundle.selections() });
+    };
+    bundle.onChange(sync);
+    sync();
+});
+</script>
+
+<template>
+    <p v-if="total" class="pdp__bundle-total mt-4 font-mono text-lg text-ink" aria-live="polite">
+        {{ label }}: <span>{{ total }}</span>
+    </p>
+</template>

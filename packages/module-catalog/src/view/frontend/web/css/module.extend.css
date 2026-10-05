@@ -1,0 +1,528 @@
+/*
+ * This file is part of the MageObsidian - Catalog project.
+ *
+ * SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */
+[data-add-to-compare].is-compared button {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+[data-add-to-compare].is-compared svg {
+    fill: var(--color-accent);
+}
+
+/* Layered navigation: two-column (sidebar + grid) on desktop, an off-canvas
+   drawer on mobile. Filters are plain links (server-first).
+   Scoped to :has(.sidebar-main): static / subcategory-landing categories render
+   no sidebar, so without this guard their lone .content collapses into the
+   16rem track while the 1fr track sits empty. */
+@media (min-width: 1024px) {
+    .page-with-filter .columns:has(.sidebar-main) {
+        display: grid;
+        grid-template-columns: 16rem 1fr;
+        gap: 2.5rem;
+        align-items: start;
+    }
+
+    .page-layout-2columns-right .columns:has(.sidebar-main) {
+        grid-template-columns: 1fr 16rem;
+    }
+
+    .page-layout-3columns .columns:has(.sidebar-additional:has(> *)) {
+        grid-template-columns: 16rem 1fr 16rem;
+    }
+}
+
+.sidebar-additional:not(:has(> *)) {
+    display: none;
+}
+
+/* Desktop: the dialog is just a box in the sidebar column. `display` overrides the
+   UA's `dialog:not([open]) { display: none }`, which is the whole reason this is a
+   dialog and not a details — CSS cannot open a details. */
+.ln-dialog {
+    display: block;
+    position: static;
+    inset: auto;
+    max-width: none;
+    max-height: none;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    overflow: visible;
+}
+
+/* Product-list toolbar. Two rows in the markup so each one can align its own
+   pair; on desktop they collapse back into the single row the design has always
+   had (summary left, controls right). */
+.toolbar-top {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.toolbar__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+.toolbar__row--controls {
+    gap: 1.25rem;
+}
+
+@media (min-width: 1024px) {
+    .toolbar-top {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .toolbar__row {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 1023.98px) {
+    /* "Show N" reads better leading the row, under the Filters button. Done with
+       order so the desktop source order — sorter, then limiter — is untouched. */
+    .toolbar__row--controls .limiter {
+        order: -1;
+    }
+}
+
+/* Drawer chrome. Hidden by default and revealed inside the drawer media block
+   below — a media query adds no specificity, so these have to come first or the
+   `display: none` would win on source order. Hidden rather than shown-then-hidden
+   because without scripting the trigger opens nothing at all. */
+.ln-dialog__head {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--color-ash-200);
+}
+.ln-dialog__title {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-ink);
+}
+.ln-dialog__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    color: var(--color-ink-soft);
+    transition: color 0.2s;
+}
+.ln-dialog__close:hover {
+    color: var(--color-ink);
+}
+
+.ln-trigger {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 0.9rem;
+    border: 1px solid var(--color-ash-300);
+    border-radius: var(--radius-edge);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-ink);
+    transition: border-color 0.2s;
+}
+.ln-trigger:hover {
+    border-color: var(--color-ink);
+}
+.ln-trigger__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.3rem;
+    border-radius: 999px;
+    background: var(--color-ink);
+    color: var(--color-alabaster);
+    font-size: 0.66rem;
+    letter-spacing: 0;
+}
+
+@media (max-width: 1023.98px) {
+    /* No-JS fallback. The sidebar is declared before the content (page layout
+       2columns-left), and with the grid gone the DOM order buries the category
+       <h1> under the full filter list — so push it past the listing instead. */
+    .page-with-filter .columns:has(.sidebar-main) {
+        display: flex;
+        flex-direction: column;
+    }
+    .page-with-filter .sidebar-main {
+        order: 2;
+    }
+
+    /* With JS the drawer takes over, so the in-flow copy goes away before the
+       first paint — no flash, no shift, and no reliance on a class the bootstrap
+       would have to set. Browsers without `scripting` support just keep the
+       fallback above. */
+    @media (scripting: enabled) {
+        .ln-dialog:not([open]) {
+            display: none;
+        }
+        /* Enters from the left because the trigger sits on the left of the
+           toolbar — the panel should come from where it was summoned. */
+        .ln-dialog[open] {
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: 88vw;
+            max-width: 380px;
+            height: 100dvh;
+            max-height: 100dvh;
+            border-right: 1px solid var(--color-ash-200);
+            background: var(--color-alabaster);
+            overflow: hidden;
+        }
+        .ln-dialog[open]::backdrop {
+            background: color-mix(in oklab, var(--color-obsidian-950) 40%, transparent);
+            backdrop-filter: blur(4px);
+        }
+        .ln-dialog[open] > .ln {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            margin-top: 0;
+            padding: 1.25rem;
+        }
+
+        /* The trigger and the panel header only mean anything where the drawer
+           actually works, so they are revealed here rather than hidden on
+           desktop: without scripting the button would open nothing. */
+        .ln-trigger {
+            display: inline-flex;
+        }
+        .ln-dialog__head {
+            display: flex;
+        }
+    }
+}
+
+.ln {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.ln__active {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.ln__active-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-ink-soft);
+}
+.ln__clear {
+    color: var(--color-sale);
+    text-decoration: underline;
+}
+.ln__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+}
+.ln__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.6rem;
+    border: 1px solid var(--color-ash-300);
+    border-radius: var(--radius-edge);
+    font-size: 0.78rem;
+    color: var(--color-ink);
+}
+.ln__chip:hover {
+    border-color: var(--color-ink);
+}
+
+.ln__filter {
+    border-top: 1px solid var(--color-ash-200);
+    padding-top: 1rem;
+}
+.ln__filter-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    list-style: none;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-ink);
+}
+.ln__filter-title::after {
+    content: "–";
+    color: var(--color-ash-400);
+}
+.ln__filter:not([open]) .ln__filter-title::after {
+    content: "+";
+}
+.ln__filter-title::-webkit-details-marker {
+    display: none;
+}
+.ln__items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+    list-style: none;
+}
+.ln__item {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.84rem;
+    color: var(--color-ink-soft);
+    transition: color 0.2s;
+}
+.ln__item:hover {
+    color: var(--color-accent);
+}
+.ln__item-count {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--color-ink-soft);
+}
+
+.ln__swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    list-style: none;
+}
+.ln__swatch {
+    display: inline-flex;
+    align-items: center;
+}
+.ln__swatch-color {
+    display: block;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1px solid var(--color-ash-300);
+    border-radius: var(--radius-edge);
+    transition: border-color 0.2s;
+}
+.ln__swatch:hover .ln__swatch-color {
+    border-color: var(--color-ink);
+}
+.ln__swatch-text {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--color-ash-300);
+    border-radius: var(--radius-edge);
+    font-size: 0.78rem;
+    color: var(--color-ink);
+    transition: border-color 0.2s;
+}
+.ln__swatch:hover .ln__swatch-text {
+    border-color: var(--color-ink);
+}
+
+/* Destination of the card → hero morph across a listing → PDP navigation. Set in
+   CSS, not by gallery.js, so the name is on the element from the first frame:
+   the browser captures the incoming snapshot before any island has mounted.
+   The frame carries the name, not the <img> inside it: naming the image leaves
+   this box behind at its final size, so its own background shows through as a
+   grey mat for as long as the image is travelling. The card's media box is its
+   counterpart — same aspect ratio, same radius, same background. */
+.pdp__gallery-main {
+    view-transition-name: pdp-hero;
+}
+
+.pdp-gallery-swap::view-transition-group(root) {
+    animation: none;
+}
+.pdp-gallery-swap::view-transition-image-pair(root) {
+    isolation: auto;
+}
+.pdp-gallery-swap::view-transition-old(root) {
+    display: none;
+}
+.pdp-gallery-swap::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+/* Long-list render perf: skip off-screen cards' layout/paint, reserving space
+   so there is no CLS. The intrinsic size is remembered after first render. */
+.products-grid .product-item {
+    view-transition-class: obsidian-card;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 420px;
+}
+
+:root:active-view-transition .products-grid .product-item {
+    animation: none;
+}
+
+:root.obsidian-hero-swap .products-grid .product-item {
+    view-transition-name: none;
+}
+
+/* ── Catalog: product card media. Magento's native <img> (anti-CLS width/height
+   + lazy); we cover-fit it and add the hover scale here since the helper image()
+   is unavailable in the core ListProduct render context. ── */
+.product-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s var(--ease-obsidian);
+}
+.product-card:hover .product-card__media img { transform: scale(1.03); }
+
+/* ── Catalog: native price render (product.price.render.default) skinned to the
+   obsidian palette. Shared by the listing card, the PDP buy box and the grouped
+   rows. ── */
+.product-card__price .price,
+.pdp__price .price,
+.pdp__group .price { font-family: var(--font-mono); color: var(--color-ink); }
+.product-card__price .price-box,
+.pdp__price .price-box,
+.pdp__group .price-box { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; }
+.product-card__price .special-price .price,
+.pdp__price .special-price .price,
+.pdp__group .special-price .price { color: var(--color-sale); }
+.product-card__price .old-price .price,
+.pdp__price .old-price .price,
+.pdp__group .old-price .price { color: var(--color-ash-500); text-decoration: line-through; }
+/* "Special Price" / "Regular Price" labels are redundant — colour and the
+   strikethrough already convey it. Hidden visually, kept for screen readers. The
+   minimal-price "As low as" label stays, since it carries meaning. */
+.product-card__price .special-price .price-label,
+.product-card__price .old-price .price-label,
+.pdp__price .special-price .price-label,
+.pdp__price .old-price .price-label,
+.pdp__group .special-price .price-label,
+.pdp__group .old-price .price-label {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.product-card__price .minimal-price,
+.product-card__price .minimal-price-link,
+.pdp__price .minimal-price,
+.pdp__price .minimal-price-link,
+.pdp__group .minimal-price,
+.pdp__group .minimal-price-link {
+    display: block; margin-top: 0.25rem; font-size: 0.72rem;
+    color: var(--color-ash-500); text-decoration: none;
+}
+.pdp__price .price { font-size: 1.5rem; line-height: 2rem; }
+.pdp__price .old-price .price { font-size: 1rem; }
+.pdp__price .minimal-price,
+.pdp__price .minimal-price-link { font-size: 0.8rem; }
+
+/* ── Catalog: subcategory landing tiles. PAGE / static categories surface the
+   real category tree as navigable tiles instead of an off-brand CMS block. The
+   child categories carry no image of their own, so the artwork is a
+   representative product; the veil keeps the label legible and lifts an obsidian
+   sheen on hover. ── */
+.subcategory-card__img { transition: transform 0.6s var(--ease-obsidian); }
+.subcategory-card:hover .subcategory-card__img { transform: scale(1.04); }
+.subcategory-card__veil {
+    background: linear-gradient(to top, rgb(0 0 0 / 0.30), transparent 55%);
+    opacity: 0.55;
+    transition: opacity 0.4s var(--ease-obsidian);
+}
+.subcategory-card:hover .subcategory-card__veil { opacity: 0.85; }
+
+/* ── Catalog: product detail page. Server-rendered gallery (the main image is
+   the LCP) with thumbs that swap it; the configurable swatches are a Vue island.
+   Swatch availability greys impossible combinations with a diagonal cut. ── */
+.pdp__gallery-img { transition: opacity 0.3s var(--ease-obsidian); }
+
+.pdp__thumb { cursor: pointer; }
+.pdp__thumb img {
+    opacity: 0.72;
+    transition: opacity 0.3s var(--ease-obsidian);
+}
+.pdp__thumb[aria-pressed="true"] img,
+.pdp__thumb:hover img { opacity: 1; }
+
+.pdp__swatch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0.5rem;
+    border: 1px solid var(--color-ash-300);
+    border-radius: var(--radius-edge);
+    cursor: pointer;
+    transition: border-color 0.2s var(--ease-obsidian),
+        box-shadow 0.2s var(--ease-obsidian);
+}
+.pdp__swatch--text {
+    padding-inline: 1rem;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-ink);
+}
+.pdp__swatch:hover { border-color: var(--color-ink); }
+.pdp__swatch--selected {
+    border-color: var(--color-ink);
+    box-shadow: inset 0 0 0 1px var(--color-ink);
+}
+.pdp__swatch:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+.pdp__swatch--unavailable {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.pdp__swatch--unavailable::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to top left,
+        transparent 46%,
+        var(--color-ash-400) 47%,
+        var(--color-ash-400) 53%,
+        transparent 54%
+    );
+}
+.pdp__swatch-chip {
+    display: block;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    background-size: cover;
+    background-position: center;
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
+}

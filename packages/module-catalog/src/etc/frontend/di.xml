@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Catalog project.
+
+ SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable">
+        <plugin name="mageObsidian_cacheParentIdsByChild"
+                type="MageObsidian\Catalog\Plugin\ConfigurableProduct\CacheParentIdsByChild"/>
+    </type>
+
+    <!-- A widget instance stores the template it was placed with, so the swap to
+         this theme's card has to happen at render or every widget already on a
+         page keeps rendering a Luma grid. -->
+    <type name="Magento\CatalogWidget\Block\Product\ProductsList">
+        <plugin name="mageObsidian_renderProductListWidget"
+                type="MageObsidian\Catalog\Plugin\CatalogWidget\RenderProductListWidget"/>
+    </type>
+
+    <!-- Fixed product tax is looked up once per product by the platform, so a
+         listing asks the database once per card for rows that differ only by
+         the product. The ids a collection loaded are recorded on load and the
+         first lookup warms all of them in one statement; anything the warm pass
+         cannot answer for falls through to the platform's own method, because a
+         wrong answer here is a wrong price. -->
+    <type name="Magento\Catalog\Model\ResourceModel\Product\Collection">
+        <plugin name="mageObsidian_expectWeeeTaxForCollection"
+                type="MageObsidian\Catalog\Plugin\Catalog\ExpectWeeeTaxForCollection"/>
+    </type>
+    <type name="Magento\Weee\Model\ResourceModel\Tax">
+        <plugin name="mageObsidian_batchWeeeTaxByEntity"
+                type="MageObsidian\Catalog\Plugin\Weee\BatchTaxByEntity"/>
+    </type>
+</config>

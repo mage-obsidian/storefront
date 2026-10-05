@@ -1,0 +1,185 @@
+// This file is part of the MageObsidian - Catalog project.
+//
+// SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
+// SPDX-License-Identifier: MIT
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { mount, flushPromises } from "@vue/test-utils";
+import ProductForm from "./ProductForm.vue";
+import { __rawCalls, __reset, __setResult } from "MageObsidian_Storefront::js/useCart";
+import events from "MageObsidian_ModernFrontend::js/events";
+import { CatalogEvent } from "MageObsidian_Catalog::js/catalog-events";
+import { NOTIFICATION_EVENT } from "MageObsidian_Storefront::js/notifications";
+
+// Configurable buy-box island. We assert the selection contract: a radiogroup per
+// attribute, impossible combinations greyed out, full selection drives price +
+// gallery image, and add-to-cart delegates super_attribute to the cart and
+// announces a toast. The cart POST itself (form key, body shape, section reload)
+// is owned by module-storefront's useCart, mocked here at the module boundary.
+
+const LABELS = {
+    chooseFor: "Choose %1",
+    addToCart: "Add to cart",
+    selectOptions: "Select options",
+    qty: "Qty",
+    added: "Added",
+    failed: "Failed",
+};
+
+// One color attribute (93) × one size attribute (144), two real variants:
+//   variant 11 = Red / S, variant 12 = Blue / M.
+// So Red only pairs with S and Blue only with M (the cross pairs are impossible).
+function config() {
+    return JSON.stringify({
+        attributes: {
+            93: {
+                id: "93", code: "color", label: "Color", position: 0,
+                options: [
+                    { id: "5", label: "Red", products: ["11"] },
+                    { id: "6", label: "Blue", products: ["12"] },
+                ],
+            },
+            144: {
+                id: "144", code: "size", label: "Size", position: 1,
+                options: [
+                    { id: "7", label: "S", products: ["11"] },
+                    { id: "8", label: "M", products: ["12"] },
+                ],
+            },
+        },
+        index: {
+            11: { 93: "5", 144: "7" },
+            12: { 93: "6", 144: "8" },
+        },
+        optionPrices: {
+            11: { finalPrice: { amount: 20 }, oldPrice: { amount: 25 } },
+            12: { finalPrice: { amount: 30 }, oldPrice: { amount: 30 } },
+        },
+        currencyFormat: "$%s",
+        images: { 11: [{ full: "/red.jpg", img: "/red.jpg", isMain: true, caption: "Red tee" }] },
+        productId: 7,
+    });
+}
+
+function swatches() {
+    return JSON.stringify({
+        93: {
+            5: { type: "1", value: "#ff0000", label: "Red" },
+            6: { type: "1", value: "#0000ff", label: "Blue" },
+        },
+    });
+}
+
+function build() {
+    return mount(ProductForm, {
+        props: {
+            config: config(),
+            swatches: swatches(),
+            productId: 7,
+            action: "/checkout/cart/add",
+            uenc: "ENC",
+            initialPrice: "$20.00",
+            labels: LABELS,
+        },
+    });
+}
+
+beforeEach(() => {
+    __reset();
+    events.reset();
+});
+
+describe("ProductForm", () => {
+    it("renders a radiogroup per attribute", () => {
+        const wrapper = build();
+        const groups = wrapper.findAll("[role=radiogroup]");
+        expect(groups).toHaveLength(2);
+        expect(wrapper.findAll('[role=radio]')).toHaveLength(4);
+    });
+
+    it("shows the initial price and a select-options button before any choice", () => {
+        const wrapper = build();
+        expect(wrapper.text()).toContain("$20.00");
+        expect(wrapper.find("button[type=submit]").text()).toBe("Select options");
+    });
+
+    it("greys impossible combinations once one attribute is chosen", async () => {
+        const wrapper = build();
+        await wrapper.find('[data-option-id="5"]').trigger("click"); // Red
+
+        // Red only pairs with S (7); M (8) becomes impossible.
+        expect(wrapper.find('[data-option-id="7"]').attributes("disabled")).toBeUndefined();
+        expect(wrapper.find('[data-option-id="8"]').attributes("disabled")).toBeDefined();
+    });
+
+    it("updates price, swaps the gallery image and delegates super_attribute on full selection", async () => {
+        const variantImage = vi.fn();
+        events.observe(CatalogEvent.ProductGalleryChange, variantImage);
+        const toast = vi.fn();
+        events.observe(NOTIFICATION_EVENT, toast);
+
+        const wrapper = build();
+        await wrapper.find('[data-option-id="5"]').trigger("click"); // Red
+        await wrapper.find('[data-option-id="7"]').trigger("click"); // S → variant 11
+
+        expect(wrapper.text()).toContain("$25.00"); // old price struck through
+        expect(wrapper.find("button[type=submit]").text()).toBe("Add to cart");
+        expect(variantImage).toHaveBeenCalledTimes(1);
+        expect(variantImage.mock.calls[0][0].large).toBe("/red.jpg");
+
+        await wrapper.find("form").trigger("submit");
+        await flushPromises();
+
+        expect(__rawCalls).toHaveLength(1);
+        expect(__rawCalls[0].action).toBe("/checkout/cart/add");
+        const body = __rawCalls[0].body;
+        expect(body.get("product")).toBe("7");
+        expect(body.get("uenc")).toBe("ENC");
+        expect(body.get("super_attribute[93]")).toBe("5");
+        expect(body.get("super_attribute[144]")).toBe("7");
+        expect(toast).toHaveBeenCalledTimes(1);
+        expect(toast.mock.calls[0][0].message).toBe("Added");
+    });
+
+    it("announces the failure label when the cart rejects the add", async () => {
+        __setResult(false);
+        const toast = vi.fn();
+        events.observe(NOTIFICATION_EVENT, toast);
+
+        const wrapper = build();
+        await wrapper.find('[data-option-id="6"]').trigger("click"); // Blue
+        await wrapper.find('[data-option-id="8"]').trigger("click"); // M → variant 12
+        await wrapper.find("form").trigger("submit");
+        await flushPromises();
+
+        expect(__rawCalls).toHaveLength(1);
+        expect(toast.mock.calls.at(-1)[0].message).toBe("Failed");
+    });
+
+    it("stays quiet when the bag already announced the add", async () => {
+        __setResult(true, undefined, true);
+        const toast = vi.fn();
+        events.observe(NOTIFICATION_EVENT, toast);
+
+        const wrapper = build();
+        await wrapper.find('[data-option-id="6"]').trigger("click");
+        await wrapper.find('[data-option-id="8"]').trigger("click");
+        await wrapper.find("form").trigger("submit");
+        await flushPromises();
+
+        expect(__rawCalls).toHaveLength(1);
+        expect(toast).not.toHaveBeenCalled();
+    });
+});
+
+describe("variant announcements", () => {
+    it("announces the resolved child once the selection is complete", async () => {
+        const wrapper = build();
+
+        await wrapper.find('[data-option-id="5"]').trigger("click");
+        await wrapper.find('[data-option-id="7"]').trigger("click");
+        await flushPromises();
+
+        expect(events.recorded("product_variant_change")).toEqual([{ productId: 11 }]);
+        wrapper.unmount();
+    });
+});
