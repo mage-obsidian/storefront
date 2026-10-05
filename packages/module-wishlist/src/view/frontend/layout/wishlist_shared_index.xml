@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Wishlist project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
+  Public shared wish list (opened from a share link). Standalone — no account
+  shell, since the viewer is not necessarily the owner. Renders our Twig over the
+  core Share\Wishlist block (data source for the shared item collection and the
+  shared add-to-cart URLs); ProductThumbnail supplies the resized images. Item
+  and add-all actions are native POST forms. cacheable="false".
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Shared Wish List</title>
+    </head>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="wishlist.shared"
+                   template="Magento_Wishlist::shared.twig" cacheable="false">
+                <arguments>
+                    <argument name="thumbnail" xsi:type="object">MageObsidian\Wishlist\ViewModel\ProductThumbnail</argument>
+                </arguments>
+                <block class="Magento\Wishlist\Block\Share\Wishlist" name="customer.wishlist" as="shared"/>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

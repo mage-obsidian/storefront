@@ -1,0 +1,14 @@
+/*
+ * This file is part of the MageObsidian - Wishlist project.
+ *
+ * SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ * SPDX-License-Identifier: MIT
+ */
+[data-add-to-wishlist].is-saved button {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+[data-add-to-wishlist].is-saved svg {
+    fill: var(--color-accent);
+}

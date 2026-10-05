@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Wishlist project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
+  Reconfigure a wish-list item. The controller renders the product detail page
+  with the item's saved selection preconfigured; we just load our PDP layout. The
+  buy-box form detects wish-list configure mode (ProductView::isWishlistConfigure
+  Mode) and posts to wishlist/index/updateItemOptions with the item id, relabelled
+  "Update Wish List", instead of adding a new cart line.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="catalog_product_view"/>
+</page>

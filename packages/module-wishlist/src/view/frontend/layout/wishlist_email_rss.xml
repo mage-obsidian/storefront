@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Wishlist project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <block class="Magento\Wishlist\Block\Rss\EmailLink" name="wishlist.email.rss"
+               template="Magento_Wishlist::rss/email.twig" cacheable="false"/>
+    </body>
+</page>

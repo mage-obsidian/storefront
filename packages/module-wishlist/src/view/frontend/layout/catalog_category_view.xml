@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Wishlist project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!-- Loads the wishlist heart enhancer where product cards / the PDP render it. -->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.wishlist_actions"
+                   template="Magento_Wishlist::wishlist-actions.twig"/>
+        </referenceContainer>
+    </body>
+</page>

@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Wishlist project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
+  Wish list. Pulls in the account shell, then renders our Twig over the core
+  Customer\Wishlist block (kept as data source for the item collection and the
+  add-all-to-cart params). Item actions (move to cart, remove) are native POST
+  forms. cacheable="false" — customer-specific. ProductThumbnail supplies the
+  resized image since the wrapper is a generic template (no catalog getImage).
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="customer_account"/>
+    <head>
+        <title>My Wish List</title>
+    </head>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceBlock name="account.shell">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="account.wishlist"
+                   as="account_content" template="Magento_Wishlist::account/wishlist.twig" cacheable="false">
+                <arguments>
+                    <argument name="thumbnail" xsi:type="object">MageObsidian\Wishlist\ViewModel\ProductThumbnail</argument>
+                </arguments>
+                <block class="Magento\Wishlist\Block\Customer\Wishlist" name="customer.wishlist" as="wishlist">
+                    <!-- Required by Customer\Wishlist::_prepareLayout (it sets the
+                         pager up unconditionally); also paginates the collection. -->
+                    <block class="Magento\Theme\Block\Html\Pager" name="wishlist_item_pager"
+                           template="Magento_Theme::html/pager.twig"/>
+                </block>
+            </block>
+        </referenceBlock>
+    </body>
+</page>

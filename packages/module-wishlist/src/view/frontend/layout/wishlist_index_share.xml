@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Wishlist project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
+  Wish list sharing form. Pulls in the account shell, then renders our Twig over
+  the core Customer\Sharing block (kept as the data source for the send URL,
+  previously entered values and the back link). The form is a native POST to
+  wishlist/index/send — no JS. cacheable="false" — customer-specific.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="customer_account"/>
+    <head>
+        <title>Wish List Sharing</title>
+    </head>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceBlock name="account.shell">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="account.wishlist.share"
+                   as="account_content" template="Magento_Wishlist::sharing.twig" cacheable="false">
+                <arguments>
+                    <argument name="rss_allowed" xsi:type="helper" helper="Magento\Wishlist\Helper\Rss::isRssAllow"/>
+                </arguments>
+                <block class="Magento\Wishlist\Block\Customer\Sharing" name="customer.wishlist.sharing" as="sharing"/>
+            </block>
+        </referenceBlock>
+    </body>
+</page>
