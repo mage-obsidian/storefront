@@ -5,6 +5,7 @@
 import { defineConfig } from "vitest/config";
 import vue from "@vitejs/plugin-vue";
 import { fileURLToPath } from "node:url";
+import { frameworkPath } from "../../tools/vitest/framework.js";
 
 // Component unit tests for the storefront's shared Vue islands. Runs in the host
 // Node toolchain (like the engine suite); happy-dom supplies the DOM the islands
@@ -19,15 +20,11 @@ export default defineConfig({
     plugins: [vue()],
     resolve: {
         alias: {
-            "mage-obsidian/runtime": fileURLToPath(
-                new URL("../js-package-utils/src/runtime", import.meta.url),
-            ),
+            "mage-obsidian/runtime": frameworkPath("packages/js-package-utils/src/runtime"),
             "MageObsidian_ModernFrontend::elements/Icon": fileURLToPath(
                 new URL("./src/Test/Js/stubs/Icon.vue", import.meta.url),
             ),
-            "MageObsidian_ModernFrontend::js/activity": fileURLToPath(
-                new URL("../module-modern-frontend/src/view/frontend/web/js/activity.ts", import.meta.url),
-            ),
+            "MageObsidian_ModernFrontend::js/activity": frameworkPath("packages/module-modern-frontend/src/view/frontend/web/js/activity.ts"),
             "MageObsidian_ModernFrontend::js/customer-data": fileURLToPath(
                 new URL("./src/Test/Js/stubs/customerData.ts", import.meta.url),
             ),

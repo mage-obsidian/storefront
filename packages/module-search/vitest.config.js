@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MIT
 import { defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
+import { frameworkPath } from "../../tools/vitest/framework.js";
 
 // The `Vendor_Module::path` import specifier is resolved by the engine's Vite
 // plugins at runtime; here the storefront's event vocabulary and the runtime are
@@ -13,9 +14,7 @@ import { fileURLToPath } from "node:url";
 export default defineConfig({
     resolve: {
         alias: {
-            "mage-obsidian/runtime": fileURLToPath(
-                new URL("../js-package-utils/src/runtime", import.meta.url),
-            ),
+            "mage-obsidian/runtime": frameworkPath("packages/js-package-utils/src/runtime"),
             "MageObsidian_Storefront::js/listing-events": fileURLToPath(
                 new URL("../module-storefront/src/view/frontend/web/js/listing-events.ts", import.meta.url),
             ),

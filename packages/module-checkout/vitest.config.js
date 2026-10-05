@@ -5,6 +5,7 @@
 import { defineConfig } from "vitest/config";
 import vue from "@vitejs/plugin-vue";
 import { fileURLToPath } from "node:url";
+import { frameworkPath } from "../../tools/vitest/framework.js";
 
 // Component unit tests for the checkout islands. The `Vendor_Module::path` import
 // specifier is resolved by the engine's Vite plugins at build time; for tests we
@@ -17,9 +18,7 @@ export default defineConfig({
     plugins: [vue()],
     resolve: {
         alias: {
-            "mage-obsidian/runtime": fileURLToPath(
-                new URL("../js-package-utils/src/runtime", import.meta.url),
-            ),
+            "mage-obsidian/runtime": frameworkPath("packages/js-package-utils/src/runtime"),
             "MageObsidian_Storefront::form/Field": fileURLToPath(
                 new URL("../module-storefront/src/view/frontend/web/components/form/Field.vue", import.meta.url),
             ),
@@ -50,9 +49,7 @@ export default defineConfig({
             "MageObsidian_ModernFrontend::js/events": fileURLToPath(
                 new URL("./src/Test/Js/stubs/events.ts", import.meta.url),
             ),
-            "MageObsidian_ModernFrontend::js/activity": fileURLToPath(
-                new URL("../module-modern-frontend/src/view/frontend/web/js/activity.ts", import.meta.url),
-            ),
+            "MageObsidian_ModernFrontend::js/activity": frameworkPath("packages/module-modern-frontend/src/view/frontend/web/js/activity.ts"),
             "MageObsidian_ModernFrontend::js/customer-data": fileURLToPath(
                 new URL("./src/Test/Js/stubs/customerData.ts", import.meta.url),
             ),
