@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Downloadable project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="MageObsidian_Downloadable">
+        <sequence>
+            <!-- Renders on the account shell and inherits the legacy-layout
+                 neutralization from the storefront foundation. -->
+            <module name="MageObsidian_Storefront"/>
+            <module name="MageObsidian_ModernFrontend"/>
+            <!-- The account shell and sidebar live in the customer domain. -->
+            <module name="MageObsidian_Customer"/>
+            <!-- Adds purchased-link rows to the sales order documents this layers on. -->
+            <module name="MageObsidian_Sales"/>
+            <!-- Load after the core downloadable module whose frontend this adapts. -->
+            <module name="Magento_Downloadable"/>
+        </sequence>
+    </module>
+</config>

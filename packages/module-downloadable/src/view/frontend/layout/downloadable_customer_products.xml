@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Downloadable project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
+  "My Downloadable Products" account page. The native downloadable layout is
+  suppressed (Magento_Downloadable not opted-in), so this re-declares it on the
+  account shell, reusing the core Customer\Products\ListProducts block as the data
+  source (purchased links, statuses, download URLs) behind our Twig. cacheable
+  false — customer data.
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="customer_account"/>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceBlock name="account.shell">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="account.downloadable.products"
+                   as="account_content" template="Magento_Downloadable::customer/products/list.twig"
+                   cacheable="false">
+                <!-- Our subclass of the core block: it only re-templates the pager
+                     core creates in PHP, which is what paginates the item list. -->
+                <block class="MageObsidian\Downloadable\Block\Customer\Products\ListProducts"
+                       name="downloadable_customer_products_list" as="list"/>
+            </block>
+        </referenceBlock>
+    </body>
+</page>

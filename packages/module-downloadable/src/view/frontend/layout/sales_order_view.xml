@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Downloadable project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<!--
+  Adds the purchased-link list to downloadable lines in the customer order view.
+  The OrderItemLinks ViewModel is injected as an optional argument the shared
+  Magento_Sales item-options partial reads when present, so the link rendering
+  lives here (Downloadable) and Sales stays unaware of it.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="account.order.view">
+            <arguments>
+                <argument name="downloadable_links" xsi:type="object">MageObsidian\Downloadable\ViewModel\OrderItemLinks</argument>
+            </arguments>
+        </referenceBlock>
+    </body>
+</page>
