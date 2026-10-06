@@ -35,8 +35,8 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: ctype, dom, json, libxml, mbstring, tokenizer, xml, xmlwriter
           coverage: none
-      - name: Lint PHP sources
-        run: find packages/*/src -name '*.php' -print0 | xargs -0 -n1 -P4 php -l
+      - name: Lint PHP sources and templates
+        run: find packages \( -name vendor -o -name node_modules \) -prune -o \( -name '*.php' -o -name '*.phtml' \) -type f -print0 | xargs -0 -n1 -P4 php -l
 
   islands:
     name: Island harnesses
