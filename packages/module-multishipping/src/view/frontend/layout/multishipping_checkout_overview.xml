@@ -30,6 +30,8 @@
                     </action>
                 </block>
                 <block class="Magento\Checkout\Block\Cart\Totals" name="totals"/>
+                <block class="Magento\CheckoutAgreements\Block\Agreements" name="checkout.multishipping.agreements"
+                       as="agreements" template="Magento_CheckoutAgreements::multishipping_agreements.twig"/>
                 <container name="checkout.multishipping.overview.items.after" as="items_after" label="Overview Items After"/>
             </block>
         </referenceContainer>
