@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MIT
 import events from 'MageObsidian_ModernFrontend::js/events';
 import { readCookie } from 'mage-obsidian/runtime/sectionStoreCore.ts';
+import { deleteCookie } from 'mage-obsidian/runtime/cookies.ts';
 import { LifecycleEvent } from 'mage-obsidian/runtime/lifecycleEvents.ts';
 import { NotificationTone, notify } from 'MageObsidian_Storefront::js/notifications';
 
@@ -98,7 +99,7 @@ function cookiePaths(): string[] {
 
 function expireCookie(): void {
     for (const path of cookiePaths()) {
-        document.cookie = `${MESSAGES_COOKIE}=; Max-Age=0; path=${path}; SameSite=Strict`;
+        deleteCookie(MESSAGES_COOKIE, { sameSite: 'strict', path });
     }
 }
 

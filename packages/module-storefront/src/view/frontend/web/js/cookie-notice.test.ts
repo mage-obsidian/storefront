@@ -3,6 +3,7 @@
 // SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
 // SPDX-License-Identifier: MIT
 import { describe, it, expect, vi } from "vitest";
+import { resetSiteConfig } from "mage-obsidian/runtime/cookies.ts";
 import { readCookie, consentCookie, bindCookieNotice } from "./cookie-notice.ts";
 
 function makeBanner(): HTMLElement {
@@ -27,13 +28,28 @@ describe("cookie-notice helpers", () => {
     });
 
     it("serializes the consent cookie with path, max-age and samesite", () => {
-        expect(consentCookie("user_allowed_save_cookie", '{"1":1}', 3600)).toBe(
-            "user_allowed_save_cookie=%7B%221%22%3A1%7D; path=/; max-age=3600; samesite=lax",
-        );
+        const text = consentCookie("user_allowed_save_cookie", '{"1":1}', 3600);
+
+        expect(text).toContain("user_allowed_save_cookie=%7B%221%22%3A1%7D; max-age=3600; expires=");
+        expect(text).toContain("; path=/; samesite=lax");
     });
 
     it("omits max-age when the lifetime is zero (session cookie)", () => {
         expect(consentCookie("c", "v", 0)).toBe("c=v; path=/; samesite=lax");
+    });
+
+    it("carries the domain the store configured, so the consent is read wherever the session is", () => {
+        document.head.innerHTML = `<script type="application/json" id="mage-obsidian-site-config">${JSON.stringify({
+            version: 1,
+            cookie: { domain: ".shop.test", path: "/", lifetime: 3600, secure: true, sameSite: "lax" },
+            websiteId: 1,
+        })}</script>`;
+        resetSiteConfig();
+
+        expect(consentCookie("c", "v", 0)).toBe("c=v; path=/; domain=.shop.test; secure; samesite=lax");
+
+        document.head.innerHTML = "";
+        resetSiteConfig();
     });
 });
 

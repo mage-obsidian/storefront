@@ -110,6 +110,15 @@
         </referenceBlock>
 
         <referenceBlock name="head.additional">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.site_config"
+                   template="Magento_Cookie::html/site-config.twig">
+                <arguments>
+                    <argument name="site_config" xsi:type="object">MageObsidian\Storefront\ViewModel\SiteConfig</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+
+        <referenceBlock name="head.additional">
             <block class="MageObsidian\Storefront\Block\NavigationRetention"
                    name="obsidian.navigation_retention"/>
         </referenceBlock>

@@ -11,6 +11,8 @@
  * no-cookies URL. No jQuery / mage widget — a single delegated listener.
  */
 
+import { serializeCookie, siteConfig } from "mage-obsidian/runtime/cookies.ts";
+
 const ALLOW_EVENT = "user:allowed:save:cookie";
 const HEIGHT_VARIABLE = "--obsidian-cookie-notice-height";
 
@@ -28,8 +30,10 @@ export function readCookie(name: string, cookieString: string): string | null {
 
 /** Serialize the consent cookie the way Magento's read-path expects. */
 export function consentCookie(name: string, value: string, lifetime: number): string {
-    const maxAge = lifetime > 0 ? `; max-age=${lifetime}` : "";
-    return `${name}=${encodeURIComponent(value)}; path=/${maxAge}; samesite=lax`;
+    return serializeCookie(name, value, {
+        config: siteConfig(),
+        maxAgeSeconds: lifetime > 0 ? lifetime : undefined,
+    });
 }
 
 export function bindCookieNotice(banner: HTMLElement, doc: Document = document): void {

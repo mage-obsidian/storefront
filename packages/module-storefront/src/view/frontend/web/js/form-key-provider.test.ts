@@ -2,7 +2,8 @@
 //
 // SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
 // SPDX-License-Identifier: MIT
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { resetSiteConfig } from "mage-obsidian/runtime/cookies.ts";
 import { ensureFormKey, getFormKey, stampFormKey } from "./form-key-provider.ts";
 
 function readCookie(): string {
@@ -12,6 +13,43 @@ function readCookie(): string {
 beforeEach(() => {
     document.cookie = "form_key=; max-age=0; path=/";
     document.body.innerHTML = "";
+    document.head.innerHTML = "";
+    resetSiteConfig();
+});
+
+const publish = (cookie: Record<string, unknown>): void => {
+    document.head.innerHTML = `<script type="application/json" id="mage-obsidian-site-config">${JSON.stringify({
+        version: 1,
+        cookie,
+        websiteId: 1,
+    })}</script>`;
+    resetSiteConfig();
+};
+
+describe("the cookie it writes", () => {
+    it("carries the domain, path and Secure flag the store configured", () => {
+        publish({ domain: ".shop.test", path: "/shop", lifetime: 3600, secure: true, sameSite: "strict" });
+        const written = vi.spyOn(document, "cookie", "set");
+
+        getFormKey();
+
+        const text = written.mock.calls[0][0] as string;
+        expect(text).toContain("domain=.shop.test");
+        expect(text).toContain("path=/shop");
+        expect(text).toContain("secure");
+        expect(text).toContain("samesite=strict");
+        written.mockRestore();
+    });
+
+    it("stays a host-only cookie when the store configured no domain", () => {
+        publish({ domain: "", path: "/", lifetime: 3600, secure: false, sameSite: "lax" });
+        const written = vi.spyOn(document, "cookie", "set");
+
+        getFormKey();
+
+        expect(written.mock.calls[0][0] as string).not.toContain("domain=");
+        written.mockRestore();
+    });
 });
 
 describe("getFormKey", () => {
