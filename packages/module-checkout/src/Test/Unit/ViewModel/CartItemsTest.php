@@ -82,6 +82,7 @@ class CartItemsTest extends TestCase
                 ['label' => 'Color', 'value' => 'Gray'],
             ],
             'configureUrl' => 'https://shop.test/checkout/cart/configure/id/15/product_id/42/',
+            'messages' => [],
         ], $rows[0]);
     }
 
@@ -105,6 +106,28 @@ class CartItemsTest extends TestCase
         $rows = $this->viewModel([$item])->getItems();
 
         $this->assertSame('$5.00', $rows[0]['fpt']);
+    }
+
+    public function testCarriesTheQuoteMessagesOfTheLine(): void
+    {
+        $product = $this->createMock(Product::class);
+        $product->method('getTypeInstance')->willReturn($this->createMock(AbstractType::class));
+
+        $item = $this->getMockBuilder(QuoteItem::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getItemId', 'getName', 'getQty', 'getCalculationPrice', 'getProduct', 'getProductType', 'getMessage'])
+            ->getMock();
+        $item->method('getItemId')->willReturn(9);
+        $item->method('getName')->willReturn('Driven Backpack');
+        $item->method('getQty')->willReturn(3.0);
+        $item->method('getCalculationPrice')->willReturn(36.0);
+        $item->method('getProduct')->willReturn($product);
+        $item->method('getProductType')->willReturn('simple');
+        $item->method('getMessage')->with(false)->willReturn(['Only 2 left', '', 'Price changed']);
+
+        $rows = $this->viewModel([$item])->getItems();
+
+        $this->assertSame(['Only 2 left', 'Price changed'], $rows[0]['messages']);
     }
 
     public function testReturnsEmptyListForAnEmptyCart(): void

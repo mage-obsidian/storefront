@@ -36,7 +36,7 @@ class CartItems implements ArgumentInterface
     private const THUMBNAIL_IMAGE_ID = 'cart_page_product_thumbnail';
 
     /**
-     * Memoised rows: id, name, url, image, qty, price, rowTotal, options[].
+     * Memoised rows: id, name, url, image, qty, price, rowTotal, options[], messages[].
      *
      * @var list<array<string, mixed>>|null
      */
@@ -107,7 +107,16 @@ class CartItems implements ArgumentInterface
             'fpt' => $fpt > 0 ? (string)$this->priceCurrency->format($fpt, false) : '',
             'options' => $this->options($item),
             'configureUrl' => $this->configureUrl($item),
+            'messages' => $this->messages($item),
         ];
+    }
+
+    private function messages(QuoteItem $item): array
+    {
+        return array_values(array_filter(
+            array_map('strval', (array)$item->getMessage(false)),
+            static fn (string $text): bool => $text !== ''
+        ));
     }
 
     /**

@@ -30,6 +30,8 @@
                    template="Magento_Checkout::cart/page.twig" cacheable="false">
                 <arguments>
                     <argument name="cart_items" xsi:type="object">MageObsidian\Checkout\ViewModel\CartItems</argument>
+                    <argument name="cart_pager" xsi:type="object">MageObsidian\Checkout\ViewModel\CartPager</argument>
+                    <argument name="cart_validation" xsi:type="object">MageObsidian\Checkout\ViewModel\CartValidation</argument>
                     <!-- Server-primed config + directory data for the "Estimate
                          Shipping and Tax" island (reuses the checkout REST wiring). -->
                     <argument name="checkout_config" xsi:type="object">MageObsidian\Checkout\ViewModel\CheckoutConfig</argument>
@@ -39,9 +41,21 @@
                      suppressed along with the core module layout). -->
                 <block class="MageObsidian\Checkout\Block\CartTitle" name="checkout.cart.title"
                        as="cart_title" template="Magento_Checkout::cart/title.twig"/>
+                <block class="MageObsidian\ModernFrontend\Block\Template" name="checkout.cart.validationmessages"
+                       as="validation" template="Magento_Checkout::cart/validation-messages.twig">
+                    <arguments>
+                        <argument name="cart_validation" xsi:type="object">MageObsidian\Checkout\ViewModel\CartValidation</argument>
+                    </arguments>
+                </block>
                 <!-- Core blocks as DATA SOURCES only, rendered by our Twig. -->
                 <block class="Magento\Checkout\Block\Cart\Totals" name="checkout.cart.totals"
                        as="totals" template="Magento_Checkout::cart/totals.twig"/>
+                <block class="Magento\Msrp\Block\Total" name="checkout.cart.totals.msrp"
+                       as="totals_msrp" template="Magento_Checkout::cart/totals-msrp.twig">
+                    <arguments>
+                        <argument name="original_block_name" xsi:type="string">checkout.cart.totals</argument>
+                    </arguments>
+                </block>
                 <block class="Magento\Checkout\Block\Cart\Coupon" name="checkout.cart.coupon"
                        as="coupon" template="Magento_Checkout::cart/coupon.twig">
                     <block class="MageObsidian\ModernFrontend\Block\Template" name="coupon_recaptcha" as="captcha"
