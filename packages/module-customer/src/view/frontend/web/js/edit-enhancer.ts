@@ -2,6 +2,8 @@
 //
 // SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
 // SPDX-License-Identifier: MIT
+import { bindPasswordPolicy, passwordClasses } from "MageObsidian_Customer::js/password-policy";
+import { requiredProfileRules } from "MageObsidian_Customer::js/profile-fields";
 import { enhanceValidation, required, email, minLength, matches, when } from "MageObsidian_Storefront::js/form-validation";
 
 // Edit-account page entry. Toggles the email / password fieldsets from their
@@ -15,7 +17,8 @@ function init(): void {
     }
 
     const requiredMsg = form.dataset.errRequired;
-    const minChars = Number(form.dataset.passwordMinLength || "8");
+    const policy = bindPasswordPolicy(form, "password");
+    const minChars = policy.minLength;
 
     // Server renders the fieldsets visible so the no-JS form works; here a fieldset
     // shows when any of its checkboxes is ticked.
@@ -53,8 +56,10 @@ function init(): void {
         password: [
             when(changingPassword, required(requiredMsg)),
             when(changingPassword, minLength(minChars, form.dataset.errMinlength)),
+            when(changingPassword, passwordClasses(policy.classes, form.dataset.errClasses ?? "")),
         ],
         password_confirmation: [when(changingPassword, matches("password", form.dataset.errMatch))],
+        ...requiredProfileRules(form, requiredMsg),
     });
 }
 

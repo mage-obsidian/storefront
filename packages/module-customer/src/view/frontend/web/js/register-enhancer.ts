@@ -2,6 +2,8 @@
 //
 // SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
 // SPDX-License-Identifier: MIT
+import { requiredProfileRules } from "MageObsidian_Customer::js/profile-fields";
+import { bindPasswordPolicy, passwordClasses } from "MageObsidian_Customer::js/password-policy";
 import { enhanceValidation, required, email, minLength, matches } from "MageObsidian_Storefront::js/form-validation";
 
 // Registration page entry. Inline validation only — account creation runs the
@@ -15,14 +17,20 @@ function init(): void {
     }
 
     const requiredMsg = form.dataset.errRequired;
-    const minChars = Number(form.dataset.passwordMinLength || "8");
+    const policy = bindPasswordPolicy(form, "password");
+    const minChars = policy.minLength;
 
     enhanceValidation(form, {
         firstname: [required(requiredMsg)],
         lastname: [required(requiredMsg)],
         email: [required(requiredMsg), email(form.dataset.errEmail)],
-        password: [required(requiredMsg), minLength(minChars, form.dataset.errMinlength)],
+        password: [
+            required(requiredMsg),
+            minLength(minChars, form.dataset.errMinlength),
+            passwordClasses(policy.classes, form.dataset.errClasses ?? ""),
+        ],
         password_confirmation: [required(requiredMsg), matches("password", form.dataset.errMatch)],
+        ...requiredProfileRules(form, requiredMsg),
     });
 }
 

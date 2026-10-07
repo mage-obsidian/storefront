@@ -22,6 +22,10 @@
         <referenceBlock name="account.shell">
             <block class="MageObsidian\ModernFrontend\Block\Template" name="account.edit"
                    as="account_content" template="Magento_Customer::account/edit.twig" cacheable="false">
+                <arguments>
+                    <argument name="form_attributes" xsi:type="object">MageObsidian\Customer\ViewModel\FormAttributes</argument>
+                    <argument name="password_policy" xsi:type="object">MageObsidian\Customer\ViewModel\PasswordPolicy</argument>
+                </arguments>
                 <block class="Magento\Customer\Block\Form\Edit" name="customer_edit" as="form_data"/>
                 <!-- The customer's own decision about being assisted. The core
                      module's layout is suppressed, so the slot is declared here. -->

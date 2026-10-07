@@ -2,6 +2,7 @@
 //
 // SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
 // SPDX-License-Identifier: MIT
+import { bindPasswordPolicy, passwordClasses } from "MageObsidian_Customer::js/password-policy";
 import { enhanceValidation, required, minLength, matches } from "MageObsidian_Storefront::js/form-validation";
 
 // Reset-password page entry (reached from the emailed link). Inline length/match
@@ -14,10 +15,15 @@ function init(): void {
     }
 
     const requiredMsg = form.dataset.errRequired;
-    const minChars = Number(form.dataset.passwordMinLength || "8");
+    const policy = bindPasswordPolicy(form, "password");
+    const minChars = policy.minLength;
 
     enhanceValidation(form, {
-        password: [required(requiredMsg), minLength(minChars, form.dataset.errMinlength)],
+        password: [
+            required(requiredMsg),
+            minLength(minChars, form.dataset.errMinlength),
+            passwordClasses(policy.classes, form.dataset.errClasses ?? ""),
+        ],
         password_confirmation: [required(requiredMsg), matches("password", form.dataset.errMatch)],
     });
 }

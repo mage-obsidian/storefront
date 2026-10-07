@@ -75,6 +75,37 @@ function applyRegionState(select: HTMLSelectElement, input: HTMLInputElement, st
     }
 }
 
+function parseOptionalZip(raw: string): string[] {
+    try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch {
+        return [];
+    }
+}
+
+function markRequired(form: HTMLFormElement, control: HTMLInputElement, isRequired: boolean): void {
+    control.required = isRequired;
+    if (isRequired) {
+        control.setAttribute("aria-required", "true");
+    } else {
+        control.removeAttribute("aria-required");
+        control.removeAttribute("aria-invalid");
+    }
+
+    const label = control.id ? form.querySelector(`label[for="${control.id}"]`) : null;
+    const marker = label?.querySelector(".field__required") ?? null;
+    if (isRequired && label && !marker) {
+        const star = document.createElement("span");
+        star.className = "field__required";
+        star.setAttribute("aria-hidden", "true");
+        star.textContent = "*";
+        label.append(star);
+    } else if (!isRequired && marker) {
+        marker.remove();
+    }
+}
+
 export function enhanceAddressForm(form: HTMLFormElement): void {
     const country = form.querySelector<HTMLSelectElement>("[data-country]");
     const regionSelect = form.querySelector<HTMLSelectElement>("[data-region-select]");
@@ -98,16 +129,35 @@ export function enhanceAddressForm(form: HTMLFormElement): void {
 
     country.addEventListener("change", syncRegion);
 
+    const optionalZip = parseOptionalZip(form.dataset.optionalZip ?? "");
+    const postcode = form.querySelector<HTMLInputElement>('[name="postcode"]');
+    let postcodeRequired = !optionalZip.includes(country.value);
+
+    const syncPostcode = (): void => {
+        postcodeRequired = !optionalZip.includes(country.value);
+        if (postcode) {
+            markRequired(form, postcode, postcodeRequired);
+        }
+    };
+
+    country.addEventListener("change", syncPostcode);
+    syncPostcode();
+
     const rules: FieldRules = {
-        firstname: [required(requiredMessage)],
-        lastname: [required(requiredMessage)],
-        telephone: [required(requiredMessage)],
-        "street[0]": [required(requiredMessage)],
-        city: [required(requiredMessage)],
-        postcode: [required(requiredMessage)],
-        country_id: [required(requiredMessage)],
         region_id: [when(() => regionRequired, required(requiredMessage))],
     };
+
+    for (const control of Array.from(form.elements)) {
+        const name = (control as HTMLInputElement).name;
+        if (name === "" || name === "postcode" || name in rules || !(control as HTMLInputElement).required) {
+            continue;
+        }
+        rules[name] = [required(requiredMessage)];
+    }
+
+    if (postcode) {
+        rules.postcode = [when(() => postcodeRequired, required(requiredMessage))];
+    }
 
     enhanceValidation(form, rules);
 }

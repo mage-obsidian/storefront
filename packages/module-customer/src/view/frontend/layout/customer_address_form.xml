@@ -25,6 +25,7 @@
                    as="account_content" template="Magento_Customer::account/address-form.twig" cacheable="false">
                 <arguments>
                     <argument name="address_form" xsi:type="object">MageObsidian\Customer\ViewModel\AddressForm</argument>
+                    <argument name="form_attributes" xsi:type="object">MageObsidian\Customer\ViewModel\FormAttributes</argument>
                 </arguments>
                 <block class="Magento\Customer\Block\Address\Edit" name="customer_address_edit" as="edit">
                     <arguments>
