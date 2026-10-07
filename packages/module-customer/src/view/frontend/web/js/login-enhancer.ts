@@ -5,6 +5,8 @@
 import { enhanceValidation, required, email } from "MageObsidian_Storefront::js/form-validation";
 import { setButtonBusy } from "MageObsidian_Storefront::js/button-state";
 import { useAuth, CAPTCHA_FORM_ID } from "MageObsidian_Customer::js/useAuth";
+import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
+import "MageObsidian_Storefront::js/captcha-refresh";
 
 // Login page entry (loaded only here, so the customer-data/Pinia cost is paid
 // only where it's used). The native <form> POSTs to loginPost without JS; this
@@ -12,9 +14,36 @@ import { useAuth, CAPTCHA_FORM_ID } from "MageObsidian_Customer::js/useAuth";
 // before redirecting.
 
 const REFERER_IN_ACTION = /\/referer\/[^/]+/;
+const CAPTCHA_SECTION = "captcha";
+const CAPTCHA_FIELD = "[data-captcha]";
 
 function captchaAnswer(form: HTMLFormElement): string {
     return form.querySelector<HTMLInputElement>(`input[name="captcha[${CAPTCHA_FORM_ID}]"]`)?.value ?? "";
+}
+
+async function challengeRequired(): Promise<boolean> {
+    const customerData = useCustomerData();
+    await customerData.reload([CAPTCHA_SECTION]);
+    const section = customerData.section(CAPTCHA_SECTION) as Record<string, { isRequired?: boolean }> | null;
+    return section?.[CAPTCHA_FORM_ID]?.isRequired === true;
+}
+
+async function revealChallenge(form: HTMLFormElement): Promise<void> {
+    if (form.querySelector(CAPTCHA_FIELD) || !(await challengeRequired())) {
+        return;
+    }
+    const response = await fetch(window.location.href, {
+        credentials: "same-origin",
+        headers: { Accept: "text/html" },
+    });
+    if (!response.ok) {
+        return;
+    }
+    const page = new DOMParser().parseFromString(await response.text(), "text/html");
+    const field = page.querySelector(`[data-login-form] ${CAPTCHA_FIELD}`);
+    if (field) {
+        form.querySelector('button[type="submit"]')?.before(document.importNode(field, true));
+    }
 }
 
 function init(): void {
@@ -70,6 +99,7 @@ function init(): void {
                         || form.dataset.errFailed
                         || "We couldn't sign you in. Check your details and try again.";
                 }
+                await revealChallenge(form);
                 setButtonBusy(submit, false);
             },
         },

@@ -20,7 +20,7 @@ const render = (withChallenge: boolean, action = "/customer/account/loginPost"):
             </div>
             ${
                 withChallenge
-                    ? `<div class="field">
+                    ? `<div class="field" data-captcha="user_login">
                            <label class="field__label" for="captcha-user-login">Type this</label>
                            <input class="field__control" id="captcha-user-login" name="captcha[user_login]" value="">
                            <p class="field__error" id="captcha-user-login-error"></p>
@@ -51,7 +51,10 @@ const signIn = async (form: HTMLFormElement, word = ""): Promise<void> => {
 beforeEach(() => {
     document.body.innerHTML = "";
     vi.resetModules();
-    Object.defineProperty(window, "location", { value: { assign: vi.fn() }, writable: true });
+    Object.defineProperty(window, "location", {
+        value: { assign: vi.fn(), href: "https://shop.test/customer/account/login/" },
+        writable: true,
+    });
     globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ errors: false, redirectUrl: "/customer/account" }),
@@ -96,5 +99,75 @@ describe("login-enhancer", () => {
 
         expect(globalThis.fetch).not.toHaveBeenCalled();
         expect(submit).toHaveBeenCalledOnce();
+    });
+
+    describe("the challenge that appears once failures pile up", () => {
+        const CHALLENGE_PAGE = `
+            <form data-login-form>
+                <div class="field-captcha" data-captcha="user_login" data-captcha-refresh="/captcha/refresh">
+                    <input name="captcha[user_login]" value="">
+                    <img data-captcha-image src="/media/captcha/abc.png" alt="">
+                </div>
+            </form>`;
+
+        const rejectedSignIn = (): ReturnType<typeof vi.fn> =>
+            vi.fn().mockImplementation(async (url: string) =>
+                url.includes("/customer/ajax/login")
+                    ? { ok: true, json: async () => ({ errors: true, message: "Invalid login or password." }) }
+                    : { ok: true, text: async () => CHALLENGE_PAGE },
+            );
+
+        const prepare = async (required: boolean | null, withChallenge = false) => {
+            const customerData = await import("MageObsidian_ModernFrontend::js/customer-data");
+            customerData.__reset();
+            if (required !== null) {
+                customerData.__setSection("captcha", { user_login: { isRequired: required } });
+            }
+            globalThis.fetch = rejectedSignIn();
+            const form = render(withChallenge);
+            await import("./login-enhancer.ts");
+            return { form, customerData, fetchMock: globalThis.fetch as ReturnType<typeof vi.fn> };
+        };
+
+        const pagesFetched = (fetchMock: ReturnType<typeof vi.fn>): string[] =>
+            fetchMock.mock.calls.map(([url]) => String(url)).filter((url) => !url.includes("/customer/ajax/login"));
+
+        it("asks for the challenge state when a sign-in is refused and shows the field once it is required", async () => {
+            const { form, customerData } = await prepare(true);
+
+            await signIn(form);
+
+            expect(customerData.reload.calls).toEqual([[["captcha"]]]);
+            const field = form.querySelector('[data-captcha="user_login"]');
+            expect(field).not.toBeNull();
+            expect(field!.nextElementSibling?.tagName).toBe("BUTTON");
+        });
+
+        it("leaves the form alone while the platform does not ask for a challenge", async () => {
+            const { form, fetchMock } = await prepare(false);
+
+            await signIn(form);
+
+            expect(form.querySelector("[data-captcha]")).toBeNull();
+            expect(pagesFetched(fetchMock)).toEqual([]);
+        });
+
+        it("does not fetch the page again when the challenge is already there", async () => {
+            const { form, customerData, fetchMock } = await prepare(true, true);
+
+            await signIn(form, "wrong");
+
+            expect(form.querySelectorAll("[data-captcha]").length).toBe(1);
+            expect(customerData.reload.calls).toEqual([]);
+            expect(pagesFetched(fetchMock)).toEqual([]);
+        });
+
+        it("keeps the refusal message on screen next to the new field", async () => {
+            const { form } = await prepare(true);
+
+            await signIn(form);
+
+            expect(form.querySelector("[data-login-error]")!.textContent).toBe("Invalid login or password.");
+        });
     });
 });
