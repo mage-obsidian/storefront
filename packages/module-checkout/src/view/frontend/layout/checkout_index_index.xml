@@ -46,6 +46,7 @@
                 <arguments>
                     <argument name="checkout_config" xsi:type="object">MageObsidian\Checkout\ViewModel\CheckoutConfig</argument>
                     <argument name="directory_data" xsi:type="object">MageObsidian\Storefront\ViewModel\DirectoryData</argument>
+                    <argument name="sign_in" xsi:type="object">MageObsidian\Checkout\ViewModel\SignIn</argument>
                 </arguments>
                 <block class="MageObsidian\Checkout\Block\CheckoutTitle" name="checkout.title"
                        as="checkout_title" template="Magento_Checkout::checkout/title.twig"/>

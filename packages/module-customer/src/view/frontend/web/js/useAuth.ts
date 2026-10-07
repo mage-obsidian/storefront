@@ -3,6 +3,7 @@
 // SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
 // SPDX-License-Identifier: MIT
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
+import { requireCookies } from "mage-obsidian/runtime/cookies.ts";
 import ensureFormKey from "MageObsidian_Storefront::js/form-key-provider";
 
 // AJAX sign-in over Magento's native `customer/ajax/login` endpoint — the
@@ -23,6 +24,8 @@ export interface LoginRequest {
     captchaFormId?: string;
     /** Solution, once a template renders the challenge. */
     captchaString?: string;
+    recaptchaToken?: string;
+    rememberMe?: boolean;
 }
 
 /**
@@ -46,10 +49,20 @@ interface AjaxLoginResponse {
     redirectUrl?: string;
 }
 
+function withContext(url: string, context: string | undefined): string {
+    if (!context || context === "default") {
+        return url;
+    }
+    return `${url}${url.includes("?") ? "&" : "?"}context=${encodeURIComponent(context)}`;
+}
+
 export function useAuth() {
     const customerData = useCustomerData();
 
     async function login(req: LoginRequest): Promise<LoginResult> {
+        if (!requireCookies()) {
+            return { ok: false };
+        }
         // Keeps the form_key cookie alive for the native fallback form; the ajax
         // endpoint authenticates on the credentials themselves.
         ensureFormKey();
@@ -57,7 +70,7 @@ export function useAuth() {
         let payload: AjaxLoginResponse = {};
         let ok = false;
         try {
-            const response = await fetch(req.url, {
+            const response = await fetch(withContext(req.url, req.context), {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -69,6 +82,8 @@ export function useAuth() {
                     context: req.context ?? "default",
                     captcha_form_id: req.captchaFormId ?? CAPTCHA_FORM_ID,
                     captcha_string: req.captchaString ?? "",
+                    ...(req.rememberMe ? { persistent_remember_me: true } : {}),
+                    ...(req.recaptchaToken ? { "g-recaptcha-response": req.recaptchaToken } : {}),
                 }),
                 credentials: "same-origin",
             });

@@ -5,6 +5,7 @@
 import { defineConfig } from "vitest/config";
 import vue from "@vitejs/plugin-vue";
 import { fileURLToPath } from "node:url";
+import { frameworkPath } from "../../tools/vitest/framework.js";
 
 // Unit tests for the customer auth enhancers and the header account island. The
 // `Vendor_Module::path` import specifiers are resolved by the engine's Vite
@@ -16,6 +17,7 @@ export default defineConfig({
     plugins: [vue()],
     resolve: {
         alias: {
+            "mage-obsidian/runtime": frameworkPath("packages/js-package-utils/src/runtime"),
             "MageObsidian_ModernFrontend::js/customer-data": fileURLToPath(
                 new URL("./src/Test/Js/stubs/customerData.ts", import.meta.url),
             ),
@@ -28,8 +30,17 @@ export default defineConfig({
             "MageObsidian_Storefront::js/form-validation": fileURLToPath(
                 new URL("../module-storefront/src/view/frontend/web/js/form-validation.ts", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/recaptcha": fileURLToPath(
+                new URL("./src/Test/Js/stubs/recaptcha.ts", import.meta.url),
+            ),
             "MageObsidian_Storefront::js/captcha-refresh": fileURLToPath(
                 new URL("../module-storefront/src/view/frontend/web/js/captcha-refresh.ts", import.meta.url),
+            ),
+            "MageObsidian_Customer::js/profile-fields": fileURLToPath(
+                new URL("./src/view/frontend/web/js/profile-fields.ts", import.meta.url),
+            ),
+            "MageObsidian_Customer::js/password-policy": fileURLToPath(
+                new URL("./src/view/frontend/web/js/password-policy.ts", import.meta.url),
             ),
             "MageObsidian_Customer::js/useAuth": fileURLToPath(
                 new URL("./src/view/frontend/web/js/useAuth.ts", import.meta.url),

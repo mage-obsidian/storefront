@@ -2,6 +2,7 @@
 //
 // SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
 // SPDX-License-Identifier: MIT
+import { requireCookies } from "mage-obsidian/runtime/cookies.ts";
 import { requiredProfileRules } from "MageObsidian_Customer::js/profile-fields";
 import { bindPasswordPolicy, passwordClasses } from "MageObsidian_Customer::js/password-policy";
 import { enhanceValidation, required, email, minLength, matches } from "MageObsidian_Storefront::js/form-validation";
@@ -15,6 +16,12 @@ function init(): void {
     if (!form) {
         return;
     }
+
+    form.addEventListener("submit", (event) => {
+        if (!requireCookies()) {
+            event.preventDefault();
+        }
+    });
 
     const requiredMsg = form.dataset.errRequired;
     const policy = bindPasswordPolicy(form, "password");

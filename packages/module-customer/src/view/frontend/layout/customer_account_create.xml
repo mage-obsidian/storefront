@@ -28,6 +28,7 @@
                 <arguments>
                     <argument name="form_attributes" xsi:type="object">MageObsidian\Customer\ViewModel\FormAttributes</argument>
                     <argument name="password_policy" xsi:type="object">MageObsidian\Customer\ViewModel\PasswordPolicy</argument>
+                    <argument name="checkout_context" xsi:type="object">MageObsidian\Customer\ViewModel\CheckoutContext</argument>
                 </arguments>
                 <block class="Magento\Customer\Block\Form\Register" name="customer.form.register.data" as="form_data"/>
                 <!-- The customer's own decision about being assisted. The core

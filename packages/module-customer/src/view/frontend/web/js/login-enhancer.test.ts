@@ -27,6 +27,7 @@ const render = (withChallenge: boolean, action = "/customer/account/loginPost"):
                        </div>`
                     : ""
             }
+            <label><input type="checkbox" name="persistent_remember_me" value="1"> Remember Me</label>
             <p data-login-error></p>
             <button type="submit">Sign In</button>
         </form>`;
@@ -99,6 +100,81 @@ describe("login-enhancer", () => {
 
         expect(globalThis.fetch).not.toHaveBeenCalled();
         expect(submit).toHaveBeenCalledOnce();
+    });
+
+    describe("the checkout context", () => {
+        it("is carried to the ajax endpoint when the form says the shopper came from the checkout", async () => {
+            const form = render(false);
+            form.insertAdjacentHTML("afterbegin", '<input type="hidden" name="context" value="checkout">');
+            await import("./login-enhancer.ts");
+
+            await signIn(form);
+
+            expect(String((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0])).toContain("context=checkout");
+        });
+    });
+
+    describe("remember me", () => {
+        it("carries a ticked box to the ajax endpoint", async () => {
+            const form = render(false);
+            form.querySelector<HTMLInputElement>('[name="persistent_remember_me"]')!.checked = true;
+            await import("./login-enhancer.ts");
+
+            await signIn(form);
+
+            expect(bodyOf(globalThis.fetch as ReturnType<typeof vi.fn>).persistent_remember_me).toBe(true);
+        });
+
+        it("says nothing when the box is left unticked", async () => {
+            const form = render(false);
+            await import("./login-enhancer.ts");
+
+            await signIn(form);
+
+            expect(bodyOf(globalThis.fetch as ReturnType<typeof vi.fn>)).not.toHaveProperty("persistent_remember_me");
+        });
+    });
+
+    describe("the reCAPTCHA of the sign-in form", () => {
+        it("sends the token the widget holds to the ajax endpoint", async () => {
+            const recaptcha = await import("MageObsidian_Storefront::js/recaptcha");
+            recaptcha.reset();
+            recaptcha.setToken("tok-1");
+            const form = render(false);
+            await import("./login-enhancer.ts");
+
+            await signIn(form);
+
+            expect(recaptcha.asked).toEqual(["customer_login"]);
+            expect(bodyOf(globalThis.fetch as ReturnType<typeof vi.fn>)["g-recaptcha-response"]).toBe("tok-1");
+        });
+
+        it("sends nothing when the form carries no widget", async () => {
+            const recaptcha = await import("MageObsidian_Storefront::js/recaptcha");
+            recaptcha.reset();
+            const form = render(false);
+            await import("./login-enhancer.ts");
+
+            await signIn(form);
+
+            expect(bodyOf(globalThis.fetch as ReturnType<typeof vi.fn>)).not.toHaveProperty("g-recaptcha-response");
+        });
+
+        it("asks for a fresh token once the sign-in is refused, since a token is good for one request", async () => {
+            const recaptcha = await import("MageObsidian_Storefront::js/recaptcha");
+            recaptcha.reset();
+            recaptcha.setToken("tok-1");
+            globalThis.fetch = vi.fn().mockResolvedValue({
+                ok: true,
+                json: async () => ({ errors: true, message: "Invalid login or password." }),
+            });
+            const form = render(false);
+            await import("./login-enhancer.ts");
+
+            await signIn(form);
+
+            expect(recaptcha.resets).toEqual(["customer_login"]);
+        });
     });
 
     describe("the challenge that appears once failures pile up", () => {

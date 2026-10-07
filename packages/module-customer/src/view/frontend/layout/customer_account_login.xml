@@ -34,6 +34,9 @@
         <referenceContainer name="content">
             <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.customer.login"
                    template="Magento_Customer::form/login.twig">
+                <arguments>
+                    <argument name="checkout_context" xsi:type="object">MageObsidian\Customer\ViewModel\CheckoutContext</argument>
+                </arguments>
                 <!-- Core block as DATA SOURCE only (post URL, persisted username). -->
                 <block class="Magento\Customer\Block\Form\Login" name="customer.form.login.data" as="form_data"/>
                 <!-- The platform's own challenges. Both blocks render an empty string

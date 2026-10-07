@@ -6,6 +6,7 @@ import { enhanceValidation, required, email } from "MageObsidian_Storefront::js/
 import { setButtonBusy } from "MageObsidian_Storefront::js/button-state";
 import { useAuth, CAPTCHA_FORM_ID } from "MageObsidian_Customer::js/useAuth";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
+import { tokenFor, resetToken } from "MageObsidian_Storefront::js/recaptcha";
 import "MageObsidian_Storefront::js/captcha-refresh";
 
 // Login page entry (loaded only here, so the customer-data/Pinia cost is paid
@@ -16,6 +17,7 @@ import "MageObsidian_Storefront::js/captcha-refresh";
 const REFERER_IN_ACTION = /\/referer\/[^/]+/;
 const CAPTCHA_SECTION = "captcha";
 const CAPTCHA_FIELD = "[data-captcha]";
+const RECAPTCHA_FORM = "customer_login";
 
 function captchaAnswer(form: HTMLFormElement): string {
     return form.querySelector<HTMLInputElement>(`input[name="captcha[${CAPTCHA_FORM_ID}]"]`)?.value ?? "";
@@ -44,6 +46,14 @@ async function revealChallenge(form: HTMLFormElement): Promise<void> {
     if (field) {
         form.querySelector('button[type="submit"]')?.before(document.importNode(field, true));
     }
+}
+
+function rememberMeTicked(form: HTMLFormElement): boolean {
+    return form.querySelector<HTMLInputElement>('input[name="persistent_remember_me"]')?.checked ?? false;
+}
+
+function checkoutContext(form: HTMLFormElement): string | undefined {
+    return form.querySelector<HTMLInputElement>('input[name="context"]')?.value || undefined;
 }
 
 function init(): void {
@@ -87,6 +97,9 @@ function init(): void {
                     // shopper who answers it correctly is refused if this is not
                     // carried across, while the no-JS form would have let them in.
                     captchaString: captchaAnswer(form),
+                    context: checkoutContext(form),
+                    rememberMe: rememberMeTicked(form),
+                    recaptchaToken: (await tokenFor(RECAPTCHA_FORM)) ?? "",
                 });
 
                 if (result.ok) {
@@ -99,6 +112,7 @@ function init(): void {
                         || form.dataset.errFailed
                         || "We couldn't sign you in. Check your details and try again.";
                 }
+                resetToken(RECAPTCHA_FORM);
                 await revealChallenge(form);
                 setButtonBusy(submit, false);
             },
