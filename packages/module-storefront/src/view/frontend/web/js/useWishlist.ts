@@ -8,6 +8,7 @@
  * MageObsidian_Wishlist section plugin, since the native section caps its item
  * list at 3 — the heart needs every membership to flag cards and toggle one off.
  */
+import { requireCookies } from 'mage-obsidian/runtime/cookies.ts';
 import { computed } from 'vue';
 import { useCustomerData } from 'MageObsidian_ModernFrontend::js/customer-data';
 import events from 'MageObsidian_ModernFrontend::js/events';
@@ -57,6 +58,9 @@ export function useWishlist() {
         action: string,
         body: FormData,
     ): Promise<boolean> {
+        if (!requireCookies()) {
+            return false;
+        }
         if (!body.get('form_key')) {
             body.set('form_key', getFormKey());
         }

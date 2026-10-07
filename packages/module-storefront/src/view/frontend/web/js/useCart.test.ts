@@ -2,6 +2,7 @@
 //
 // SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
 // SPDX-License-Identifier: MIT
+import { withCookiesOff, NO_COOKIES_URL } from "../../../../Test/Js/cookiesOff.ts";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { useCart, getFormKey } from "./useCart.ts";
 import { observeSectionMessages } from "./session-messages.ts";
@@ -365,5 +366,20 @@ describe("optimistic add", () => {
         await settled();
 
         expect(useCart().count.value).toBe(1);
+    });
+});
+
+describe("useCart with cookies off", () => {
+    it("sends the shopper to the no-cookies page and posts nothing", async () => {
+        const off = withCookiesOff();
+        const fetchMock = vi.fn();
+        vi.stubGlobal("fetch", fetchMock);
+
+        const result = await useCart().addRaw("https://shop.test/checkout/cart/add/", new FormData());
+
+        expect(result.ok).toBe(false);
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(off.visited).toEqual([NO_COOKIES_URL]);
+        off.restore();
     });
 });

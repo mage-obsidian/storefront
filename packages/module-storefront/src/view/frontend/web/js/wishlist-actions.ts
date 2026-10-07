@@ -10,6 +10,7 @@
  * add/remove via AJAX. Guests fall through to the native POST (redirect to login).
  */
 import { watchEffect } from 'vue';
+import { requireCookies } from 'mage-obsidian/runtime/cookies.ts';
 import { useWishlist } from 'MageObsidian_Storefront::js/useWishlist';
 import { ensureFormKey } from 'MageObsidian_Storefront::js/form-key-provider';
 import { i18n } from 'mage-obsidian/runtime/i18nCore.ts';
@@ -31,6 +32,10 @@ function init(): void {
     document.addEventListener('submit', async (event) => {
         const form = (event.target as HTMLElement | null)?.closest?.<HTMLFormElement>('form[data-add-to-wishlist]');
         if (!form) {
+            return;
+        }
+        if (!requireCookies()) {
+            event.preventDefault();
             return;
         }
         if (!wishlist.isLoggedIn.value) {

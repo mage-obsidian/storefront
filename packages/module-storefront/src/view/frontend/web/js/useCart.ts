@@ -11,6 +11,7 @@
  * it — the reactive `count` (and everything else reading `section('cart')`)
  * updates everywhere, FPC-safe.
  */
+import { requireCookies } from 'mage-obsidian/runtime/cookies.ts';
 import { computed } from 'vue';
 import { useCustomerData } from 'MageObsidian_ModernFrontend::js/customer-data';
 import events from 'MageObsidian_ModernFrontend::js/events';
@@ -118,6 +119,9 @@ export function useCart() {
      * caller so the toast can say what actually went wrong.
      */
     async function post(operation: CartOperation, action: string, body: FormData): Promise<CartResult> {
+        if (!requireCookies()) {
+            return { ok: false };
+        }
         if (!body.get('form_key')) {
             body.set('form_key', getFormKey());
         }

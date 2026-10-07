@@ -2,6 +2,7 @@
 //
 // SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
 // SPDX-License-Identifier: MIT
+import { withCookiesOff, NO_COOKIES_URL } from "../../../../Test/Js/cookiesOff.ts";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useCompare, CompareOperation } from "./useCompare.ts";
 import events, { dispatched, __reset as __resetEvents } from "MageObsidian_ModernFrontend::js/events";
@@ -113,5 +114,21 @@ describe("compare events", () => {
 
         expect(fetchMock).not.toHaveBeenCalled();
         expect(dispatched.map((d) => d.event)).toEqual(["compare_add_before"]);
+    });
+});
+
+describe("useCompare with cookies off", () => {
+    it("sends the shopper to the no-cookies page and posts nothing", async () => {
+        const off = withCookiesOff();
+        const fetchMock = mockFetch();
+        const element = document.createElement("form");
+        element.action = "https://shop.test/catalog/product_compare/add/";
+
+        const ok = await useCompare().add(element);
+
+        expect(ok).toBe(false);
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(off.visited).toEqual([NO_COOKIES_URL]);
+        off.restore();
     });
 });
