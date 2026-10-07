@@ -26,6 +26,13 @@
                     <argument name="rss_allowed" xsi:type="helper" helper="Magento\Wishlist\Helper\Rss::isRssAllow"/>
                 </arguments>
                 <block class="Magento\Wishlist\Block\Customer\Sharing" name="customer.wishlist.sharing" as="sharing"/>
+                <block class="MageObsidian\ModernFrontend\Block\Template" name="captcha" as="captcha"
+                       template="Magento_ReCaptchaFrontendUi::recaptcha.twig">
+                    <arguments>
+                        <argument name="view_model" xsi:type="object">MageObsidian\Storefront\ViewModel\ReCaptcha</argument>
+                        <argument name="recaptcha_for" xsi:type="string">wishlist</argument>
+                    </arguments>
+                </block>
             </block>
         </referenceBlock>
     </body>
