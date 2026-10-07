@@ -29,6 +29,36 @@ describe("AccountMenu.vue", () => {
         expect(wrapper.find("button").exists()).toBe(false);
     });
 
+    it("offers a guest the way to register next to the way in", async () => {
+        __setSection("customer", {});
+        const wrapper = mount(AccountMenu, {
+            props: { ...URLS, registerUrl: "/customer/account/create", signInLabel: "Sign In", createAccountLabel: "Create an Account" },
+        });
+        await wrapper.vm.$nextTick();
+
+        const create = wrapper.get("a[href='/customer/account/create']");
+        expect(create.text()).toBe("Create an Account");
+        expect(wrapper.get("a[href='/customer/account/login']").text()).toBe("Sign In");
+    });
+
+    it("does not offer registration to a signed-in customer", async () => {
+        __setSection("customer", { firstname: "Ada" });
+        const wrapper = mount(AccountMenu, {
+            props: { ...URLS, registerUrl: "/customer/account/create", createAccountLabel: "Create an Account" },
+        });
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.find("a[href='/customer/account/create']").exists()).toBe(false);
+    });
+
+    it("offers no registration link when the page names no address for it", async () => {
+        __setSection("customer", {});
+        const wrapper = mount(AccountMenu, { props: { ...URLS, signInLabel: "Sign In" } });
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.findAll("a")).toHaveLength(1);
+    });
+
     it("renders neither branch until the customer section says which one is true", async () => {
         const wrapper = mount(AccountMenu, { props: { ...URLS, signInLabel: "Sign In" } });
         await wrapper.vm.$nextTick();

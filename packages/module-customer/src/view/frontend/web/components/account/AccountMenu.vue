@@ -41,11 +41,13 @@ const props = withDefaults(
     defineProps<{
         accountUrl?: string;
         loginUrl?: string;
+        registerUrl?: string;
         logoutUrl?: string;
         ordersUrl?: string;
         addressesUrl?: string;
         // i18n labels (resolved in Twig).
         signInLabel?: string;
+        createAccountLabel?: string;
         menuLabel?: string;
         myAccountLabel?: string;
         myOrdersLabel?: string;
@@ -55,10 +57,12 @@ const props = withDefaults(
     {
         accountUrl: "",
         loginUrl: "",
+        registerUrl: "",
         logoutUrl: "",
         ordersUrl: "",
         addressesUrl: "",
         signInLabel: "Sign In",
+        createAccountLabel: "Create an Account",
         menuLabel: "Account menu",
         myAccountLabel: "My Account",
         myOrdersLabel: "My Orders",
@@ -117,11 +121,14 @@ onClickOutside(root, () => close(false));
 </script>
 
 <template>
-    <a
-        v-if="known && !isLoggedIn"
-        :href="loginUrl"
-        class="hidden whitespace-nowrap transition-colors hover:text-ink sm:inline"
-    >{{ signInLabel }}</a>
+    <span v-if="known && !isLoggedIn" class="hidden items-center gap-4 sm:inline-flex">
+        <a :href="loginUrl" class="whitespace-nowrap transition-colors hover:text-ink">{{ signInLabel }}</a>
+        <a
+            v-if="registerUrl"
+            :href="registerUrl"
+            class="whitespace-nowrap transition-colors hover:text-ink"
+        >{{ createAccountLabel }}</a>
+    </span>
 
     <div v-else-if="known" ref="root" class="relative max-sm:hidden" @keydown.escape="close()">
         <button

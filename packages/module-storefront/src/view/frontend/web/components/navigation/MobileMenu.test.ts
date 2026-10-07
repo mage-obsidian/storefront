@@ -5,6 +5,7 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import MobileMenu from "./MobileMenu.vue";
+import { __setSection, __reset } from "MageObsidian_ModernFrontend::js/customer-data";
 
 // Above-the-fold mobile navigation island: a hamburger trigger that opens the
 // shared Drawer with the server-provided links. The trigger is server-eager
@@ -221,5 +222,58 @@ describe("MobileMenu", () => {
         expect(dialog.querySelector("a[href='/c/USD']")).toBeNull();
 
         wrapper.unmount();
+    });
+
+    describe("account entries", () => {
+        const account = {
+            label: "Account",
+            signInLabel: "Sign In",
+            signInUrl: "/customer/account/login/",
+            createLabel: "Create an Account",
+            createUrl: "/customer/account/create/",
+            accountLabel: "My Account",
+            accountUrl: "/customer/account/",
+            signOutLabel: "Sign Out",
+            signOutUrl: "/customer/account/logout/",
+        };
+
+        const open = async () => {
+            const wrapper = mount(MobileMenu, { props: { links, label: "Menu", account }, attachTo: document.body });
+            await wrapper.get("button[aria-haspopup='dialog']").trigger("click");
+            return { wrapper, dialog: document.querySelector('[role="dialog"]') as HTMLElement };
+        };
+
+        afterEach(() => __reset());
+
+        it("offers a guest the way in and the way to register", async () => {
+            const { wrapper, dialog } = await open();
+
+            expect(dialog.querySelector("a[href='/customer/account/login/']")!.textContent).toContain("Sign In");
+            expect(dialog.querySelector("a[href='/customer/account/create/']")!.textContent).toContain("Create an Account");
+            expect(dialog.querySelector("a[href='/customer/account/']")).toBeNull();
+            expect(dialog.querySelector("a[href='/customer/account/logout/']")).toBeNull();
+
+            wrapper.unmount();
+        });
+
+        it("offers a signed-in customer their account and the way out", async () => {
+            __setSection("customer", { firstname: "Ada" });
+            const { wrapper, dialog } = await open();
+
+            expect(dialog.querySelector("a[href='/customer/account/']")!.textContent).toContain("My Account");
+            expect(dialog.querySelector("a[href='/customer/account/logout/']")!.textContent).toContain("Sign Out");
+            expect(dialog.querySelector("a[href='/customer/account/login/']")).toBeNull();
+
+            wrapper.unmount();
+        });
+
+        it("keeps the account block out of the drawer when the page names none", async () => {
+            const wrapper = mountMenu();
+            await wrapper.get("button[aria-haspopup='dialog']").trigger("click");
+
+            expect(document.querySelector("a[href='/customer/account/login/']")).toBeNull();
+
+            wrapper.unmount();
+        });
     });
 });

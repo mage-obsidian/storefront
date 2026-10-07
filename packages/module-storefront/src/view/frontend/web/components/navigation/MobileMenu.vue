@@ -5,7 +5,8 @@
  SPDX-License-Identifier: MIT
 -->
 <script setup lang="ts">
-import { ref, useId } from "vue";
+import { computed, ref, useId } from "vue";
+import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 import Icon from "MageObsidian_ModernFrontend::elements/Icon";
 import Drawer from "MageObsidian_Storefront::elements/Drawer";
 import Switcher from "MageObsidian_Storefront::navigation/Switcher";
@@ -33,15 +34,28 @@ interface UtilityLink {
     kind: "wishlist" | "compare";
 }
 
+interface AccountLinks {
+    label: string;
+    signInLabel: string;
+    signInUrl: string;
+    createLabel: string;
+    createUrl: string;
+    accountLabel: string;
+    accountUrl: string;
+    signOutLabel: string;
+    signOutUrl: string;
+}
+
 interface SwitcherGroup {
     label: string;
     srLabel: string;
     items: Array<{ label: string; url: string; current?: boolean }>;
 }
 
-withDefaults(
+const props = withDefaults(
     defineProps<{
         links?: NavLink[];
+        account?: AccountLinks | null;
         utilities?: UtilityLink[];
         label?: string;
         // Distinct from `label`: the dialog is labelled "Menu", so the inner nav
@@ -56,6 +70,7 @@ withDefaults(
     }>(),
     {
         links: () => [],
+        account: null,
         utilities: () => [],
         label: "Menu",
         navLabel: "Browse",
@@ -68,6 +83,24 @@ withDefaults(
 
 const open = ref(false);
 const drawerId = `mobile-menu-${useId()}`;
+
+const customerData = useCustomerData();
+const signedIn = computed(() => Boolean(customerData.section("customer")?.firstname));
+const accountLinks = computed(() => {
+    const account = props.account;
+    if (!account) {
+        return [];
+    }
+    return signedIn.value
+        ? [
+              { label: account.accountLabel, url: account.accountUrl },
+              { label: account.signOutLabel, url: account.signOutUrl },
+          ]
+        : [
+              { label: account.signInLabel, url: account.signInUrl },
+              { label: account.createLabel, url: account.createUrl },
+          ];
+});
 
 const countComponents = { wishlist: WishlistCount, compare: CompareCount };
 
@@ -102,6 +135,17 @@ const hasSwitcher = (group: SwitcherGroup | null) =>
                     <Icon name="x-mark" set="outline" class="h-5 w-5" />
                 </button>
             </div>
+
+            <nav v-if="accountLinks.length" class="flex flex-col border-b border-ash-200 px-2 py-4" :aria-label="account?.label">
+                <a
+                    v-for="link in accountLinks"
+                    :key="link.url"
+                    :href="link.url"
+                    class="flex items-center gap-3 rounded-edge px-3 py-3 font-mono text-note uppercase tracking-label text-ink-soft transition-colors hover:bg-ash-100 hover:text-ink"
+                >
+                    {{ link.label }}
+                </a>
+            </nav>
 
             <nav class="px-2 py-4" :aria-label="navLabel">
                 <NavAccordion :items="links" />
