@@ -24,6 +24,9 @@ const props = defineProps({
     uenc: { type: String, default: "" },
     initialPrice: { type: String, default: "" },
     initialPriceAmount: { type: [Number, String], default: null },
+    initialPriceExcl: { type: String, default: "" },
+    initialPriceAmountExcl: { type: [Number, String], default: null },
+    priceDisplay: { type: String, default: "excl" },
     // Saved super-attribute selection (attributeId -> optionId) + qty when the
     // PDP is opened to reconfigure a cart item; empty on a normal product view.
     preconfigured: { type: [Object, Array], default: () => ({}) },
@@ -110,6 +113,19 @@ const price = computed(() => {
         return props.initialPrice;
     }
     const base = prices ? Number(prices.finalPrice.amount) : Number(props.initialPriceAmount ?? 0);
+    return formatAmount(base + optionsDelta.value);
+});
+
+const showsBothPrices = computed(
+    () => props.priceDisplay === "both" && (props.initialPriceExcl !== "" || props.initialPriceAmountExcl !== null),
+);
+
+const priceExcl = computed(() => {
+    const prices = variantId.value && config.optionPrices?.[variantId.value];
+    if (!prices && optionsDelta.value === 0) {
+        return props.initialPriceExcl;
+    }
+    const base = prices?.basePrice ? Number(prices.basePrice.amount) : Number(props.initialPriceAmountExcl ?? 0);
     return formatAmount(base + optionsDelta.value);
 });
 
@@ -230,7 +246,17 @@ async function add() {
 <template>
     <form v-if="valid" class="pdp__configurable" novalidate @submit.prevent="add">
         <div class="pdp__price mb-6 flex items-baseline gap-3" aria-live="polite">
-            <span class="pdp__price-final font-mono text-2xl" :class="oldPrice ? 'text-sale' : 'text-ink'">{{ price }}</span>
+            <span v-if="showsBothPrices" class="flex flex-col gap-1">
+                <span data-price-basis="incl" class="flex items-baseline gap-2">
+                    <span class="font-mono text-xs text-ink-soft">{{ props.labels.inclTax ?? "Incl. Tax" }}</span>
+                    <span class="price pdp__price-final font-mono text-2xl" :class="oldPrice ? 'text-sale' : 'text-ink'">{{ price }}</span>
+                </span>
+                <span data-price-basis="excl" class="flex items-baseline gap-2">
+                    <span class="font-mono text-xs text-ink-soft">{{ props.labels.exclTax ?? "Excl. Tax" }}</span>
+                    <span class="price font-mono text-base text-ink-soft">{{ priceExcl }}</span>
+                </span>
+            </span>
+            <span v-else class="pdp__price-final font-mono text-2xl" :class="oldPrice ? 'text-sale' : 'text-ink'">{{ price }}</span>
             <span v-if="oldPrice" class="pdp__price-regular font-mono text-base text-ink-soft line-through">{{ oldPrice }}</span>
         </div>
 

@@ -183,3 +183,86 @@ describe("variant announcements", () => {
         wrapper.unmount();
     });
 });
+
+describe("ProductForm — prices with and without tax", () => {
+    function taxedConfig() {
+        const parsed = JSON.parse(config());
+        parsed.attributes[93].options[0].products = ["11", "13"];
+        parsed.attributes[144].options[1].products = ["12", "13"];
+        parsed.index[13] = { 93: "5", 144: "8" };
+        parsed.optionPrices = {
+            11: { finalPrice: { amount: 21.6 }, basePrice: { amount: 20 }, oldPrice: { amount: 21.6 } },
+            12: { finalPrice: { amount: 32.4 }, basePrice: { amount: 30 }, oldPrice: { amount: 32.4 } },
+            13: { finalPrice: { amount: 43.2 }, basePrice: { amount: 40 }, oldPrice: { amount: 43.2 } },
+        };
+        return JSON.stringify(parsed);
+    }
+
+    function taxed(priceDisplay) {
+        return mount(ProductForm, {
+            props: {
+                config: taxedConfig(),
+                swatches: swatches(),
+                productId: 7,
+                action: "/checkout/cart/add",
+                uenc: "ENC",
+                initialPrice: "$21.60",
+                initialPriceExcl: "$20.00",
+                priceDisplay,
+                labels: { ...LABELS, inclTax: "Incl. Tax", exclTax: "Excl. Tax" },
+            },
+        });
+    }
+
+    const basis = (wrapper) =>
+        wrapper.findAll("[data-price-basis]").map((node) => [node.attributes("data-price-basis"), node.find(".price").text()]);
+
+    it("states both amounts before any variant is chosen", () => {
+        expect(basis(taxed("both"))).toEqual([
+            ["incl", "$21.60"],
+            ["excl", "$20.00"],
+        ]);
+    });
+
+    it("keeps stating both amounts of the variant the buyer chooses", async () => {
+        const wrapper = taxed("both");
+        await wrapper.find('[data-option-id="5"]').trigger("click");
+        await wrapper.find('[data-option-id="7"]').trigger("click");
+
+        expect(basis(wrapper)).toEqual([
+            ["incl", "$21.60"],
+            ["excl", "$20.00"],
+        ]);
+
+        await wrapper.find('[data-option-id="8"]').trigger("click");
+
+        expect(basis(wrapper)).toEqual([
+            ["incl", "$43.20"],
+            ["excl", "$40.00"],
+        ]);
+    });
+
+    it("labels each amount", () => {
+        const text = taxed("both").text();
+
+        expect(text).toContain("Incl. Tax");
+        expect(text).toContain("Excl. Tax");
+    });
+
+    it("states a single amount when the store shows the price with tax only", async () => {
+        const wrapper = taxed("incl");
+        await wrapper.find('[data-option-id="5"]').trigger("click");
+        await wrapper.find('[data-option-id="7"]').trigger("click");
+
+        expect(wrapper.findAll("[data-price-basis]")).toHaveLength(0);
+        expect(wrapper.find(".pdp__price-final").text()).toBe("$21.60");
+    });
+
+    it("states a single amount when the store shows the price without tax", async () => {
+        const wrapper = taxed("excl");
+
+        expect(wrapper.findAll("[data-price-basis]")).toHaveLength(0);
+        expect(wrapper.find(".pdp__price-final").text()).toBe("$21.60");
+    });
+});
+

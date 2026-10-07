@@ -24,6 +24,7 @@ use Magento\Framework\Registry;
 use Magento\Framework\Url\Helper\Data as UrlHelper;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\LayoutInterface;
+use Magento\Tax\Helper\Data as TaxHelper;
 use MageObsidian\Catalog\Service\Product\ConfigurableInitialState;
 use MageObsidian\Catalog\ViewModel\ProductView;
 use PHPUnit\Framework\TestCase;
@@ -48,7 +49,8 @@ class ProductViewTest extends TestCase
         ?Product $product,
         ?OutputHelper $output = null,
         ?LayoutInterface $layout = null,
-        ?Request $request = null
+        ?Request $request = null,
+        ?TaxHelper $tax = null
     ): ProductView {
         $registry = $this->createMock(Registry::class);
         $registry->method('registry')->with('current_product')->willReturn($product);
@@ -77,7 +79,8 @@ class ProductViewTest extends TestCase
             $priceCurrency,
             $layout ?? $this->createMock(LayoutInterface::class),
             $request,
-            new ConfigurableInitialState()
+            new ConfigurableInitialState(),
+            $tax ?? $this->createMock(TaxHelper::class)
         );
     }
 
@@ -93,10 +96,10 @@ class ProductViewTest extends TestCase
         return $product;
     }
 
-    private function priceInfo(float $final, float $regular): PriceInfoInterface
+    private function priceInfo(float $final, float $regular, ?float $finalBase = null): PriceInfoInterface
     {
         $finalPrice = $this->createMock(PriceInterface::class);
-        $finalPrice->method('getAmount')->willReturn($this->amount($final));
+        $finalPrice->method('getAmount')->willReturn($this->amount($final, $finalBase));
         $regularPrice = $this->createMock(PriceInterface::class);
         $regularPrice->method('getAmount')->willReturn($this->amount($regular));
 
@@ -109,10 +112,11 @@ class ProductViewTest extends TestCase
         return $info;
     }
 
-    private function amount(float $value): AmountInterface
+    private function amount(float $value, ?float $base = null): AmountInterface
     {
         $amount = $this->createMock(AmountInterface::class);
         $amount->method('getValue')->willReturn($value);
+        $amount->method('getBaseAmount')->willReturn($base ?? $value);
 
         return $amount;
     }
@@ -178,6 +182,41 @@ class ProductViewTest extends TestCase
         $this->assertSame(10.0, $view->getRegularPrice());
     }
 
+    public function testFinalPriceExcludingTaxIsTheBaseAmount(): void
+    {
+        $product = $this->product('configurable', true);
+        $product->method('getPriceInfo')->willReturn($this->priceInfo(56.16, 56.16, 52.0));
+
+        $view = $this->viewModel($product);
+
+        $this->assertSame(56.16, $view->getFinalPrice());
+        $this->assertSame(52.0, $view->getFinalPriceExcludingTax());
+    }
+
+    public function testFinalPriceExcludingTaxDegradesOffAProductPage(): void
+    {
+        $this->assertSame(0.0, $this->viewModel(null)->getFinalPriceExcludingTax());
+    }
+
+    public static function displayModes(): array
+    {
+        return [
+            'both' => [true, false, 'both'],
+            'including' => [false, true, 'incl'],
+            'excluding' => [false, false, 'excl'],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('displayModes')]
+    public function testPriceDisplayModeFollowsTheCatalogSetting(bool $both, bool $including, string $expected): void
+    {
+        $tax = $this->createMock(TaxHelper::class);
+        $tax->method('displayBothPrices')->willReturn($both);
+        $tax->method('displayPriceIncludingTax')->willReturn($including);
+
+        $this->assertSame($expected, $this->viewModel(null, null, null, null, $tax)->getPriceDisplayMode());
+    }
+
     public function testNotOnSaleWhenPricesMatch(): void
     {
         $product = $this->product('simple', false);
@@ -216,7 +255,8 @@ class ProductViewTest extends TestCase
             $priceCurrency,
             $this->createMock(LayoutInterface::class),
             $this->createMock(Request::class),
-            new ConfigurableInitialState()
+            new ConfigurableInitialState(),
+            $this->createMock(TaxHelper::class)
         );
 
         $this->assertSame('$%s', $view->getCurrencyFormat());

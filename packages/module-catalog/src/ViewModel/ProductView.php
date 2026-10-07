@@ -20,6 +20,7 @@ use Magento\Framework\Url\Helper\Data as UrlHelper;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
 use Magento\Framework\View\LayoutInterface;
+use Magento\Tax\Helper\Data as TaxHelper;
 use MageObsidian\Catalog\Service\Product\ConfigurableInitialState;
 use Throwable;
 
@@ -46,6 +47,8 @@ class ProductView implements ArgumentInterface
      * @param PriceCurrencyInterface $priceCurrency
      * @param LayoutInterface $layout
      * @param Request $request
+     * @param ConfigurableInitialState $configurableInitialState
+     * @param TaxHelper $taxHelper
      */
     public function __construct(
         private readonly Registry $registry,
@@ -55,7 +58,8 @@ class ProductView implements ArgumentInterface
         private readonly PriceCurrencyInterface $priceCurrency,
         private readonly LayoutInterface $layout,
         private readonly Request $request,
-        private readonly ConfigurableInitialState $configurableInitialState
+        private readonly ConfigurableInitialState $configurableInitialState,
+        private readonly TaxHelper $taxHelper
     ) {
     }
 
@@ -210,6 +214,29 @@ class ProductView implements ArgumentInterface
         } catch (Throwable) {
             return 0.0;
         }
+    }
+
+    public function getFinalPriceExcludingTax(): float
+    {
+        try {
+            $product = $this->getProduct();
+            if ($product === null) {
+                return 0.0;
+            }
+
+            return (float)$product->getPriceInfo()->getPrice('final_price')->getAmount()->getBaseAmount();
+        } catch (Throwable) {
+            return 0.0;
+        }
+    }
+
+    public function getPriceDisplayMode(): string
+    {
+        if ($this->taxHelper->displayBothPrices()) {
+            return 'both';
+        }
+
+        return $this->taxHelper->displayPriceIncludingTax() ? 'incl' : 'excl';
     }
 
     /**
