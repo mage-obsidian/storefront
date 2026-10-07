@@ -5,7 +5,7 @@
 import { describe, it, expect } from "vitest";
 import { mount } from "@vue/test-utils";
 import AddressForm from "./AddressForm.vue";
-import { emptyAddress, type AddressData } from "MageObsidian_Storefront::js/address";
+import { defaultAddressRules, emptyAddress, type AddressData, type AddressRules } from "MageObsidian_Storefront::js/address";
 
 const DIRECTORY = {
     countries: [
@@ -116,5 +116,109 @@ describe("AddressForm", () => {
 
         const street = wrapper.find('input[autocomplete="address-line1"]').element;
         expect(document.activeElement).toBe(street);
+    });
+
+    describe("store rules", () => {
+        const rulesWith = (fields: AddressRules["fields"] = {}, extra: Partial<AddressRules> = {}): AddressRules => {
+            const base = defaultAddressRules();
+            return { ...base, ...extra, fields: { ...base.fields, ...fields } };
+        };
+
+        const mountWith = (address: AddressData, rules: AddressRules) =>
+            mount(AddressForm, {
+                props: {
+                    ...DIRECTORY,
+                    modelValue: address,
+                    "onUpdate:modelValue": (v: AddressData) => Object.assign(address, v),
+                    rules,
+                },
+            });
+
+        it("omits a company the store hides", () => {
+            const wrapper = mountWith(
+                emptyAddress("US"),
+                rulesWith({ company: { visible: false, required: false, options: [] } }),
+            );
+            expect(wrapper.find('input[autocomplete="organization"]').exists()).toBe(false);
+        });
+
+        it("offers the prefix as a list when the store configures options", () => {
+            const wrapper = mountWith(
+                emptyAddress("US"),
+                rulesWith({ prefix: { visible: true, required: false, options: ["Mr.", "Mrs."] } }),
+            );
+            const prefix = wrapper.find('select[autocomplete="honorific-prefix"]');
+            expect(prefix.exists()).toBe(true);
+            expect(prefix.findAll("option").map((option) => option.text())).toEqual(["", "Mr.", "Mrs."]);
+        });
+
+        it("offers the prefix as free text when the store configures no options", () => {
+            const wrapper = mountWith(
+                emptyAddress("US"),
+                rulesWith({ prefix: { visible: true, required: false, options: [] } }),
+            );
+            expect(wrapper.find('input[autocomplete="honorific-prefix"]').exists()).toBe(true);
+        });
+
+        it("shows the middle name, suffix, fax and VAT number the store turns on", () => {
+            const wrapper = mountWith(
+                emptyAddress("US"),
+                rulesWith({
+                    middlename: { visible: true, required: false, options: [] },
+                    suffix: { visible: true, required: false, options: [] },
+                    fax: { visible: true, required: false, options: [] },
+                    vat_id: { visible: true, required: false, options: [] },
+                }),
+            );
+            for (const autocomplete of ["additional-name", "honorific-suffix", "fax"]) {
+                expect(wrapper.find(`input[autocomplete="${autocomplete}"]`).exists()).toBe(true);
+            }
+            expect(wrapper.find("[data-field-vat-id]").exists()).toBe(true);
+        });
+
+        it("does not require a telephone the store makes optional", async () => {
+            const address = {
+                ...emptyAddress("US"),
+                firstname: "Ada",
+                lastname: "Lovelace",
+                street: ["1 Analytical Way", ""],
+                city: "London",
+                postcode: "94016",
+                regionId: 12,
+                region: "California",
+            };
+            const wrapper = mountWith(address, rulesWith({ telephone: { visible: true, required: false, options: [] } }));
+
+            expect(wrapper.find('input[autocomplete="tel"]').attributes("required")).toBeUndefined();
+            expect(wrapper.vm.validate()).toBe(true);
+        });
+
+        it("omits a telephone the store hides", () => {
+            const wrapper = mountWith(
+                emptyAddress("US"),
+                rulesWith({ telephone: { visible: false, required: false, options: [] } }),
+            );
+            expect(wrapper.find('input[autocomplete="tel"]').exists()).toBe(false);
+        });
+
+        it("does not require a postcode in a country the store declares optional", () => {
+            const address = {
+                ...emptyAddress("PT"),
+                firstname: "Ada",
+                lastname: "Lovelace",
+                street: ["1 Analytical Way", ""],
+                city: "Lisbon",
+                telephone: "555-0100",
+            };
+            const wrapper = mountWith(address, rulesWith({}, { optionalZipCountries: ["PT"] }));
+
+            expect(wrapper.find('input[autocomplete="postal-code"]').attributes("required")).toBeUndefined();
+            expect(wrapper.vm.validate()).toBe(true);
+        });
+
+        it("renders as many street lines as the store configures", () => {
+            const wrapper = mountWith(emptyAddress("US", 3), rulesWith({}, { streetLines: 3 }));
+            expect(wrapper.findAll('input[autocomplete^="address-line"]')).toHaveLength(3);
+        });
     });
 });

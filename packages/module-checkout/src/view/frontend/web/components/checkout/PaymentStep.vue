@@ -9,6 +9,7 @@ import { ref, computed } from "vue";
 import { useCheckout, CheckoutStep } from "MageObsidian_Checkout::js/useCheckout";
 import AddressForm from "MageObsidian_Storefront::form/AddressForm";
 import PaymentMethodRenderer from "MageObsidian_Checkout::checkout/PaymentMethodRenderer";
+import SavedAddressPicker from "MageObsidian_Checkout::checkout/SavedAddressPicker";
 import type { RegionData } from "MageObsidian_Storefront::js/address";
 
 interface DirectoryData {
@@ -22,6 +23,8 @@ interface DirectoryData {
 interface PaymentLabels {
     methodsHeading?: string;
     billingHeading?: string;
+    billTo?: string;
+    newAddress?: string;
     billingForMethod?: string;
     sameAsShipping?: string;
     noMethods?: string;
@@ -58,8 +61,24 @@ const selectedMethodTitle = computed(
 );
 const billingVisible = computed(() => !checkout.displayBillingOnPayment || checkout.selectedPayment !== "");
 
+const billingOptions = computed(() => [
+    ...checkout.savedAddresses.map((address) => ({ value: String(address.id), label: address.label })),
+    { value: "", label: t("newAddress", "Use a new address") },
+]);
+const billingValue = computed(() =>
+    checkout.selectedBillingAddressId === null ? "" : String(checkout.selectedBillingAddressId),
+);
+const showSavedBilling = computed(() => !checkout.sameAsShipping && checkout.savedAddresses.length > 0);
+const showBillingForm = computed(
+    () => !checkout.sameAsShipping && (!showSavedBilling.value || checkout.selectedBillingAddressId === null),
+);
+
+function pickBilling(value: string): void {
+    checkout.selectBillingAddress(value === "" ? null : Number(value));
+}
+
 function toReview(): void {
-    if (checkout.sameAsShipping || billingForm.value?.validate()) {
+    if (!showBillingForm.value || billingForm.value?.validate()) {
         checkout.goToStep(CheckoutStep.Review);
     }
 }
@@ -118,16 +137,28 @@ function toReview(): void {
                 <input v-model="checkout.sameAsShipping" type="checkbox" class="field-check__input">
                 <span class="field-check__label">{{ t("sameAsShipping", "Same as shipping address") }}</span>
             </label>
-            <AddressForm
-                v-if="!checkout.sameAsShipping"
-                ref="billingForm"
-                v-model="checkout.billingAddress"
-                :countries="directory.countries"
-                :regions="directory.regions"
-                :states-required="directory.statesRequired"
-                :display-all-regions="directory.displayAllRegions"
-                :labels="addressLabels"
+            <SavedAddressPicker
+                v-if="showSavedBilling"
+                data-billing-saved-addresses
+                class="mb-5"
+                name="checkout-saved-billing-address"
+                :legend="t('billTo', 'Bill to')"
+                :options="billingOptions"
+                :current="billingValue"
+                @pick="pickBilling"
             />
+            <div v-if="showBillingForm" data-billing-address-fields>
+                <AddressForm
+                    ref="billingForm"
+                    v-model="checkout.billingAddress"
+                    :countries="directory.countries"
+                    :regions="directory.regions"
+                    :states-required="directory.statesRequired"
+                    :display-all-regions="directory.displayAllRegions"
+                    :labels="addressLabels"
+                    :rules="checkout.addressRules"
+                />
+            </div>
         </section>
 
         <p

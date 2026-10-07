@@ -8,6 +8,7 @@
 import { computed, ref } from "vue";
 import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
 import AddressForm from "MageObsidian_Storefront::form/AddressForm";
+import SavedAddressPicker from "MageObsidian_Checkout::checkout/SavedAddressPicker";
 import type { RegionData } from "MageObsidian_Storefront::js/address";
 import { formatCurrency } from "MageObsidian_Storefront::js/currency";
 
@@ -132,29 +133,16 @@ async function toPayment(): Promise<void> {
             <h3 id="shipping-address-heading" class="mb-5 font-mono text-xs uppercase tracking-label text-ink-soft">
                 {{ t("addressHeading", "Shipping address") }}
             </h3>
-            <div
+            <SavedAddressPicker
                 v-if="checkout.savedAddresses.length > 0"
                 data-saved-addresses
-                class="mb-6 flex flex-col gap-3"
-                role="radiogroup"
-                :aria-label="t('savedAddress', 'Ship to')"
-            >
-                <label
-                    v-for="option in addressOptions"
-                    :key="option.value"
-                    class="field-radio-card field-radio"
-                >
-                    <input
-                        type="radio"
-                        name="checkout-saved-address"
-                        class="field-radio__input"
-                        :value="option.value"
-                        :checked="currentAddressValue === option.value"
-                        @change="pickAddress(option.value)"
-                    >
-                    <span class="field-radio__label">{{ option.label }}</span>
-                </label>
-            </div>
+                class="mb-6"
+                name="checkout-saved-address"
+                :legend="t('savedAddress', 'Ship to')"
+                :options="addressOptions"
+                :current="currentAddressValue"
+                @pick="pickAddress"
+            />
 
             <div v-if="showAddressForm" data-address-fields class="flex flex-col gap-5">
                 <AddressForm
@@ -166,6 +154,7 @@ async function toPayment(): Promise<void> {
                     :display-all-regions="directory.displayAllRegions"
                     :labels="addressLabels"
                     :invalid-fields="invalidFields"
+                    :rules="checkout.addressRules"
                 />
                 <label v-if="checkout.canSaveAddress" class="field-check" data-save-address>
                     <input v-model="checkout.saveAddress" type="checkbox" class="field-check__input">

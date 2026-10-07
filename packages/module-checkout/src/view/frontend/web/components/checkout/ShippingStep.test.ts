@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { setActivePinia, createPinia } from "pinia";
 import ShippingStep from "./ShippingStep.vue";
+import AddressForm from "MageObsidian_Storefront::form/AddressForm";
 import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
 
 const CONFIG = {
@@ -323,5 +324,17 @@ describe("ShippingStep — sending the shopper to a field the checkout is waitin
         expect(wrapper.find("[data-address-form-stub]").exists()).toBe(false);
 
         expect(() => wrapper.vm.focusMissingField("firstname")).not.toThrow();
+    });
+
+    it("hands the store's address rules to the address form", () => {
+        const pinia2 = createPinia();
+        setActivePinia(pinia2);
+        useCheckout().init({ ...CONFIG, addressFields: { optionalZipCountries: ["IE"], streetLines: 3 } });
+
+        const wrapper = mount(ShippingStep, { props: { directory: DIRECTORY }, global: { plugins: [pinia2] } });
+        const rules = wrapper.findComponent(AddressForm).props("rules");
+
+        expect(rules.optionalZipCountries).toEqual(["IE"]);
+        expect(rules.streetLines).toBe(3);
     });
 });

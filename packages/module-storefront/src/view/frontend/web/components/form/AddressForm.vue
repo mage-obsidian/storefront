@@ -10,8 +10,11 @@ import Field from "MageObsidian_Storefront::form/Field";
 import {
     type AddressData,
     type RegionData,
+    type AddressRules,
     ADDRESS_FIELD_LABELS,
+    defaultAddressRules,
     missingFields,
+    postcodeRequired,
 } from "MageObsidian_Storefront::js/address";
 
 // Reusable address form island (the Magento_UI counterpart's address field set):
@@ -27,9 +30,14 @@ interface CountryOption {
 }
 
 interface AddressLabels {
+    prefix?: string;
     firstname?: string;
+    middlename?: string;
     lastname?: string;
+    suffix?: string;
     company?: string;
+    fax?: string;
+    vatId?: string;
     street?: string;
     streetLine2?: string;
     city?: string;
@@ -50,6 +58,7 @@ const props = withDefaults(
         displayAllRegions?: boolean;
         labels?: AddressLabels;
         invalidFields?: string[];
+        rules?: AddressRules;
     }>(),
     {
         countries: () => [],
@@ -58,6 +67,7 @@ const props = withDefaults(
         displayAllRegions: false,
         labels: () => ({}),
         invalidFields: () => [],
+        rules: () => defaultAddressRules(),
     },
 );
 
@@ -71,9 +81,14 @@ const hasError = (field: string): boolean =>
     errors.value.has(field) || props.invalidFields.includes(field);
 
 const t = computed(() => ({
+    prefix: props.labels.prefix ?? ADDRESS_FIELD_LABELS.prefix,
     firstname: props.labels.firstname ?? ADDRESS_FIELD_LABELS.firstname,
+    middlename: props.labels.middlename ?? ADDRESS_FIELD_LABELS.middlename,
     lastname: props.labels.lastname ?? ADDRESS_FIELD_LABELS.lastname,
-    company: props.labels.company ?? "Company",
+    suffix: props.labels.suffix ?? ADDRESS_FIELD_LABELS.suffix,
+    company: props.labels.company ?? ADDRESS_FIELD_LABELS.company,
+    fax: props.labels.fax ?? ADDRESS_FIELD_LABELS.fax,
+    vatId: props.labels.vatId ?? ADDRESS_FIELD_LABELS.vatId,
     street: props.labels.street ?? ADDRESS_FIELD_LABELS.street,
     streetLine2: props.labels.streetLine2 ?? "Apartment, suite, etc.",
     city: props.labels.city ?? ADDRESS_FIELD_LABELS.city,
@@ -85,6 +100,26 @@ const t = computed(() => ({
     required: props.labels.required ?? "This field is required.",
     optional: props.labels.optional ?? "optional",
 }));
+
+const rule = (code: string) => props.rules.fields[code] ?? { visible: false, required: false, options: [] };
+const listOptions = (code: string): Array<{ value: string; label: string }> => [
+    { value: "", label: "" },
+    ...rule(code).options.map((option) => ({ value: option, label: option })),
+];
+const streetLineIndexes = computed(() => Array.from({ length: props.rules.streetLines }, (_, index) => index));
+const streetLineLabel = (index: number): string =>
+    index === 1 ? t.value.streetLine2 : `${t.value.street} ${index + 1}`;
+const postcodeIsRequired = computed(() => postcodeRequired(address.value.countryId, props.rules));
+
+watch(
+    () => props.rules.streetLines,
+    (lines) => {
+        while (address.value.street.length < lines) {
+            address.value.street.push("");
+        }
+    },
+    { immediate: true },
+);
 
 const availableRegions = computed<RegionData[]>(() => props.regions[address.value.countryId] ?? []);
 const hasRegions = computed(() => availableRegions.value.length > 0);
@@ -133,7 +168,7 @@ function focusField(field: string): void {
  * hits the REST endpoints.
  */
 function validate(): boolean {
-    const missing = missingFields(address.value, regionRequired.value);
+    const missing = missingFields(address.value, regionRequired.value, props.rules);
     errors.value = new Set(missing);
     if (missing.length > 0) {
         focusField(missing[0]);
@@ -147,6 +182,31 @@ defineExpose({ validate, focusField });
 
 <template>
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <template v-if="rule('prefix').visible">
+            <Field
+                v-if="rule('prefix').options.length > 0"
+                v-model="address.prefix"
+                :id="id('prefix')"
+                :label="t.prefix"
+                type="select"
+                :required="rule('prefix').required"
+                autocomplete="honorific-prefix"
+                :options="listOptions('prefix')"
+                :error="hasError('prefix') ? t.required : ''"
+                @update:model-value="clearError('prefix')"
+            />
+            <Field
+                v-else
+                v-model="address.prefix"
+                :id="id('prefix')"
+                :label="t.prefix"
+                :required="rule('prefix').required"
+                autocomplete="honorific-prefix"
+                :error="hasError('prefix') ? t.required : ''"
+                @update:model-value="clearError('prefix')"
+            />
+        </template>
+
         <Field
             v-model="address.firstname"
             :id="id('firstname')"
@@ -155,6 +215,17 @@ defineExpose({ validate, focusField });
             autocomplete="given-name"
             :error="hasError('firstname') ? t.required : ''"
             @update:model-value="clearError('firstname')"
+        />
+
+        <Field
+            v-if="rule('middlename').visible"
+            v-model="address.middlename"
+            :id="id('middlename')"
+            :label="t.middlename"
+            :required="rule('middlename').required"
+            autocomplete="additional-name"
+            :error="hasError('middlename') ? t.required : ''"
+            @update:model-value="clearError('middlename')"
         />
 
         <Field
@@ -167,12 +238,40 @@ defineExpose({ validate, focusField });
             @update:model-value="clearError('lastname')"
         />
 
-        <div class="sm:col-span-2">
+        <template v-if="rule('suffix').visible">
+            <Field
+                v-if="rule('suffix').options.length > 0"
+                v-model="address.suffix"
+                :id="id('suffix')"
+                :label="t.suffix"
+                type="select"
+                :required="rule('suffix').required"
+                autocomplete="honorific-suffix"
+                :options="listOptions('suffix')"
+                :error="hasError('suffix') ? t.required : ''"
+                @update:model-value="clearError('suffix')"
+            />
+            <Field
+                v-else
+                v-model="address.suffix"
+                :id="id('suffix')"
+                :label="t.suffix"
+                :required="rule('suffix').required"
+                autocomplete="honorific-suffix"
+                :error="hasError('suffix') ? t.required : ''"
+                @update:model-value="clearError('suffix')"
+            />
+        </template>
+
+        <div v-if="rule('company').visible" class="sm:col-span-2">
             <Field
                 v-model="address.company"
                 :id="id('company')"
                 :label="t.company"
+                :required="rule('company').required"
                 autocomplete="organization"
+                :error="hasError('company') ? t.required : ''"
+                @update:model-value="clearError('company')"
             />
         </div>
 
@@ -182,26 +281,30 @@ defineExpose({ validate, focusField });
             <label :for="id('street')" class="field__label">
                 {{ t.street }}<span class="field__required" aria-hidden="true">*</span>
             </label>
-            <input
-                :id="id('street')"
-                v-model="address.street[0]"
-                type="text"
-                class="field__control"
-                autocomplete="address-line1"
-                required
-                aria-required="true"
-                :aria-invalid="hasError('street0') ? 'true' : undefined"
-                :aria-describedby="errorId('street0')"
-                @input="clearError('street0')"
-            >
-            <input
-                v-model="address.street[1]"
-                type="text"
-                class="field__control"
-                autocomplete="address-line2"
-                :aria-label="t.streetLine2"
-                :placeholder="t.streetLine2"
-            >
+            <template v-for="index in streetLineIndexes" :key="index">
+                <input
+                    v-if="index === 0"
+                    :id="id('street')"
+                    v-model="address.street[0]"
+                    type="text"
+                    class="field__control"
+                    autocomplete="address-line1"
+                    required
+                    aria-required="true"
+                    :aria-invalid="hasError('street0') ? 'true' : undefined"
+                    :aria-describedby="errorId('street0')"
+                    @input="clearError('street0')"
+                >
+                <input
+                    v-else
+                    v-model="address.street[index]"
+                    type="text"
+                    class="field__control"
+                    :autocomplete="`address-line${index + 1}`"
+                    :aria-label="streetLineLabel(index)"
+                    :placeholder="streetLineLabel(index)"
+                >
+            </template>
             <p :id="errorId('street0')" class="field__error" role="alert">{{ hasError('street0') ? t.required : '' }}</p>
         </div>
 
@@ -267,22 +370,46 @@ defineExpose({ validate, focusField });
             v-model="address.postcode"
             :id="id('postcode')"
             :label="t.postcode"
-            required
+            :required="postcodeIsRequired"
             autocomplete="postal-code"
             :error="hasError('postcode') ? t.required : ''"
             @update:model-value="clearError('postcode')"
         />
 
-        <div class="sm:col-span-2">
+        <div v-if="rule('telephone').visible" class="sm:col-span-2">
             <Field
                 v-model="address.telephone"
                 :id="id('telephone')"
                 :label="t.telephone"
                 type="tel"
-                required
+                :required="rule('telephone').required"
                 autocomplete="tel"
                 :error="hasError('telephone') ? t.required : ''"
                 @update:model-value="clearError('telephone')"
+            />
+        </div>
+
+        <div v-if="rule('fax').visible" class="sm:col-span-2">
+            <Field
+                v-model="address.fax"
+                :id="id('fax')"
+                :label="t.fax"
+                type="tel"
+                :required="rule('fax').required"
+                autocomplete="fax"
+                :error="hasError('fax') ? t.required : ''"
+                @update:model-value="clearError('fax')"
+            />
+        </div>
+
+        <div v-if="rule('vat_id').visible" class="sm:col-span-2" data-field-vat-id>
+            <Field
+                v-model="address.vatId"
+                :id="id('vatId')"
+                :label="t.vatId"
+                :required="rule('vat_id').required"
+                :error="hasError('vatId') ? t.required : ''"
+                @update:model-value="clearError('vatId')"
             />
         </div>
     </div>

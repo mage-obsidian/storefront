@@ -149,7 +149,7 @@ class CheckoutConfigTest extends TestCase
         sort($whole);
         sort($halves);
         $this->assertSame($halves, $whole);
-        $this->assertCount(22, $whole);
+        $this->assertCount(23, $whole);
     }
 
     public function testPrivateDataCarriesTheShippingChoiceHeldOnTheQuote(): void
@@ -275,6 +275,54 @@ class CheckoutConfigTest extends TestCase
         $this->assertSame('Ada Lovelace, 12 Baker Street, Austin, Texas 78701', $austin['label']);
 
         $this->assertFalse($private['addresses'][1]['isDefaultShipping']);
+    }
+
+    public function testTheCacheableHalfCarriesTheAddressFieldRules(): void
+    {
+        $rules = [
+            'fields' => ['telephone' => ['visible' => true, 'required' => false, 'options' => []]],
+            'streetLines' => 3,
+            'optionalZipCountries' => ['IE'],
+        ];
+
+        $public = $this->viewModel(isLoggedIn: false, maskedId: 'guestmask123', addressFields: $rules)->getPublicConfig();
+
+        $this->assertSame($rules, $public['addressFields']);
+    }
+
+    public function testTheAddressBookCarriesTheOptionalNameFields(): void
+    {
+        $private = $this->viewModel(
+            isLoggedIn: true,
+            maskedId: '',
+            addresses: [
+                self::ADDRESS_BOOK[0] + [
+                    'prefix' => 'Dr.', 'middlename' => 'King', 'suffix' => 'FRS', 'fax' => '0102', 'vatId' => 'GB1',
+                ],
+            ],
+            defaultShippingId: '20'
+        )->getPrivateData();
+
+        $address = $private['addresses'][0];
+        $this->assertSame('Dr.', $address['prefix']);
+        $this->assertSame('King', $address['middlename']);
+        $this->assertSame('FRS', $address['suffix']);
+        $this->assertSame('0102', $address['fax']);
+        $this->assertSame('GB1', $address['vatId']);
+    }
+
+    public function testTheQuoteShippingAddressCarriesTheOptionalNameFields(): void
+    {
+        $private = $this->viewModel(
+            isLoggedIn: false,
+            maskedId: 'guestmask123',
+            quoteShipping: self::QUOTE_SHIPPING + ['prefix' => 'Rear Admiral', 'fax' => '0199', 'vatId' => 'US7']
+        )->getPrivateData();
+
+        $address = $private['shipping']['address'];
+        $this->assertSame('Rear Admiral', $address['prefix']);
+        $this->assertSame('0199', $address['fax']);
+        $this->assertSame('US7', $address['vatId']);
     }
 
     public function testAGuestHasNoAddressBook(): void
@@ -411,7 +459,8 @@ class CheckoutConfigTest extends TestCase
         ?string $defaultShippingId = null,
         array $quoteShipping = [],
         array $reCaptchaConfig = [],
-        array $paymentConfig = []
+        array $paymentConfig = [],
+        array $addressFields = []
     ): CheckoutConfig {
         return $this->checkoutConfig(
             $isLoggedIn,
@@ -424,7 +473,8 @@ class CheckoutConfigTest extends TestCase
             $defaultShippingId,
             $quoteShipping,
             $reCaptchaConfig,
-            $paymentConfig
+            $paymentConfig,
+            $addressFields
         );
     }
 }

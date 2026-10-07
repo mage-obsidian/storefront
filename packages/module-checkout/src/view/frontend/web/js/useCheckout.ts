@@ -15,7 +15,16 @@ import { defineStore } from 'pinia';
 import { ensureSharedPinia } from 'MageObsidian_ModernFrontend::js/store';
 import { createCheckoutApi } from 'MageObsidian_Checkout::js/useCheckoutApi';
 import { useCustomerData } from 'MageObsidian_ModernFrontend::js/customer-data';
-import { emptyAddress, missingFields, toRestAddress, type AddressData } from 'MageObsidian_Storefront::js/address';
+import {
+    defaultAddressRules,
+    emptyAddress,
+    missingFields,
+    normalizeAddressRules,
+    postcodeRequired,
+    toRestAddress,
+    type AddressData,
+    type AddressRules,
+} from 'MageObsidian_Storefront::js/address';
 import { formatCurrency } from 'MageObsidian_Storefront::js/currency';
 import { tokenFor } from 'MageObsidian_Storefront::js/recaptcha';
 import events from 'MageObsidian_ModernFrontend::js/events';
@@ -181,6 +190,23 @@ async function runFlow<Result>(
 ensureSharedPinia();
 
 const RECAPTCHA_FORM = 'place_order';
+const PAYMENT_ROOT_FIELDS = ['po_number'];
+
+function paymentPayload(method: string, data: Record<string, unknown>): Record<string, unknown> {
+    const payload: Record<string, unknown> = { method };
+    const additional: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(data)) {
+        if (PAYMENT_ROOT_FIELDS.includes(key)) {
+            payload[key] = value;
+        } else {
+            additional[key] = value;
+        }
+    }
+    if (Object.keys(additional).length > 0) {
+        payload.additional_data = additional;
+    }
+    return payload;
+}
 
 export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const step = ref<CheckoutStep>(CheckoutStep.Identification);
@@ -196,9 +222,11 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const currencyFormat = ref('');
 
     const statesRequired = ref<string[]>([]);
+    const addressRules = ref<AddressRules>(defaultAddressRules());
     const shippingAddress = ref<AddressData>(emptyAddress());
     const savedAddresses = ref<SavedAddress[]>([]);
     const selectedAddressId = ref<number | null>(null);
+    const selectedBillingAddressId = ref<number | null>(null);
     const saveAddress = ref(true);
     const shippingMethods = ref<ShippingMethod[]>([]);
     const selectedMethod = ref<ShippingMethod | null>(null);
@@ -262,8 +290,9 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         restBaseUrl = cfg.restBaseUrl || '';
         defaultCountry = cfg.defaultCountry || '';
         statesRequired.value = Array.isArray(cfg.statesRequired) ? (cfg.statesRequired as string[]) : [];
-        shippingAddress.value = emptyAddress(defaultCountry);
-        billingAddress.value = emptyAddress(defaultCountry);
+        addressRules.value = normalizeAddressRules(cfg.addressFields);
+        shippingAddress.value = blankAddress();
+        billingAddress.value = blankAddress();
         guestCheckout.value = cfg.guestCheckout !== false;
         guestCheckoutLogin.value = !!cfg.guestCheckoutLogin;
         displayBillingOnPayment.value = cfg.displayBillingOnPayment !== false;
@@ -325,11 +354,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
             return false;
         }
 
-        const street = [...(held.street ?? [])];
-        while (street.length < 2) {
-            street.push('');
-        }
-        shippingAddress.value = { ...emptyAddress(defaultCountry), ...held, street };
+        shippingAddress.value = { ...blankAddress(), ...held, street: padStreet(held.street) };
         selectedAddressId.value =
             savedAddresses.value.find((a) => addressKey(a) === addressKey(shippingAddress.value))?.id ?? null;
 
@@ -344,32 +369,54 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         return true;
     }
 
+    function blankAddress(): AddressData {
+        return emptyAddress(defaultCountry, addressRules.value.streetLines);
+    }
+
+    function padStreet(lines: string[] | undefined): string[] {
+        const street = [...(lines ?? [])];
+        while (street.length < addressRules.value.streetLines) {
+            street.push('');
+        }
+        return street;
+    }
+
     /** Copies rather than references: AddressForm writes into `street` in place. */
     function selectAddress(id: number | null): void {
         selectedAddressId.value = id;
         const saved = id === null ? undefined : savedAddresses.value.find((a) => a.id === id);
         if (!saved) {
             selectedAddressId.value = null;
-            shippingAddress.value = emptyAddress(defaultCountry);
+            shippingAddress.value = blankAddress();
             return;
         }
 
-        const street = [...(saved.street ?? [])];
-        while (street.length < 2) {
-            street.push('');
-        }
+        shippingAddress.value = copyOf(saved);
+    }
 
-        shippingAddress.value = {
+    function selectBillingAddress(id: number | null): void {
+        const saved = id === null ? undefined : savedAddresses.value.find((a) => a.id === id);
+        selectedBillingAddressId.value = saved ? saved.id : null;
+        billingAddress.value = saved ? copyOf(saved) : blankAddress();
+    }
+
+    function copyOf(saved: SavedAddress): AddressData {
+        return {
+            prefix: saved.prefix || '',
             firstname: saved.firstname || '',
+            middlename: saved.middlename || '',
             lastname: saved.lastname || '',
+            suffix: saved.suffix || '',
             company: saved.company || '',
-            street,
+            street: padStreet(saved.street),
             city: saved.city || '',
             region: saved.region || '',
             regionId: saved.regionId ?? null,
             postcode: saved.postcode || '',
             countryId: saved.countryId || defaultCountry,
             telephone: saved.telephone || '',
+            fax: saved.fax || '',
+            vatId: saved.vatId || '',
         };
     }
 
@@ -639,11 +686,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         if (!api || code === '' || step.value !== CheckoutStep.Payment) {
             return;
         }
-        const payload: Record<string, unknown> = { method: code };
-        const additional = stateFor(code).data;
-        if (Object.keys(additional).length > 0) {
-            payload.additional_data = additional;
-        }
+        const payload = paymentPayload(code, stateFor(code).data);
         try {
             await api.setSelectedPaymentMethod(payload);
             await refreshTotals();
@@ -752,11 +795,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         try {
             const source = sameAsShipping.value ? shippingAddress.value : billingAddress.value;
             const billing = toRestAddress(source, isLoggedIn.value ? {} : { email: email.value });
-            const additional = stateFor(selectedPayment.value).data;
-            const paymentMethod: Record<string, unknown> = { method: selectedPayment.value };
-            if (Object.keys(additional).length > 0) {
-                paymentMethod.additional_data = additional;
-            }
+            const paymentMethod = paymentPayload(selectedPayment.value, stateFor(selectedPayment.value).data);
             if (agreementsEnabled.value && acceptedAgreements.value.length > 0) {
                 paymentMethod.extension_attributes = {
                     agreement_ids: acceptedAgreements.value.map((id) => String(id)),
@@ -817,6 +856,11 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
             address.postcode.trim(),
             address.countryId.trim(),
             address.telephone.trim(),
+            (address.prefix ?? '').trim(),
+            (address.middlename ?? '').trim(),
+            (address.suffix ?? '').trim(),
+            (address.fax ?? '').trim(),
+            (address.vatId ?? '').trim(),
         ]);
     }
 
@@ -835,11 +879,13 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         const a = shippingAddress.value;
         return (
             a.countryId.trim() !== '' &&
-            a.postcode.trim() !== '' &&
+            (a.postcode.trim() !== '' || !postcodeRequired(a.countryId, addressRules.value)) &&
             (!regionRequired.value || a.region.trim() !== '' || a.regionId !== null)
         );
     });
-    const missingAddressFields = computed(() => missingFields(shippingAddress.value, regionRequired.value));
+    const missingAddressFields = computed(() =>
+        missingFields(shippingAddress.value, regionRequired.value, addressRules.value),
+    );
     const addressComplete = computed(() => missingAddressFields.value.length === 0);
     const emailReady = computed(() => isLoggedIn.value || email.value.trim() !== '');
     const shippingSignature = computed(() => `${addressKey(shippingAddress.value)}|${selectedMethodKey.value}`);
@@ -932,10 +978,13 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         shippingAddress,
         savedAddresses,
         selectedAddressId,
+        selectedBillingAddressId,
+        selectBillingAddress,
         saveAddress,
         canSaveAddress,
         selectAddress,
         regionRequired,
+        addressRules,
         rateReady,
         addressComplete,
         missingAddressFields,

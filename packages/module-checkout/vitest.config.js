@@ -88,7 +88,7 @@ export default defineConfig({
                 new URL("../module-storefront/src/view/frontend/web/js/currency.ts", import.meta.url),
             ),
             "MageObsidian_Storefront::js/address": fileURLToPath(
-                new URL("./src/Test/Js/stubs/address.ts", import.meta.url),
+                new URL("../module-storefront/src/view/frontend/web/js/address.ts", import.meta.url),
             ),
             "MageObsidian_Storefront::form/AddressForm": fileURLToPath(
                 new URL("./src/Test/Js/stubs/AddressForm.vue", import.meta.url),
@@ -107,6 +107,9 @@ export default defineConfig({
             ),
             "MageObsidian_Checkout::checkout/OnePageCheckout": fileURLToPath(
                 new URL("./src/view/frontend/web/components/checkout/OnePageCheckout.vue", import.meta.url),
+            ),
+            "MageObsidian_Checkout::checkout/SavedAddressPicker": fileURLToPath(
+                new URL("./src/view/frontend/web/components/checkout/SavedAddressPicker.vue", import.meta.url),
             ),
             "MageObsidian_Checkout::checkout/PaymentMethodRenderer": fileURLToPath(
                 new URL("./src/view/frontend/web/components/checkout/PaymentMethodRenderer.vue", import.meta.url),

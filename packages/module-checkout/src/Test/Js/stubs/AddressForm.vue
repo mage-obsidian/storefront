@@ -21,6 +21,7 @@ const props = withDefaults(
         displayAllRegions?: boolean;
         labels?: Record<string, string>;
         invalidFields?: string[];
+        rules?: unknown;
         valid?: boolean;
     }>(),
     { valid: true, invalidFields: () => [] },

@@ -3,7 +3,16 @@
 // SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
 // SPDX-License-Identifier: MIT
 import { describe, it, expect } from "vitest";
-import { addressFieldLabel, emptyAddress, missingFields, toRestAddress, type AddressData } from "./address.ts";
+import {
+    addressFieldLabel,
+    defaultAddressRules,
+    emptyAddress,
+    missingFields,
+    postcodeRequired,
+    toRestAddress,
+    type AddressData,
+    type AddressRules,
+} from "./address.ts";
 
 function filled(overrides: Partial<AddressData> = {}): AddressData {
     return {
@@ -122,6 +131,91 @@ describe("addressFieldLabel", () => {
     });
 
     it("falls back to the field name for something it does not know", () => {
-        expect(addressFieldLabel("vatId")).toBe("vatId");
+        expect(addressFieldLabel("loyaltyId")).toBe("loyaltyId");
+    });
+});
+
+function rulesWith(fields: AddressRules["fields"] = {}, extra: Partial<AddressRules> = {}): AddressRules {
+    const base = defaultAddressRules();
+    return { ...base, ...extra, fields: { ...base.fields, ...fields } };
+}
+
+describe("defaultAddressRules", () => {
+    it("matches the platform defaults: telephone required, company optional, the rest hidden", () => {
+        const { fields, streetLines, optionalZipCountries } = defaultAddressRules();
+        expect(fields.telephone).toEqual({ visible: true, required: true, options: [] });
+        expect(fields.company).toEqual({ visible: true, required: false, options: [] });
+        expect(fields.prefix.visible).toBe(false);
+        expect(fields.fax.visible).toBe(false);
+        expect(streetLines).toBe(2);
+        expect(optionalZipCountries).toEqual([]);
+    });
+});
+
+describe("postcodeRequired", () => {
+    it("is required unless the country is declared optional", () => {
+        const rules = rulesWith({}, { optionalZipCountries: ["IE"] });
+        expect(postcodeRequired("US", rules)).toBe(true);
+        expect(postcodeRequired("IE", rules)).toBe(false);
+    });
+});
+
+describe("missingFields with store rules", () => {
+    it("does not ask for a postcode where the country declares it optional", () => {
+        const rules = rulesWith({}, { optionalZipCountries: ["IE"] });
+        const address = filled({ countryId: "IE", postcode: "", region: "", regionId: null });
+        expect(missingFields(address, false, rules)).toEqual([]);
+        expect(missingFields({ ...address, countryId: "US" }, false, rules)).toEqual(["postcode"]);
+    });
+
+    it("does not ask for a telephone the store made optional", () => {
+        const rules = rulesWith({ telephone: { visible: true, required: false, options: [] } });
+        expect(missingFields(filled({ telephone: "" }), false, rules)).toEqual([]);
+    });
+
+    it("does not ask for a telephone the store hides", () => {
+        const rules = rulesWith({ telephone: { visible: false, required: false, options: [] } });
+        expect(missingFields(filled({ telephone: "" }), false, rules)).toEqual([]);
+    });
+
+    it("asks for every visible field the store makes required", () => {
+        const rules = rulesWith({
+            prefix: { visible: true, required: true, options: ["Mr.", "Mrs."] },
+            company: { visible: true, required: true, options: [] },
+            vat_id: { visible: true, required: true, options: [] },
+        });
+        expect(missingFields(filled(), false, rules)).toEqual(["prefix", "company", "vatId"]);
+    });
+
+    it("ignores a required flag on a hidden field", () => {
+        const rules = rulesWith({ company: { visible: false, required: true, options: [] } });
+        expect(missingFields(filled(), false, rules)).toEqual([]);
+    });
+});
+
+describe("emptyAddress with the configured street lines", () => {
+    it("seeds as many blank lines as the store configures", () => {
+        expect(emptyAddress("US", 3).street).toEqual(["", "", ""]);
+    });
+
+    it("seeds the optional name fields blank", () => {
+        const address = emptyAddress("US");
+        expect([address.prefix, address.middlename, address.suffix, address.fax, address.vatId]).toEqual(["", "", "", "", ""]);
+    });
+});
+
+describe("toRestAddress with the optional fields", () => {
+    it("carries each filled optional field under its REST name", () => {
+        const rest = toRestAddress(
+            filled({ prefix: "Dr.", middlename: "Byron", suffix: "Jr.", fax: "555-0199", vatId: "GB123" }),
+        );
+        expect(rest).toMatchObject({ prefix: "Dr.", middlename: "Byron", suffix: "Jr.", fax: "555-0199", vat_id: "GB123" });
+    });
+
+    it("omits the optional fields left blank", () => {
+        const rest = toRestAddress(filled());
+        for (const key of ["prefix", "middlename", "suffix", "fax", "vat_id"]) {
+            expect(rest).not.toHaveProperty(key);
+        }
     });
 });

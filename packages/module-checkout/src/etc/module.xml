@@ -14,6 +14,7 @@
                  shared Drawer) and inherits its legacy-layout neutralization. -->
             <module name="MageObsidian_Storefront"/>
             <module name="MageObsidian_ModernFrontend"/>
+            <module name="MageObsidian_Customer"/>
             <!-- Load after the core checkout module whose frontend this adapts, so
                  our re-declared layout wins the merge. -->
             <module name="Magento_Checkout"/>

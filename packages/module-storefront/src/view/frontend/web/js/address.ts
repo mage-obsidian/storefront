@@ -17,8 +17,11 @@ export interface RegionData {
 }
 
 export interface AddressData {
+    prefix: string;
     firstname: string;
+    middlename: string;
     lastname: string;
+    suffix: string;
     company: string;
     /** Street lines; [0] is required, [1] optional. */
     street: string[];
@@ -30,6 +33,61 @@ export interface AddressData {
     postcode: string;
     countryId: string;
     telephone: string;
+    fax: string;
+    vatId: string;
+}
+
+export interface FieldRule {
+    visible: boolean;
+    required: boolean;
+    options: string[];
+}
+
+export interface AddressRules {
+    fields: Record<string, FieldRule>;
+    streetLines: number;
+    optionalZipCountries: string[];
+}
+
+const hiddenRule = (): FieldRule => ({ visible: false, required: false, options: [] });
+
+export function defaultAddressRules(): AddressRules {
+    return {
+        fields: {
+            prefix: hiddenRule(),
+            middlename: hiddenRule(),
+            suffix: hiddenRule(),
+            company: { visible: true, required: false, options: [] },
+            telephone: { visible: true, required: true, options: [] },
+            fax: hiddenRule(),
+            vat_id: hiddenRule(),
+        },
+        streetLines: 2,
+        optionalZipCountries: [],
+    };
+}
+
+export function normalizeAddressRules(raw: unknown): AddressRules {
+    const base = defaultAddressRules();
+    const source = (typeof raw === 'object' && raw !== null ? raw : {}) as Partial<AddressRules>;
+    const fields = { ...base.fields };
+    for (const [code, rule] of Object.entries(source.fields ?? {})) {
+        fields[code] = {
+            visible: Boolean(rule?.visible),
+            required: Boolean(rule?.visible) && Boolean(rule?.required),
+            options: Array.isArray(rule?.options) ? rule.options.map(String) : [],
+        };
+    }
+    const lines = Number(source.streetLines);
+    return {
+        fields,
+        streetLines: lines >= 1 ? Math.min(lines, 20) : base.streetLines,
+        optionalZipCountries: Array.isArray(source.optionalZipCountries) ? source.optionalZipCountries.map(String) : [],
+    };
+}
+
+export function postcodeRequired(countryId: string, rules: AddressRules): boolean {
+    return !rules.optionalZipCountries.includes(countryId);
 }
 
 /**
@@ -47,24 +105,34 @@ export interface RestAddress {
     telephone: string;
     firstname: string;
     lastname: string;
+    prefix?: string;
+    middlename?: string;
+    suffix?: string;
+    fax?: string;
+    vat_id?: string;
     company?: string;
     email?: string;
     save_in_address_book?: number;
 }
 
 /** A blank address, optionally pre-seeded with the store's default country. */
-export function emptyAddress(countryId = ''): AddressData {
+export function emptyAddress(countryId = '', streetLines = 2): AddressData {
     return {
+        prefix: '',
         firstname: '',
+        middlename: '',
         lastname: '',
+        suffix: '',
         company: '',
-        street: ['', ''],
+        street: Array.from({ length: Math.max(streetLines, 1) }, () => ''),
         city: '',
         region: '',
         regionId: null,
         postcode: '',
         countryId,
         telephone: '',
+        fax: '',
+        vatId: '',
     };
 }
 
@@ -73,7 +141,16 @@ export function emptyAddress(countryId = ''): AddressData {
  * required only when the selected country mandates a state. Used by the form to
  * mark fields and by the store to gate REST submission.
  */
-export function missingFields(address: AddressData, regionRequired: boolean): string[] {
+function isRequired(rules: AddressRules, code: string): boolean {
+    const rule = rules.fields[code];
+    return Boolean(rule?.visible && rule.required);
+}
+
+export function missingFields(
+    address: AddressData,
+    regionRequired: boolean,
+    rules: AddressRules = defaultAddressRules(),
+): string[] {
     const missing: string[] = [];
     if (!address.firstname.trim()) {
         missing.push('firstname');
@@ -87,7 +164,7 @@ export function missingFields(address: AddressData, regionRequired: boolean): st
     if (!address.city.trim()) {
         missing.push('city');
     }
-    if (!address.postcode.trim()) {
+    if (!address.postcode.trim() && postcodeRequired(address.countryId, rules)) {
         missing.push('postcode');
     }
     if (!address.countryId.trim()) {
@@ -96,8 +173,21 @@ export function missingFields(address: AddressData, regionRequired: boolean): st
     if (regionRequired && !address.region.trim() && !address.regionId) {
         missing.push('region');
     }
-    if (!address.telephone.trim()) {
+    if (!address.telephone.trim() && isRequired(rules, 'telephone')) {
         missing.push('telephone');
+    }
+    const optionalFields: Array<[string, string, string]> = [
+        ['prefix', 'prefix', address.prefix],
+        ['middlename', 'middlename', address.middlename],
+        ['suffix', 'suffix', address.suffix],
+        ['company', 'company', address.company],
+        ['fax', 'fax', address.fax],
+        ['vat_id', 'vatId', address.vatId],
+    ];
+    for (const [code, name, value] of optionalFields) {
+        if (isRequired(rules, code) && !(value ?? '').trim()) {
+            missing.push(name);
+        }
     }
     return missing;
 }
@@ -105,6 +195,12 @@ export function missingFields(address: AddressData, regionRequired: boolean): st
 export const ADDRESS_FIELD_LABELS: Record<string, string> = {
     firstname: 'First name',
     lastname: 'Last name',
+    prefix: 'Prefix',
+    middlename: 'Middle name',
+    suffix: 'Suffix',
+    company: 'Company',
+    fax: 'Fax',
+    vatId: 'VAT number',
     street: 'Street address',
     city: 'City',
     country: 'Country',
@@ -144,6 +240,18 @@ export function toRestAddress(
     };
     if (address.company.trim() !== '') {
         rest.company = address.company;
+    }
+    const optionalFields: Array<[keyof RestAddress, string]> = [
+        ['prefix', address.prefix],
+        ['middlename', address.middlename],
+        ['suffix', address.suffix],
+        ['fax', address.fax],
+        ['vat_id', address.vatId],
+    ];
+    for (const [key, value] of optionalFields) {
+        if ((value ?? '').trim() !== '') {
+            (rest as Record<string, unknown>)[key] = value;
+        }
     }
     if (extra.regionCode) {
         rest.region_code = extra.regionCode;

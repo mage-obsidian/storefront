@@ -270,4 +270,71 @@ describe("PaymentStep", () => {
         expect(wrapper.text()).not.toContain("Check / Money order");
         expect(wrapper.text()).toContain("No Payment Information Required");
     });
+
+    describe("billing from the saved addresses", () => {
+        const AUSTIN = {
+            id: 20, label: "Ada, 12 Baker Street, Austin", isDefaultShipping: true,
+            firstname: "Ada", lastname: "Lovelace", company: "", street: ["12 Baker Street"],
+            city: "Austin", region: "Texas", regionId: 57, postcode: "78701", countryId: "US", telephone: "5125550142",
+        };
+        const MIAMI = { ...AUSTIN, id: 21, label: "Ada, 440 Ocean Drive, Miami", isDefaultShipping: false, city: "Miami", postcode: "33139" };
+
+        function renderWithSaved(sameAsShipping = false) {
+            checkout.savedAddresses = [AUSTIN, MIAMI];
+            checkout.sameAsShipping = sameAsShipping;
+            return render();
+        }
+
+        const options = (wrapper) => wrapper.findAll("[data-billing-saved-addresses] .field-radio-card");
+
+        it("offers the saved addresses once billing is not the shipping address", () => {
+            const wrapper = renderWithSaved();
+
+            expect(options(wrapper).map((card) => card.text())).toEqual([
+                "Ada, 12 Baker Street, Austin",
+                "Ada, 440 Ocean Drive, Miami",
+                "Use a new address",
+            ]);
+        });
+
+        it("offers nothing while billing is the shipping address", () => {
+            expect(renderWithSaved(true).find("[data-billing-saved-addresses]").exists()).toBe(false);
+        });
+
+        it("offers nothing when the customer has no saved address", () => {
+            checkout.sameAsShipping = false;
+
+            expect(render().find("[data-billing-saved-addresses]").exists()).toBe(false);
+        });
+
+        it("bills the saved address that is picked and folds the form away", async () => {
+            const wrapper = renderWithSaved();
+
+            await options(wrapper)[1].find("input").setValue(true);
+
+            expect(checkout.selectedBillingAddressId).toBe(21);
+            expect(checkout.billingAddress.postcode).toBe("33139");
+            expect(wrapper.find("[data-billing-address-fields]").exists()).toBe(false);
+        });
+
+        it("shows the form again for a new address", async () => {
+            const wrapper = renderWithSaved();
+            await options(wrapper)[1].find("input").setValue(true);
+
+            await options(wrapper)[2].find("input").setValue(true);
+
+            expect(checkout.selectedBillingAddressId).toBeNull();
+            expect(wrapper.find("[data-billing-address-fields]").exists()).toBe(true);
+        });
+
+        it("lets the shopper go on without validating a form that is not shown", async () => {
+            const wrapper = renderWithSaved();
+            await options(wrapper)[1].find("input").setValue(true);
+            checkout.goToStep = vi.fn();
+
+            await wrapper.find(".checkout-cta").trigger("click");
+
+            expect(checkout.goToStep).toHaveBeenCalled();
+        });
+    });
 });

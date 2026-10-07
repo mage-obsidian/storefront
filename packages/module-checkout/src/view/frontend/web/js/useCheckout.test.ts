@@ -412,6 +412,36 @@ describe("useCheckout — payment, coupon and order", () => {
         });
     });
 
+    it("sends a purchase order number as a field of the payment, not as additional data", async () => {
+        Object.defineProperty(window, "location", { value: { assign: vi.fn() }, writable: true });
+        const fetchMock = mockFetch(737373);
+        const checkout = ready();
+        checkout.selectPayment("purchaseorder");
+        checkout.declareMethodState("purchaseorder", { data: { po_number: "PO-1234", reference: "REF-9" } });
+
+        expect(await checkout.placeOrder()).toBe(737373);
+        expect(JSON.parse(fetchMock.mock.calls[0][1].body).paymentMethod).toEqual({
+            method: "purchaseorder",
+            po_number: "PO-1234",
+            additional_data: { reference: "REF-9" },
+        });
+    });
+
+    it("leaves additional data out when the purchase order number is all there is", async () => {
+        Object.defineProperty(window, "location", { value: { assign: vi.fn() }, writable: true });
+        const fetchMock = mockFetch(747474);
+        const checkout = ready();
+        checkout.selectPayment("purchaseorder");
+        checkout.declareMethodState("purchaseorder", { data: { po_number: "PO-1234" } });
+
+        await checkout.placeOrder();
+
+        expect(JSON.parse(fetchMock.mock.calls[0][1].body).paymentMethod).toEqual({
+            method: "purchaseorder",
+            po_number: "PO-1234",
+        });
+    });
+
     it("refuses to place the order while the selected method says it is not ready", async () => {
         const fetchMock = mockFetch(919191);
         const checkout = ready();
@@ -1335,5 +1365,178 @@ describe("useCheckout — an address that stops being complete after the payment
 
         expect(checkout.paymentMethods).toEqual([]);
         expect(checkout.methodState).toEqual({});
+    });
+});
+
+describe("useCheckout — the address rules the store configures", () => {
+    const IRELAND = { countryId: "IE", postcode: "", region: "", regionId: null };
+
+    beforeEach(() => {
+        setActivePinia(createPinia());
+    });
+
+    function seeded(addressFields: Record<string, unknown> = {}, overrides = {}) {
+        const checkout = useCheckout();
+        checkout.init({ ...GUEST_CONFIG, statesRequired: ["US"], addressFields });
+        Object.assign(checkout.shippingAddress, overrides);
+        return checkout;
+    }
+
+    it("quotes an address without a postcode where the country is declared optional", () => {
+        const checkout = seeded({ optionalZipCountries: ["IE"] }, IRELAND);
+
+        expect(checkout.rateReady).toBe(true);
+    });
+
+    it("still waits for a postcode where the country is not declared optional", () => {
+        const checkout = seeded({ optionalZipCountries: ["IE"] }, { ...IRELAND, countryId: "FR" });
+
+        expect(checkout.rateReady).toBe(false);
+    });
+
+    it("keeps waiting for a postcode when the store declares no optional country", () => {
+        expect(seeded({}, IRELAND).rateReady).toBe(false);
+    });
+
+    it("does not list the postcode as missing in an optional-postcode country", () => {
+        const checkout = seeded({ optionalZipCountries: ["IE"] }, IRELAND);
+
+        expect(checkout.missingAddressFields).not.toContain("postcode");
+    });
+
+    it("does not list a telephone the store made optional as missing", () => {
+        const checkout = seeded({ fields: { telephone: { visible: true, required: false, options: [] } } });
+
+        expect(checkout.missingAddressFields).not.toContain("telephone");
+    });
+
+    it("lists a required field the store turned on, such as the VAT number", () => {
+        const checkout = seeded({ fields: { vat_id: { visible: true, required: true, options: [] } } });
+
+        expect(checkout.missingAddressFields).toContain("vatId");
+    });
+
+    it("still asks for a telephone when the store says nothing about it", () => {
+        expect(seeded().missingAddressFields).toContain("telephone");
+    });
+
+    it("seeds as many blank street lines as the store configures", () => {
+        const checkout = seeded({ streetLines: 3 });
+
+        expect(checkout.shippingAddress.street).toEqual(["", "", ""]);
+        expect(checkout.billingAddress.street).toEqual(["", "", ""]);
+    });
+
+    it("exposes the normalised rules for the forms", () => {
+        const checkout = seeded({ streetLines: 3, optionalZipCountries: ["IE"] });
+
+        expect(checkout.addressRules.streetLines).toBe(3);
+        expect(checkout.addressRules.optionalZipCountries).toEqual(["IE"]);
+        expect(checkout.addressRules.fields.telephone.required).toBe(true);
+    });
+
+    it("carries the optional name fields of a saved address into the form", () => {
+        const checkout = useCheckout();
+        checkout.init({
+            ...GUEST_CONFIG,
+            isLoggedIn: true,
+            customerEmail: "ada@shop.test",
+            addressFields: { fields: { prefix: { visible: true, required: false, options: ["Dr."] } } },
+            addresses: [
+                {
+                    id: 7, label: "Home", isDefaultShipping: true, prefix: "Dr.", firstname: "Ada", middlename: "King",
+                    lastname: "Lovelace", suffix: "FRS", company: "", street: ["1 Rue"], city: "Paris", region: "",
+                    regionId: null, postcode: "75001", countryId: "FR", telephone: "", fax: "0102", vatId: "FR1",
+                },
+            ],
+        });
+
+        expect(checkout.shippingAddress).toMatchObject({
+            prefix: "Dr.", middlename: "King", suffix: "FRS", fax: "0102", vatId: "FR1", telephone: "",
+        });
+    });
+});
+
+describe("useCheckout — billing from the saved addresses", () => {
+    const AUSTIN = {
+        id: 20, label: "Ada, 12 Baker Street, Austin", isDefaultShipping: true,
+        firstname: "Ada", lastname: "Lovelace", company: "", street: ["12 Baker Street"],
+        city: "Austin", region: "Texas", regionId: 57, postcode: "78701",
+        countryId: "US", telephone: "5125550142",
+    };
+    const MIAMI = {
+        ...AUSTIN, id: 21, label: "Ada, 440 Ocean Drive, Miami", isDefaultShipping: false,
+        street: ["440 Ocean Drive"], city: "Miami", region: "Florida", regionId: 18, postcode: "33139",
+    };
+
+    beforeEach(() => {
+        setActivePinia(createPinia());
+    });
+
+    function loggedIn() {
+        const checkout = useCheckout();
+        checkout.init({
+            ...GUEST_CONFIG,
+            isLoggedIn: true,
+            customerEmail: "ada@shop.test",
+            addresses: [AUSTIN, MIAMI],
+        });
+        return checkout;
+    }
+
+    it("starts with no saved billing address chosen", () => {
+        expect(loggedIn().selectedBillingAddressId).toBeNull();
+    });
+
+    it("copies the chosen saved address into the billing address", () => {
+        const checkout = loggedIn();
+
+        checkout.selectBillingAddress(21);
+
+        expect(checkout.selectedBillingAddressId).toBe(21);
+        expect(checkout.billingAddress).toMatchObject({ city: "Miami", postcode: "33139", regionId: 18 });
+    });
+
+    it("does not touch the shipping address while billing is chosen", () => {
+        const checkout = loggedIn();
+
+        checkout.selectBillingAddress(21);
+
+        expect(checkout.shippingAddress.postcode).toBe("78701");
+    });
+
+    it("goes back to a blank billing address for a new one", () => {
+        const checkout = loggedIn();
+        checkout.selectBillingAddress(21);
+
+        checkout.selectBillingAddress(null);
+
+        expect(checkout.selectedBillingAddressId).toBeNull();
+        expect(checkout.billingAddress.postcode).toBe("");
+        expect(checkout.billingAddress.countryId).toBe("US");
+    });
+
+    it("treats an unknown id as a new address", () => {
+        const checkout = loggedIn();
+
+        checkout.selectBillingAddress(999);
+
+        expect(checkout.selectedBillingAddressId).toBeNull();
+    });
+
+    it("bills the order to the saved address that was chosen", async () => {
+        Object.defineProperty(window, "location", { value: { assign: vi.fn() }, writable: true });
+        const fetchMock = mockFetch(757575);
+        const checkout = loggedIn();
+        checkout.selectPayment("checkmo");
+        checkout.sameAsShipping = false;
+        checkout.selectBillingAddress(21);
+
+        await checkout.placeOrder();
+
+        expect(JSON.parse(fetchMock.mock.calls[0][1].body).billingAddress).toMatchObject({
+            city: "Miami",
+            postcode: "33139",
+        });
     });
 });
