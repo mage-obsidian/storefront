@@ -21,6 +21,8 @@ import {
     type MutationEvent,
     type MutationEventName,
 } from "mage-obsidian/runtime/mutationEvent.ts";
+import { resetToken } from "MageObsidian_Storefront::js/recaptcha";
+import { announce, readCookieMessages } from "MageObsidian_Storefront::js/session-messages";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 import { ensureFormKey } from "MageObsidian_Storefront::js/form-key-provider";
 import { createCartQueue } from "MageObsidian_Checkout::js/cart-queue";
@@ -46,6 +48,8 @@ const couponEvent = <Phase extends MutationPhase>(phase: Phase) =>
     mutationEvent(CART_DOMAIN, CartPageOperation.Coupon, phase);
 
 const CART_SECTION = "cart";
+const MESSAGES_SECTION = "messages";
+const COUPON_CAPTCHA_FORM = "coupon_code";
 const WISHLIST_SECTION = "wishlist";
 
 const cart = useCart();
@@ -254,7 +258,9 @@ async function applyCoupon(form: HTMLFormElement): Promise<void> {
     } catch {
         ok = false;
     }
-    await customerData.reload([CART_SECTION]);
+    resetToken(COUPON_CAPTCHA_FORM);
+    await customerData.reload([CART_SECTION, MESSAGES_SECTION]);
+    await announce(readCookieMessages());
 
     await events.dispatch(couponEvent(MutationPhase.After), { ...request, result: ok });
     if (!ok) {

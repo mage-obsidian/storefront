@@ -125,7 +125,7 @@ describe("cart-page enhancer", () => {
         expect(reload.calls.at(-1)).toEqual([["cart", "wishlist"]]);
     });
 
-    it("submits the coupon form in place and reloads the cart section", async () => {
+    it("submits the coupon form in place and reloads the cart and the messages sections", async () => {
         const form = document.querySelector("[data-cart-coupon]");
         form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
 
@@ -133,7 +133,31 @@ describe("cart-page enhancer", () => {
         const postCall = fetch.mock.calls.find(([url]) => String(url).endsWith("/checkout/cart/couponPost"));
         expect(postCall).toBeDefined();
         expect(postCall[1].method).toBe("POST");
-        expect(reload.calls.at(-1)).toEqual([["cart"]]);
+        expect(reload.calls.at(-1)).toEqual([["cart", "messages"]]);
+    });
+});
+
+describe("coupon challenge", () => {
+    it("asks for a fresh challenge after every attempt, since a token is good for one", async () => {
+        const { resets, reset } = await import("MageObsidian_Storefront::js/recaptcha");
+        reset();
+        const form = document.querySelector("[data-cart-coupon]");
+        form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+
+        await vi.waitFor(() => expect(resets).toEqual(["coupon_code"]));
+    });
+});
+
+describe("coupon rejection", () => {
+    it("announces what the server queued in the messages cookie once the attempt is over", async () => {
+        const { announced, cookieMessages, reset } = await import("MageObsidian_Storefront::js/session-messages");
+        reset();
+        const rejection = { type: "error", text: "Something went wrong with reCAPTCHA." };
+        cookieMessages.push(rejection);
+        const form = document.querySelector("[data-cart-coupon]");
+        form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+
+        await vi.waitFor(() => expect(announced).toEqual([[rejection]]));
     });
 });
 

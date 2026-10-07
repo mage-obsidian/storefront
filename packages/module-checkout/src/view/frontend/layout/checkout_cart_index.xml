@@ -43,7 +43,15 @@
                 <block class="Magento\Checkout\Block\Cart\Totals" name="checkout.cart.totals"
                        as="totals" template="Magento_Checkout::cart/totals.twig"/>
                 <block class="Magento\Checkout\Block\Cart\Coupon" name="checkout.cart.coupon"
-                       as="coupon" template="Magento_Checkout::cart/coupon.twig"/>
+                       as="coupon" template="Magento_Checkout::cart/coupon.twig">
+                    <block class="MageObsidian\ModernFrontend\Block\Template" name="coupon_recaptcha" as="captcha"
+                           template="Magento_ReCaptchaFrontendUi::recaptcha.twig">
+                        <arguments>
+                            <argument name="view_model" xsi:type="object">MageObsidian\Storefront\ViewModel\ReCaptcha</argument>
+                            <argument name="recaptcha_for" xsi:type="string">coupon_code</argument>
+                        </arguments>
+                    </block>
+                </block>
                 <block class="Magento\Checkout\Block\Cart\Crosssell" name="checkout.cart.crosssell"
                        as="crosssell" template="Magento_Checkout::cart/cross-sell.twig"/>
             </block>

@@ -84,6 +84,9 @@ export default defineConfig({
             "MageObsidian_Storefront::js/recaptcha": fileURLToPath(
                 new URL("./src/Test/Js/stubs/recaptcha.ts", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/session-messages": fileURLToPath(
+                new URL("./src/Test/Js/stubs/session-messages.ts", import.meta.url),
+            ),
             "MageObsidian_Storefront::js/currency": fileURLToPath(
                 new URL("../module-storefront/src/view/frontend/web/js/currency.ts", import.meta.url),
             ),
