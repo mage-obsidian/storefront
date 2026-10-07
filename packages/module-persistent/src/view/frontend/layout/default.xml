@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Persistent project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="header-content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.persistent.greeting"
+                   as="persistent_greeting" template="Magento_Persistent::header/greeting.twig">
+                <arguments>
+                    <argument name="greeting" xsi:type="object">MageObsidian\Persistent\ViewModel\Greeting</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+    </body>
+</page>
