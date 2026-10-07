@@ -76,6 +76,9 @@ export default defineConfig({
             "MageObsidian_Checkout::js/useCheckoutApi": fileURLToPath(
                 new URL("./src/view/frontend/web/js/useCheckoutApi.ts", import.meta.url),
             ),
+            "MageObsidian_Checkout::js/tax-display": fileURLToPath(
+                new URL("./src/view/frontend/web/js/tax-display.ts", import.meta.url),
+            ),
             "MageObsidian_Checkout::js/useShippingEstimator": fileURLToPath(
                 new URL("./src/view/frontend/web/js/useShippingEstimator.ts", import.meta.url),
             ),

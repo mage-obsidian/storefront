@@ -31,6 +31,7 @@ use MageObsidian\Checkout\Model\Payment\MethodData;
 use MageObsidian\Checkout\Model\Shell\Gate;
 use MageObsidian\Checkout\ViewModel\CartItems;
 use MageObsidian\Checkout\ViewModel\CheckoutConfig;
+use MageObsidian\Checkout\ViewModel\TaxDisplay;
 use MageObsidian\Customer\ViewModel\FormAttributes;
 use MageObsidian\ModernFrontend\Model\Config\ConfigProvider;
 use MageObsidian\Storefront\ViewModel\ReCaptcha;
@@ -149,6 +150,9 @@ trait CheckoutConfigFixture
             static fn (string $formKey): array => ($reCaptchaConfig['formKey'] ?? null) === $formKey ? $reCaptchaConfig : []
         );
 
+        $taxDisplay = $this->createMock(TaxDisplay::class);
+        $taxDisplay->method('getConfig')->willReturn(['price' => 'both', 'subtotal' => 'incl']);
+
         $formAttributes = $this->createMock(FormAttributes::class);
         $formAttributes->method('checkoutConfig')->willReturn($addressFields);
 
@@ -168,7 +172,8 @@ trait CheckoutConfigFixture
             $methodConfig,
             $gate,
             $reCaptcha,
-            $formAttributes
+            $formAttributes,
+            $taxDisplay
         );
     }
 

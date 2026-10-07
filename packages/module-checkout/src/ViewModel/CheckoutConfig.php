@@ -80,6 +80,8 @@ class CheckoutConfig implements ArgumentInterface
      * @param MethodConfig $methodConfig
      * @param Gate $gate
      * @param ReCaptcha $reCaptcha
+     * @param FormAttributes $formAttributes
+     * @param TaxDisplay $taxDisplay
      */
     public function __construct(
         private readonly CheckoutSession $checkoutSession,
@@ -97,7 +99,8 @@ class CheckoutConfig implements ArgumentInterface
         private readonly MethodConfig $methodConfig,
         private readonly Gate $gate,
         private readonly ReCaptcha $reCaptcha,
-        private readonly FormAttributes $formAttributes
+        private readonly FormAttributes $formAttributes,
+        private readonly TaxDisplay $taxDisplay
     ) {
     }
 
@@ -200,6 +203,7 @@ class CheckoutConfig implements ArgumentInterface
             'recaptcha' => $this->reCaptcha->configFor(self::RECAPTCHA_FORM),
             'couponRecaptcha' => $this->reCaptcha->configFor(self::COUPON_RECAPTCHA_FORM),
             'addressFields' => $this->formAttributes->checkoutConfig(),
+            'taxDisplay' => $this->taxDisplay->getConfig(),
         ];
     }
 

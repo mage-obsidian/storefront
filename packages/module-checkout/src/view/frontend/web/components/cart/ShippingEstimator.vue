@@ -14,6 +14,14 @@ import {
 } from "MageObsidian_Checkout::js/useShippingEstimator";
 import type { CheckoutApiConfig } from "MageObsidian_Checkout::js/useCheckoutApi";
 import { formatCurrency } from "MageObsidian_Storefront::js/currency";
+import {
+    basisLabel,
+    buildTotalRows,
+    normalizeTaxDisplay,
+    rateAmounts,
+    type TaxBasis,
+    type TotalRow,
+} from "MageObsidian_Checkout::js/tax-display";
 
 // Cart "Estimate Shipping and Tax" panel (Luma parity). It previews shipping
 // rates + recalculated totals for a partial address through the native REST
@@ -45,6 +53,13 @@ interface EstimatorLabels {
     methodsHeading?: string;
     noRates?: string;
     free?: string;
+    exclTax?: string;
+    inclTax?: string;
+    subtotalExcl?: string;
+    subtotalIncl?: string;
+    shippingExcl?: string;
+    shippingIncl?: string;
+    fixedTax?: string;
 }
 
 const props = withDefaults(
@@ -52,10 +67,12 @@ const props = withDefaults(
         config: CheckoutApiConfig;
         directory: DirectoryData;
         currencyFormat?: string;
+        taxDisplay?: Record<string, unknown>;
         labels?: EstimatorLabels;
     }>(),
     {
         currencyFormat: "%s",
+        taxDisplay: () => ({}),
         labels: () => ({}),
     },
 );
@@ -78,6 +95,27 @@ const regionOptions = computed(() => [
 
 const formatPrice = (amount: number | null): string =>
     formatCurrency(props.currencyFormat, amount);
+
+const tax = computed(() => normalizeTaxDisplay(props.taxDisplay));
+const totalRows = computed<TotalRow[]>(() =>
+    buildTotalRows(estimator.totals.value, tax.value, {
+        subtotalExcl: props.labels?.subtotalExcl,
+        subtotalIncl: props.labels?.subtotalIncl,
+        shippingExcl: props.labels?.shippingExcl,
+        shippingIncl: props.labels?.shippingIncl,
+        fixedTax: props.labels?.fixedTax,
+    }),
+);
+const rateEntries = (rate: ShippingRate) => rateAmounts(rate, tax.value.shipping);
+const rateIsFree = (rate: ShippingRate): boolean => rateEntries(rate).every((entry) => !entry.amount);
+const rateBasisLabel = (basis: TaxBasis): string =>
+    basisLabel(basis, { exclTax: props.labels?.exclTax, inclTax: props.labels?.inclTax });
+const totalRowClass = (row: TotalRow): string => {
+    if (row.code === "grand_total") {
+        return "border-t border-ash-200 pt-2 text-base font-semibold text-ink";
+    }
+    return row.detail ? "pl-4 text-xs text-ash-500" : "text-ink-soft";
+};
 
 function buildAddress(): EstimatorAddress {
     const address: EstimatorAddress = { country_id: countryId.value };
@@ -174,23 +212,31 @@ async function onSelect(rate: ShippingRate): Promise<void> {
                                 {{ rate.carrier_title }}<span v-if="rate.method_title"> — {{ rate.method_title }}</span>
                             </span>
                         </span>
-                        <span class="font-mono text-sm text-ink">{{ rate.amount ? formatPrice(rate.amount) : t("free", "Free") }}</span>
+                        <span class="flex flex-col items-end font-mono text-sm text-ink" data-rate-price>
+                            <template v-if="rateIsFree(rate)">{{ t("free", "Free") }}</template>
+                            <template v-else>
+                                <span v-for="entry in rateEntries(rate)" :key="entry.basis">
+                                    <span v-if="rateEntries(rate).length > 1" class="text-xs text-ash-500">{{ rateBasisLabel(entry.basis) }}: </span><span :data-basis="entry.basis">{{ formatPrice(entry.amount) }}</span>
+                                </span>
+                            </template>
+                        </span>
                     </label>
                 </div>
             </section>
 
             <dl
-                v-if="estimator.segments.value.length > 0"
+                v-if="totalRows.length > 0"
                 class="flex flex-col gap-2 border-t border-ash-200 pt-4 font-mono text-sm"
             >
                 <div
-                    v-for="segment in estimator.segments.value"
-                    :key="segment.code"
+                    v-for="row in totalRows"
+                    :key="`${row.code}-${row.label}`"
+                    :data-total-row="row.code"
                     class="flex items-center justify-between gap-4"
-                    :class="segment.code === 'grand_total' ? 'border-t border-ash-200 pt-2 text-base font-semibold text-ink' : 'text-ink-soft'"
+                    :class="totalRowClass(row)"
                 >
-                    <dt class="uppercase tracking-mono">{{ segment.title }}</dt>
-                    <dd :class="segment.code === 'grand_total' ? 'text-ink' : ''">{{ formatPrice(segment.value) }}</dd>
+                    <dt :class="row.detail ? '' : 'uppercase tracking-mono'">{{ row.label }}</dt>
+                    <dd :class="row.code === 'grand_total' ? 'text-ink' : ''">{{ formatPrice(row.amount) }}</dd>
                 </div>
             </dl>
 

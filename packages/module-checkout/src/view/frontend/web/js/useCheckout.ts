@@ -14,6 +14,14 @@ import { ref, computed, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { ensureSharedPinia } from 'MageObsidian_ModernFrontend::js/store';
 import { createCheckoutApi } from 'MageObsidian_Checkout::js/useCheckoutApi';
+import {
+    DEFAULT_TAX_DISPLAY,
+    buildTotalRows,
+    normalizeTaxDisplay,
+    type TaxDisplayConfig,
+    type TaxLabels,
+    type TaxTotals,
+} from 'MageObsidian_Checkout::js/tax-display';
 import { useCustomerData } from 'MageObsidian_ModernFrontend::js/customer-data';
 import {
     defaultAddressRules,
@@ -47,6 +55,7 @@ export interface CheckoutItem {
     image?: string;
     qty?: number | string;
     rowTotal?: string;
+    rowTotals?: Record<string, string>;
     options?: CheckoutItemOption[];
 }
 
@@ -56,6 +65,8 @@ export interface ShippingMethod {
     carrier_title?: string;
     method_title?: string;
     amount?: number;
+    price_excl_tax?: number;
+    price_incl_tax?: number;
     available?: boolean;
     error_message?: string;
 }
@@ -127,7 +138,7 @@ const asDescriptorMap = (value: unknown): Record<string, PaymentRendererDescript
     return map;
 };
 
-interface QuoteTotals {
+interface QuoteTotals extends TaxTotals {
     grand_total?: number;
     total_segments?: TotalSegment[];
 }
@@ -246,6 +257,9 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const sameAsShipping = ref(true);
     const selectedPayment = ref('');
     const totalSegments = ref<TotalSegment[]>([]);
+    const quoteTotals = ref<QuoteTotals>({});
+    const taxDisplay = ref<TaxDisplayConfig>({ ...DEFAULT_TAX_DISPLAY });
+    const taxLabels = ref<TaxLabels>({});
     const couponCode = ref('');
     const appliedCoupon = ref('');
     const couponError = ref('');
@@ -297,6 +311,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         billingAddress.value = blankAddress();
         guestCheckout.value = cfg.guestCheckout !== false;
         guestCheckoutLogin.value = !!cfg.guestCheckoutLogin;
+        taxDisplay.value = normalizeTaxDisplay(cfg.taxDisplay);
         displayBillingOnPayment.value = cfg.displayBillingOnPayment !== false;
         if (typeof cfg.maxSummaryItems === 'number' && cfg.maxSummaryItems > 0) {
             maxSummaryItems.value = cfg.maxSummaryItems;
@@ -848,6 +863,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
             return;
         }
         totalSegments.value = Array.isArray(totals.total_segments) ? totals.total_segments : [];
+        quoteTotals.value = totals;
         if (typeof totals.grand_total === 'number') {
             grandTotal.value = formatTotal(totals.grand_total);
         }
@@ -937,6 +953,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const placeOrderAvailable = computed(
         () => selectedPayment.value !== '' && !selectedMethodState.value.takesOver,
     );
+    const totalRows = computed(() => buildTotalRows(quoteTotals.value, taxDisplay.value, taxLabels.value));
     const visibleItems = computed(() => items.value.slice(0, maxSummaryItems.value));
     const hiddenItemCount = computed(() => Math.max(0, items.value.length - maxSummaryItems.value));
 
@@ -1042,6 +1059,10 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         sameAsShipping,
         selectedPayment,
         totalSegments,
+        quoteTotals,
+        totalRows,
+        taxDisplay,
+        taxLabels,
         couponCode,
         appliedCoupon,
         couponError,

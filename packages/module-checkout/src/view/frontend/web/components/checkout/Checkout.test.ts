@@ -633,3 +633,107 @@ describe("Checkout.vue — an unsynced snapshot cannot decide the cart is empty"
     });
 });
 
+describe("Checkout.vue — tax display in the order summary", () => {
+    let pinia;
+
+    const TOTALS = {
+        subtotal: 32,
+        subtotal_incl_tax: 34.56,
+        shipping_amount: 5,
+        shipping_incl_tax: 5.4,
+        total_segments: [
+            { code: "subtotal", title: "Subtotal", value: 34.56 },
+            { code: "shipping", title: "Shipping & Handling (Flat Rate - Fixed)", value: 5 },
+            {
+                code: "tax",
+                title: "Tax",
+                value: 2.96,
+                extension_attributes: {
+                    tax_grandtotal_details: [
+                        { amount: 2.96, rates: [{ percent: "6", title: "State" }, { percent: "2", title: "County" }] },
+                    ],
+                },
+            },
+            { code: "grand_total", title: "Grand Total", value: 39.96 },
+        ],
+    };
+
+    beforeEach(() => {
+        pinia = createPinia();
+        setActivePinia(pinia);
+        __reset();
+    });
+
+    function render(taxDisplay: Record<string, unknown>, rowTotals?: Record<string, string>) {
+        const item = { id: 1, name: "Strive Pack", qty: 1, rowTotal: "$32.00", image: "", ...(rowTotals ? { rowTotals } : {}) };
+        return track(mount(Checkout, {
+            props: { config: { ...CONFIG, taxDisplay, quote: { ...CONFIG.quote, items: [item] } }, labels: {} },
+            global: { plugins: [pinia] },
+        }));
+    }
+
+    const rows = (wrapper: ReturnType<typeof mount>) => wrapper.findAll("[data-total-row]").map((row) => row.attributes("data-total-row"));
+
+    const withTotals = async (taxDisplay: Record<string, unknown>) => {
+        const wrapper = render(taxDisplay);
+        useCheckout().quoteTotals = TOTALS;
+        await nextTick();
+        return wrapper;
+    };
+
+    it("states the subtotal and the shipping without tax by default", async () => {
+        const wrapper = await withTotals({});
+
+        expect(rows(wrapper)).toEqual(["subtotal", "shipping", "tax", "grand_total"]);
+        expect(wrapper.get('[data-total-row="subtotal"] dd').text()).toBe("32.00");
+        expect(wrapper.get('[data-total-row="shipping"] dd').text()).toBe("5.00");
+    });
+
+    it("states them with tax when the store includes it", async () => {
+        const wrapper = await withTotals({ subtotal: "incl", shipping: "incl" });
+
+        expect(wrapper.get('[data-total-row="subtotal"] dd').text()).toBe("34.56");
+        expect(wrapper.get('[data-total-row="shipping"] dd').text()).toBe("5.40");
+    });
+
+    it("states both amounts of the subtotal and the shipping when the store asks for both", async () => {
+        const wrapper = await withTotals({ subtotal: "both", shipping: "both" });
+
+        expect(rows(wrapper)).toEqual([
+            "subtotal_excl_tax",
+            "subtotal_incl_tax",
+            "shipping_excl_tax",
+            "shipping_incl_tax",
+            "tax",
+            "grand_total",
+        ]);
+    });
+
+    it("itemises each tax with the full summary", async () => {
+        const wrapper = await withTotals({ fullSummary: true });
+
+        expect(rows(wrapper)).toEqual(["subtotal", "shipping", "tax", "tax_detail", "tax_detail", "grand_total"]);
+        expect(wrapper.findAll('[data-total-row="tax_detail"] dt').map((node) => node.text())).toEqual([
+            "State (6%)",
+            "County (2%)",
+        ]);
+    });
+
+    it("labels each basis of a line when the store asks for both", () => {
+        const wrapper = render({ price: "both" }, { excl: "$32.00", incl: "$34.56" });
+
+        const basis = wrapper.findAll("[data-summary-line-total] [data-basis]").map((node) => [node.attributes("data-basis"), node.text()]);
+        expect(basis).toEqual([
+            ["excl", "$32.00"],
+            ["incl", "$34.56"],
+        ]);
+        expect(wrapper.get("[data-summary-line-total]").text()).toContain("Incl. Tax");
+    });
+
+    it("shows a single amount per line otherwise", () => {
+        const wrapper = render({ price: "excl" });
+
+        expect(wrapper.findAll("[data-summary-line-total] [data-basis]")).toHaveLength(1);
+        expect(wrapper.get("[data-summary-line-total]").text()).toBe("$32.00");
+    });
+});

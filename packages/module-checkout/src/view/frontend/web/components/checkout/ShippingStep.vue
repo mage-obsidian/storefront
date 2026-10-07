@@ -6,7 +6,8 @@
 -->
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
+import { useCheckout, type ShippingMethod } from "MageObsidian_Checkout::js/useCheckout";
+import { basisLabel, rateAmounts, type TaxBasis } from "MageObsidian_Checkout::js/tax-display";
 import AddressForm from "MageObsidian_Storefront::form/AddressForm";
 import SavedAddressPicker from "MageObsidian_Checkout::checkout/SavedAddressPicker";
 import type { RegionData } from "MageObsidian_Storefront::js/address";
@@ -37,6 +38,8 @@ interface ShippingLabels {
     ratesSaving?: string;
     ratesReady?: string;
     saveAddress?: string;
+    exclTax?: string;
+    inclTax?: string;
     free?: string;
     continue?: string;
     loading?: string;
@@ -102,11 +105,13 @@ function focusMissingField(field: string): void {
 defineExpose({ focusMissingField });
 
 function formatPrice(amount: number): string {
-    if (!amount) {
-        return t("free", "Free");
-    }
     return formatCurrency(checkout.currencyFormat, amount);
 }
+
+const rateEntries = (method: ShippingMethod) => rateAmounts(method, checkout.taxDisplay.shipping);
+const rateIsFree = (method: ShippingMethod): boolean => rateEntries(method).every((entry) => !entry.amount);
+const rateBasisLabel = (basis: TaxBasis): string =>
+    basisLabel(basis, { exclTax: props.labels?.exclTax, inclTax: props.labels?.inclTax });
 
 const hasMethods = computed(() => checkout.shippingMethods.length > 0);
 const waitingForAddress = computed(() => !checkout.ratesRequested && !checkout.loadingRates);
@@ -216,7 +221,14 @@ async function toPayment(): Promise<void> {
                                 {{ method.carrier_title }}<span v-if="method.method_title"> — {{ method.method_title }}</span>
                             </span>
                         </span>
-                        <span class="font-mono text-sm text-ink">{{ formatPrice(method.amount ?? 0) }}</span>
+                        <span class="flex flex-col items-end font-mono text-sm text-ink" data-rate-price>
+                            <template v-if="rateIsFree(method)">{{ t("free", "Free") }}</template>
+                            <template v-else>
+                                <span v-for="entry in rateEntries(method)" :key="entry.basis">
+                                    <span v-if="rateEntries(method).length > 1" class="text-xs text-ash-500">{{ rateBasisLabel(entry.basis) }}: </span><span :data-basis="entry.basis">{{ formatPrice(entry.amount) }}</span>
+                                </span>
+                            </template>
+                        </span>
                     </label>
                 </div>
             </div>

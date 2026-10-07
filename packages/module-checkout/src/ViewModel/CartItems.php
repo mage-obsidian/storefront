@@ -36,7 +36,7 @@ class CartItems implements ArgumentInterface
     private const THUMBNAIL_IMAGE_ID = 'cart_page_product_thumbnail';
 
     /**
-     * Memoised rows: id, name, url, image, qty, price, rowTotal, options[], messages[].
+     * Memoised rows: id, name, url, image, qty, price, rowTotal, prices, rowTotals, fixedTaxes[], options[], messages[].
      *
      * @var list<array<string, mixed>>|null
      */
@@ -50,13 +50,15 @@ class CartItems implements ArgumentInterface
      * @param ImageHelper $imageHelper
      * @param PriceCurrencyInterface $priceCurrency
      * @param UrlInterface $url
+     * @param TaxDisplay $taxDisplay
      */
     public function __construct(
         private readonly CheckoutSession $checkoutSession,
         private readonly ConfigurationPool $configurationPool,
         private readonly ImageHelper $imageHelper,
         private readonly PriceCurrencyInterface $priceCurrency,
-        private readonly UrlInterface $url
+        private readonly UrlInterface $url,
+        private readonly TaxDisplay $taxDisplay
     ) {
     }
 
@@ -90,11 +92,11 @@ class CartItems implements ArgumentInterface
     private function buildRow(QuoteItem $item): array
     {
         $product = $item->getProduct();
-        // Prefer incl-tax row total when the store collected it; both are already
-        // store-currency floats, so PriceCurrency just formats them.
-        $rowTotal = $item->getRowTotalInclTax() ?: $item->getRowTotal();
-        // Fixed Product Tax (WEEE) applied to the line, when the store collects it.
-        $fpt = (float)$item->getWeeeTaxAppliedRowAmount();
+        $amounts = $this->amounts($item);
+        $mode = $this->taxDisplay->priceMode();
+        $prices = $this->taxDisplay->pick($mode, $amounts['unitIncl'], $amounts['unitExcl']);
+        $rowTotals = $this->taxDisplay->pick($mode, $amounts['rowIncl'], $amounts['rowExcl']);
+        $primary = $mode === TaxDisplay::INCL ? 'incl' : 'excl';
 
         return [
             'id' => (int)$item->getItemId(),
@@ -102,13 +104,70 @@ class CartItems implements ArgumentInterface
             'url' => $product ? (string)$product->getProductUrl() : '',
             'image' => $this->thumbnail($item),
             'qty' => (float)$item->getQty(),
-            'price' => (string)$this->priceCurrency->format((float)$item->getCalculationPrice(), false),
-            'rowTotal' => (string)$this->priceCurrency->format((float)$rowTotal, false),
-            'fpt' => $fpt > 0 ? (string)$this->priceCurrency->format($fpt, false) : '',
+            'price' => $this->money($prices[$primary]),
+            'rowTotal' => $this->money($rowTotals[$primary]),
+            'prices' => array_map($this->money(...), array_filter($prices, static fn (?float $amount): bool => $amount !== null)),
+            'rowTotals' => array_map($this->money(...), array_filter($rowTotals, static fn (?float $amount): bool => $amount !== null)),
+            'fixedTaxes' => $this->fixedTaxes($item),
             'options' => $this->options($item),
             'configureUrl' => $this->configureUrl($item),
             'messages' => $this->messages($item),
         ];
+    }
+
+    private function money(?float $amount): string
+    {
+        return (string)$this->priceCurrency->format((float)$amount, false);
+    }
+
+    /**
+     * @return array{unitExcl: float, unitIncl: float, rowExcl: float, rowIncl: float}
+     */
+    private function amounts(QuoteItem $item): array
+    {
+        $qty = (float)$item->getQty();
+        $rowExcl = (float)$item->getRowTotal();
+        if ($rowExcl <= 0 && $qty > 0) {
+            $rowExcl = (float)$item->getCalculationPrice() * $qty;
+        }
+        $unitExcl = (float)$item->getCalculationPrice();
+        $rowIncl = (float)$item->getRowTotalInclTax() ?: $rowExcl;
+        $unitIncl = (float)$item->getPriceInclTax() ?: $unitExcl;
+
+        if ($this->taxDisplay->includesFixedTaxInPrice()) {
+            $fixed = $this->taxDisplay->itemFixedTaxAmounts($item);
+            $rowExcl += $fixed['excl'];
+            $rowIncl += $fixed['incl'];
+            if ($qty > 0) {
+                $unitExcl = $rowExcl / $qty;
+                $unitIncl = $rowIncl / $qty;
+            }
+        }
+
+        return ['unitExcl' => $unitExcl, 'unitIncl' => $unitIncl, 'rowExcl' => $rowExcl, 'rowIncl' => $rowIncl];
+    }
+
+    /**
+     * @return list<array{label: string, amount: string}>
+     */
+    private function fixedTaxes(QuoteItem $item): array
+    {
+        if (!in_array($this->taxDisplay->fixedTaxMode(), ['incl_desc', 'excl_desc_incl'], true)) {
+            return [];
+        }
+
+        return array_map(
+            fn (array $fixedTax): array => [
+                'label' => $fixedTax['label'],
+                'amount' => $this->money(
+                    $this->taxDisplay->priceMode() === TaxDisplay::INCL ? $fixedTax['amountInclTax'] : $fixedTax['amount']
+                ),
+            ],
+            array_values(array_filter(
+                $this->taxDisplay->itemFixedTaxes($item),
+                static fn (array $fixedTax): bool => $fixedTax['amount'] > 0
+            ))
+        );
     }
 
     private function messages(QuoteItem $item): array

@@ -6,7 +6,8 @@
 -->
 <script setup lang="ts">
 import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watchEffect } from "vue";
-import { useCheckout, CheckoutStep } from "MageObsidian_Checkout::js/useCheckout";
+import { useCheckout, CheckoutStep, type CheckoutItem } from "MageObsidian_Checkout::js/useCheckout";
+import { basisLabel, type TotalRow } from "MageObsidian_Checkout::js/tax-display";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 import StepRail from "MageObsidian_Checkout::checkout/StepRail";
 import Icon from "MageObsidian_ModernFrontend::elements/Icon";
@@ -167,6 +168,29 @@ onUnmounted(() => {
 
 const t = (key: string, fallback: string): string => props.labels?.[key] ?? fallback;
 
+watchEffect(() => {
+    checkout.taxLabels = {
+        subtotalExcl: props.labels?.subtotalExcl,
+        subtotalIncl: props.labels?.subtotalIncl,
+        shippingExcl: props.labels?.shippingExcl,
+        shippingIncl: props.labels?.shippingIncl,
+        fixedTax: props.labels?.fixedTax,
+    };
+});
+
+const taxBasisLabel = (basis: string): string =>
+    basisLabel(basis === "incl" ? "incl" : "excl", { exclTax: props.labels?.exclTax, inclTax: props.labels?.inclTax });
+
+const lineTotals = (item: CheckoutItem): Array<[string, string]> =>
+    Object.entries(item.rowTotals ?? { [checkout.taxDisplay.price === "incl" ? "incl" : "excl"]: item.rowTotal ?? "" });
+
+const totalRowClass = (row: TotalRow): string => {
+    if (row.code === "grand_total") {
+        return "border-t border-ash-200 pt-2 text-base text-ink";
+    }
+    return row.detail ? "pl-4 text-xs text-ash-500" : "text-ink-soft";
+};
+
 const steps = computed(() => {
     const raw = [
         { key: CheckoutStep.Identification, label: t("stepIdentification", "Identification") },
@@ -299,7 +323,11 @@ const grandTotalLabel = computed(() => {
                                 </ul>
                                 <span class="mt-0.5 font-mono text-xs text-ink-soft">× {{ item.qty }}</span>
                             </span>
-                            <span class="shrink-0 font-mono text-sm text-ink">{{ item.rowTotal }}</span>
+                            <span class="flex shrink-0 flex-col items-end font-mono text-sm text-ink" data-summary-line-total>
+                                <span v-for="[basis, value] in lineTotals(item)" :key="basis">
+                                    <span v-if="lineTotals(item).length > 1" class="text-xs text-ash-500">{{ taxBasisLabel(basis) }}: </span><span :data-basis="basis">{{ value }}</span>
+                                </span>
+                            </span>
                         </li>
                     </ul>
 
@@ -307,15 +335,16 @@ const grandTotalLabel = computed(() => {
                         {{ t('moreItems', '+ {count} more item(s)').replace('{count}', String(checkout.hiddenItemCount)) }}
                     </p>
 
-                    <dl v-if="checkout.totalSegments.length > 0" class="flex flex-col gap-2 font-mono text-sm">
+                    <dl v-if="checkout.totalRows.length > 0" class="flex flex-col gap-2 font-mono text-sm">
                         <div
-                            v-for="seg in checkout.totalSegments"
-                            :key="seg.code"
+                            v-for="row in checkout.totalRows"
+                            :key="`${row.code}-${row.label}`"
+                            :data-total-row="row.code"
                             class="flex justify-between"
-                            :class="seg.code === 'grand_total' ? 'border-t border-ash-200 pt-2 text-base text-ink' : 'text-ink-soft'"
+                            :class="totalRowClass(row)"
                         >
-                            <dt>{{ seg.title }}</dt>
-                            <dd>{{ seg.value === null ? '—' : checkout.formatTotal(seg.value) }}</dd>
+                            <dt>{{ row.label }}</dt>
+                            <dd>{{ row.amount === null ? '—' : checkout.formatTotal(row.amount) }}</dd>
                         </div>
                     </dl>
                     <dl v-else class="flex flex-col gap-2 font-mono text-sm">

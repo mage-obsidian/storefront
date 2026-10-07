@@ -49,7 +49,11 @@
                 </block>
                 <!-- Core blocks as DATA SOURCES only, rendered by our Twig. -->
                 <block class="Magento\Checkout\Block\Cart\Totals" name="checkout.cart.totals"
-                       as="totals" template="Magento_Checkout::cart/totals.twig"/>
+                       as="totals" template="Magento_Checkout::cart/totals.twig">
+                    <arguments>
+                        <argument name="tax_display" xsi:type="object">MageObsidian\Checkout\ViewModel\TaxDisplay</argument>
+                    </arguments>
+                </block>
                 <block class="Magento\Msrp\Block\Total" name="checkout.cart.totals.msrp"
                        as="totals_msrp" template="Magento_Checkout::cart/totals-msrp.twig">
                     <arguments>

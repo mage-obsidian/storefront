@@ -95,4 +95,81 @@ describe("ShippingEstimator.vue", () => {
         expect(text).toContain("Grand Total");
         expect(text).toContain("$46.00");
     });
+
+    describe("tax display", () => {
+        const TAXED_RATE = { ...FLATRATE, price_excl_tax: 5, price_incl_tax: 5.4 };
+
+        async function estimate(taxDisplay: Record<string, unknown>) {
+            mockFetch([TAXED_RATE]);
+            const wrapper = mount(ShippingEstimator, {
+                props: { config: CONFIG, directory: DIRECTORY, currencyFormat: "$%s", taxDisplay },
+            });
+            await wrapper.get("#estimator-postcode").setValue("78701");
+            await wrapper.get("[data-shipping-estimator] button").trigger("click");
+            await flush();
+            await wrapper.vm.$nextTick();
+            return wrapper;
+        }
+
+        const amounts = (wrapper: ReturnType<typeof mount>) =>
+            wrapper.findAll("[data-rate-price] [data-basis]").map((node) => [node.attributes("data-basis"), node.text()]);
+
+        it("offers the rate without tax by default", async () => {
+            expect(amounts(await estimate({}))).toEqual([["excl", "$5.00"]]);
+        });
+
+        it("offers the rate with tax when the store includes it", async () => {
+            expect(amounts(await estimate({ shipping: "incl" }))).toEqual([["incl", "$5.40"]]);
+        });
+
+        it("offers both amounts when the store asks for both", async () => {
+            const wrapper = await estimate({ shipping: "both" });
+
+            expect(amounts(wrapper)).toEqual([
+                ["excl", "$5.00"],
+                ["incl", "$5.40"],
+            ]);
+            expect(wrapper.get("[data-rate-price]").text()).toContain("Excl. Tax");
+        });
+
+        it("states the previewed totals in the configured basis", async () => {
+            const wrapper = await estimate({ subtotal: "both", shipping: "both", fullSummary: true });
+            mockFetch({
+                subtotal: 32,
+                subtotal_incl_tax: 34.56,
+                shipping_amount: 5,
+                shipping_incl_tax: 5.4,
+                total_segments: [
+                    { code: "subtotal", title: "Subtotal", value: 34.56 },
+                    { code: "shipping", title: "Shipping & Handling (Flat Rate - Fixed)", value: 5 },
+                    {
+                        code: "tax",
+                        title: "Tax",
+                        value: 2.96,
+                        extension_attributes: {
+                            tax_grandtotal_details: [
+                                { amount: 2.96, rates: [{ percent: "6", title: "State" }, { percent: "2", title: "County" }] },
+                            ],
+                        },
+                    },
+                    { code: "grand_total", title: "Grand Total", value: 39.96 },
+                ],
+            });
+            await wrapper.get('input[name="estimator-method"]').trigger("change");
+            await flush();
+            await wrapper.vm.$nextTick();
+
+            const rows = wrapper.findAll("[data-total-row]").map((row) => row.attributes("data-total-row"));
+            expect(rows).toEqual([
+                "subtotal_excl_tax",
+                "subtotal_incl_tax",
+                "shipping_excl_tax",
+                "shipping_incl_tax",
+                "tax",
+                "tax_detail",
+                "tax_detail",
+                "grand_total",
+            ]);
+        });
+    });
 });

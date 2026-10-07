@@ -162,7 +162,7 @@ class CheckoutConfigTest extends TestCase
         sort($whole);
         sort($halves);
         $this->assertSame($halves, $whole);
-        $this->assertCount(24, $whole);
+        $this->assertCount(25, $whole);
     }
 
     public function testPrivateDataCarriesTheShippingChoiceHeldOnTheQuote(): void
@@ -301,6 +301,13 @@ class CheckoutConfigTest extends TestCase
         $public = $this->viewModel(isLoggedIn: false, maskedId: 'guestmask123', addressFields: $rules)->getPublicConfig();
 
         $this->assertSame($rules, $public['addressFields']);
+    }
+
+    public function testTheCacheableHalfCarriesTheTaxDisplay(): void
+    {
+        $public = $this->viewModel(isLoggedIn: false, maskedId: 'guestmask123')->getPublicConfig();
+
+        $this->assertSame(['price' => 'both', 'subtotal' => 'incl'], $public['taxDisplay']);
     }
 
     public function testTheAddressBookCarriesTheOptionalNameFields(): void

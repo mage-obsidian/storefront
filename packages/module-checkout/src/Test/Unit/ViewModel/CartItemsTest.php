@@ -19,7 +19,11 @@ use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\Quote\Item as QuoteItem;
+use Magento\Tax\Model\Config as TaxConfig;
+use Magento\Weee\Helper\Data as WeeeHelper;
 use MageObsidian\Checkout\ViewModel\CartItems;
+use MageObsidian\Checkout\ViewModel\TaxDisplay;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -53,7 +57,7 @@ class CartItemsTest extends TestCase
         $item->method('getName')->willReturn('Chaz Hoodie');
         $item->method('getQty')->willReturn(2.0);
         $item->method('getCalculationPrice')->willReturn(52.0);
-        $item->setData(['row_total_incl_tax' => 104.0, 'weee_tax_applied_row_amount' => 0.0]);
+        $item->setData(['row_total' => 104.0, 'row_total_incl_tax' => 112.32, 'price_incl_tax' => 56.16]);
         $item->method('getProduct')->willReturn($product);
         $item->method('getProductType')->willReturn('configurable');
 
@@ -76,7 +80,9 @@ class CartItemsTest extends TestCase
             'qty' => 2.0,
             'price' => '$52.00',
             'rowTotal' => '$104.00',
-            'fpt' => '',
+            'prices' => ['excl' => '$52.00'],
+            'rowTotals' => ['excl' => '$104.00'],
+            'fixedTaxes' => [],
             'options' => [
                 ['label' => 'Size', 'value' => 'M'],
                 ['label' => 'Color', 'value' => 'Gray'],
@@ -86,26 +92,104 @@ class CartItemsTest extends TestCase
         ], $rows[0]);
     }
 
-    public function testExposesFixedProductTaxWhenTheLineCarriesWeee(): void
+    public static function priceModes(): array
     {
-        $product = $this->createMock(Product::class);
-        $product->method('getTypeInstance')->willReturn($this->createMock(AbstractType::class));
+        return [
+            'including tax' => [
+                ['displayCartPricesInclTax' => true],
+                ['price' => '$56.16', 'rowTotal' => '$112.32', 'prices' => ['incl' => '$56.16'], 'rowTotals' => ['incl' => '$112.32']],
+            ],
+            'excluding tax' => [
+                [],
+                ['price' => '$52.00', 'rowTotal' => '$104.00', 'prices' => ['excl' => '$52.00'], 'rowTotals' => ['excl' => '$104.00']],
+            ],
+            'both' => [
+                ['displayCartPricesBoth' => true],
+                [
+                    'price' => '$52.00',
+                    'rowTotal' => '$104.00',
+                    'prices' => ['incl' => '$56.16', 'excl' => '$52.00'],
+                    'rowTotals' => ['incl' => '$112.32', 'excl' => '$104.00'],
+                ],
+            ],
+        ];
+    }
 
-        $item = $this->getMockBuilder(QuoteItem::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getItemId', 'getName', 'getQty', 'getCalculationPrice', 'getProduct', 'getProductType'])
-            ->getMock();
-        $item->method('getItemId')->willReturn(7);
-        $item->method('getName')->willReturn('Strive Shoulder Pack');
-        $item->method('getQty')->willReturn(1.0);
-        $item->method('getCalculationPrice')->willReturn(32.0);
-        $item->setData(['row_total_incl_tax' => 37.0, 'weee_tax_applied_row_amount' => 5.0]);
-        $item->method('getProduct')->willReturn($product);
-        $item->method('getProductType')->willReturn('simple');
+    #[DataProvider('priceModes')]
+    public function testAmountsOfALineShareOneTaxBasis(array $tax, array $expected): void
+    {
+        $item = $this->pricedItem(2.0, 52.0, ['row_total' => 104.0, 'row_total_incl_tax' => 112.32, 'price_incl_tax' => 56.16]);
 
-        $rows = $this->viewModel([$item])->getItems();
+        $row = $this->viewModel([$item], null, $this->taxDisplay($tax))->getItems()[0];
 
-        $this->assertSame('$5.00', $rows[0]['fpt']);
+        foreach ($expected as $key => $value) {
+            $this->assertSame($value, $row[$key], $key);
+        }
+    }
+
+    public function testFallsBackToThePriceWithoutTaxWhenTaxWasNotCollected(): void
+    {
+        $item = $this->pricedItem(1.0, 36.0, ['row_total' => 36.0]);
+
+        $row = $this->viewModel([$item], null, $this->taxDisplay(['displayCartPricesInclTax' => true]))->getItems()[0];
+
+        $this->assertSame('$36.00', $row['price']);
+        $this->assertSame('$36.00', $row['rowTotal']);
+    }
+
+    public function testFixedProductTaxJoinsThePriceWhenTheStoreIncludesIt(): void
+    {
+        $item = $this->pricedItem(1.0, 32.0, ['row_total' => 32.0, 'row_total_incl_tax' => 34.56, 'price_incl_tax' => 34.56]);
+        $weee = ['type' => 0, 'rowExcl' => 5.0, 'rowIncl' => 5.4];
+
+        $row = $this->viewModel([$item], null, $this->taxDisplay([], $weee))->getItems()[0];
+
+        $this->assertSame('$37.00', $row['price']);
+        $this->assertSame('$37.00', $row['rowTotal']);
+        $this->assertSame([], $row['fixedTaxes']);
+
+        $row = $this->viewModel([$item], null, $this->taxDisplay(['displayCartPricesInclTax' => true], $weee))->getItems()[0];
+
+        $this->assertSame('$39.96', $row['price']);
+        $this->assertSame('$39.96', $row['rowTotal']);
+    }
+
+    public function testFixedProductTaxStaysOutOfThePriceWhenTheStoreExcludesIt(): void
+    {
+        $item = $this->pricedItem(1.0, 32.0, ['row_total' => 32.0, 'row_total_incl_tax' => 34.56]);
+
+        $row = $this->viewModel([$item], null, $this->taxDisplay([], ['type' => 3, 'rowExcl' => 5.0, 'rowIncl' => 5.4]))->getItems()[0];
+
+        $this->assertSame('$32.00', $row['price']);
+        $this->assertSame([], $row['fixedTaxes']);
+    }
+
+    public function testNamesEachFixedProductTaxWhenTheStoreDescribesThem(): void
+    {
+        $item = $this->pricedItem(1.0, 32.0, ['row_total' => 32.0, 'row_total_incl_tax' => 34.56]);
+        $weee = [
+            'type' => 1,
+            'rowExcl' => 5.0,
+            'rowIncl' => 5.4,
+            'applied' => [
+                ['title' => 'Recycling', 'row_amount' => 3.0, 'row_amount_incl_tax' => 3.24],
+                ['title' => 'Battery', 'row_amount' => 2.0, 'row_amount_incl_tax' => 2.16],
+            ],
+        ];
+
+        $row = $this->viewModel([$item], null, $this->taxDisplay([], $weee))->getItems()[0];
+
+        $this->assertSame(
+            [['label' => 'Recycling', 'amount' => '$3.00'], ['label' => 'Battery', 'amount' => '$2.00']],
+            $row['fixedTaxes']
+        );
+
+        $row = $this->viewModel([$item], null, $this->taxDisplay(['displayCartPricesInclTax' => true], $weee))->getItems()[0];
+
+        $this->assertSame(
+            [['label' => 'Recycling', 'amount' => '$3.24'], ['label' => 'Battery', 'amount' => '$2.16']],
+            $row['fixedTaxes']
+        );
     }
 
     public function testCarriesTheQuoteMessagesOfTheLine(): void
@@ -140,7 +224,7 @@ class CartItemsTest extends TestCase
      * @param ConfigurationPool|null $pool
      * @return CartItems
      */
-    private function viewModel(array $items, ?ConfigurationPool $pool = null): CartItems
+    private function viewModel(array $items, ?ConfigurationPool $pool = null, ?TaxDisplay $taxDisplay = null): CartItems
     {
         $quote = $this->createMock(Quote::class);
         $quote->method('getAllVisibleItems')->willReturn($items);
@@ -167,7 +251,45 @@ class CartItemsTest extends TestCase
             $pool ?? $this->createMock(ConfigurationPool::class),
             $image,
             $priceCurrency,
-            $url
+            $url,
+            $taxDisplay ?? $this->taxDisplay()
         );
+    }
+
+    private function pricedItem(float $qty, float $calculationPrice, array $data): QuoteItem
+    {
+        $product = $this->createMock(Product::class);
+        $product->method('getTypeInstance')->willReturn($this->createMock(AbstractType::class));
+
+        $item = $this->getMockBuilder(QuoteItem::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getItemId', 'getName', 'getQty', 'getCalculationPrice', 'getProduct', 'getProductType'])
+            ->getMock();
+        $item->method('getItemId')->willReturn(7);
+        $item->method('getName')->willReturn('Strive Shoulder Pack');
+        $item->method('getQty')->willReturn($qty);
+        $item->method('getCalculationPrice')->willReturn($calculationPrice);
+        $item->setData($data);
+        $item->method('getProduct')->willReturn($product);
+        $item->method('getProductType')->willReturn('simple');
+
+        return $item;
+    }
+
+    private function taxDisplay(array $tax = [], array $weee = []): TaxDisplay
+    {
+        $config = $this->createMock(TaxConfig::class);
+        foreach (['displayCartPricesInclTax', 'displayCartPricesBoth'] as $method) {
+            $config->method($method)->willReturn($tax[$method] ?? false);
+        }
+
+        $helper = $this->createMock(WeeeHelper::class);
+        $helper->method('isEnabled')->willReturn(isset($weee['type']));
+        $helper->method('typeOfDisplay')->willReturn($weee['type'] ?? 3);
+        $helper->method('getWeeeTaxAppliedRowAmount')->willReturn($weee['rowExcl'] ?? 0.0);
+        $helper->method('getRowWeeeTaxInclTax')->willReturn($weee['rowIncl'] ?? 0.0);
+        $helper->method('getApplied')->willReturn($weee['applied'] ?? []);
+
+        return new TaxDisplay($config, $helper);
     }
 }

@@ -338,3 +338,64 @@ describe("ShippingStep — sending the shopper to a field the checkout is waitin
         expect(rules.streetLines).toBe(3);
     });
 });
+
+describe("ShippingStep — tax display", () => {
+    let pinia;
+
+    beforeEach(() => {
+        pinia = createPinia();
+        setActivePinia(pinia);
+        vi.restoreAllMocks();
+    });
+
+    function render() {
+        return mount(ShippingStep, {
+            props: { directory: DIRECTORY },
+            global: { plugins: [pinia] },
+        });
+    }
+
+    const TAXED_RATE = { ...FLATRATE, price_excl_tax: 5, price_incl_tax: 5.4 };
+
+    async function listRates(taxDisplay: Record<string, unknown>) {
+        useCheckout().init({ ...CONFIG, taxDisplay });
+        mockFetch([TAXED_RATE]);
+        const wrapper = render();
+        await wrapper.find("button").trigger("click");
+        await flush();
+        await wrapper.vm.$nextTick();
+        return wrapper;
+    }
+
+    const amounts = (wrapper: ReturnType<typeof mount>) =>
+        wrapper.findAll("[data-rate-price] [data-basis]").map((node) => [node.attributes("data-basis"), node.text()]);
+
+    it("lists the rate without tax by default", async () => {
+        expect(amounts(await listRates({}))).toEqual([["excl", "$5.00"]]);
+    });
+
+    it("lists the rate with tax when the store includes it", async () => {
+        expect(amounts(await listRates({ shipping: "incl" }))).toEqual([["incl", "$5.40"]]);
+    });
+
+    it("lists both amounts when the store asks for both", async () => {
+        const wrapper = await listRates({ shipping: "both" });
+
+        expect(amounts(wrapper)).toEqual([
+            ["excl", "$5.00"],
+            ["incl", "$5.40"],
+        ]);
+        expect(wrapper.get("[data-rate-price]").text()).toContain("Incl. Tax");
+    });
+
+    it("still calls a rate of zero free", async () => {
+        useCheckout().init({ ...CONFIG, taxDisplay: { shipping: "both" } });
+        mockFetch([{ ...FLATRATE, amount: 0, price_excl_tax: 0, price_incl_tax: 0 }]);
+        const wrapper = render();
+        await wrapper.find("button").trigger("click");
+        await flush();
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.get("[data-rate-price]").text()).toBe("Free");
+    });
+});

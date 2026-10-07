@@ -14,6 +14,7 @@
 
 import { ref } from "vue";
 import { createCheckoutApi, type CheckoutApiConfig } from "MageObsidian_Checkout::js/useCheckoutApi";
+import type { TaxTotals } from "MageObsidian_Checkout::js/tax-display";
 
 export interface ShippingRate {
     carrier_code: string;
@@ -21,6 +22,8 @@ export interface ShippingRate {
     carrier_title?: string;
     method_title?: string;
     amount?: number;
+    price_excl_tax?: number;
+    price_incl_tax?: number;
     available?: boolean;
     error_message?: string;
 }
@@ -38,7 +41,7 @@ export interface EstimatorAddress {
     postcode?: string;
 }
 
-interface TotalsResponse {
+interface TotalsResponse extends TaxTotals {
     total_segments?: TotalSegment[];
 }
 
@@ -48,6 +51,7 @@ export function useShippingEstimator(config: CheckoutApiConfig) {
     const methods = ref<ShippingRate[]>([]);
     const selectedKey = ref<string>("");
     const segments = ref<TotalSegment[]>([]);
+    const totals = ref<TotalsResponse>({});
     const loadingRates = ref(false);
     const loadingTotals = ref(false);
     const error = ref<string>("");
@@ -60,6 +64,7 @@ export function useShippingEstimator(config: CheckoutApiConfig) {
         methods.value = [];
         selectedKey.value = "";
         segments.value = [];
+        totals.value = {};
         try {
             const rates = (await api.estimateShippingMethods(address)) as ShippingRate[];
             methods.value = Array.isArray(rates) ? rates.filter((rate) => rate.available !== false) : [];
@@ -75,15 +80,17 @@ export function useShippingEstimator(config: CheckoutApiConfig) {
         loadingTotals.value = true;
         error.value = "";
         try {
-            const totals = (await api.setTotalsInformation({
+            const response = (await api.setTotalsInformation({
                 address,
                 shipping_method_code: rate.method_code,
                 shipping_carrier_code: rate.carrier_code,
             })) as TotalsResponse;
-            segments.value = Array.isArray(totals?.total_segments) ? totals.total_segments : [];
+            segments.value = Array.isArray(response?.total_segments) ? response.total_segments : [];
+            totals.value = response ?? {};
         } catch (err) {
             error.value = err instanceof Error ? err.message : String(err);
             segments.value = [];
+            totals.value = {};
         } finally {
             loadingTotals.value = false;
         }
@@ -93,6 +100,7 @@ export function useShippingEstimator(config: CheckoutApiConfig) {
         methods,
         selectedKey,
         segments,
+        totals,
         loadingRates,
         loadingTotals,
         error,
