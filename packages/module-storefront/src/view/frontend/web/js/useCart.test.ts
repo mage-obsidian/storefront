@@ -383,3 +383,79 @@ describe("useCart with cookies off", () => {
         off.restore();
     });
 });
+
+describe("redirect to the cart after an add", () => {
+    const CART_URL = "https://shop.test/checkout/cart/";
+    let visited: string[];
+    let original: Location;
+
+    beforeEach(() => {
+        visited = [];
+        original = window.location;
+        Object.defineProperty(window, "location", {
+            value: { assign: (url: string) => visited.push(url), href: "https://shop.test/p.html", origin: "https://shop.test" },
+            writable: true,
+            configurable: true,
+        });
+        document.body.innerHTML = '<form action="/checkout/cart/add" data-add-to-cart></form>';
+    });
+
+    afterEach(() => {
+        Object.defineProperty(window, "location", { value: original, writable: true, configurable: true });
+    });
+
+    const answer = (payload: unknown) =>
+        vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(payload) }));
+
+    it("follows the back url the core returns when the add succeeded", async () => {
+        answer({ backUrl: CART_URL });
+
+        const result = await useCart().addFromForm(document.querySelector("form"));
+
+        expect(result.ok).toBe(true);
+        expect(visited).toEqual([CART_URL]);
+    });
+
+    it("stays on the page when the core returned no back url", async () => {
+        answer({});
+
+        await useCart().addFromForm(document.querySelector("form"));
+
+        expect(visited).toEqual([]);
+    });
+
+    it("stays on the page when the add failed", async () => {
+        answer({ backUrl: CART_URL });
+        __setReloadResponse({ messages: { messages: [{ type: "error", text: "Out of stock" }] } });
+
+        const result = await useCart().addFromForm(document.querySelector("form"));
+
+        expect(result.ok).toBe(false);
+        expect(visited).toEqual([]);
+    });
+
+    it("does not follow a back url that leaves the store", async () => {
+        answer({ backUrl: "https://elsewhere.test/checkout/cart/" });
+
+        await useCart().addFromForm(document.querySelector("form"));
+
+        expect(visited).toEqual([]);
+    });
+
+    it("does not navigate after a quantity change", async () => {
+        answer({ backUrl: CART_URL });
+
+        await useCart().updateItemQty(15, 2, "/checkout/sidebar/updateItemQty");
+
+        expect(visited).toEqual([]);
+    });
+
+    it("tolerates a response without a body", async () => {
+        vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
+
+        const result = await useCart().addFromForm(document.querySelector("form"));
+
+        expect(result.ok).toBe(true);
+        expect(visited).toEqual([]);
+    });
+});

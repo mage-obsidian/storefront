@@ -38,6 +38,7 @@ interface CartItem {
     product_url?: string;
     product_price?: string;
     product_image?: { src?: string; alt?: string };
+    configure_url?: string;
     options?: CartItemOption[];
 }
 
@@ -62,9 +63,11 @@ const props = withDefaults(
         updateUrl: string;
         removeUrl: string;
         signInUrl?: string;
+        enabled?: boolean;
+        maxItems?: number;
         labels?: Record<string, string>;
     }>(),
-    { labels: () => ({}) },
+    { enabled: true, maxItems: 0, labels: () => ({}) },
 );
 
 const customerData = useCustomerData();
@@ -72,10 +75,15 @@ const cart = useCart();
 const ux = readUxRuntimeConfig();
 
 const section = computed<CartSection>(() => (customerData.section(CART_SECTION) ?? {}) as CartSection);
-const items = computed(() => section.value.items ?? []);
+const allItems = computed(() => section.value.items ?? []);
+const items = computed(() => (props.maxItems > 0 ? allItems.value.slice(0, props.maxItems) : allItems.value));
+const hiddenLines = computed(() => allItems.value.length - items.value.length);
+const shownOfTotal = computed(() =>
+    (props.labels.showing ?? "%1 of %2").replace("%1", String(items.value.length)).replace("%2", String(allItems.value.length)),
+);
 const count = computed(() => Number(section.value.summary_count ?? 0));
 const subtotal = computed(() => section.value.subtotal ?? "");
-const isEmpty = computed(() => items.value.length === 0);
+const isEmpty = computed(() => allItems.value.length === 0);
 const checkoutHref = computed(() => checkoutDestination(props.checkoutUrl, props.signInUrl));
 
 const open = ref(false);
@@ -257,7 +265,7 @@ const bagPageIsShowing = (): boolean => document.querySelector(CART_PAGE_ROOT) !
 
 const onAddAfter = (event: CartEvent): void => {
     const before = quantitiesBeforeAdd.shift() ?? new Map<string, number>();
-    if (!event.result?.ok || bagPageIsShowing()) {
+    if (!props.enabled || !event.result?.ok || bagPageIsShowing()) {
         return;
     }
     open.value = true;
@@ -271,6 +279,9 @@ const onAddAfter = (event: CartEvent): void => {
 const triggers: Element[] = [];
 const unobserve: Array<() => void> = [];
 const onTriggerClick = (event: Event): void => {
+    if (!props.enabled) {
+        return;
+    }
     event.preventDefault();
     open.value = true;
 };
@@ -280,7 +291,8 @@ onMounted(() => {
         events.observe(ADD_BEFORE, onAddBefore, { name: "minicart", sortOrder: 1000 }),
     );
     unobserve.push(events.observe(ADD_AFTER, onAddAfter, { name: "minicart" }));
-    document.querySelectorAll("[data-minicart-trigger]").forEach((trigger) => {
+    const bound = props.enabled ? document.querySelectorAll("[data-minicart-trigger]") : [];
+    bound.forEach((trigger) => {
         trigger.setAttribute("aria-haspopup", "dialog");
         trigger.setAttribute("aria-controls", drawerId);
         trigger.setAttribute("aria-expanded", "false");
@@ -375,6 +387,14 @@ watch(open, (isOpen) => {
                                     {{ option.label }}: <span class="text-ink-soft">{{ optionText(option.value) }}</span>
                                 </li>
                             </ul>
+                            <a
+                                v-if="item.configure_url && item.options && item.options.length"
+                                :href="item.configure_url"
+                                class="link w-fit text-xs text-ink-soft"
+                                data-minicart-edit
+                            >
+                                {{ labels.edit ?? "Edit" }}
+                            </a>
 
                             <div class="mt-1.5 flex items-end justify-between gap-3">
                                 <div
@@ -418,6 +438,15 @@ watch(open, (isOpen) => {
                         </div>
                     </li>
                 </TransitionGroup>
+
+                <a
+                    v-if="hiddenLines > 0"
+                    :href="cartUrl"
+                    class="border-t border-ash-200 px-5 py-3 text-center font-mono text-xs uppercase tracking-mono text-ink-soft transition-colors hover:text-ink"
+                    data-minicart-more
+                >
+                    {{ shownOfTotal }}
+                </a>
 
                 <footer class="border-t border-ash-200 px-5 py-4">
                     <div class="flex items-center justify-between pb-4 font-mono text-sm uppercase tracking-mono text-ink">

@@ -569,3 +569,76 @@ describe("MiniCart add-to-cart flow", () => {
         expect(document.querySelector('[role="dialog"]')).toBeNull();
     });
 });
+
+describe("MiniCart settings", () => {
+    const ADD_BEFORE = "cart_add_before";
+    const ADD_AFTER = "cart_add_after";
+    const SETTING_LABELS = { ...LABELS, showing: "%1 of %2", edit: "Edit" };
+    const lineOf = (id: number) => ({
+        ...ITEM,
+        item_id: id,
+        product_name: `Product ${id}`,
+        configure_url: `/checkout/cart/configure/id/${id}/`,
+    });
+    const opened = () => document.querySelector('[role="dialog"]');
+
+    async function addWith(props: Record<string, unknown>, items = [lineOf(1)], result: Record<string, unknown> = { ok: true }) {
+        __setSection("cart", { items, summary_count: items.length, subtotal: "$10.00" });
+        const trigger = addTrigger();
+        mount(MiniCart, { props: { ...PROPS, labels: SETTING_LABELS, ...props }, attachTo: document.body });
+        await nextTick();
+        await events.dispatch(ADD_BEFORE, { operation: "add" });
+        await events.dispatch(ADD_AFTER, { operation: "add", result });
+        await nextTick();
+        return { trigger, result };
+    }
+
+    async function openFromTrigger(props: Record<string, unknown>, items: unknown[]) {
+        __setSection("cart", { items, summary_count: items.length, subtotal: "$10.00" });
+        const trigger = addTrigger();
+        mount(MiniCart, { props: { ...PROPS, labels: SETTING_LABELS, ...props }, attachTo: document.body });
+        const click = new Event("click", { bubbles: true, cancelable: true });
+        trigger.dispatchEvent(click);
+        await nextTick();
+        return click;
+    }
+
+    it("stays shut after an add and leaves the confirmation to the caller when it is switched off", async () => {
+        const { result } = await addWith({ enabled: false });
+
+        expect(opened()).toBeNull();
+        expect(result.announced).toBeUndefined();
+    });
+
+    it("lets the header trigger navigate to the cart page when it is switched off", async () => {
+        const click = await openFromTrigger({ enabled: false }, [lineOf(1)]);
+
+        expect(click.defaultPrevented).toBe(false);
+        expect(opened()).toBeNull();
+    });
+
+    it("lists no more lines than the configured maximum and says how many there are", async () => {
+        const items = [1, 2, 3, 4, 5].map(lineOf);
+        await openFromTrigger({ maxItems: 3 }, items);
+
+        expect(document.querySelectorAll(".minicart-item")).toHaveLength(3);
+        expect(document.body.textContent).toContain("3 of 5");
+        expect(document.querySelector("[data-minicart-more]")?.getAttribute("href")).toBe(PROPS.cartUrl);
+    });
+
+    it("shows every line and no counter when they fit within the maximum", async () => {
+        await openFromTrigger({ maxItems: 3 }, [1, 2, 3].map(lineOf));
+
+        expect(document.querySelectorAll(".minicart-item")).toHaveLength(3);
+        expect(document.querySelector("[data-minicart-more]")).toBeNull();
+    });
+
+    it("offers to edit the options of a line that has them", async () => {
+        const plain = { ...lineOf(2), options: [] };
+        await openFromTrigger({}, [lineOf(1), plain]);
+
+        const edits = document.querySelectorAll(".minicart-item a[data-minicart-edit]");
+        expect(edits).toHaveLength(1);
+        expect(edits[0].getAttribute("href")).toBe("/checkout/cart/configure/id/1/");
+    });
+});

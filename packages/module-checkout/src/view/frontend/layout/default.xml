@@ -20,7 +20,11 @@
     <body>
         <referenceContainer name="before.body.end">
             <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.minicart"
-                   template="Magento_Checkout::cart/mini-cart.twig"/>
+                   template="Magento_Checkout::cart/mini-cart.twig">
+                <arguments>
+                    <argument name="settings" xsi:type="object">MageObsidian\Checkout\ViewModel\MiniCartSettings</argument>
+                </arguments>
+            </block>
         </referenceContainer>
     </body>
 </page>

@@ -87,6 +87,22 @@ function toFormData(fields: Record<string, unknown>): FormData {
     return body;
 }
 
+async function readBackUrl(response: Response): Promise<string> {
+    if (typeof response.json !== 'function') {
+        return '';
+    }
+    try {
+        const payload = (await response.json()) as { backUrl?: unknown };
+        if (typeof payload?.backUrl !== 'string') {
+            return '';
+        }
+        const target = new URL(payload.backUrl, window.location.href);
+        return target.origin === window.location.origin ? target.href : '';
+    } catch {
+        return '';
+    }
+}
+
 export function useCart() {
     const customerData = useCustomerData();
     const ux = readUxRuntimeConfig();
@@ -138,6 +154,7 @@ export function useCart() {
         }
 
         let ok = false;
+        let backUrl = '';
         try {
             const response = await fetch(request.action, {
                 method: 'POST',
@@ -146,6 +163,7 @@ export function useCart() {
                 credentials: 'same-origin',
             });
             ok = response.ok;
+            backUrl = await readBackUrl(response);
         } catch {
             ok = false;
         }
@@ -164,6 +182,8 @@ export function useCart() {
                 ...request,
                 result,
             });
+        } else if (operation === CartOperation.Add && backUrl !== '') {
+            window.location.assign(backUrl);
         }
 
         return result;
