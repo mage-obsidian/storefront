@@ -13,7 +13,7 @@
  * cart region — totals/tax/discount are never recomputed client-side. Delegation
  * on the document means the swapped-in DOM keeps working without re-binding.
  */
-import { useCart, getFormKey, CART_DOMAIN } from "MageObsidian_Storefront::js/useCart";
+import { useCart, getFormKey, CART_DOMAIN, CartOperation as CartMutation } from "MageObsidian_Storefront::js/useCart";
 import events from "MageObsidian_ModernFrontend::js/events";
 import {
     MutationPhase,
@@ -21,7 +21,7 @@ import {
     type MutationEvent,
     type MutationEventName,
 } from "mage-obsidian/runtime/mutationEvent.ts";
-import { resetToken } from "MageObsidian_Storefront::js/recaptcha";
+import { mountReCaptchaFields, resetToken } from "MageObsidian_Storefront::js/recaptcha";
 import { announce, readCookieMessages } from "MageObsidian_Storefront::js/session-messages";
 import { useCustomerData } from "MageObsidian_ModernFrontend::js/customer-data";
 import { ensureFormKey } from "MageObsidian_Storefront::js/form-key-provider";
@@ -115,6 +115,7 @@ async function refresh(): Promise<void> {
 
     const swap = (): void => {
         current.replaceWith(fresh as Element);
+        void mountReCaptchaFields(document);
         if (focused) {
             root()?.querySelector<HTMLElement>(focused)?.focus({ preventScroll: true });
         }
@@ -285,6 +286,12 @@ document.addEventListener("submit", (event) => {
             applyQty(input);
         }
         void run(async () => {});
+    }
+});
+
+events.observe(mutationEvent(CART_DOMAIN, CartMutation.Add, MutationPhase.After), async (data) => {
+    if (root() && (data as { result?: { ok?: boolean } }).result?.ok) {
+        await refresh();
     }
 });
 

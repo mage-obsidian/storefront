@@ -145,7 +145,9 @@ trait CheckoutConfigFixture
         $gate->method('isCacheable')->willReturn($shellCacheable);
 
         $reCaptcha = $this->createMock(ReCaptcha::class);
-        $reCaptcha->method('configFor')->willReturn($reCaptchaConfig);
+        $reCaptcha->method('configFor')->willReturnCallback(
+            static fn (string $formKey): array => ($reCaptchaConfig['formKey'] ?? null) === $formKey ? $reCaptchaConfig : []
+        );
 
         $formAttributes = $this->createMock(FormAttributes::class);
         $formAttributes->method('checkoutConfig')->willReturn($addressFields);

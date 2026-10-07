@@ -62,6 +62,7 @@ class CheckoutConfig implements ArgumentInterface
      * The key Magento configures the place-order challenge under.
      */
     private const string RECAPTCHA_FORM = 'place_order';
+    private const string COUPON_RECAPTCHA_FORM = 'coupon_code';
 
     /**
      * @param CheckoutSession $checkoutSession
@@ -197,6 +198,7 @@ class CheckoutConfig implements ArgumentInterface
             // Store-scoped: the site key is the same for every shopper, so it
             // belongs in the half that may reach a cacheable page.
             'recaptcha' => $this->reCaptcha->configFor(self::RECAPTCHA_FORM),
+            'couponRecaptcha' => $this->reCaptcha->configFor(self::COUPON_RECAPTCHA_FORM),
             'addressFields' => $this->formAttributes->checkoutConfig(),
         ];
     }
@@ -534,6 +536,7 @@ class CheckoutConfig implements ArgumentInterface
             'agreements' => ['enabled' => false, 'items' => []],
             'payment' => [],
             'recaptcha' => [],
+            'couponRecaptcha' => [],
         ];
     }
 

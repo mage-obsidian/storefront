@@ -7,6 +7,7 @@ import {
     bindReCaptchaFields,
     loadReCaptchaApi,
     mountReCaptcha,
+    mountReCaptchaFields,
     resetReCaptchaModule,
     tokenFor,
     type GReCaptcha,
@@ -127,6 +128,19 @@ describe("mountReCaptcha", () => {
         expect(rendered).toHaveLength(1);
     });
 
+    it("renders again when the page swapped the slot for a fresh one", async () => {
+        const { rendered } = stubApi();
+        const first = render();
+        await mountReCaptcha(first);
+
+        const replacement = render();
+        await mountReCaptcha(replacement);
+
+        expect(first.isConnected).toBe(false);
+        expect(rendered).toHaveLength(2);
+        expect(rendered[1].element).toBe(replacement);
+    });
+
     // A slot the platform left empty carries no settings at all.
     it("does nothing for an element with no settings", async () => {
         const { rendered } = stubApi();
@@ -144,6 +158,27 @@ describe("mountReCaptcha", () => {
         await mountReCaptcha(document.querySelector(".field-recaptcha") as HTMLElement);
 
         expect(rendered).toHaveLength(0);
+    });
+});
+
+describe("mountReCaptchaFields", () => {
+    it("mounts the slots under the root it is given", async () => {
+        const { rendered } = stubApi();
+        render();
+
+        await mountReCaptchaFields(document);
+
+        expect(rendered).toHaveLength(1);
+    });
+
+    it("leaves a slot that is already rendered alone", async () => {
+        const { rendered } = stubApi();
+        render();
+
+        await mountReCaptchaFields(document);
+        await mountReCaptchaFields(document);
+
+        expect(rendered).toHaveLength(1);
     });
 });
 

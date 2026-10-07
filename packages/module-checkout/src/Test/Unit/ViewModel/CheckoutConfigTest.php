@@ -102,11 +102,24 @@ class CheckoutConfigTest extends TestCase
         $this->assertSame('site-key', $public['recaptcha']['sitekey']);
     }
 
+    public function testTheCouponChallengeTravelsWithTheCacheableHalfToo(): void
+    {
+        $public = $this->viewModel(
+            isLoggedIn: false,
+            maskedId: 'guestmask123',
+            reCaptchaConfig: ['formKey' => 'coupon_code', 'sitekey' => 'coupon-key', 'invisible' => false]
+        )->getPublicConfig();
+
+        $this->assertSame('coupon-key', $public['couponRecaptcha']['sitekey']);
+        $this->assertSame([], $public['recaptcha']);
+    }
+
     public function testAStoreWithNoChallengeCarriesNone(): void
     {
         $public = $this->viewModel(isLoggedIn: false, maskedId: 'guestmask123')->getPublicConfig();
 
         $this->assertSame([], $public['recaptcha']);
+        $this->assertSame([], $public['couponRecaptcha']);
     }
 
     public function testPublicConfigCarriesNoPrivateKeys(): void
@@ -149,7 +162,7 @@ class CheckoutConfigTest extends TestCase
         sort($whole);
         sort($halves);
         $this->assertSame($halves, $whole);
-        $this->assertCount(23, $whole);
+        $this->assertCount(24, $whole);
     }
 
     public function testPrivateDataCarriesTheShippingChoiceHeldOnTheQuote(): void

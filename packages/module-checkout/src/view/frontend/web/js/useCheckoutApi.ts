@@ -126,8 +126,13 @@ export function createCheckoutApi(config: CheckoutApiConfig) {
         setSelectedPaymentMethod(method: unknown) {
             return request('PUT', 'selected-payment-method', { method });
         },
-        applyCoupon(code: string) {
-            return request('PUT', `coupons/${encodeURIComponent(code)}`) as Promise<boolean>;
+        applyCoupon(code: string, reCaptchaToken = '') {
+            return request(
+                'PUT',
+                `coupons/${encodeURIComponent(code)}`,
+                undefined,
+                reCaptchaToken ? { 'X-ReCaptcha': reCaptchaToken } : {},
+            ) as Promise<boolean>;
         },
         removeCoupon() {
             return request('DELETE', 'coupons') as Promise<boolean>;

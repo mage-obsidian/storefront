@@ -10,6 +10,7 @@
 export const mounted: HTMLElement[] = [];
 export let token: string | null = null;
 export const resets: string[] = [];
+export const remounts: ParentNode[] = [];
 
 export const setToken = (value: string | null): void => {
     token = value;
@@ -18,6 +19,7 @@ export const setToken = (value: string | null): void => {
 export const reset = (): void => {
     mounted.length = 0;
     resets.length = 0;
+    remounts.length = 0;
     token = null;
 };
 
@@ -30,4 +32,8 @@ export const tokenFor = async (): Promise<string | null> => token;
 
 export const resetToken = (formKey: string): void => {
     resets.push(formKey);
+};
+
+export const mountReCaptchaFields = async (root: ParentNode): Promise<void> => {
+    remounts.push(root);
 };

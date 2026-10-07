@@ -5,7 +5,7 @@
  SPDX-License-Identifier: MIT
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
 import Agreements from "MageObsidian_Checkout::checkout/Agreements";
 import { mountReCaptcha } from "MageObsidian_Storefront::js/recaptcha";
@@ -67,11 +67,22 @@ const shippingPending = computed(() => checkout.shippingDirty || shippingBusy.va
 const reCaptchaEl = ref<HTMLElement | null>(null);
 const reCaptchaSettings = computed(() => (checkout.reCaptcha ? JSON.stringify(checkout.reCaptcha) : ""));
 
+const couponReCaptchaEl = ref<HTMLElement | null>(null);
+const couponReCaptchaSettings = computed(() =>
+    checkout.couponReCaptcha ? JSON.stringify(checkout.couponReCaptcha) : "",
+);
+
 onMounted(() => {
     if (reCaptchaEl.value) {
         void mountReCaptcha(reCaptchaEl.value).catch(() => undefined);
     }
 });
+
+watch(couponReCaptchaEl, (element) => {
+    if (element) {
+        void mountReCaptcha(element).catch(() => undefined);
+    }
+}, { flush: "post" });
 
 const paymentTitle = (): string =>
     checkout.paymentMethods.find((m) => m.code === checkout.selectedPayment)?.title ?? checkout.selectedPayment;
@@ -107,6 +118,12 @@ const paymentTitle = (): string =>
                         :aria-describedby="checkout.couponError ? 'coupon-error' : undefined"
                         class="field__control w-full font-mono"
                     >
+                    <div
+                        v-if="couponReCaptchaSettings"
+                        ref="couponReCaptchaEl"
+                        class="field-recaptcha"
+                        :data-recaptcha="couponReCaptchaSettings"
+                    ></div>
                     <p v-if="checkout.couponError" id="coupon-error" role="alert" class="font-mono text-micro text-sale">{{ checkout.couponError }}</p>
                 </div>
                 <button

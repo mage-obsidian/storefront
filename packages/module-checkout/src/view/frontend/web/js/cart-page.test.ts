@@ -6,6 +6,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { __calls, __reset } from "MageObsidian_Storefront::js/useCart";
 import { reload, __reset as __resetData, __setSection } from "MageObsidian_ModernFrontend::js/customer-data";
 import { signInUrl } from "./guest-checkout-gate.ts";
+import events from "MageObsidian_ModernFrontend::js/events";
+import { MutationPhase, mutationEvent } from "mage-obsidian/runtime/mutationEvent.ts";
 
 // The enhancer binds delegated listeners on the document at import time, so it is
 // imported once and the DOM/stubs are reset per test (the realistic page setup).
@@ -148,6 +150,19 @@ describe("coupon challenge", () => {
     });
 });
 
+describe("coupon challenge after a refresh", () => {
+    it("mounts the challenge again on the region the refresh brought in", async () => {
+        const { remounts, reset } = await import("MageObsidian_Storefront::js/recaptcha");
+        reset();
+        const plus = document.querySelector('[data-cart-step="1"]');
+        plus.dispatchEvent(new Event("click", { bubbles: true }));
+
+        await vi.waitFor(() => expect(plus.isConnected).toBe(false));
+
+        expect(remounts).toEqual([document]);
+    });
+});
+
 describe("coupon rejection", () => {
     it("announces what the server queued in the messages cookie once the attempt is over", async () => {
         const { announced, cookieMessages, reset } = await import("MageObsidian_Storefront::js/session-messages");
@@ -195,5 +210,28 @@ describe("checkout button", () => {
         expect(click.defaultPrevented).toBe(false);
         expect(assign).not.toHaveBeenCalled();
         assign.mockRestore();
+    });
+});
+
+describe("a product added from the page", () => {
+    const added = (ok: boolean) =>
+        events.dispatch(mutationEvent("cart", "add", MutationPhase.After), { result: { ok } });
+
+    it("refreshes the cart region so the new line and the totals appear", async () => {
+        const before = document.querySelector("[data-cart-root]");
+
+        await added(true);
+
+        await vi.waitFor(() => expect(before.isConnected).toBe(false));
+        expect(fetch).toHaveBeenCalled();
+    });
+
+    it("leaves the page alone when the add failed", async () => {
+        const before = document.querySelector("[data-cart-root]");
+
+        await added(false);
+
+        expect(before.isConnected).toBe(true);
+        expect(fetch).not.toHaveBeenCalled();
     });
 });

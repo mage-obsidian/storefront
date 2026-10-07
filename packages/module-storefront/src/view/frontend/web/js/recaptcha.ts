@@ -107,8 +107,12 @@ function settle(widget: Widget, token: string): void {
 
 export async function mountReCaptcha(element: HTMLElement, doc: Document = document): Promise<Widget | null> {
     const settings = settingsOf(element);
-    if (!settings || widgets.has(settings.formKey)) {
-        return settings ? (widgets.get(settings.formKey) ?? null) : null;
+    if (!settings) {
+        return null;
+    }
+    const existing = widgets.get(settings.formKey);
+    if (existing && existing.element.isConnected) {
+        return existing;
     }
 
     const api = await loadReCaptchaApi(settings.lang, doc);
@@ -187,6 +191,14 @@ function guardInvisibleSubmits(root: ParentNode & EventTarget, doc: Document): v
             });
         },
         true,
+    );
+}
+
+export async function mountReCaptchaFields(root: ParentNode = document, doc: Document = document): Promise<void> {
+    await Promise.all(
+        Array.from(root.querySelectorAll<HTMLElement>(FIELD)).map((element) =>
+            mountReCaptcha(element, doc).catch(() => undefined),
+        ),
     );
 }
 
