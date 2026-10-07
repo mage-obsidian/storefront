@@ -12,13 +12,18 @@
  * Magento_PageCache/js/form-key-provider, and the single source of truth the
  * cart flow reads its form key from.
  */
-import { writeCookie } from 'mage-obsidian/runtime/cookies.ts';
+import { siteConfig, writeCookie } from 'mage-obsidian/runtime/cookies.ts';
 
 const COOKIE = 'form_key';
 const LENGTH = 16;
 const CHARS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const INPUT_SELECTOR = 'input[name="form_key"]';
-const COOKIE_LIFETIME_SECONDS = 86400;
+const DEFAULT_COOKIE_LIFETIME_SECONDS = 86400;
+
+function lifetimeSeconds(): number {
+    const configured = siteConfig()?.cookie.lifetime ?? 0;
+    return configured > 0 ? configured : DEFAULT_COOKIE_LIFETIME_SECONDS;
+}
 
 function readCookie(): string {
     const match = typeof document !== 'undefined'
@@ -51,7 +56,7 @@ export function getFormKey(): string {
         return existing;
     }
     const key = generate();
-    writeCookie(COOKIE, key, { maxAgeSeconds: COOKIE_LIFETIME_SECONDS });
+    writeCookie(COOKIE, key, { maxAgeSeconds: lifetimeSeconds() });
     return key;
 }
 

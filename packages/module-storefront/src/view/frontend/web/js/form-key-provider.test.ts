@@ -41,6 +41,25 @@ describe("the cookie it writes", () => {
         written.mockRestore();
     });
 
+    it("lives as long as the store configured cookies to live", () => {
+        publish({ domain: "", path: "/", lifetime: 3600, secure: false, sameSite: "lax" });
+        const written = vi.spyOn(document, "cookie", "set");
+
+        getFormKey();
+
+        expect(written.mock.calls[0][0] as string).toContain("max-age=3600");
+        written.mockRestore();
+    });
+
+    it("falls back to a day when the store published no configuration", () => {
+        const written = vi.spyOn(document, "cookie", "set");
+
+        getFormKey();
+
+        expect(written.mock.calls[0][0] as string).toContain("max-age=86400");
+        written.mockRestore();
+    });
+
     it("stays a host-only cookie when the store configured no domain", () => {
         publish({ domain: "", path: "/", lifetime: 3600, secure: false, sameSite: "lax" });
         const written = vi.spyOn(document, "cookie", "set");
