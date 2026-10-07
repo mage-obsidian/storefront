@@ -18,5 +18,9 @@
                 <argument name="wishlist" xsi:type="object">MageObsidian\Wishlist\ViewModel\CartMove</argument>
             </arguments>
         </referenceBlock>
+        <referenceContainer name="before.body.end">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.cart_wishlist_actions"
+                   template="Magento_Wishlist::wishlist-actions.twig"/>
+        </referenceContainer>
     </body>
 </page>

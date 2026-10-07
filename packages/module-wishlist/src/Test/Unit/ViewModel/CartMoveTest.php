@@ -44,6 +44,23 @@ class CartMoveTest extends TestCase
         $this->assertFalse((new CartMove($helper, $this->createMock(UrlInterface::class)))->isAllowed());
     }
 
+    public function testIsEnabledFollowsTheWishListSettingNotTheSession(): void
+    {
+        $helper = $this->createMock(WishlistHelper::class);
+        $helper->method('isAllow')->willReturn(true);
+        $helper->method('isAllowInCart')->willReturn(false);
+
+        $this->assertTrue((new CartMove($helper, $this->createMock(UrlInterface::class)))->isEnabled());
+    }
+
+    public function testIsNotEnabledWhenTheWishListIsOff(): void
+    {
+        $helper = $this->createMock(WishlistHelper::class);
+        $helper->method('isAllow')->willReturn(false);
+
+        $this->assertFalse((new CartMove($helper, $this->createMock(UrlInterface::class)))->isEnabled());
+    }
+
     public function testMoveUrlPointsAtTheFromcartController(): void
     {
         $url = $this->createMock(UrlInterface::class);

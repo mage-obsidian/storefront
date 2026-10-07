@@ -46,6 +46,11 @@ class CartMove implements ArgumentInterface
         return (bool)$this->wishlistHelper->isAllowInCart();
     }
 
+    public function isEnabled(): bool
+    {
+        return (bool)$this->wishlistHelper->isAllow();
+    }
+
     /**
      * Controller URL a cart line posts its item id to.
      *
