@@ -61,6 +61,72 @@ class MethodConfigTest extends TestCase
         return $manager;
     }
 
+    public function testTheInstructionsReachTheirOwnMethodAsPlainText(): void
+    {
+        $config = $this->methodConfig(
+            [
+                'instructions' => [
+                    'banktransfer' => 'Wire to <b>us</b><br />IBAN &amp; BIC',
+                    'cashondelivery' => 'Pay the courier',
+                ],
+            ],
+            ['banktransfer']
+        );
+
+        $this->assertSame(
+            ['banktransfer' => ['instructions' => "Wire to us\nIBAN & BIC"]],
+            $config->getConfig()
+        );
+    }
+
+    public function testAMethodWithoutInstructionsPublishesNoneForIt(): void
+    {
+        $config = $this->methodConfig(['instructions' => ['banktransfer' => '']], ['banktransfer']);
+
+        $this->assertSame([], $config->getConfig());
+    }
+
+    public function testTheChequePayeeAndAddressArePlainText(): void
+    {
+        $config = $this->methodConfig(
+            ['checkmo' => ['mailingAddress' => '1 Lane<br />Dallas &amp; Co', 'payableTo' => 'Obsidian &amp; Sons']],
+            ['checkmo']
+        );
+
+        $this->assertSame(
+            [
+                'checkmo' => [
+                    'mailingAddress' => "1 Lane\nDallas & Co",
+                    'payableTo' => 'Obsidian & Sons',
+                    'labels' => ['payableTo' => 'Make check payable to', 'mailingAddress' => 'Send check to'],
+                ],
+            ],
+            $config->getConfig()
+        );
+    }
+
+    public function testAnActivePurchaseOrderCarriesItsOwnLabels(): void
+    {
+        $config = $this->methodConfig([], ['purchaseorder']);
+
+        $this->assertSame(
+            [
+                'purchaseorder' => [
+                    'labels' => [
+                        'poNumber' => 'Purchase Order Number',
+                        'required' => 'Enter the purchase order number.',
+                    ],
+                ],
+            ],
+            $config->getConfig()
+        );
+    }
+
+    public function testAnInactivePurchaseOrderCarriesNothing(): void
+    {
+        $this->assertSame([], $this->methodConfig([], ['checkmo'])->getConfig());
+    }
+
     public function testAnInactiveMethodIsNotPublished(): void
     {
         $config = $this->methodConfig(

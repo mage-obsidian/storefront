@@ -20,6 +20,10 @@ class MethodConfig
 
     private const string AVAILABLE_TYPES = 'availableTypes';
 
+    private const string INSTRUCTIONS = 'instructions';
+
+    private const array PLAIN_TEXT_FIELDS = ['mailingAddress', 'payableTo'];
+
     public function __construct(
         private readonly ConfigProviderInterface $configProviders,
         private readonly PaymentMethodListInterface $methodList,
@@ -77,15 +81,72 @@ class MethodConfig
 
         foreach ($payment as $key => $value) {
             $key = (string)$key;
-            if ($key === '' || $key === self::CC_FORM || !is_array($value)) {
+            if ($key === '' || $key === self::CC_FORM || $key === self::INSTRUCTIONS || !is_array($value)) {
                 continue;
             }
             if ($this->methodFor($key, $active) !== null) {
-                $config[$key] = $value;
+                $config[$key] = $this->plainTextFields($value);
+            }
+        }
+
+        return $this->withPurchaseOrderLabels($this->withInstructions($config, $payment, $active), $active);
+    }
+
+    private function withPurchaseOrderLabels(array $config, array $active): array
+    {
+        if (isset($active['purchaseorder'])) {
+            $config['purchaseorder']['labels'] = [
+                'poNumber' => (string)__('Purchase Order Number'),
+                'required' => (string)__('Enter the purchase order number.'),
+            ];
+        }
+
+        return $config;
+    }
+
+    private function withInstructions(array $config, array $payment, array $active): array
+    {
+        $instructions = $payment[self::INSTRUCTIONS] ?? null;
+        if (!is_array($instructions)) {
+            return $config;
+        }
+
+        foreach ($instructions as $code => $text) {
+            $code = (string)$code;
+            $plain = $this->plainText($text);
+            if (isset($active[$code]) && $plain !== '') {
+                $config[$code][self::INSTRUCTIONS] = $plain;
             }
         }
 
         return $config;
+    }
+
+    private function plainTextFields(array $value): array
+    {
+        $converted = false;
+        foreach (self::PLAIN_TEXT_FIELDS as $field) {
+            if (isset($value[$field]) && is_string($value[$field])) {
+                $value[$field] = $this->plainText($value[$field]);
+                $converted = true;
+            }
+        }
+
+        if ($converted) {
+            $value['labels'] = [
+                'payableTo' => (string)__('Make check payable to'),
+                'mailingAddress' => (string)__('Send check to'),
+            ];
+        }
+
+        return $value;
+    }
+
+    private function plainText(mixed $html): string
+    {
+        $text = (string)preg_replace('#<br\s*/?>#i', "\n", (string)$html);
+
+        return trim(html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
     }
 
     private function ccForm(array $payment, array $active): ?array

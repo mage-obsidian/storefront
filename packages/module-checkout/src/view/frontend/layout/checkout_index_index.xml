@@ -49,7 +49,18 @@
                 </arguments>
                 <block class="MageObsidian\Checkout\Block\CheckoutTitle" name="checkout.title"
                        as="checkout_title" template="Magento_Checkout::checkout/title.twig"/>
-                <container name="checkout.payment.methods" as="payment_methods" label="Checkout payment methods"/>
+                <container name="checkout.payment.methods" as="payment_methods" label="Checkout payment methods">
+                    <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.payment.instructions">
+                        <arguments>
+                            <argument name="renderer" xsi:type="object">MageObsidianInstructionsRenderer</argument>
+                        </arguments>
+                    </block>
+                    <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.payment.purchaseorder">
+                        <arguments>
+                            <argument name="renderer" xsi:type="object">MageObsidianPurchaseOrderRenderer</argument>
+                        </arguments>
+                    </block>
+                </container>
             </block>
         </referenceContainer>
     </body>
