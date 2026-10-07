@@ -235,6 +235,38 @@ describe("useCheckout — payment, coupon and order", () => {
         expect(checkout.grandTotal).toBe("$54.00");
     });
 
+    it("sends the coupon challenge token in the header the platform reads", async () => {
+        setToken("coupon-token");
+        const fetchMock = mockFetch({ grand_total: 54, total_segments: [] });
+        const checkout = ready();
+
+        await checkout.applyCoupon("SAVE10");
+
+        const put = fetchMock.mock.calls.find(([, init]) => init.method === "PUT");
+        expect(put[1].headers["X-ReCaptcha"]).toBe("coupon-token");
+    });
+
+    it("sends no challenge header with a coupon when the store configured none", async () => {
+        const fetchMock = mockFetch({ grand_total: 54, total_segments: [] });
+        const checkout = ready();
+
+        await checkout.applyCoupon("SAVE10");
+
+        const put = fetchMock.mock.calls.find(([, init]) => init.method === "PUT");
+        expect(put[1].headers).not.toHaveProperty("X-ReCaptcha");
+    });
+
+    it("asks for a fresh coupon challenge after every attempt, since a token is good for one", async () => {
+        const fetchMock = mockFetch({ grand_total: 54, total_segments: [] });
+        const checkout = ready();
+
+        await checkout.applyCoupon("SAVE10");
+
+        expect(fetchMock).toHaveBeenCalled();
+        const { resets } = await import("MageObsidian_Storefront::js/recaptcha");
+        expect(resets).toContain("coupon_code");
+    });
+
     it("assigns the chosen method to the cart so the summary can show what it changed", async () => {
         const fetchMock = mockFetch({
             grand_total: 37,
@@ -1538,5 +1570,48 @@ describe("useCheckout — billing from the saved addresses", () => {
             city: "Miami",
             postcode: "33139",
         });
+    });
+
+    it("names the saved address on the order so it stays linked to the address book", async () => {
+        Object.defineProperty(window, "location", { value: { assign: vi.fn() }, writable: true });
+        const fetchMock = mockFetch(757575);
+        const checkout = loggedIn();
+        checkout.selectPayment("checkmo");
+        checkout.sameAsShipping = false;
+        checkout.selectBillingAddress(21);
+
+        await checkout.placeOrder();
+
+        expect(JSON.parse(fetchMock.mock.calls[0][1].body).billingAddress.customer_address_id).toBe(21);
+    });
+
+    it("names no saved address when the billing address was typed in", async () => {
+        Object.defineProperty(window, "location", { value: { assign: vi.fn() }, writable: true });
+        const fetchMock = mockFetch(757575);
+        const checkout = loggedIn();
+        checkout.selectPayment("checkmo");
+        checkout.sameAsShipping = false;
+        checkout.selectBillingAddress(null);
+        Object.assign(checkout.billingAddress, { firstname: "Ada", lastname: "L", street: ["1 Way"], city: "Austin", postcode: "78701", countryId: "US", regionId: 57, region: "Texas", telephone: "5125550142" });
+
+        await checkout.placeOrder();
+
+        expect(JSON.parse(fetchMock.mock.calls[0][1].body).billingAddress).not.toHaveProperty("customer_address_id");
+    });
+
+    it("does not place the order when the saved billing address lacks a field the store now requires", async () => {
+        Object.defineProperty(window, "location", { value: { assign: vi.fn() }, writable: true });
+        const fetchMock = mockFetch(757575);
+        const checkout = loggedIn();
+        checkout.selectPayment("checkmo");
+        checkout.sameAsShipping = false;
+        checkout.selectBillingAddress(21);
+        checkout.billingAddress.city = "";
+
+        const orderId = await checkout.placeOrder();
+
+        expect(orderId).toBeNull();
+        expect(checkout.orderError).not.toBe("");
+        expect(fetchMock).not.toHaveBeenCalled();
     });
 });

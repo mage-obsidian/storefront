@@ -113,6 +113,7 @@ export interface RestAddress {
     company?: string;
     email?: string;
     save_in_address_book?: number;
+    customer_address_id?: number;
 }
 
 /** A blank address, optionally pre-seeded with the store's default country. */
@@ -136,16 +137,16 @@ export function emptyAddress(countryId = '', streetLines = 2): AddressData {
     };
 }
 
-/**
- * The names of the required fields missing a value, in form order. `region` is
- * required only when the selected country mandates a state. Used by the form to
- * mark fields and by the store to gate REST submission.
- */
 function isRequired(rules: AddressRules, code: string): boolean {
     const rule = rules.fields[code];
     return Boolean(rule?.visible && rule.required);
 }
 
+/**
+ * The names of the required fields missing a value, in form order. `region` is
+ * required only when the selected country mandates a state. Used by the form to
+ * mark fields and by the store to gate REST submission.
+ */
 export function missingFields(
     address: AddressData,
     regionRequired: boolean,

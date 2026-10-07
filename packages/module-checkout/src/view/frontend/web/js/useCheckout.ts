@@ -26,7 +26,7 @@ import {
     type AddressRules,
 } from 'MageObsidian_Storefront::js/address';
 import { formatCurrency } from 'MageObsidian_Storefront::js/currency';
-import { tokenFor } from 'MageObsidian_Storefront::js/recaptcha';
+import { resetToken, tokenFor } from 'MageObsidian_Storefront::js/recaptcha';
 import events from 'MageObsidian_ModernFrontend::js/events';
 import { MutationPhase } from 'mage-obsidian/runtime/mutationEvent.ts';
 import {
@@ -190,6 +190,7 @@ async function runFlow<Result>(
 ensureSharedPinia();
 
 const RECAPTCHA_FORM = 'place_order';
+const COUPON_RECAPTCHA_FORM = 'coupon_code';
 const PAYMENT_ROOT_FIELDS = ['po_number'];
 
 function paymentPayload(method: string, data: Record<string, unknown>): Record<string, unknown> {
@@ -260,6 +261,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     const agreements = ref<Agreement[]>([]);
     const acceptedAgreements = ref<Array<number | string>>([]);
     const reCaptcha = ref<Record<string, unknown> | null>(null);
+    const couponReCaptcha = ref<Record<string, unknown> | null>(null);
 
     let publicSeeded = false;
     let restBaseUrl = '';
@@ -307,6 +309,8 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         paymentConfig.value = asRecordMap(cfg.payment);
         const captcha = cfg.recaptcha || {};
         reCaptcha.value = captcha.sitekey ? (captcha as Record<string, unknown>) : null;
+        const couponCaptcha = cfg.couponRecaptcha || {};
+        couponReCaptcha.value = couponCaptcha.sitekey ? (couponCaptcha as Record<string, unknown>) : null;
     }
 
     /**
@@ -723,7 +727,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
     async function doApplyCoupon(code: string): Promise<boolean> {
         couponError.value = '';
         try {
-            await api.applyCoupon(code.trim());
+            await api.applyCoupon(code.trim(), (await tokenFor(COUPON_RECAPTCHA_FORM)) ?? '');
             appliedCoupon.value = code.trim();
             couponCode.value = '';
             await refreshTotals();
@@ -731,6 +735,8 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         } catch (e) {
             couponError.value = e instanceof Error ? e.message : String(e);
             return false;
+        } finally {
+            resetToken(COUPON_RECAPTCHA_FORM);
         }
     }
 
@@ -775,6 +781,10 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
             orderError.value = selectedMethodBlocker.value;
             return null;
         }
+        if (billingIncomplete.value) {
+            orderError.value = 'The billing address is missing required details.';
+            return null;
+        }
         if (!(await flushShippingSync())) {
             orderError.value = error.value;
             return null;
@@ -795,6 +805,9 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         try {
             const source = sameAsShipping.value ? shippingAddress.value : billingAddress.value;
             const billing = toRestAddress(source, isLoggedIn.value ? {} : { email: email.value });
+            if (!sameAsShipping.value && selectedBillingAddressId.value !== null) {
+                billing.customer_address_id = selectedBillingAddressId.value;
+            }
             const paymentMethod = paymentPayload(selectedPayment.value, stateFor(selectedPayment.value).data);
             if (agreementsEnabled.value && acceptedAgreements.value.length > 0) {
                 paymentMethod.extension_attributes = {
@@ -887,6 +900,15 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         missingFields(shippingAddress.value, regionRequired.value, addressRules.value),
     );
     const addressComplete = computed(() => missingAddressFields.value.length === 0);
+    const billingIncomplete = computed(
+        () =>
+            !sameAsShipping.value &&
+            missingFields(
+                billingAddress.value,
+                statesRequired.value.includes(billingAddress.value.countryId),
+                addressRules.value,
+            ).length > 0,
+    );
     const emailReady = computed(() => isLoggedIn.value || email.value.trim() !== '');
     const shippingSignature = computed(() => `${addressKey(shippingAddress.value)}|${selectedMethodKey.value}`);
     const shippingUnsaved = computed(
@@ -1032,6 +1054,7 @@ export const useCheckout = defineStore('mageObsidianCheckout', () => {
         agreementsEnabled,
         agreements,
         reCaptcha,
+        couponReCaptcha,
         acceptedAgreements,
         requiredAgreementIds,
         allRequiredAccepted,

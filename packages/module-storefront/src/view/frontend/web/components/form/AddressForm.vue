@@ -396,7 +396,7 @@ defineExpose({ validate, focusField });
                 :label="t.fax"
                 type="tel"
                 :required="rule('fax').required"
-                autocomplete="fax"
+                autocomplete="fax tel"
                 :error="hasError('fax') ? t.required : ''"
                 @update:model-value="clearError('fax')"
             />

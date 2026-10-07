@@ -170,7 +170,7 @@ describe("AddressForm", () => {
                     vat_id: { visible: true, required: false, options: [] },
                 }),
             );
-            for (const autocomplete of ["additional-name", "honorific-suffix", "fax"]) {
+            for (const autocomplete of ["additional-name", "honorific-suffix", "fax tel"]) {
                 expect(wrapper.find(`input[autocomplete="${autocomplete}"]`).exists()).toBe(true);
             }
             expect(wrapper.find("[data-field-vat-id]").exists()).toBe(true);

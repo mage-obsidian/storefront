@@ -13,9 +13,12 @@ use Magento\Customer\Api\AddressMetadataInterface;
 use Magento\Customer\Api\CustomerMetadataInterface;
 use Magento\Customer\Api\Data\AttributeMetadataInterface;
 use Magento\Customer\Api\Data\OptionInterface;
+use Magento\Customer\Helper\Address as AddressHelper;
 use Magento\Customer\Model\Options;
 use Magento\Directory\Helper\Data as DirectoryHelper;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Locale\ResolverInterface;
+use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use MageObsidian\Customer\ViewModel\FormAttributes;
 use PHPUnit\Framework\TestCase;
 
@@ -55,7 +58,10 @@ class FormAttributesTest extends TestCase
         array $addressAttributes = [],
         array $prefixOptions = [],
         array $suffixOptions = [],
-        array $optionalZip = []
+        array $optionalZip = [],
+        bool $vatVisibleOnStorefront = true,
+        string $dateFormat = 'M/d/y',
+        string $locale = 'en_US'
     ): FormAttributes {
         $options = $this->createMock(Options::class);
         $options->method('getNamePrefixOptions')->willReturn($prefixOptions === [] ? false : $prefixOptions);
@@ -64,11 +70,22 @@ class FormAttributesTest extends TestCase
         $directory = $this->createMock(DirectoryHelper::class);
         $directory->method('getCountriesWithOptionalZip')->willReturn($optionalZip);
 
+        $addressHelper = $this->createMock(AddressHelper::class);
+        $addressHelper->method('isVatAttributeVisible')->willReturn($vatVisibleOnStorefront);
+
+        $timezone = $this->createMock(TimezoneInterface::class);
+        $timezone->method('getDateFormatWithLongYear')->willReturn($dateFormat);
+        $resolver = $this->createMock(ResolverInterface::class);
+        $resolver->method('getLocale')->willReturn($locale);
+
         return new FormAttributes(
             $this->metadata(CustomerMetadataInterface::class, $customerAttributes),
             $this->metadata(AddressMetadataInterface::class, $addressAttributes),
             $options,
-            $directory
+            $directory,
+            $addressHelper,
+            $timezone,
+            $resolver
         );
     }
 
@@ -127,6 +144,69 @@ class FormAttributesTest extends TestCase
             ['visible' => true, 'required' => false, 'options' => []],
             $viewModel->addressField('telephone')
         );
+    }
+
+    public function testTheVatNumberStaysHiddenUntilTheStoreAsksForIt(): void
+    {
+        $viewModel = $this->viewModel([], ['vat_id' => $this->attribute(true, false)], [], [], [], false);
+
+        $this->assertSame(
+            ['visible' => false, 'required' => false, 'options' => []],
+            $viewModel->addressField('vat_id')
+        );
+    }
+
+    public function testTheVatNumberShowsWhenTheStoreAsksForIt(): void
+    {
+        $viewModel = $this->viewModel([], ['vat_id' => $this->attribute(true, false)], [], [], [], true);
+
+        $this->assertTrue($viewModel->addressField('vat_id')['visible']);
+    }
+
+    public function testTheStorefrontVisibilitySettingDoesNotTouchOtherFields(): void
+    {
+        $viewModel = $this->viewModel([], ['company' => $this->attribute(true, false)], [], [], [], false);
+
+        $this->assertTrue($viewModel->addressField('company')['visible']);
+    }
+
+    public function testNameOptionsAreNotEscapedAgainBecauseTheCoreAlreadyEscapedThem(): void
+    {
+        $viewModel = $this->viewModel(
+            ['prefix' => $this->attribute(true, false)],
+            [],
+            ['Mr. &amp; Mrs.' => 'Mr. &amp; Mrs.', 'O&#039;Brien' => 'O&#039;Brien']
+        );
+
+        $this->assertSame(['Mr. & Mrs.', "O'Brien"], $viewModel->customerField('prefix')['options']);
+    }
+
+    public function testTheBirthDateIsShownInTheFormatTheCoreFilterParses(): void
+    {
+        $viewModel = $this->viewModel([], [], [], [], [], true, 'dd/MM/y', 'es_ES');
+
+        $this->assertSame('dd/MM/y', $viewModel->dobPattern());
+        $this->assertSame('31/12/1990', $viewModel->dobDisplay('1990-12-31 00:00:00'));
+    }
+
+    public function testTheBirthDateKeepsTheDayWithTheMonthFirstLocale(): void
+    {
+        $viewModel = $this->viewModel();
+
+        $this->assertSame('3/4/1985', $viewModel->dobDisplay('1985-03-04'));
+    }
+
+    public function testNoBirthDateIsShownAsNothing(): void
+    {
+        $viewModel = $this->viewModel();
+
+        $this->assertSame('', $viewModel->dobDisplay(null));
+        $this->assertSame('', $viewModel->dobDisplay(''));
+    }
+
+    public function testAnUnreadableBirthDateIsShownAsItCame(): void
+    {
+        $this->assertSame('not a date', $this->viewModel()->dobDisplay('not a date'));
     }
 
     public function testStreetLinesFollowTheMultilineCount(): void
