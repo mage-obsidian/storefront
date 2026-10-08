@@ -9,5 +9,6 @@
     <update handle="1column"/>
     <referenceContainer name="columns">
         <container name="sidebar.main" htmlTag="aside" htmlClass="sidebar-main" after="content"/>
+        <container name="sidebar.additional" htmlTag="aside" htmlClass="sidebar-additional" after="sidebar.main"/>
     </referenceContainer>
 </layout>

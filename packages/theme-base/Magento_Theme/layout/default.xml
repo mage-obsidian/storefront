@@ -76,6 +76,8 @@
         </referenceContainer>
         <referenceContainer name="content">
             <container name="content.top" label="Main Content Top"/>
+            <container name="content.aside" label="Main Content Aside" after="-"/>
+            <container name="content.bottom" label="Main Content Bottom" after="-"/>
         </referenceContainer>
         <referenceContainer name="footer-container" htmlClass="shadow-inner bg-white mt-4">
             <container name="footer" as="footer" label="Page Footer">

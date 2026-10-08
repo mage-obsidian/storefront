@@ -14,5 +14,6 @@
     <update handle="1column"/>
     <referenceContainer name="columns">
         <container name="sidebar.main" htmlTag="aside" htmlClass="sidebar-main" before="content"/>
+        <container name="sidebar.additional" htmlTag="aside" htmlClass="sidebar-additional" after="content"/>
     </referenceContainer>
 </layout>
