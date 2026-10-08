@@ -252,3 +252,117 @@ describe("gallery enhancer and the responsive srcset", () => {
         expect(main.hasAttribute("srcset")).toBe(false);
     });
 });
+
+describe("gallery video facade", () => {
+    const EMBED = "https://www.youtube-nocookie.com/embed/abc?autoplay=1&rel=0";
+
+    function video(firstIsVideo = false) {
+        const embed = `data-video-embed="${EMBED}" data-video-title="Unboxing"`;
+        document.body.innerHTML = `
+            <div data-pdp>
+                <figure>
+                    <img data-gallery-main src="/a.jpg" alt="A">
+                    <div data-gallery-video hidden></div>
+                    <button type="button" data-gallery-play aria-label="Play video" ${firstIsVideo ? embed : "hidden"}></button>
+                </figure>
+                <ul data-gallery-thumbs data-thumb-label="Show image %1">
+                    <li><button data-gallery-thumb data-large="/a.jpg" data-label="A" aria-pressed="true" ${firstIsVideo ? embed : ""}><img></button></li>
+                    <li><button data-gallery-thumb data-large="/v.jpg" data-label="Clip" aria-pressed="false" ${firstIsVideo ? "" : embed}>
+                        <img><span data-gallery-video-badge></span></button></li>
+                </ul>
+            </div>`;
+        init();
+    }
+
+    const play = () => document.querySelector<HTMLButtonElement>("[data-gallery-play]")!;
+    const stage = () => document.querySelector<HTMLElement>("[data-gallery-video]")!;
+    const thumbs = () => document.querySelectorAll<HTMLElement>("[data-gallery-thumb]");
+    const main = () => document.querySelector<HTMLElement>("[data-gallery-main]")!;
+
+    it("creates no frame while the page is only displayed", () => {
+        video();
+
+        expect(document.querySelectorAll("iframe")).toHaveLength(0);
+        expect(play().hidden).toBe(true);
+    });
+
+    it("offers to play when the chosen tile is the video, and shows its preview", () => {
+        video();
+
+        thumbs()[1].click();
+
+        expect(play().hidden).toBe(false);
+        expect(main().getAttribute("src")).toBe("/v.jpg");
+        expect(document.querySelectorAll("iframe")).toHaveLength(0);
+    });
+
+    it("offers to play from the start when the first tile is the video", () => {
+        video(true);
+
+        expect(play().hidden).toBe(false);
+        expect(document.querySelectorAll("iframe")).toHaveLength(0);
+    });
+
+    it("loads the provider's player only when asked, in place of the preview", () => {
+        video();
+        thumbs()[1].click();
+
+        play().click();
+
+        const frames = stage().querySelectorAll("iframe");
+        expect(frames).toHaveLength(1);
+        expect(frames[0].getAttribute("src")).toBe(EMBED);
+        expect(frames[0].getAttribute("title")).toBe("Unboxing");
+        expect(frames[0].hasAttribute("allowfullscreen")).toBe(true);
+        expect(frames[0].getAttribute("referrerpolicy")).toBe("strict-origin-when-cross-origin");
+        expect(stage().hidden).toBe(false);
+        expect(main().hidden).toBe(true);
+        expect(play().hidden).toBe(true);
+    });
+
+    it("takes the player away when another tile is chosen", () => {
+        video();
+        thumbs()[1].click();
+        play().click();
+
+        thumbs()[0].click();
+
+        expect(document.querySelectorAll("iframe")).toHaveLength(0);
+        expect(stage().hidden).toBe(true);
+        expect(main().hidden).toBe(false);
+        expect(play().hidden).toBe(true);
+    });
+
+    it("takes the player away when a variant changes the gallery", () => {
+        video();
+        thumbs()[1].click();
+        play().click();
+
+        fireVariant({ large: "/red-main.jpg", label: "Red", tiles: variantTiles });
+
+        expect(document.querySelectorAll("iframe")).toHaveLength(0);
+        expect(main().hidden).toBe(false);
+        expect(play().hidden).toBe(true);
+    });
+
+    it("does not carry the video over to the tiles a variant brings", () => {
+        video(true);
+
+        fireVariant({ large: "/red-main.jpg", label: "Red", tiles: variantTiles });
+
+        const rebuilt = thumbs();
+        expect(rebuilt).toHaveLength(3);
+        expect([...rebuilt].some((thumb) => thumb.hasAttribute("data-video-embed"))).toBe(false);
+        expect(document.querySelector("[data-gallery-video-badge]")).toBeNull();
+        expect(play().hidden).toBe(true);
+    });
+
+    it("offers the first tile's video again after a reset", () => {
+        video(true);
+        fireVariant({ large: "/red-main.jpg", label: "Red", tiles: variantTiles });
+
+        fireVariant({ reset: true });
+
+        expect(play().hidden).toBe(false);
+    });
+});

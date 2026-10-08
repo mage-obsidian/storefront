@@ -51,6 +51,8 @@ function init(): void {
         return;
     }
     const strip = root.querySelector<HTMLElement>("[data-gallery-thumbs]");
+    const playButton = root.querySelector<HTMLButtonElement>("[data-gallery-play]");
+    const videoStage = root.querySelector<HTMLElement>("[data-gallery-video]");
 
     // Snapshot the base product's gallery so a variant reset can restore it.
     const base = {
@@ -60,6 +62,50 @@ function init(): void {
         label: main.getAttribute("alt"),
     };
     const labelPattern = strip?.dataset.thumbLabel ?? "Show image %1";
+    const baseVideo = { embed: playButton?.dataset.videoEmbed, title: playButton?.dataset.videoTitle };
+
+    function stopVideo(): void {
+        videoStage?.replaceChildren();
+        if (videoStage) {
+            videoStage.hidden = true;
+        }
+        main!.hidden = false;
+    }
+
+    function offerVideo(embed: string | undefined, title: string | undefined): void {
+        if (!playButton) {
+            return;
+        }
+        if (embed) {
+            playButton.dataset.videoEmbed = embed;
+            playButton.dataset.videoTitle = title ?? "";
+        } else {
+            delete playButton.dataset.videoEmbed;
+            delete playButton.dataset.videoTitle;
+        }
+        playButton.hidden = !embed;
+    }
+
+    function playVideo(): void {
+        const embed = playButton?.dataset.videoEmbed;
+        if (!embed || !videoStage) {
+            return;
+        }
+        const frame = document.createElement("iframe");
+        frame.src = embed;
+        frame.title = playButton?.dataset.videoTitle ?? "";
+        frame.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+        frame.setAttribute("allowfullscreen", "");
+        frame.referrerPolicy = "strict-origin-when-cross-origin";
+        frame.className = "aspect-video w-full border-0";
+        videoStage.replaceChildren(frame);
+        videoStage.hidden = false;
+        main!.hidden = true;
+        playButton!.hidden = true;
+        frame.focus();
+    }
+
+    playButton?.addEventListener("click", playVideo);
 
     // A rebuilt thumb is a clone of one the server rendered, so the markup lives
     // in gallery.twig alone: a class or attribute added there is picked up here
@@ -132,6 +178,9 @@ function init(): void {
         if (!button || !image) {
             return null;
         }
+        delete button.dataset.videoEmbed;
+        delete button.dataset.videoTitle;
+        li.querySelector("[data-gallery-video-badge]")?.remove();
         button.dataset.large = tile.large;
         button.dataset.largeSrcset = tile.largeSrcset ?? "";
         button.dataset.label = tile.label ?? "";
@@ -159,6 +208,8 @@ function init(): void {
             if (!thumb || !strip.contains(thumb)) {
                 return;
             }
+            stopVideo();
+            offerVideo(thumb.dataset.videoEmbed, thumb.dataset.videoTitle);
             swapMain(thumb.dataset.large, thumb.dataset.label, thumb.dataset.largeSrcset);
             setActiveThumb(thumb);
         });
@@ -184,6 +235,8 @@ function init(): void {
     }
 
     function onGalleryChange(detail: ProductGalleryChangeEvent): void {
+        stopVideo();
+        offerVideo(detail.reset ? baseVideo.embed : undefined, baseVideo.title);
         if (detail.reset) {
             transition(() => {
                 if (strip && base.thumbs != null) {

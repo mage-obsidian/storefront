@@ -11,8 +11,12 @@ namespace MageObsidian\Catalog\ViewModel;
 
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Helper\Image as ImageHelper;
+use Magento\Csp\Model\Collector\DynamicCollector;
+use Magento\Csp\Model\Policy\FetchPolicy;
+use Magento\Framework\DataObject;
 use Magento\Framework\Registry;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
+use MageObsidian\Catalog\Service\Product\VideoEmbed;
 use Throwable;
 
 /**
@@ -49,7 +53,9 @@ class ProductGallery implements ArgumentInterface
      */
     public function __construct(
         private readonly Registry $registry,
-        private readonly ImageHelper $imageHelper
+        private readonly ImageHelper $imageHelper,
+        private readonly VideoEmbed $videoEmbed,
+        private readonly DynamicCollector $contentSecurityPolicy
     ) {
     }
 
@@ -71,6 +77,7 @@ class ProductGallery implements ArgumentInterface
             }
 
             $images = $this->fromMediaGallery($product);
+            $this->allowVideoFrames($images);
 
             return $this->images = $images === [] ? $this->fromBaseImage($product) : $images;
         } catch (Throwable) {
@@ -104,7 +111,8 @@ class ProductGallery implements ArgumentInterface
         $baseFile = (string)$product->getData('image');
         $tiles = [];
         foreach ($gallery as $image) {
-            if ((string)$image->getData('media_type') !== 'image' || (int)$image->getData('disabled') === 1) {
+            $video = $this->videoOf($product, $image);
+            if ($video === false || (int)$image->getData('disabled') === 1) {
                 continue;
             }
             $file = (string)$image->getData('file');
@@ -115,10 +123,46 @@ class ProductGallery implements ArgumentInterface
                 'full' => (string)$image->getData('url'),
                 'label' => (string)($image->getData('label') ?: $product->getName()),
                 'isMain' => $file === $baseFile,
+                'video' => $video,
             ];
         }
 
         return $tiles;
+    }
+
+    private function allowVideoFrames(array $tiles): void
+    {
+        foreach ($tiles as $tile) {
+            if ($tile['video'] !== null) {
+                $this->contentSecurityPolicy->add(new FetchPolicy(
+                    'frame-src',
+                    false,
+                    [VideoEmbed::YOUTUBE_PLAYER_HOST, VideoEmbed::VIMEO_PLAYER_HOST]
+                ));
+
+                return;
+            }
+        }
+    }
+
+    private function videoOf(ProductInterface $product, DataObject $image): array|null|false
+    {
+        $type = (string)$image->getData('media_type');
+        if ($type === 'image') {
+            return null;
+        }
+        if ($type !== 'external-video') {
+            return false;
+        }
+
+        $resolved = $this->videoEmbed->resolve((string)$image->getData('video_url'));
+        if ($resolved === null) {
+            return false;
+        }
+
+        return $resolved + [
+            'title' => (string)($image->getData('video_title') ?: $image->getData('label') ?: $product->getName()),
+        ];
     }
 
     /**
@@ -141,6 +185,7 @@ class ProductGallery implements ArgumentInterface
             'full' => $large,
             'label' => (string)$product->getName(),
             'isMain' => true,
+            'video' => null,
         ]];
     }
 
