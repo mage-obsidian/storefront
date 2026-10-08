@@ -29,7 +29,7 @@ class ConfigurableInitialState
      * @param string $configJson Output of the configurable renderer's getJsonConfig().
      * @param string $swatchJson Output of getJsonSwatchConfig(), or an empty map.
      *
-     * @return array<int, array{id: string, label: string, options: array<int, array{
+     * @return array<int, array{id: string, code: string, label: string, options: array<int, array{
      *     id: string, label: string, kind: string, value: string, available: bool
      * }>}>
      */
@@ -60,6 +60,7 @@ class ConfigurableInitialState
 
             $groups[] = [
                 'id' => $attributeId,
+                'code' => (string)($attribute['code'] ?? ''),
                 'label' => (string)($attribute['label'] ?? ''),
                 'options' => $options,
             ];

@@ -66,6 +66,12 @@
                  the title is set regardless of display mode. -->
             <block class="MageObsidian\Catalog\Block\CategoryTitle" name="category.title"
                    before="-" template="Magento_Catalog::category/title.twig"/>
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="category.image"
+                   after="category.title" template="Magento_Catalog::category/image.twig">
+                <arguments>
+                    <argument name="landing" xsi:type="object">MageObsidian\Catalog\ViewModel\CategoryLanding</argument>
+                </arguments>
+            </block>
             <block class="Magento\Catalog\Block\Category\View" name="category.view"
                    template="Magento_Catalog::category/view.twig">
                 <arguments>
@@ -81,6 +87,17 @@
                          reuses the parent list's already-loaded collection. -->
                     <block class="MageObsidian\ModernFrontend\Block\Template" name="category.product.item_list"
                            as="item_list" template="Magento_Catalog::product/item-list.twig"/>
+                    <block class="Magento\Framework\View\Element\RendererList" name="category.product.type.details.renderers" as="details.renderers">
+                        <block class="Magento\Framework\View\Element\Template" name="category.product.type.details.renderers.default" as="default"/>
+                        <block class="Magento\Swatches\Block\Product\Renderer\Listing\Configurable"
+                               name="category.product.type.details.renderers.configurable" as="configurable"
+                               template="Magento_Swatches::product/listing/renderer.twig"
+                               ifconfig="catalog/frontend/show_swatches_in_product_list">
+                            <arguments>
+                                <argument name="swatches" xsi:type="object">MageObsidian\Catalog\ViewModel\ListingSwatches</argument>
+                            </arguments>
+                        </block>
+                    </block>
                     <block class="Magento\Catalog\Block\Product\ProductList\Toolbar" name="product_list_toolbar"
                            as="toolbar" template="Magento_Catalog::product/list/toolbar.twig">
                         <arguments>

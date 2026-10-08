@@ -81,6 +81,22 @@ onMounted(() => {
     sync();
 });
 
+function optionsFromAddress() {
+    const chosen = {};
+    new URLSearchParams(window.location.hash.slice(1)).forEach((optionId, code) => {
+        const attr = attributes.find((candidate) => candidate.code === code);
+        if (attr && attr.options.some((option) => String(option.id) === optionId)) {
+            chosen[attr.id] = optionId;
+        }
+    });
+    return chosen;
+}
+
+onMounted(() => {
+    const fromAddress = optionsFromAddress();
+    Object.entries(fromAddress).forEach(([attrId, optionId]) => select(attrId, optionId));
+});
+
 /** Variant ids (keys of the index) compatible with a (partial) selection. */
 function matchingVariants(selection) {
     return Object.keys(config.index ?? {}).filter((id) =>

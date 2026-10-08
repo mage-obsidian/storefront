@@ -102,6 +102,36 @@ describe("ProductForm", () => {
         expect(wrapper.find("button[type=submit]").text()).toBe("Select options");
     });
 
+    it("picks up the options a listing card carried in the address", async () => {
+        window.location.hash = "#color=5&size=7";
+        const wrapper = build();
+        await flushPromises();
+        window.location.hash = "";
+
+        expect(wrapper.find('[data-option-id="5"]').attributes("aria-checked")).toBe("true");
+        expect(wrapper.find('[data-option-id="7"]').attributes("aria-checked")).toBe("true");
+        expect(wrapper.find("button[type=submit]").text()).toBe("Add to cart");
+    });
+
+    it("ignores an address option the product does not offer", async () => {
+        window.location.hash = "#color=99&size=7&weight=1";
+        const wrapper = build();
+        await flushPromises();
+        window.location.hash = "";
+
+        expect(wrapper.find('[data-option-id="7"]').attributes("aria-checked")).toBe("true");
+        expect(wrapper.findAll('[aria-checked="true"]')).toHaveLength(1);
+    });
+
+    it("leaves the choice empty when the address names no option", async () => {
+        window.location.hash = "#reviews";
+        const wrapper = build();
+        await flushPromises();
+        window.location.hash = "";
+
+        expect(wrapper.findAll('[aria-checked="true"]')).toHaveLength(0);
+    });
+
     it("greys impossible combinations once one attribute is chosen", async () => {
         const wrapper = build();
         await wrapper.find('[data-option-id="5"]').trigger("click"); // Red

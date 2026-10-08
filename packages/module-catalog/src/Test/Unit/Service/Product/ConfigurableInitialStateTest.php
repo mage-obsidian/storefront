@@ -27,6 +27,7 @@ class ConfigurableInitialStateTest extends TestCase
             'attributes' => [
                 '93' => [
                     'id' => '93',
+                    'code' => 'color',
                     'label' => 'Color',
                     'position' => '1',
                     'options' => [
@@ -49,6 +50,13 @@ class ConfigurableInitialStateTest extends TestCase
                 '102' => ['141' => '29', '93' => '50'],
             ],
         ]);
+    }
+
+    public function testGroupsCarryTheAttributeCode(): void
+    {
+        $groups = $this->state->build($this->config());
+
+        $this->assertSame(['', 'color'], array_column($groups, 'code'));
     }
 
     public function testGroupsFollowTheAttributePositionNotTheJsonKeyOrder(): void
