@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Review project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="customer.wishlist">
+            <block class="Magento\Wishlist\Block\Customer\Wishlist\Item\Column" name="customer.wishlist.item.review"
+                   template="Magento_Review::wishlist/item-review.twig" cacheable="false">
+                <arguments>
+                    <argument name="rating" xsi:type="object">MageObsidian\Review\ViewModel\ListRatings</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+    </body>
+</page>
