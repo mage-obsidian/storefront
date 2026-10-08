@@ -15,7 +15,8 @@
     <body>
         <referenceBlock name="account.dashboard">
             <block class="MageObsidian\ModernFrontend\Block\Template" name="review.customer.recent" as="recent_reviews"
-                   template="Magento_Review::customer/dashboard-reviews.twig" cacheable="false">
+                   template="Magento_Review::customer/dashboard-reviews.twig" cacheable="false"
+                   ifconfig="catalog/review/active">
                 <block class="Magento\Review\Block\Customer\Recent" name="review.customer.recent.source" as="recent"/>
             </block>
         </referenceBlock>

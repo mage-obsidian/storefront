@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace MageObsidian\Review\ViewModel;
 
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Registry;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
 use Magento\Review\Model\Review;
@@ -27,6 +28,9 @@ use Throwable;
  */
 class ProductReviews implements ArgumentInterface
 {
+    public const string PAGE_PARAM = 'review_page';
+    public const int PAGE_SIZE = 5;
+
     /** @var array<int, array{title: string, detail: string, nickname: string, created_at: string, percent: int}>|null */
     private ?array $items = null;
 
@@ -34,11 +38,13 @@ class ProductReviews implements ArgumentInterface
      * @param Registry $registry
      * @param CollectionFactory $collectionFactory
      * @param StoreManagerInterface $storeManager
+     * @param RequestInterface $request
      */
     public function __construct(
         private readonly Registry $registry,
         private readonly CollectionFactory $collectionFactory,
-        private readonly StoreManagerInterface $storeManager
+        private readonly StoreManagerInterface $storeManager,
+        private readonly RequestInterface $request
     ) {
     }
 
@@ -100,6 +106,41 @@ class ProductReviews implements ArgumentInterface
     public function getCount(): int
     {
         return count($this->getItems());
+    }
+
+    /**
+     * @return int
+     */
+    public function getPageCount(): int
+    {
+        return max(1, (int)ceil($this->getCount() / self::PAGE_SIZE));
+    }
+
+    /**
+     * @return int
+     */
+    public function getPage(): int
+    {
+        return min(max(1, (int)$this->request->getParam(self::PAGE_PARAM, 1)), $this->getPageCount());
+    }
+
+    /**
+     * @return array<int, array{title: string, detail: string, nickname: string, created_at: string, percent: int}>
+     */
+    public function getPageItems(): array
+    {
+        return array_slice($this->getItems(), ($this->getPage() - 1) * self::PAGE_SIZE, self::PAGE_SIZE);
+    }
+
+    /**
+     * @param int $page
+     * @return string
+     */
+    public function getPageUrl(int $page): string
+    {
+        $url = $this->getProductUrl();
+
+        return $page <= 1 ? $url : $url . '?' . self::PAGE_PARAM . '=' . $page . '#reviews';
     }
 
     /**

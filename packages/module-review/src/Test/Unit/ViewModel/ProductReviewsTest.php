@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace MageObsidian\Review\Test\Unit\ViewModel;
 
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Registry;
 use Magento\Review\Model\ResourceModel\Review\Collection;
 use Magento\Review\Model\ResourceModel\Review\CollectionFactory;
@@ -80,7 +81,7 @@ class ProductReviewsTest extends TestCase
         };
     }
 
-    private function subject(?object $product, array $reviews): ProductReviews
+    private function subject(?object $product, array $reviews, int $page = 1): ProductReviews
     {
         $registry = $this->createMock(Registry::class);
         $registry->method('registry')->with('current_product')->willReturn($product);
@@ -99,7 +100,10 @@ class ProductReviewsTest extends TestCase
         $storeManager = $this->createMock(StoreManagerInterface::class);
         $storeManager->method('getStore')->willReturn($store);
 
-        return new ProductReviews($registry, $factory, $storeManager);
+        $request = $this->createMock(RequestInterface::class);
+        $request->method('getParam')->with(ProductReviews::PAGE_PARAM)->willReturn((string)$page);
+
+        return new ProductReviews($registry, $factory, $storeManager, $request);
     }
 
     private function product(): object
@@ -159,5 +163,56 @@ class ProductReviewsTest extends TestCase
         $this->assertFalse($vm->hasReviews());
         $this->assertSame(0, $vm->getAveragePercent());
         $this->assertSame('', $vm->getProductName());
+    }
+
+    private function reviews(int $count): array
+    {
+        return array_map(fn (int $n) => $this->review('Review ' . $n, [100]), range(1, $count));
+    }
+
+    public function testListsOnlyAPageOfReviewsAndCountsThePages(): void
+    {
+        $vm = $this->subject($this->product(), $this->reviews(7));
+
+        $this->assertSame(7, $vm->getCount());
+        $this->assertSame(2, $vm->getPageCount());
+        $this->assertSame(1, $vm->getPage());
+        $this->assertSame(
+            ['Review 1', 'Review 2', 'Review 3', 'Review 4', 'Review 5'],
+            array_column($vm->getPageItems(), 'title')
+        );
+    }
+
+    public function testServesTheRemainingReviewsOnTheLastPage(): void
+    {
+        $vm = $this->subject($this->product(), $this->reviews(7), 2);
+
+        $this->assertSame(2, $vm->getPage());
+        $this->assertSame(['Review 6', 'Review 7'], array_column($vm->getPageItems(), 'title'));
+    }
+
+    public function testClampsAPageOutsideTheRange(): void
+    {
+        $beyond = $this->subject($this->product(), $this->reviews(7), 9);
+        $below = $this->subject($this->product(), $this->reviews(7), -3);
+
+        $this->assertSame(2, $beyond->getPage());
+        $this->assertSame(1, $below->getPage());
+    }
+
+    public function testBuildsPageLinksOnTheProductUrl(): void
+    {
+        $vm = $this->subject($this->product(), $this->reviews(7));
+
+        $this->assertSame('https://shop.test/helios.html', $vm->getPageUrl(1));
+        $this->assertSame('https://shop.test/helios.html?review_page=2#reviews', $vm->getPageUrl(2));
+    }
+
+    public function testAveragesOverEveryReviewNotJustTheVisiblePage(): void
+    {
+        $reviews = array_merge($this->reviews(5), [$this->review('Low', [20]), $this->review('Low', [20])]);
+        $vm = $this->subject($this->product(), $reviews);
+
+        $this->assertSame(77, $vm->getAveragePercent());
     }
 }
