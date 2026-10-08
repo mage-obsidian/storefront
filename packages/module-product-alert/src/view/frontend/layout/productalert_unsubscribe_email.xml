@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - ProductAlert project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Stock alerts</title>
+    </head>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceContainer name="content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="unsubscription_form" cacheable="false"
+                   template="Magento_ProductAlert::email/email.twig">
+                <arguments>
+                    <argument name="unsubscription" xsi:type="object">MageObsidian\ProductAlert\ViewModel\Unsubscription</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>
