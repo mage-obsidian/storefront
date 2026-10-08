@@ -152,6 +152,14 @@
                    template="Magento_Catalog::cart-actions.twig"/>
             <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.pdp_compare_actions"
                    template="Magento_Catalog::compare-actions.twig"/>
+            <container name="report.product.view.container">
+                <block class="MageObsidian\ModernFrontend\Block\Template" name="report.product.view"
+                       template="Magento_Reports::product/report_viewed_product.twig">
+                    <arguments>
+                        <argument name="beacons" xsi:type="object">MageObsidian\Catalog\ViewModel\ReportBeacons</argument>
+                    </arguments>
+                </block>
+            </container>
         </referenceContainer>
     </body>
 </page>

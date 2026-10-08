@@ -57,6 +57,23 @@
                          reuses the parent list's already-loaded collection. -->
                     <block class="MageObsidian\ModernFrontend\Block\Template" name="search.product.item_list"
                            as="item_list" template="Magento_Catalog::product/item-list.twig"/>
+                    <block class="Magento\Framework\View\Element\RendererList" name="category.product.type.details.renderers" as="details.renderers">
+                        <block class="Magento\Framework\View\Element\Template" name="category.product.type.details.renderers.default" as="default"/>
+                        <block class="Magento\Swatches\Block\Product\Renderer\Listing\Configurable"
+                               name="category.product.type.details.renderers.configurable" as="configurable"
+                               template="Magento_Swatches::product/listing/renderer.twig"
+                               ifconfig="catalog/frontend/show_swatches_in_product_list">
+                            <arguments>
+                                <argument name="swatches" xsi:type="object">MageObsidian\Catalog\ViewModel\ListingSwatches</argument>
+                            </arguments>
+                        </block>
+                    </block>
+                    <container name="additional" as="additional" label="Additional Info" after="product_list_toolbar">
+                        <block class="Magento\AdvancedSearch\Block\Suggestions" name="search_suggestions"
+                               template="Magento_AdvancedSearch::search_data.twig"/>
+                        <block class="Magento\AdvancedSearch\Block\Recommendations" name="search_recommendations"
+                               template="Magento_AdvancedSearch::search_data.twig"/>
+                    </container>
                     <block class="Magento\Catalog\Block\Product\ProductList\Toolbar" name="product_list_toolbar"
                            as="toolbar" template="Magento_Catalog::product/list/toolbar.twig">
                         <arguments>
@@ -84,6 +101,12 @@
                    template="Magento_Catalog::cart-actions.twig"/>
             <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.compare_actions"
                    template="Magento_Catalog::compare-actions.twig"/>
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="search.search_terms_log"
+                   template="Magento_CatalogSearch::search_terms_log.twig">
+                <arguments>
+                    <argument name="beacons" xsi:type="object">MageObsidian\Catalog\ViewModel\ReportBeacons</argument>
+                </arguments>
+            </block>
         </referenceContainer>
     </body>
 </page>
