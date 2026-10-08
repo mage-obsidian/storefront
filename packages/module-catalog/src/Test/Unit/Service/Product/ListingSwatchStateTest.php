@@ -198,4 +198,100 @@ class ListingSwatchStateTest extends TestCase
 
         $this->assertSame([0, 0], array_column($groups, 'hidden'));
     }
+
+    private function purchaseConfig(): string
+    {
+        return (string)json_encode([
+            'attributes' => [
+                '93' => ['id' => '93', 'code' => 'color', 'label' => 'Color', 'position' => '0', 'options' => [
+                    ['id' => '50', 'label' => 'Blue'],
+                    ['id' => '51', 'label' => 'Red'],
+                ]],
+                '141' => ['id' => '141', 'code' => 'size', 'label' => 'Size', 'position' => '1', 'options' => [
+                    ['id' => '28', 'label' => 'S'],
+                    ['id' => '29', 'label' => 'M'],
+                ]],
+            ],
+            'index' => [
+                '101' => ['93' => '50', '141' => '28'],
+                '102' => ['93' => '50', '141' => '29'],
+                '103' => ['93' => '51', '141' => '28'],
+            ],
+            'optionPrices' => [
+                '101' => ['finalPrice' => ['amount' => 49]],
+                '102' => ['finalPrice' => ['amount' => 59.5]],
+                '103' => ['finalPrice' => ['amount' => 49]],
+            ],
+        ]);
+    }
+
+    private function purchaseSwatches(): string
+    {
+        return (string)json_encode([
+            '93' => ['50' => ['value' => '#1f4ed8'], '51' => ['value' => '#ff0000']],
+            '141' => ['28' => ['value' => 'S'], '29' => ['value' => 'M']],
+        ]);
+    }
+
+    private function purchase(?string $config = null, ?string $swatches = null): array
+    {
+        $config ??= $this->purchaseConfig();
+        $groups = $this->state->build($config, $swatches ?? $this->purchaseSwatches(), $this->noImages(), 16);
+
+        return $this->state->purchase($config, $groups, static fn(float $amount): string => sprintf('$%.2f', $amount));
+    }
+
+    public function testEveryAvailableCombinationMapsToItsFormattedPriceAndChild(): void
+    {
+        $purchase = $this->purchase();
+
+        $this->assertSame(['color', 'size'], $purchase['attributes']);
+        $this->assertSame(
+            [
+                '50,28' => ['price' => '$49.00', 'id' => 101],
+                '50,29' => ['price' => '$59.50', 'id' => 102],
+                '51,28' => ['price' => '$49.00', 'id' => 103],
+            ],
+            $purchase['variants']
+        );
+    }
+
+    public function testACombinationNoVariantCarriesIsAbsentFromTheMap(): void
+    {
+        $this->assertArrayNotHasKey('51,29', $this->purchase()['variants']);
+    }
+
+    public function testTheKeyFollowsTheOrderOfTheGroups(): void
+    {
+        $config = json_decode($this->purchaseConfig(), true);
+        $config['attributes']['93']['position'] = '1';
+        $config['attributes']['141']['position'] = '0';
+
+        $purchase = $this->purchase((string)json_encode($config));
+
+        $this->assertSame(['size', 'color'], $purchase['attributes']);
+        $this->assertArrayHasKey('29,50', $purchase['variants']);
+    }
+
+    public function testNothingIsOfferedWhenAnAttributeHasNoSwatchGroup(): void
+    {
+        $swatches = json_decode($this->purchaseSwatches(), true);
+        unset($swatches['141']);
+
+        $this->assertSame([], $this->purchase(null, (string)json_encode($swatches)));
+    }
+
+    public function testAVariantWithoutAPriceIsLeftOut(): void
+    {
+        $config = json_decode($this->purchaseConfig(), true);
+        unset($config['optionPrices']['102']);
+
+        $this->assertArrayNotHasKey('50,29', $this->purchase((string)json_encode($config))['variants']);
+    }
+
+    public function testNoGroupsOrNoVariantsYieldNoPurchase(): void
+    {
+        $this->assertSame([], $this->state->purchase($this->purchaseConfig(), [], static fn(float $amount): string => ''));
+        $this->assertSame([], $this->purchase('not json'));
+    }
 }

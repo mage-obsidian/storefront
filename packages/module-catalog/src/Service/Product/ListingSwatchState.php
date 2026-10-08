@@ -62,6 +62,27 @@ class ListingSwatchState
         return $built;
     }
 
+    public function purchase(string $configJson, array $groups, callable $formatPrice): array
+    {
+        $config = $this->decode($configJson);
+        if ($groups === [] || count($groups) !== count($config['attributes'] ?? [])) {
+            return [];
+        }
+
+        $attributeIds = array_column($groups, 'id');
+        $variants = [];
+        foreach ($config['index'] ?? [] as $variantId => $selection) {
+            $amount = $config['optionPrices'][$variantId]['finalPrice']['amount'] ?? null;
+            $options = array_map(static fn(string $id): string => (string)($selection[$id] ?? ''), $attributeIds);
+            if (!is_numeric($amount) || in_array('', $options, true)) {
+                continue;
+            }
+            $variants[implode(',', $options)] = ['price' => $formatPrice((float)$amount), 'id' => (int)$variantId];
+        }
+
+        return $variants === [] ? [] : ['attributes' => array_column($groups, 'code'), 'variants' => $variants];
+    }
+
     private function picturedGroup(array $groups): int
     {
         foreach ($groups as $position => $group) {

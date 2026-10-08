@@ -62,6 +62,67 @@ function showImage(card: Element, chosen: HTMLElement | null): void {
     }
 }
 
+type Purchase = { attributes: string[]; variants: Record<string, { price: string; id: number }> };
+
+function purchaseOf(container: HTMLElement | null): Purchase | null {
+    try {
+        return container?.dataset.purchase ? (JSON.parse(container.dataset.purchase) as Purchase) : null;
+    } catch {
+        return null;
+    }
+}
+
+function setHidden(element: Element | null, hidden: boolean): void {
+    if (element) {
+        (element as HTMLElement).hidden = hidden;
+    }
+}
+
+function showPrice(card: Element, text: string | null): void {
+    const target = card.querySelector<HTMLElement>(".product-card__price");
+    if (!target) {
+        return;
+    }
+    if (target.dataset.swatchPrice === undefined) {
+        target.dataset.swatchPrice = target.innerHTML;
+    }
+    if (text === null) {
+        target.innerHTML = target.dataset.swatchPrice;
+    } else {
+        target.textContent = text;
+    }
+}
+
+function updatePurchase(card: Element): void {
+    const container = card.querySelector<HTMLElement>("[data-listing-swatches]");
+    const purchase = purchaseOf(container);
+    const area = card.querySelector<HTMLElement>(".product-card__action");
+    const form = card.querySelector<HTMLFormElement>("[data-listing-purchase]");
+    const unavailable = card.querySelector("[data-listing-unavailable]");
+    if (!purchase || !area || !form || !unavailable) {
+        return;
+    }
+    area.append(form, unavailable);
+    const link = area.querySelector(":scope > a[href]");
+    const chosen = Object.fromEntries(selection(card));
+    const complete = purchase.attributes.every((code) => chosen[code]);
+    const variant = complete ? purchase.variants[purchase.attributes.map((code) => chosen[code]).join(",")] : undefined;
+
+    form.querySelectorAll<HTMLInputElement>("input[data-attribute-code]").forEach((field) => {
+        field.disabled = !variant;
+        field.value = variant ? (chosen[field.dataset.attributeCode ?? ""] ?? "") : "";
+    });
+    if (variant) {
+        form.dataset.variantId = String(variant.id);
+    } else {
+        delete form.dataset.variantId;
+    }
+    setHidden(form, !variant);
+    setHidden(unavailable, !(complete && !variant));
+    setHidden(link, complete);
+    showPrice(card, variant ? variant.price : null);
+}
+
 export function choose(swatch: HTMLElement): void {
     const card = swatch.closest(CARD);
     const group = swatch.closest("[data-attribute-code]");
@@ -78,6 +139,7 @@ export function choose(swatch: HTMLElement): void {
     );
     showImage(card, withImage ?? null);
     carryTo(card);
+    updatePurchase(card);
 }
 
 export function init(): void {

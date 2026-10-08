@@ -12,6 +12,7 @@ namespace MageObsidian\Catalog\Test\Unit\ViewModel;
 use Magento\Catalog\Model\Product;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ConfigurableType;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Swatches\Block\Product\Renderer\Listing\Configurable;
 use MageObsidian\Catalog\Service\Product\ConfigurableInitialState;
 use MageObsidian\Catalog\Service\Product\ListingSwatchState;
@@ -56,7 +57,7 @@ class ListingSwatchesTest extends TestCase
         return $variant;
     }
 
-    private function renderer(Product $variant, string $limit = '16'): Configurable
+    private function renderer(Product $variant, string $limit = '16', ?string $config = null): Configurable
     {
         $type = $this->createMock(ConfigurableType::class);
         $type->method('getUsedProducts')->willReturn([$variant]);
@@ -66,7 +67,7 @@ class ListingSwatchesTest extends TestCase
 
         $renderer = $this->createMock(Configurable::class);
         $renderer->method('getProduct')->willReturn($parent);
-        $renderer->method('getJsonConfig')->willReturn($this->config());
+        $renderer->method('getJsonConfig')->willReturn($config ?? $this->config());
         $renderer->method('getJsonSwatchConfig')->willReturn($this->swatches());
         $renderer->method('getNumberSwatchesPerProduct')->willReturn($limit);
 
@@ -80,10 +81,16 @@ class ListingSwatchesTest extends TestCase
             static fn(string $path): bool => $flags[$path] ?? false
         );
 
+        $priceCurrency = $this->createMock(PriceCurrencyInterface::class);
+        $priceCurrency->method('format')->willReturnCallback(
+            static fn(float $amount): string => sprintf('$%.2f', $amount)
+        );
+
         return new ListingSwatches(
             new ListingSwatchState(new ConfigurableInitialState()),
             $card ?? $this->createMock(ProductCard::class),
-            $scopeConfig
+            $scopeConfig,
+            $priceCurrency
         );
     }
 
@@ -109,6 +116,28 @@ class ListingSwatchesTest extends TestCase
 
             $this->assertNull($groups[0]['options'][0]['image']);
         }
+    }
+
+    public function testTheViewCarriesThePurchaseMapFormattedWithTheStoreCurrency(): void
+    {
+        $card = $this->createMock(ProductCard::class);
+        $card->method('getAddToCartPostParams')->willReturn(['action' => '/cart/add', 'data' => ['product' => 7, 'uenc' => 'abc']]);
+        $renderer = $this->renderer($this->variant(null), '16', (string)json_encode([
+            'attributes' => ['93' => [
+                'id' => '93',
+                'code' => 'color',
+                'label' => 'Color',
+                'position' => '0',
+                'options' => [['id' => '50', 'label' => 'Blue']],
+            ]],
+            'index' => ['101' => ['93' => '50']],
+            'optionPrices' => ['101' => ['finalPrice' => ['amount' => 59]]],
+        ]));
+
+        $view = $this->viewModel($card)->view($renderer);
+
+        $this->assertSame(['50' => ['price' => '$59.00', 'id' => 101]], $view['purchase']['variants']);
+        $this->assertSame('/cart/add', $view['post']['action']);
     }
 
     public function testABrokenRendererDegradesToNoSwatches(): void

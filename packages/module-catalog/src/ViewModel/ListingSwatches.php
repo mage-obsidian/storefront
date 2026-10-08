@@ -11,6 +11,7 @@ namespace MageObsidian\Catalog\ViewModel;
 
 use Magento\Catalog\Model\Product;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Swatches\Block\Product\Renderer\Listing\Configurable;
@@ -26,7 +27,8 @@ class ListingSwatches implements ArgumentInterface
     public function __construct(
         private readonly ListingSwatchState $state,
         private readonly ProductCard $card,
-        private readonly ScopeConfigInterface $scopeConfig
+        private readonly ScopeConfigInterface $scopeConfig,
+        private readonly PriceCurrencyInterface $priceCurrency
     ) {
     }
 
@@ -42,18 +44,34 @@ class ListingSwatches implements ArgumentInterface
 
     public function groups(Configurable $renderer): array
     {
+        return $this->view($renderer)['groups'];
+    }
+
+    public function view(Configurable $renderer): array
+    {
         try {
             $product = $renderer->getProduct();
             $limit = (int)$renderer->getNumberSwatchesPerProduct();
+            $config = (string)$renderer->getJsonConfig();
 
-            return $this->state->build(
-                (string)$renderer->getJsonConfig(),
+            $groups = $this->state->build(
+                $config,
                 (string)$renderer->getJsonSwatchConfig(),
                 fn(string $variantId): ?array => $this->variantImage($product, $variantId),
                 $limit > 0 ? $limit : self::DEFAULT_LIMIT
             );
+
+            return [
+                'groups' => $groups,
+                'purchase' => $this->state->purchase(
+                    $config,
+                    $groups,
+                    fn(float $amount): string => $this->priceCurrency->format($amount, false)
+                ),
+                'post' => $this->card->getAddToCartPostParams($product),
+            ];
         } catch (Throwable) {
-            return [];
+            return ['groups' => [], 'purchase' => [], 'post' => []];
         }
     }
 
