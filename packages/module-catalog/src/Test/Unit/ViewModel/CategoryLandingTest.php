@@ -71,6 +71,32 @@ class CategoryLandingTest extends TestCase
         $this->assertSame('', $this->viewModel(null)->getDescriptionHtml());
     }
 
+    public function testNoCurrentCategoryYieldsNoImage(): void
+    {
+        $this->assertNull($this->viewModel(null)->getImage());
+    }
+
+    public function testCategoryWithoutImageYieldsNoImage(): void
+    {
+        $category = $this->createMock(Category::class);
+        $category->method('getImageUrl')->willReturn('');
+        $category->method('getName')->willReturn('Tops');
+
+        $this->assertNull($this->viewModel($category)->getImage());
+    }
+
+    public function testCategoryImageCarriesItsUrlAndTheCategoryNameAsAlternativeText(): void
+    {
+        $category = $this->createMock(Category::class);
+        $category->method('getImageUrl')->willReturn('https://shop.test/media/catalog/category/tops.png');
+        $category->method('getName')->willReturn('Tops');
+
+        $this->assertSame(
+            ['url' => 'https://shop.test/media/catalog/category/tops.png', 'alt' => 'Tops'],
+            $this->viewModel($category)->getImage()
+        );
+    }
+
     public function testChildrenAreMappedToTilesWithCountAndImage(): void
     {
         $parent = $this->createMock(Category::class);

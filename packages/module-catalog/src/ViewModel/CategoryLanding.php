@@ -12,6 +12,7 @@ namespace MageObsidian\Catalog\ViewModel;
 use Magento\Catalog\Api\Data\CategoryInterface;
 use Magento\Catalog\Helper\Image as ImageHelper;
 use Magento\Catalog\Helper\Output as OutputHelper;
+use Magento\Catalog\Model\Category;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory as CategoryCollectionFactory;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
@@ -79,6 +80,23 @@ class CategoryLanding implements ArgumentInterface
             );
         } catch (Throwable) {
             return '';
+        }
+    }
+
+    public function getImage(): ?array
+    {
+        try {
+            $category = $this->registry->registry('current_category');
+            if (!$category instanceof Category) {
+                return null;
+            }
+            $url = (string)$category->getImageUrl();
+            if ($url === '') {
+                return null;
+            }
+            return ['url' => $url, 'alt' => (string)$category->getName()];
+        } catch (Throwable) {
+            return null;
         }
     }
 
