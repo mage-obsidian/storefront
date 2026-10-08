@@ -35,6 +35,7 @@
                    before="-" template="Magento_LayeredNavigation::layer/view.twig">
                 <arguments>
                     <argument name="swatch_view_model" xsi:type="object">MageObsidian\Catalog\ViewModel\LayeredSwatch</argument>
+                    <argument name="layer_filter" xsi:type="object">Magento\LayeredNavigation\ViewModel\Layer\Filter</argument>
                     <argument name="filter_state" xsi:type="object">MageObsidian\CatalogSearch\ViewModel\SearchFilterState</argument>
                     <argument name="vite" xsi:type="object">MageObsidian\ModernFrontend\ViewModel\ViteResolver</argument>
                 </arguments>

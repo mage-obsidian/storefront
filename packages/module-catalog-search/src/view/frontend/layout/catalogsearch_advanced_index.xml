@@ -21,7 +21,12 @@
     <body>
         <referenceContainer name="content">
             <block class="Magento\CatalogSearch\Block\Advanced\Form" name="catalogsearch.advanced.form"
-                   template="Magento_CatalogSearch::advanced/form.twig"/>
+                   template="Magento_CatalogSearch::advanced/form.twig">
+                <arguments>
+                    <argument name="max_query_length" xsi:type="helper"
+                              helper="Magento\CatalogSearch\Helper\Data::getMaxQueryLength"/>
+                </arguments>
+            </block>
         </referenceContainer>
     </body>
 </page>

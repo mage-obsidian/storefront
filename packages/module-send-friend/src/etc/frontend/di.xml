@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - SendFriend project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\SendFriend\Model\SendFriend">
+        <plugin name="mage_obsidian_send_friend_drop_blank_recipients"
+                type="MageObsidian\SendFriend\Plugin\SendFriend\DropBlankRecipients"/>
+    </type>
+</config>
