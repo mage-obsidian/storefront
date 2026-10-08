@@ -23,6 +23,16 @@
                     <argument name="order_presentation" xsi:type="object">MageObsidian\Sales\ViewModel\OrderPresentation</argument>
                     <argument name="tax_breakdown" xsi:type="object">MageObsidian\Sales\ViewModel\TaxBreakdown</argument>
                 </arguments>
+                <block class="Magento\Sales\Block\Order\Info\Buttons" name="sales.order.info.buttons" template="Magento_Sales::order/info/buttons.twig" cacheable="false">
+                    <arguments>
+                        <argument name="reorder_policy" xsi:type="object">MageObsidian\Sales\ViewModel\ReorderPolicy</argument>
+                    </arguments>
+                </block>
+                <block class="Magento\Sales\Block\Order\Comments" name="creditmemo_comments" template="Magento_Sales::order/comments.twig" cacheable="false">
+                    <arguments>
+                        <argument name="title" xsi:type="string" translate="true">About Your Refund</argument>
+                    </arguments>
+                </block>
                 <block class="MageObsidian\Sales\Block\OrderTitle" name="account.creditmemo.title"/>
                 <block class="Magento\Sales\Block\Order\Creditmemo" name="sales.order.creditmemo" as="creditmemo"/>
                 <block class="Magento\Sales\Block\Order\Info" name="sales.order.info" as="info"/>

@@ -21,6 +21,11 @@
                     <argument name="item_options" xsi:type="object">MageObsidian\Sales\ViewModel\ItemOptions</argument>
                     <argument name="tax_breakdown" xsi:type="object">MageObsidian\Sales\ViewModel\TaxBreakdown</argument>
                 </arguments>
+                <block class="Magento\Sales\Block\Order\PrintOrder\Creditmemo" name="order.status" template="Magento_Sales::order/order-status.twig" cacheable="false">
+                    <arguments>
+                        <argument name="order_presentation" xsi:type="object">MageObsidian\Sales\ViewModel\OrderPresentation</argument>
+                    </arguments>
+                </block>
                 <block class="MageObsidian\Sales\Block\OrderTitle" name="print.creditmemo.title"/>
                 <block class="Magento\Sales\Block\Order\PrintOrder\Creditmemo"
                        name="sales.order.print.creditmemo.source" as="print"/>

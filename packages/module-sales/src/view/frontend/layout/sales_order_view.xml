@@ -24,6 +24,12 @@
                     <argument name="item_options" xsi:type="object">MageObsidian\Sales\ViewModel\ItemOptions</argument>
                     <argument name="order_presentation" xsi:type="object">MageObsidian\Sales\ViewModel\OrderPresentation</argument>
                 </arguments>
+                <block class="Magento\Sales\Block\Order\View" name="order.comments" template="Magento_Sales::order/order-comments.twig" cacheable="false"/>
+                <block class="Magento\Shipping\Block\Tracking\Link" name="tracking-info-link" template="Magento_Shipping::tracking/link.twig" cacheable="false">
+                    <arguments>
+                        <argument name="label" xsi:type="string" translate="true">Track your order</argument>
+                    </arguments>
+                </block>
                 <block class="MageObsidian\Sales\Block\OrderTitle" name="account.order.title"/>
                 <block class="Magento\Sales\Block\Order\View" name="sales.order.view" as="view"/>
                 <block class="Magento\Sales\Block\Order\Items" name="order_items" as="items"/>
