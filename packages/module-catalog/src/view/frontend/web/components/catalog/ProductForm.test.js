@@ -266,3 +266,85 @@ describe("ProductForm — prices with and without tax", () => {
     });
 });
 
+
+describe("ProductForm — quantity discounts", () => {
+    const TIER_LABEL = "Buy %1 for %2 each and save %3%";
+
+    function tiered() {
+        const parsed = JSON.parse(config());
+        parsed.optionPrices[11].tierPrices = [
+            { qty: 5, price: 16, percentage: 20 },
+            { qty: 10, price: 14, percentage: 30 },
+        ];
+        return mount(ProductForm, {
+            props: {
+                config: JSON.stringify(parsed),
+                swatches: swatches(),
+                productId: 7,
+                action: "/checkout/cart/add",
+                uenc: "ENC",
+                initialPrice: "$20.00",
+                labels: { ...LABELS, tierPrice: TIER_LABEL },
+            },
+        });
+    }
+
+    const lines = (wrapper) => wrapper.findAll(".prices-tier li").map((node) => node.text());
+
+    it("announces nothing before a variant is chosen", () => {
+        expect(lines(tiered())).toEqual([]);
+    });
+
+    it("announces each tier of the chosen variant with its unit price and saving", async () => {
+        const wrapper = tiered();
+        await wrapper.find('[data-option-id="5"]').trigger("click");
+        await wrapper.find('[data-option-id="7"]').trigger("click");
+
+        expect(lines(wrapper)).toEqual([
+            "Buy 5 for $16.00 each and save 20%",
+            "Buy 10 for $14.00 each and save 30%",
+        ]);
+    });
+
+    it("drops the announcement when the chosen variant has no tiers", async () => {
+        const wrapper = tiered();
+        await wrapper.find('[data-option-id="6"]').trigger("click");
+        await wrapper.find('[data-option-id="8"]').trigger("click");
+
+        expect(lines(wrapper)).toEqual([]);
+    });
+});
+
+describe("ProductForm — quantity increments", () => {
+    function sold(qtyMin, qtyStep, initialQty) {
+        return mount(ProductForm, {
+            props: {
+                config: config(),
+                swatches: swatches(),
+                productId: 7,
+                action: "/checkout/cart/add",
+                uenc: "ENC",
+                initialPrice: "$20.00",
+                qtyMin,
+                qtyStep,
+                initialQty,
+                labels: LABELS,
+            },
+        });
+    }
+
+    it("lets the quantity field advance in the product's increments from its minimum", () => {
+        const field = sold(6, 6, 6).find("#pdp-cfg-qty");
+
+        expect(field.attributes("min")).toBe("6");
+        expect(field.attributes("step")).toBe("6");
+        expect(field.element.value).toBe("6");
+    });
+
+    it("keeps whole units when the product has no increments", () => {
+        const field = build().find("#pdp-cfg-qty");
+
+        expect(field.attributes("min")).toBe("1");
+        expect(field.attributes("step")).toBe("1");
+    });
+});

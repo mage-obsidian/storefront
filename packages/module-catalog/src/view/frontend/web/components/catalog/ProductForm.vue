@@ -31,6 +31,8 @@ const props = defineProps({
     // PDP is opened to reconfigure a cart item; empty on a normal product view.
     preconfigured: { type: [Object, Array], default: () => ({}) },
     initialQty: { type: [Number, String], default: 1 },
+    qtyMin: { type: [Number, String], default: 1 },
+    qtyStep: { type: [Number, String], default: 1 },
     labels: { type: Object, default: () => ({}) },
 });
 
@@ -127,6 +129,21 @@ const priceExcl = computed(() => {
     }
     const base = prices?.basePrice ? Number(prices.basePrice.amount) : Number(props.initialPriceAmountExcl ?? 0);
     return formatAmount(base + optionsDelta.value);
+});
+
+const tierLines = computed(() => {
+    const tiers = variantId.value ? config.optionPrices?.[variantId.value]?.tierPrices : null;
+    if (!Array.isArray(tiers)) {
+        return [];
+    }
+    const pattern = props.labels.tierPrice ?? "Buy %1 for %2 each and save %3%";
+    return tiers.map((tier, index) => ({
+        key: index,
+        text: pattern
+            .replace("%1", String(tier.qty))
+            .replace("%2", formatAmount(Number(tier.price)))
+            .replace("%3", String(tier.percentage)),
+    }));
 });
 
 const oldPrice = computed(() => {
@@ -260,6 +277,10 @@ async function add() {
             <span v-if="oldPrice" class="pdp__price-regular font-mono text-base text-ink-soft line-through">{{ oldPrice }}</span>
         </div>
 
+        <ul v-if="tierLines.length" class="prices-tier items">
+            <li v-for="line in tierLines" :key="line.key" class="item">{{ line.text }}</li>
+        </ul>
+
         <fieldset
             v-for="attr in attributes"
             :key="attr.id"
@@ -317,8 +338,8 @@ async function add() {
                     v-model.number="qty"
                     type="number"
                     inputmode="numeric"
-                    min="1"
-                    step="1"
+                    :min="props.qtyMin"
+                    :step="props.qtyStep"
                     class="field__control field-qty mt-2"
                 >
             </div>

@@ -50,6 +50,7 @@
                 <arguments>
                     <argument name="view" xsi:type="object">MageObsidian\Catalog\ViewModel\ProductView</argument>
                     <argument name="gallery" xsi:type="object">MageObsidian\Catalog\ViewModel\ProductGallery</argument>
+                    <argument name="stock" xsi:type="object">MageObsidian\Catalog\ViewModel\ProductStock</argument>
                 </arguments>
                 <!-- Data source only: core assembles the variant index / prices /
                      images / swatch config; we read it and hand it to the island.
@@ -59,6 +60,15 @@
                 <!-- Visible-on-front additional attributes, read for the spec list. -->
                 <block class="Magento\Catalog\Block\Product\View\Attributes"
                        name="product.attributes" as="product_attributes"/>
+                <block class="Magento\CatalogInventory\Block\Qtyincrements" name="product.info.extrahint.qtyincrements"
+                       as="qty_increments" template="Magento_CatalogInventory::qtyincrements.twig"/>
+                <block class="Magento\Catalog\Pricing\Render" name="product.price.tier" as="tier_price">
+                    <arguments>
+                        <argument name="price_render" xsi:type="string">product.price.render.default</argument>
+                        <argument name="price_type_code" xsi:type="string">tier_price</argument>
+                        <argument name="zone" xsi:type="string">item_view</argument>
+                    </arguments>
+                </block>
                 <!-- Custom options data source: read for getOptions() (structure)
                      and getJsonConfig() (per-value price deltas). Rendered by our
                      reusable Twig partials (native field names), never by this
