@@ -27,7 +27,23 @@
                 <argument name="defer_reason" xsi:type="string">a purchase reported on the shopper's next move is a purchase never reported</argument>
             </arguments>
         </referenceBlock>
+        <referenceBlock name="gtag_google_adwords" remove="true"/>
         <referenceContainer name="content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="gtag.google.adwords"
+                   template="Magento_GoogleGtag::ads.twig" ifconfig="google/gtag/adwords/active" cacheable="false">
+                <arguments>
+                    <argument name="google_ads" xsi:type="object">MageObsidian\Storefront\ViewModel\GoogleAds</argument>
+                    <argument name="report_conversion" xsi:type="boolean">true</argument>
+                    <argument name="defer_until" xsi:type="string">now</argument>
+                    <argument name="defer_reason" xsi:type="string">a purchase reported on the shopper's next move is a purchase never reported</argument>
+                </arguments>
+            </block>
+            <block class="Magento\GoogleAdwords\Block\Code" name="google.adwords.code"
+                   template="Magento_GoogleAdwords::code.twig" cacheable="false">
+                <arguments>
+                    <argument name="legacy_conversion" xsi:type="object">MageObsidian\Storefront\ViewModel\LegacyGoogleAdsConversion</argument>
+                </arguments>
+            </block>
             <block class="Magento\Checkout\Block\Onepage\Success" name="checkout.success"
                    template="Magento_Checkout::checkout/success.twig" cacheable="false">
                 <block class="Magento\Checkout\Block\Onepage\Success" name="checkout.success.print.button"
