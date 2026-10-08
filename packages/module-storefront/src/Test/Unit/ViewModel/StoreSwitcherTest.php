@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace MageObsidian\Storefront\Test\Unit\ViewModel;
 
 use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\Group;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Store\ViewModel\SwitcherUrlProvider;
@@ -51,6 +52,44 @@ class StoreSwitcherTest extends TestCase
     /**
      * @param array<int, Store&MockObject> $stores
      */
+    private function group(int $id, string $name, int $websiteId, int $defaultStoreId, array $stores): Group&MockObject
+    {
+        $group = $this->createMock(Group::class);
+        $group->method('getId')->willReturn($id);
+        $group->method('getName')->willReturn($name);
+        $group->method('getWebsiteId')->willReturn($websiteId);
+        $group->method('getDefaultStoreId')->willReturn($defaultStoreId);
+        $group->method('getStores')->willReturn($stores);
+
+        return $group;
+    }
+
+    private function inactiveStore(int $id, int $groupId): Store&MockObject
+    {
+        $store = $this->createMock(Store::class);
+        $store->method('getId')->willReturn($id);
+        $store->method('getGroupId')->willReturn($groupId);
+        $store->method('isActive')->willReturn(false);
+
+        return $store;
+    }
+
+    private function withGroups(array $groups, Store $current): void
+    {
+        $this->storeManager->method('getGroups')->willReturn($groups);
+        $this->storeManager->method('getStore')->willReturn($current);
+        $this->urlProvider->method('getTargetStoreRedirectUrl')
+            ->willReturnCallback(static fn(StoreInterface $s): string => 'https://shop.test/switch/' . $s->getId());
+    }
+
+    private function websiteStore(int $id, int $groupId, int $websiteId = 1): Store&MockObject
+    {
+        $store = $this->store($id, 'View ' . $id, $groupId);
+        $store->method('getWebsiteId')->willReturn($websiteId);
+
+        return $store;
+    }
+
     private function withStores(array $stores, int $currentId): void
     {
         $byId = [];
@@ -110,5 +149,75 @@ class StoreSwitcherTest extends TestCase
 
         $this->assertCount(2, $items);
         $this->assertSame(['English', 'Español'], array_column($items, 'label'));
+    }
+
+    public function testListsTheGroupsOfTheCurrentWebsiteWithTheirDefaultView(): void
+    {
+        $main = $this->websiteStore(1, 1);
+        $outletDefault = $this->websiteStore(5, 2);
+        $outletOther = $this->websiteStore(6, 2);
+        $this->withGroups([
+            $this->group(1, 'Main', 1, 1, [$main]),
+            $this->group(2, 'Outlet', 1, 5, [$outletOther, $outletDefault]),
+        ], $main);
+
+        $groups = $this->subject()->getGroups();
+
+        $this->assertSame(['Main', 'Outlet'], array_column($groups, 'label'));
+        $this->assertSame('https://shop.test/switch/5', $groups[1]['url']);
+        $this->assertTrue($groups[0]['current']);
+        $this->assertFalse($groups[1]['current']);
+    }
+
+    public function testFallsBackToAnActiveViewWhenTheDefaultOneIsInactive(): void
+    {
+        $main = $this->websiteStore(1, 1);
+        $this->withGroups([
+            $this->group(1, 'Main', 1, 1, [$main]),
+            $this->group(2, 'Outlet', 1, 5, [$this->inactiveStore(5, 2), $this->websiteStore(6, 2)]),
+        ], $main);
+
+        $groups = $this->subject()->getGroups();
+
+        $this->assertSame('https://shop.test/switch/6', $groups[1]['url']);
+    }
+
+    public function testSkipsGroupsWithoutActiveViewsAndGroupsOfOtherWebsites(): void
+    {
+        $main = $this->websiteStore(1, 1);
+        $this->withGroups([
+            $this->group(1, 'Main', 1, 1, [$main]),
+            $this->group(2, 'Dormant', 1, 5, [$this->inactiveStore(5, 2)]),
+            $this->group(3, 'Elsewhere', 2, 7, [$this->websiteStore(7, 3, 2)]),
+        ], $main);
+
+        $this->assertSame(['Main'], array_column($this->subject()->getGroups(), 'label'));
+    }
+
+    public function testHasMultipleGroupsOnlyWhenMoreThanOneGroupIsOffered(): void
+    {
+        $main = $this->websiteStore(1, 1);
+        $this->withGroups([$this->group(1, 'Main', 1, 1, [$main])], $main);
+
+        $this->assertFalse($this->subject()->hasMultipleGroups());
+    }
+
+    public function testHasMultipleGroupsWithTwoGroups(): void
+    {
+        $main = $this->websiteStore(1, 1);
+        $this->withGroups([
+            $this->group(1, 'Main', 1, 1, [$main]),
+            $this->group(2, 'Outlet', 1, 5, [$this->websiteStore(5, 2)]),
+        ], $main);
+
+        $this->assertTrue($this->subject()->hasMultipleGroups());
+    }
+
+    public function testGroupsDegradeToEmptyWhenTheStoreManagerFails(): void
+    {
+        $this->storeManager->method('getStore')->willThrowException(new \RuntimeException('boom'));
+
+        $this->assertSame([], $this->subject()->getGroups());
+        $this->assertFalse($this->subject()->hasMultipleGroups());
     }
 }

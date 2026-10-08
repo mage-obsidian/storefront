@@ -10,6 +10,8 @@ declare(strict_types=1);
 namespace MageObsidian\Storefront\ViewModel;
 
 use Magento\Framework\View\Element\Block\ArgumentInterface;
+use Magento\Store\Model\Group;
+use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Store\ViewModel\SwitcherUrlProvider;
 use Throwable;
@@ -93,5 +95,53 @@ class StoreSwitcher implements ArgumentInterface
     public function hasMultiple(): bool
     {
         return count($this->getItems()) > 1;
+    }
+
+    public function getGroups(): array
+    {
+        try {
+            $currentStore = $this->storeManager->getStore();
+            $currentGroupId = (int)$currentStore->getGroupId();
+            $websiteId = (int)$currentStore->getWebsiteId();
+            $items = [];
+            foreach ($this->storeManager->getGroups() as $group) {
+                if ((int)$group->getWebsiteId() !== $websiteId) {
+                    continue;
+                }
+                $target = $this->targetStore($group);
+                if ($target === null) {
+                    continue;
+                }
+                $items[] = [
+                    'label' => (string)$group->getName(),
+                    'url' => (string)$this->urlProvider->getTargetStoreRedirectUrl($target),
+                    'current' => (int)$group->getId() === $currentGroupId,
+                ];
+            }
+
+            return $items;
+        } catch (Throwable) {
+            return [];
+        }
+    }
+
+    public function hasMultipleGroups(): bool
+    {
+        return count($this->getGroups()) > 1;
+    }
+
+    private function targetStore(Group $group): ?Store
+    {
+        $active = array_values(array_filter(
+            $group->getStores(),
+            static fn (Store $store): bool => $store->isActive()
+        ));
+        foreach ($active as $store) {
+            if ((int)$store->getId() === (int)$group->getDefaultStoreId()) {
+                return $store;
+            }
+        }
+
+        return $active[0] ?? null;
     }
 }

@@ -19,11 +19,29 @@
         <!-- "Report All Bugs" footer link: a Luma demo affordance. -->
         <referenceBlock name="report.bugs" remove="true"/>
 
-        <!-- Header logo block. header.twig writes the wordmark itself and never
-             calls child_html('logo'), so the block only cost a LogoPathResolver
-             and a LogoSizeResolver on every request. The print layouts declare
-             their own logo block and are unaffected. -->
-        <referenceBlock name="logo" remove="true"/>
+        <referenceBlock name="footer.content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="store_switcher" as="store_switcher"
+                   template="Magento_Store::switch/stores.twig">
+                <arguments>
+                    <argument name="switcher" xsi:type="object">MageObsidian\Storefront\ViewModel\StoreSwitcher</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+
+        <referenceBlock name="logo">
+            <arguments>
+                <argument name="logo_state" xsi:type="object">MageObsidian\Storefront\ViewModel\HeaderLogo</argument>
+            </arguments>
+        </referenceBlock>
+
+        <referenceBlock name="header-content">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.welcome"
+                   as="welcome" template="Magento_Theme::html/header/welcome.twig">
+                <arguments>
+                    <argument name="chrome" xsi:type="object">MageObsidian\Storefront\ViewModel\PageChrome</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
 
         <referenceBlock name="messages" remove="true"/>
         <referenceBlock name="ajax.message.placeholder" remove="true"/>
