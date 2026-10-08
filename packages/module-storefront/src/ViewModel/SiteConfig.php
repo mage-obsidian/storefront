@@ -27,6 +27,8 @@ class SiteConfig implements ArgumentInterface
 
     public function toArray(): array
     {
+        $store = $this->storeManager->getStore();
+
         return [
             'version' => self::VERSION,
             'cookie' => [
@@ -37,6 +39,8 @@ class SiteConfig implements ArgumentInterface
                 'sameSite' => strtolower((string)$this->sessionConfig->getCookieSameSite()),
             ],
             'websiteId' => (int)$this->storeManager->getWebsite()->getId(),
+            'storeId' => (int)$store->getId(),
+            'currency' => (string)$store->getCurrentCurrencyCode(),
             'noCookiesUrl' => $this->url->getUrl('cookie/index/noCookies'),
         ];
     }

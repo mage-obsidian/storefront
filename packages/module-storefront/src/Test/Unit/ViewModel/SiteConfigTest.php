@@ -12,6 +12,7 @@ namespace MageObsidian\Storefront\Test\Unit\ViewModel;
 use Magento\Framework\Session\Config\ConfigInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Api\Data\WebsiteInterface;
+use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 use MageObsidian\Storefront\ViewModel\SiteConfig;
 use PHPUnit\Framework\TestCase;
@@ -31,7 +32,9 @@ class SiteConfigTest extends TestCase
         int $lifetime = 3600,
         bool $secure = false,
         string $sameSite = 'Lax',
-        int $websiteId = 1
+        int $websiteId = 1,
+        int $storeId = 1,
+        string $currency = 'USD'
     ): SiteConfig {
         $session = $this->createStub(ConfigInterface::class);
         $session->method('getCookieDomain')->willReturn($domain);
@@ -44,6 +47,10 @@ class SiteConfigTest extends TestCase
         $website->method('getId')->willReturn((string)$websiteId);
         $stores = $this->createStub(StoreManagerInterface::class);
         $stores->method('getWebsite')->willReturn($website);
+        $store = $this->createStub(Store::class);
+        $store->method('getId')->willReturn((string)$storeId);
+        $store->method('getCurrentCurrencyCode')->willReturn($currency);
+        $stores->method('getStore')->willReturn($store);
 
         $url = $this->createStub(UrlInterface::class);
         $url->method('getUrl')->willReturnCallback(static fn(string $route): string => 'https://shop.test/' . $route);
@@ -57,6 +64,14 @@ class SiteConfigTest extends TestCase
 
         $this->assertSame(1, $config['version']);
         $this->assertSame(3, $config['websiteId']);
+    }
+
+    public function testItCarriesTheStoreViewAndTheCurrencyInForce(): void
+    {
+        $config = $this->viewModel(storeId: 4, currency: 'EUR')->toArray();
+
+        $this->assertSame(4, $config['storeId']);
+        $this->assertSame('EUR', $config['currency']);
     }
 
     public function testItNamesThePageThatExplainsWhatToDoWithoutCookies(): void
