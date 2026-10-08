@@ -48,10 +48,48 @@ class WishlistSectionTest extends TestCase
         };
     }
 
+    private function collection(array $items): object
+    {
+        return new class ($items) implements \IteratorAggregate {
+            public mixed $pageSize = 3;
+
+            public function __construct(private readonly array $items)
+            {
+            }
+
+            public function clear(): self
+            {
+                return $this;
+            }
+
+            public function setPageSize(mixed $size): self
+            {
+                $this->pageSize = $size;
+
+                return $this;
+            }
+
+            public function getSelect(): object
+            {
+                return new class () {
+                    public function reset(string $part): self
+                    {
+                        return $this;
+                    }
+                };
+            }
+
+            public function getIterator(): \Traversable
+            {
+                return new \ArrayIterator($this->pageSize === 3 ? array_slice($this->items, 0, 3) : $this->items);
+            }
+        };
+    }
+
     private function subject(array $items): WishlistSection
     {
         $helper = $this->createMock(WishlistHelper::class);
-        $helper->method('getWishlistItemCollection')->willReturn($items);
+        $helper->method('getWishlistItemCollection')->willReturn($this->collection($items));
 
         $url = $this->createMock(UrlInterface::class);
         $url->method('getUrl')->willReturnCallback(
@@ -75,6 +113,19 @@ class WishlistSectionTest extends TestCase
             12 => '/wishlist/index/remove/item/5/',
             34 => '/wishlist/index/remove/item/9/',
         ], $result['saved']);
+    }
+
+    public function testListsEverySavedProductEvenWhenTheSidebarCappedTheSharedCollection(): void
+    {
+        $items = [];
+        foreach (range(1, 8) as $index) {
+            $items[] = $this->item($index * 10, $index);
+        }
+
+        $result = $this->subject($items)->afterGetSectionData($this->createMock(Wishlist::class), ['items' => []]);
+
+        $this->assertCount(8, $result['saved']);
+        $this->assertArrayHasKey(80, $result['saved']);
     }
 
     public function testSavedIsEmptyWhenTheCollectionThrows(): void

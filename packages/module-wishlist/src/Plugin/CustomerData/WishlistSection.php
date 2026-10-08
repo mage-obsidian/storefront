@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace MageObsidian\Wishlist\Plugin\CustomerData;
 
+use Magento\Framework\DB\Select;
 use Magento\Framework\UrlInterface;
 use Magento\Wishlist\CustomerData\Wishlist;
 use Magento\Wishlist\Helper\Data as WishlistHelper;
@@ -54,7 +55,11 @@ class WishlistSection
     {
         $saved = [];
         try {
-            foreach ($this->wishlistHelper->getWishlistItemCollection() as $item) {
+            $collection = clone $this->wishlistHelper->getWishlistItemCollection();
+            $collection->clear()->setPageSize(false)->getSelect()
+                ->reset(Select::LIMIT_COUNT)
+                ->reset(Select::LIMIT_OFFSET);
+            foreach ($collection as $item) {
                 $saved[(int)$item->getProductId()] = $this->url->getUrl(
                     'wishlist/index/remove',
                     ['item' => (int)$item->getId()]
