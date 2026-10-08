@@ -18,7 +18,16 @@
         <referenceBlock name="page.main.title" remove="true"/>
         <referenceContainer name="content">
             <block class="Magento\Multishipping\Block\Checkout\Shipping" name="checkout_shipping"
-                   template="Magento_Multishipping::checkout/shipping.twig" cacheable="false"/>
+                   template="Magento_Multishipping::checkout/shipping.twig" cacheable="false">
+                <block class="MageObsidian\ModernFrontend\Block\Template" name="checkout.cart.item.renderers"
+                       template="Magento_Multishipping::checkout/item-options.twig" cacheable="false">
+                    <arguments>
+                        <argument name="line_options" xsi:type="object">MageObsidian\Multishipping\ViewModel\LineOptions</argument>
+                    </arguments>
+                </block>
+                <block class="Magento\Multishipping\Block\Checkout\Billing\Items" name="checkout_billing_items"
+                       template="Magento_Multishipping::checkout/other-items.twig" cacheable="false"/>
+            </block>
         </referenceContainer>
     </body>
 </page>
