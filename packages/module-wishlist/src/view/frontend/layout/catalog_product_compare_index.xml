@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Wishlist project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="catalog.compare.list">
+            <arguments>
+                <argument name="wishlist" xsi:type="object">MageObsidian\Wishlist\ViewModel\CartMove</argument>
+            </arguments>
+        </referenceBlock>
+        <referenceContainer name="before.body.end">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.compare_wishlist_actions"
+                   template="Magento_Wishlist::wishlist-actions.twig"/>
+        </referenceContainer>
+    </body>
+</page>

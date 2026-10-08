@@ -21,6 +21,7 @@
                    template="Magento_Catalog::product/compare/list.twig" cacheable="false">
                 <arguments>
                     <argument name="attribute_output" xsi:type="object">MageObsidian\Catalog\ViewModel\ProductAttributeOutput</argument>
+                    <argument name="card" xsi:type="object">MageObsidian\Catalog\ViewModel\ProductCard</argument>
                 </arguments>
             </block>
         </referenceContainer>
