@@ -459,3 +459,72 @@ describe("redirect to the cart after an add", () => {
         expect(visited).toEqual([]);
     });
 });
+
+describe("saving the options of a wish list item", () => {
+    const UPDATE_ACTION = "/wishlist/index/updateItemOptions/id/5/product/1/";
+    const LIST_URL = "https://shop.test/wishlist/index/index/wishlist_id/20/";
+    let visited: string[];
+    let original: Location;
+
+    beforeEach(() => {
+        visited = [];
+        original = window.location;
+        Object.defineProperty(window, "location", {
+            value: { assign: (url: string) => visited.push(url), href: "https://shop.test/p.html", origin: "https://shop.test" },
+            writable: true,
+            configurable: true,
+        });
+    });
+
+    afterEach(() => {
+        Object.defineProperty(window, "location", { value: original, writable: true, configurable: true });
+    });
+
+    const answerRedirected = (url: string, ok = true) =>
+        vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok, redirected: true, url }));
+
+    it("lands on the page the core redirected to, leaving its message for that page", async () => {
+        answerRedirected(LIST_URL);
+
+        const result = await useCart().addRaw(UPDATE_ACTION, new FormData());
+
+        expect(result.ok).toBe(true);
+        expect(visited).toEqual([LIST_URL]);
+        expect(reload.calls).toEqual([]);
+    });
+
+    it("does not count the update as a product added to the cart", async () => {
+        __setSection("cart", { summary_count: 3 });
+        answerRedirected(LIST_URL);
+
+        const cart = useCart();
+        await cart.addRaw(UPDATE_ACTION, new FormData());
+
+        expect(cart.count.value).toBe(3);
+    });
+
+    it("does not follow a redirect that leaves the store", async () => {
+        answerRedirected("https://elsewhere.test/wishlist/");
+
+        await useCart().addRaw(UPDATE_ACTION, new FormData());
+
+        expect(visited).toEqual([]);
+    });
+
+    it("stays on the page when the redirected page failed to load", async () => {
+        answerRedirected(LIST_URL, false);
+
+        const result = await useCart().addRaw(UPDATE_ACTION, new FormData());
+
+        expect(result.ok).toBe(false);
+        expect(visited).toEqual([]);
+    });
+
+    it("does not follow the redirect of an ordinary add", async () => {
+        answerRedirected("https://shop.test/customer/account/login/");
+
+        await useCart().addRaw("/checkout/cart/add/product/1/", new FormData());
+
+        expect(visited).toEqual([]);
+    });
+});

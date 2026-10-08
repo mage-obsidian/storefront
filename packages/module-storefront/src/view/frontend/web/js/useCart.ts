@@ -58,6 +58,7 @@ declare module 'mage-obsidian/runtime/eventManager.ts' {
 const CART_SECTION = 'cart';
 const SUMMARY_COUNT = 'summary_count';
 const QTY_FIELD = 'qty';
+const SAVED_ITEM_UPDATE = /\/wishlist\/index\/updateItemOptions\//;
 
 /**
  * Read Magento's form key. Re-exported from the provider rather than reading the
@@ -87,17 +88,22 @@ function toFormData(fields: Record<string, unknown>): FormData {
     return body;
 }
 
+function sameOriginUrl(url: string): string {
+    try {
+        const target = new URL(url, window.location.href);
+        return target.origin === window.location.origin ? target.href : '';
+    } catch {
+        return '';
+    }
+}
+
 async function readBackUrl(response: Response): Promise<string> {
     if (typeof response.json !== 'function') {
         return '';
     }
     try {
         const payload = (await response.json()) as { backUrl?: unknown };
-        if (typeof payload?.backUrl !== 'string') {
-            return '';
-        }
-        const target = new URL(payload.backUrl, window.location.href);
-        return target.origin === window.location.origin ? target.href : '';
+        return typeof payload?.backUrl === 'string' ? sameOriginUrl(payload.backUrl) : '';
     } catch {
         return '';
     }
@@ -149,12 +155,14 @@ export function useCart() {
         if (request.cancelled) {
             return { ok: false, message: request.message };
         }
-        if (operation === CartOperation.Add) {
+        const updatesSavedItem = SAVED_ITEM_UPDATE.test(request.action);
+        if (operation === CartOperation.Add && !updatesSavedItem) {
             projectAdd(request.body);
         }
 
         let ok = false;
         let backUrl = '';
+        let landedOn = '';
         try {
             const response = await fetch(request.action, {
                 method: 'POST',
@@ -164,8 +172,13 @@ export function useCart() {
             });
             ok = response.ok;
             backUrl = await readBackUrl(response);
+            landedOn = response.redirected ? sameOriginUrl(response.url) : '';
         } catch {
             ok = false;
+        }
+        if (updatesSavedItem && ok && landedOn !== '') {
+            window.location.assign(landedOn);
+            return { ok: true };
         }
         await withSuppressedNotifications(() =>
             customerData.reload([CART_SECTION, MESSAGES_SECTION]),
