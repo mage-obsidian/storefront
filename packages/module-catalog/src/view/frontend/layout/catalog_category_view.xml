@@ -72,6 +72,8 @@
                     <argument name="landing" xsi:type="object">MageObsidian\Catalog\ViewModel\CategoryLanding</argument>
                 </arguments>
             </block>
+            <block class="Magento\Catalog\Block\Category\Rss\Link" name="rss.link"
+                   after="category.image" template="Magento_Catalog::category/rss.twig" ifconfig="rss/config/active"/>
             <block class="Magento\Catalog\Block\Category\View" name="category.view"
                    template="Magento_Catalog::category/view.twig">
                 <arguments>

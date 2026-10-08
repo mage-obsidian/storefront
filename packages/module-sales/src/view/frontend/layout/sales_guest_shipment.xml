@@ -26,6 +26,12 @@
                     <arguments>
                         <argument name="reorder_policy" xsi:type="object">MageObsidian\Sales\ViewModel\ReorderPolicy</argument>
                     </arguments>
+                    <block class="MageObsidian\ModernFrontend\Block\Template" name="sales.order.info.buttons.rss"
+                           template="Magento_Sales::order/info/buttons/rss.twig" ifconfig="rss/config/active" cacheable="false">
+                        <arguments>
+                            <argument name="order_feed" xsi:type="object">MageObsidian\Sales\ViewModel\OrderStatusFeed</argument>
+                        </arguments>
+                    </block>
                 </block>
                 <block class="Magento\Sales\Block\Order\Comments" name="shipment_comments" template="Magento_Sales::order/comments.twig" cacheable="false">
                     <arguments>

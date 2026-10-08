@@ -26,6 +26,8 @@
                 <arguments>
                     <argument name="thumbnail" xsi:type="object">MageObsidian\Wishlist\ViewModel\ProductThumbnail</argument>
                 </arguments>
+                <block class="Magento\Wishlist\Block\Rss\Link" name="wishlist.rss.link"
+                       template="Magento_Wishlist::rss/link.twig" ifconfig="rss/config/active"/>
                 <block class="Magento\Wishlist\Block\Customer\Wishlist" name="customer.wishlist" as="wishlist">
                     <!-- Required by Customer\Wishlist::_prepareLayout (it sets the
                          pager up unconditionally); also paginates the collection. -->
