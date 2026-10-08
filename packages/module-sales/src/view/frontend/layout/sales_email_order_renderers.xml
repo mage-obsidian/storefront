@@ -14,6 +14,9 @@
             <block class="Magento\Sales\Block\Order\Email\Items\Order\DefaultOrder"
                    name="sales.email.order.renderers.default" as="default"
                    template="Magento_Sales::email/items/order/default.twig"/>
+            <block class="Magento\Bundle\Block\Sales\Order\Items\Renderer"
+                   name="sales.email.order.renderers.bundle" as="bundle"
+                   template="Magento_Sales::email/items/order/bundle.twig"/>
         </referenceBlock>
     </body>
 </page>

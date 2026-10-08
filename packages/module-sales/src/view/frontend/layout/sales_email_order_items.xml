@@ -40,5 +40,12 @@
         </block>
         <block class="Magento\Framework\View\Element\Template" name="additional.product.info"
                template="Magento_Theme::template.phtml"/>
+        <referenceBlock name="order_totals">
+            <block class="Magento\Weee\Block\Sales\Order\Totals" name="weee_ord_totals">
+                <action method="setBeforeCondition">
+                    <argument name="condition" xsi:type="string">tax</argument>
+                </action>
+            </block>
+        </referenceBlock>
     </body>
 </page>

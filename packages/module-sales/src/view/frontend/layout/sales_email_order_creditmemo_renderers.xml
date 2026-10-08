@@ -14,6 +14,9 @@
             <block class="Magento\Sales\Block\Order\Email\Items\DefaultItems"
                    name="sales.email.order.creditmemo.renderers.default" as="default"
                    template="Magento_Sales::email/items/creditmemo/default.twig"/>
+            <block class="Magento\Bundle\Block\Sales\Order\Items\Renderer"
+                   name="sales.email.order.creditmemo.renderers.bundle" as="bundle"
+                   template="Magento_Sales::email/items/creditmemo/bundle.twig"/>
         </referenceBlock>
     </body>
 </page>
