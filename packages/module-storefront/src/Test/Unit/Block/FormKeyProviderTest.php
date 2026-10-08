@@ -86,6 +86,35 @@ class FormKeyProviderTest extends TestCase
         (new ReflectionMethod($block, '_toHtml'))->invoke($block);
     }
 
+
+    public function testTheScriptCarriesItsIntegrityWhenTheResolverHasAHash(): void
+    {
+        $resolver = $this->createMock(ViteResolver::class);
+        $resolver->method('getViteFileUrl')->willReturn('/x.js');
+        $resolver->method('getIntegrityAttributes')
+            ->with('MageObsidian_Storefront::js/form-key-provider')
+            ->willReturn(['integrity' => 'sha384-x', 'crossorigin' => 'anonymous']);
+
+        $renderer = $this->createMock(SecureHtmlRenderer::class);
+        $renderer->expects($this->once())
+            ->method('renderTag')
+            ->with(
+                'script',
+                [
+                    'type' => 'module',
+                    'src' => '/x.js',
+                    'fetchpriority' => 'low',
+                    'integrity' => 'sha384-x',
+                    'crossorigin' => 'anonymous',
+                ],
+                '',
+                false
+            )
+            ->willReturn('<script></script>');
+
+        $this->render($resolver, $renderer, cacheEnabled: true);
+    }
+
     private function render(
         ViteResolver $resolver,
         SecureHtmlRenderer $renderer,

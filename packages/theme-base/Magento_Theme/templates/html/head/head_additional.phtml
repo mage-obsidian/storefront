@@ -15,14 +15,7 @@ use Magento\Framework\View\Helper\SecureHtmlRenderer;
 /** @var SecureHtmlRenderer $secureRenderer */
 $configViewModel = $block->getConfigProvider();
 
-$importMap = json_encode(
-    [
-        'imports' => [
-            'vue' => $block->getViewLibFileUrl('vue'),
-        ],
-    ],
-    JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
-);
+$importMap = json_encode($block->getImportMap(), JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
 ?>
 
 <?= $block->getChildHtml('head_preload'); ?>

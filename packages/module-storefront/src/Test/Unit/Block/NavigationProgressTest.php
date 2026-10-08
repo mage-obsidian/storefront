@@ -55,4 +55,33 @@ class NavigationProgressTest extends TestCase
             (string)(new ReflectionMethod($block, '_toHtml'))->invoke($block)
         );
     }
+
+    public function testTheScriptCarriesItsIntegrityWhenTheResolverHasAHash(): void
+    {
+        $resolver = $this->createMock(ViteResolver::class);
+        $resolver->method('getViteFileUrl')->willReturn('/x.js');
+        $resolver->method('getIntegrityAttributes')
+            ->with('MageObsidian_Storefront::js/navigationProgress')
+            ->willReturn(['integrity' => 'sha384-x', 'crossorigin' => 'anonymous']);
+
+        $renderer = $this->createMock(SecureHtmlRenderer::class);
+        $renderer->expects($this->once())
+            ->method('renderTag')
+            ->with(
+                'script',
+                [
+                    'type' => 'module',
+                    'src' => '/x.js',
+                    'fetchpriority' => 'low',
+                    'integrity' => 'sha384-x',
+                    'crossorigin' => 'anonymous',
+                ],
+                '',
+                false
+            )
+            ->willReturn('<script></script>');
+
+        $block = new NavigationProgress($this->createStub(Context::class), $resolver, $renderer);
+        (new ReflectionMethod($block, '_toHtml'))->invoke($block);
+    }
 }

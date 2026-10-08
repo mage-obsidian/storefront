@@ -76,7 +76,7 @@ class FormKeyProvider extends AbstractBlock
                 'type' => 'module',
                 'src' => $this->viteResolver->getViteFileUrl(self::ASSET),
                 'fetchpriority' => 'low',
-            ],
+            ] + $this->viteResolver->getIntegrityAttributes(self::ASSET),
             '',
             false
         );
