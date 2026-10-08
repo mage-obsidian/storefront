@@ -30,13 +30,55 @@
         grid-template-columns: 1fr 16rem;
     }
 
-    .page-layout-3columns .columns:has(.sidebar-additional:has(> *)) {
+    .page-layout-2columns-left .columns:has(.sidebar-main),
+    .page-layout-2columns-right .columns:has(.sidebar-main) {
+        grid-template-rows: auto auto 1fr;
+    }
+
+    .page-layout-2columns-left .columns:has(.sidebar-main) > .content {
+        grid-column: 2;
+        grid-row: 1 / span 3;
+    }
+
+    .page-layout-2columns-left .sidebar-main,
+    .page-layout-2columns-left .sidebar-additional {
+        grid-column: 1;
+    }
+
+    .page-layout-2columns-right .columns:has(.sidebar-main) > .content {
+        grid-column: 1;
+        grid-row: 1 / span 3;
+    }
+
+    .page-layout-2columns-right .sidebar-main,
+    .page-layout-2columns-right .sidebar-additional {
+        grid-column: 2;
+    }
+
+    .page-layout-2columns-left .sidebar-main,
+    .page-layout-2columns-right .sidebar-main {
+        grid-row: 1;
+    }
+
+    .page-layout-2columns-left .sidebar-additional,
+    .page-layout-2columns-right .sidebar-additional {
+        grid-row: 2;
+    }
+
+    .page-layout-3columns .columns:has(.sidebar-additional:has(> :not([data-mage-island]:empty))) {
         grid-template-columns: 16rem 1fr 16rem;
     }
 }
 
 .sidebar-additional:not(:has(> *)) {
     display: none;
+}
+
+.sidebar-additional:not(:has(> :not([data-mage-island]:empty))) {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
 }
 
 /* Desktop: the dialog is just a box in the sidebar column. `display` overrides the
@@ -169,6 +211,9 @@
     }
     .page-with-filter .sidebar-main {
         order: 2;
+    }
+    .page-with-filter .sidebar-additional {
+        order: 3;
     }
 
     /* With JS the drawer takes over, so the in-flow copy goes away before the

@@ -20,8 +20,10 @@ import {
     type MutationEventName,
 } from 'mage-obsidian/runtime/mutationEvent.ts';
 
-interface CompareItem {
+export interface CompareItem {
     id: number | string;
+    name?: string;
+    product_url?: string;
     remove_url?: string;
 }
 

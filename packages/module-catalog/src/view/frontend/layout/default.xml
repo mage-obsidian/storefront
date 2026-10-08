@@ -21,5 +21,17 @@
                 <argument name="use_link_for_as_low_as" xsi:type="boolean">true</argument>
             </arguments>
         </block>
+        <referenceContainer name="before.body.end">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="recently.config"
+                   template="Magento_Catalog::recently/config.twig">
+                <arguments>
+                    <argument name="recently" xsi:type="object">MageObsidian\Catalog\ViewModel\RecentlyProducts</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+        <referenceContainer name="sidebar.additional">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="catalog.compare.sidebar"
+                   template="Magento_Catalog::product/compare/sidebar.twig"/>
+        </referenceContainer>
     </body>
 </page>

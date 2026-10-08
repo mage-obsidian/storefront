@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Wishlist project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="sidebar.additional">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="wishlist_sidebar" as="wishlist"
+                   template="Magento_Wishlist::sidebar.twig" ifconfig="wishlist/general/show_in_sidebar"/>
+        </referenceContainer>
+    </body>
+</page>
