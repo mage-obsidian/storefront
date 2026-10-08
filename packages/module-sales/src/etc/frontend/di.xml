@@ -22,4 +22,8 @@
             </argument>
         </arguments>
     </type>
+    <type name="Magento\Sales\Block\Widget\Guest\Form">
+        <plugin name="mageObsidian_renderGuestFormWidget"
+                type="MageObsidian\Sales\Plugin\Widget\RenderGuestFormWidget"/>
+    </type>
 </config>

@@ -5,6 +5,7 @@
 import { defineConfig } from "vitest/config";
 import vue from "@vitejs/plugin-vue";
 import { fileURLToPath } from "node:url";
+import { frameworkPath } from "../../tools/vitest/framework.js";
 
 // Unit tests for the guest orders & returns island. happy-dom drives the SFC's
 // reactive toggle; @vitejs/plugin-vue compiles it. The `Vendor_Module::path`
@@ -14,6 +15,13 @@ export default defineConfig({
     plugins: [vue()],
     resolve: {
         alias: {
+            "mage-obsidian/runtime": frameworkPath("packages/js-package-utils/src/runtime"),
+            "MageObsidian_ModernFrontend::js/customer-data": fileURLToPath(
+                new URL("../module-storefront/src/Test/Js/stubs/customerData.ts", import.meta.url),
+            ),
+            "MageObsidian_ModernFrontend::js/events": fileURLToPath(
+                new URL("../module-storefront/src/Test/Js/stubs/events.ts", import.meta.url),
+            ),
             "MageObsidian_Storefront::form/Field": fileURLToPath(
                 new URL("../module-storefront/src/view/frontend/web/components/form/Field.vue", import.meta.url),
             ),

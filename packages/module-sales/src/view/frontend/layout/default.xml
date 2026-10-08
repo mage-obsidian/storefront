@@ -21,5 +21,9 @@
                 </arguments>
             </block>
         </referenceBlock>
+        <referenceContainer name="sidebar.additional">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="sale.reorder.sidebar"
+                   template="Magento_Sales::reorder/sidebar.twig"/>
+        </referenceContainer>
     </body>
 </page>
