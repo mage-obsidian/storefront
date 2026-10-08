@@ -101,6 +101,7 @@ class CartItems implements ArgumentInterface
         return [
             'id' => (int)$item->getItemId(),
             'name' => (string)$item->getName(),
+            'sku' => (string)$item->getSku(),
             'url' => $product ? (string)$product->getProductUrl() : '',
             'image' => $this->thumbnail($item),
             'qty' => (float)$item->getQty(),

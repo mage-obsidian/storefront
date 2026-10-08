@@ -62,6 +62,7 @@
                         </arguments>
                     </block>
                 </container>
+                <container name="checkout.shipping.carriers" as="shipping_carriers" label="Checkout shipping carriers"/>
             </block>
         </referenceContainer>
     </body>

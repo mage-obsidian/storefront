@@ -35,6 +35,7 @@ const props = withDefaults(
         config?: Record<string, unknown>;
         directory?: DirectoryData;
         paymentRenderers?: Record<string, { component: string }>;
+        shippingRenderers?: Record<string, { component: string; config?: Record<string, unknown> }>;
         withdrawnMethods?: string[];
         loginUrl?: string;
         labels?: Record<string, string>;
@@ -48,6 +49,7 @@ const props = withDefaults(
         config: () => ({}),
         directory: () => ({ countries: [], regions: {}, statesRequired: [], displayAllRegions: false, defaultCountry: "" }),
         paymentRenderers: () => ({}),
+        shippingRenderers: () => ({}),
         withdrawnMethods: () => [],
         loginUrl: "",
         labels: () => ({}),
@@ -75,6 +77,7 @@ const customerData = useCustomerData();
 checkout.initPublic({
     ...props.config,
     paymentRenderers: props.paymentRenderers,
+    shippingRenderers: props.shippingRenderers,
     withdrawnMethods: props.withdrawnMethods,
     defaultCountry: props.directory.defaultCountry,
     statesRequired: props.directory.statesRequired,

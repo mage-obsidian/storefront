@@ -399,3 +399,76 @@ describe("ShippingStep — tax display", () => {
         expect(wrapper.get("[data-rate-price]").text()).toBe("Free");
     });
 });
+
+describe("ShippingStep — carrier renderers", () => {
+    const PICKUP = { carrier_code: "instore", method_code: "pickup", carrier_title: "Pick in Store", method_title: "Pick in Store", amount: 0, available: true };
+    const COMPLETE = {
+        firstname: "Ada", lastname: "Lovelace", company: "", street: ["1 Rue", ""],
+        city: "Paris", region: "", regionId: null, postcode: "75001", countryId: "FR",
+        telephone: "0102030405",
+    };
+    let pinia;
+
+    beforeEach(() => {
+        pinia = createPinia();
+        setActivePinia(pinia);
+        vi.restoreAllMocks();
+    });
+
+    async function renderWithRenderer(rates: unknown[]) {
+        const checkout = useCheckout();
+        checkout.init({
+            ...CONFIG,
+            quote: { items: [{ id: 1, name: "Bag", sku: "24-MB01" }], subtotal: "", grandTotal: "" },
+            shippingRenderers: { instore: { component: "https://shop.test/finder.js", config: {} } },
+        });
+        Object.assign(checkout.shippingAddress, COMPLETE);
+        mockFetch(rates);
+        await checkout.estimateShipping();
+        const wrapper = mount(ShippingStep, {
+            props: { directory: DIRECTORY },
+            global: {
+                plugins: [pinia],
+                stubs: { ShippingCarrierRenderer: { template: "<div data-carrier-stub><slot /></div>", props: ["code"] } },
+            },
+        });
+        return { wrapper, checkout };
+    }
+
+    it("keeps a renderer-owned carrier out of the plain method list", async () => {
+        const { wrapper } = await renderWithRenderer([PICKUP, FLATRATE]);
+
+        const radios = wrapper.findAll('input[name="shipping-method"]');
+        expect(radios).toHaveLength(1);
+        expect(radios[0].element.value).toBe("flatrate_flatrate");
+    });
+
+    it("draws the carrier renderer when the rates include that carrier", async () => {
+        const { wrapper } = await renderWithRenderer([PICKUP, FLATRATE]);
+
+        expect(wrapper.find("[data-carrier-stub]").exists()).toBe(true);
+    });
+
+    it("draws no carrier renderer when the rates leave that carrier out", async () => {
+        const { wrapper } = await renderWithRenderer([FLATRATE]);
+
+        expect(wrapper.find("[data-carrier-stub]").exists()).toBe(false);
+    });
+
+    it("hides the plain methods while the carrier owns the selection", async () => {
+        const { wrapper, checkout } = await renderWithRenderer([PICKUP, FLATRATE]);
+
+        checkout.selectMethod(PICKUP);
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.find('[role="radiogroup"]').exists()).toBe(false);
+    });
+
+    it("blocks the continue button until the carrier names its destination", async () => {
+        const { wrapper, checkout } = await renderWithRenderer([PICKUP, FLATRATE]);
+        checkout.selectMethod(PICKUP);
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.find(".checkout-cta").attributes("disabled")).toBeDefined();
+    });
+});

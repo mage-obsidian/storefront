@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - InventoryInStorePickup project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="checkout.shipping.carriers">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="obsidian.shipping.instore"
+                   ifconfig="carriers/instore/active">
+                <arguments>
+                    <argument name="renderer" xsi:type="object">MageObsidian\InventoryInStorePickup\ViewModel\InStorePickupRenderer</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

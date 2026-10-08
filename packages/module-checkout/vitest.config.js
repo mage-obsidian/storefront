@@ -105,6 +105,9 @@ export default defineConfig({
             "MageObsidian_Checkout::checkout/ShippingStep": fileURLToPath(
                 new URL("./src/view/frontend/web/components/checkout/ShippingStep.vue", import.meta.url),
             ),
+            "MageObsidian_Checkout::checkout/ShippingCarrierRenderer": fileURLToPath(
+                new URL("./src/view/frontend/web/components/checkout/ShippingCarrierRenderer.vue", import.meta.url),
+            ),
             "MageObsidian_Checkout::checkout/PaymentStep": fileURLToPath(
                 new URL("./src/view/frontend/web/components/checkout/PaymentStep.vue", import.meta.url),
             ),

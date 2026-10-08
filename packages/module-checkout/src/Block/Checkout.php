@@ -12,6 +12,7 @@ namespace MageObsidian\Checkout\Block;
 use Magento\Framework\View\Element\Template\Context;
 use MageObsidian\Checkout\Model\Payment\RendererDescriptors;
 use MageObsidian\Checkout\Model\Payment\Withdrawn;
+use MageObsidian\Checkout\Model\Shipping\RendererDescriptors as ShippingRendererDescriptors;
 use MageObsidian\ModernFrontend\Block\Template;
 use MageObsidian\ModernFrontend\Service\Vue\IslandMarkup;
 use MageObsidian\ModernFrontend\ViewModel\Image;
@@ -25,6 +26,8 @@ class Checkout extends Template
 
     private ?array $withdrawnMethods = null;
 
+    private ?array $shippingRenderers = null;
+
     public function __construct(
         Context $context,
         ViteResolver $viteResolver,
@@ -33,6 +36,7 @@ class Checkout extends Template
         IslandMarkup $islandMarkup,
         private readonly RendererDescriptors $rendererDescriptors,
         private readonly Withdrawn $withdrawn,
+        private readonly ShippingRendererDescriptors $shippingRendererDescriptors,
         array $data = []
     ) {
         parent::__construct($context, $viteResolver, $schemaOrg, $image, $islandMarkup, $data);
@@ -61,6 +65,19 @@ class Checkout extends Template
             return $this->paymentRenderers = $this->rendererDescriptors->collect($this->getLayout());
         } catch (Throwable) {
             return $this->paymentRenderers = [];
+        }
+    }
+
+    public function getShippingRenderers(): array
+    {
+        if ($this->shippingRenderers !== null) {
+            return $this->shippingRenderers;
+        }
+
+        try {
+            return $this->shippingRenderers = $this->shippingRendererDescriptors->collect($this->getLayout());
+        } catch (Throwable) {
+            return $this->shippingRenderers = [];
         }
     }
 }

@@ -200,6 +200,34 @@ repos:
         files: '^packages/module-instant-purchase/.*\.css$'
         args: [--license-filepath, packages/module-instant-purchase/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
       - id: insert-license
+        name: SPDX header (PHP) packages/module-inventory-in-store-pickup
+        files: '^packages/module-inventory-in-store-pickup/.*\.php$'
+        args: [--license-filepath, packages/module-inventory-in-store-pickup/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']
+      - id: insert-license
+        name: SPDX header (PHTML) packages/module-inventory-in-store-pickup
+        files: '^packages/module-inventory-in-store-pickup/.*\.phtml$'
+        args: [--license-filepath, packages/module-inventory-in-store-pickup/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<?php /**| *| */ ?>']
+      - id: insert-license
+        name: SPDX header (Twig) packages/module-inventory-in-store-pickup
+        files: '^packages/module-inventory-in-store-pickup/.*\.twig$'
+        args: [--license-filepath, packages/module-inventory-in-store-pickup/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '{#||#}']
+      - id: insert-license
+        name: SPDX header (Vue and HTML) packages/module-inventory-in-store-pickup
+        files: '^packages/module-inventory-in-store-pickup/.*\.(vue|html)$'
+        args: [--license-filepath, packages/module-inventory-in-store-pickup/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->']
+      - id: insert-license
+        name: SPDX header (XML) packages/module-inventory-in-store-pickup
+        files: '^packages/module-inventory-in-store-pickup/.*\.xml$'
+        args: [--license-filepath, packages/module-inventory-in-store-pickup/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '<!--||-->', --insert-license-after-regex, '^<\?xml.*\?>$']
+      - id: insert-license
+        name: SPDX header (TypeScript and JavaScript) packages/module-inventory-in-store-pickup
+        files: '^packages/module-inventory-in-store-pickup/.*\.(ts|js|mjs)$'
+        args: [--license-filepath, packages/module-inventory-in-store-pickup/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '//']
+      - id: insert-license
+        name: SPDX header (CSS) packages/module-inventory-in-store-pickup
+        files: '^packages/module-inventory-in-store-pickup/.*\.css$'
+        args: [--license-filepath, packages/module-inventory-in-store-pickup/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/*| *| */']
+      - id: insert-license
         name: SPDX header (PHP) packages/module-multishipping
         files: '^packages/module-multishipping/.*\.php$'
         args: [--license-filepath, packages/module-multishipping/.license-header.txt, --no-extra-eol, --allow-past-years, --detect-license-in-X-top-lines, '16', --comment-style, '/**| *| */', --insert-license-after-regex, '^<\?php$']

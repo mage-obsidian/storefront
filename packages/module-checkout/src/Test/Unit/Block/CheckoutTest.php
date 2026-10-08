@@ -14,6 +14,7 @@ use Magento\Framework\View\LayoutInterface;
 use MageObsidian\Checkout\Block\Checkout;
 use MageObsidian\Checkout\Model\Payment\RendererDescriptors;
 use MageObsidian\Checkout\Model\Payment\Withdrawn;
+use MageObsidian\Checkout\Model\Shipping\RendererDescriptors as ShippingRendererDescriptors;
 use MageObsidian\ModernFrontend\Service\Vue\IslandMarkup;
 use MageObsidian\ModernFrontend\ViewModel\Image;
 use MageObsidian\ModernFrontend\ViewModel\SchemaOrg;
@@ -30,7 +31,11 @@ class CheckoutTest extends TestCase
         }
     }
 
-    private function block(RendererDescriptors $descriptors, ?Withdrawn $withdrawn = null): Checkout
+    private function block(
+        RendererDescriptors $descriptors,
+        ?Withdrawn $withdrawn = null,
+        ?ShippingRendererDescriptors $shipping = null
+    ): Checkout
     {
         $block = new Checkout(
             $this->createStub(Context::class),
@@ -39,7 +44,8 @@ class CheckoutTest extends TestCase
             $this->createStub(Image::class),
             $this->createStub(IslandMarkup::class),
             $descriptors,
-            $withdrawn ?? $this->createStub(Withdrawn::class)
+            $withdrawn ?? $this->createStub(Withdrawn::class),
+            $shipping ?? $this->createStub(ShippingRendererDescriptors::class)
         );
         $block->setLayout($this->createStub(LayoutInterface::class));
 
@@ -93,5 +99,38 @@ class CheckoutTest extends TestCase
         $withdrawn->method('codes')->willThrowException(new RuntimeException('boom'));
 
         $this->assertSame([], $this->block($this->createStub(RendererDescriptors::class), $withdrawn)->getWithdrawnMethods());
+    }
+
+    public function testItHandsTheIslandTheCarrierRenderersTheLayoutDeclares(): void
+    {
+        $collected = ['instore' => ['component' => 'https://shop.test/pickup.js', 'config' => []]];
+        $shipping = $this->createStub(ShippingRendererDescriptors::class);
+        $shipping->method('collect')->willReturn($collected);
+
+        $this->assertSame(
+            $collected,
+            $this->block($this->createStub(RendererDescriptors::class), null, $shipping)->getShippingRenderers()
+        );
+    }
+
+    public function testTheCarrierCollectionIsAskedForOnlyOnce(): void
+    {
+        $shipping = $this->createMock(ShippingRendererDescriptors::class);
+        $shipping->expects($this->once())->method('collect')->willReturn([]);
+
+        $block = $this->block($this->createStub(RendererDescriptors::class), null, $shipping);
+        $block->getShippingRenderers();
+        $block->getShippingRenderers();
+    }
+
+    public function testACarrierCollectionThatFailsLeavesTheCheckoutWithoutCarrierRenderers(): void
+    {
+        $shipping = $this->createStub(ShippingRendererDescriptors::class);
+        $shipping->method('collect')->willThrowException(new RuntimeException('boom'));
+
+        $this->assertSame(
+            [],
+            $this->block($this->createStub(RendererDescriptors::class), null, $shipping)->getShippingRenderers()
+        );
     }
 }

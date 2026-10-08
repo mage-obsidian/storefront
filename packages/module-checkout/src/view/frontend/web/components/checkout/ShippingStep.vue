@@ -10,6 +10,7 @@ import { useCheckout, type ShippingMethod } from "MageObsidian_Checkout::js/useC
 import { basisLabel, rateAmounts, type TaxBasis } from "MageObsidian_Checkout::js/tax-display";
 import AddressForm from "MageObsidian_Storefront::form/AddressForm";
 import SavedAddressPicker from "MageObsidian_Checkout::checkout/SavedAddressPicker";
+import ShippingCarrierRenderer from "MageObsidian_Checkout::checkout/ShippingCarrierRenderer";
 import type { RegionData } from "MageObsidian_Storefront::js/address";
 import { formatCurrency } from "MageObsidian_Storefront::js/currency";
 
@@ -114,6 +115,30 @@ const rateBasisLabel = (basis: TaxBasis): string =>
     basisLabel(basis, { exclTax: props.labels?.exclTax, inclTax: props.labels?.inclTax });
 
 const hasMethods = computed(() => checkout.shippingMethods.length > 0);
+const listedMethods = computed(() => checkout.shippingMethods.filter((method) => !checkout.carrierOwned(method.carrier_code)));
+const carrierRenderers = computed(() =>
+    Object.entries(checkout.shippingRenderers)
+        .map(([code, descriptor]) => ({
+            code,
+            descriptor,
+            methods: checkout.shippingMethods.filter((method) => method.carrier_code === code),
+        }))
+        .filter((entry) => entry.methods.length > 0),
+);
+const takenOverBy = computed(() => {
+    const code = checkout.selectedMethod?.carrier_code ?? "";
+    return checkout.carrierOwned(code) ? code : "";
+});
+const cartSkus = computed(() =>
+    checkout.items.map((item) => item.sku ?? "").filter((sku) => sku !== ""),
+);
+
+function leaveCarrier(): void {
+    const fallback = listedMethods.value[0];
+    if (fallback) {
+        checkout.selectMethod(fallback);
+    }
+}
 const waitingForAddress = computed(() => !checkout.ratesRequested && !checkout.loadingRates);
 const noRatesFound = computed(
     () => checkout.ratesRequested && !checkout.loadingRates && !hasMethods.value && checkout.error === "",
@@ -203,8 +228,26 @@ async function toPayment(): Promise<void> {
                 </p>
             </div>
 
-            <div v-if="hasMethods" class="mt-4 flex flex-col gap-3" role="radiogroup" :aria-label="t('methodsHeading', 'Shipping method')">
-                <div v-for="method in checkout.shippingMethods" :key="`${method.carrier_code}_${method.method_code}`">
+            <ShippingCarrierRenderer
+                v-for="entry in carrierRenderers"
+                :key="entry.code"
+                class="mt-4"
+                :data-carrier-renderer="entry.code"
+                :code="entry.code"
+                :component="entry.descriptor.component"
+                :methods="entry.methods"
+                :selected="takenOverBy === entry.code"
+                :config="entry.descriptor.config"
+                :address="checkout.shippingAddress"
+                :skus="cartSkus"
+                @select="checkout.selectMethod"
+                @deselect="leaveCarrier"
+                @destination="checkout.setCarrierDestination"
+                @failed="checkout.withdrawShippingRenderer"
+            />
+
+            <div v-if="listedMethods.length > 0 && takenOverBy === ''" class="mt-4 flex flex-col gap-3" role="radiogroup" :aria-label="t('methodsHeading', 'Shipping method')">
+                <div v-for="method in listedMethods" :key="`${method.carrier_code}_${method.method_code}`">
                     <label
                         class="field-radio-card flex flex-wrap items-center justify-between gap-x-4 gap-y-1"
                     >
@@ -236,7 +279,7 @@ async function toPayment(): Promise<void> {
             <button
                 v-if="!hideAdvance && hasMethods"
                 type="button"
-                :disabled="checkout.savingShipping || !checkout.selectedMethod"
+                :disabled="checkout.savingShipping || !checkout.selectedMethod || checkout.destinationPending"
                 :class="['checkout-cta btn btn--solid btn--lg btn--block mt-8 lg:w-fit', checkout.savingShipping && 'is-loading']"
                 @click="toPayment"
             >

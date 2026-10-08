@@ -57,7 +57,7 @@ class CartItemsTest extends TestCase
         $item->method('getName')->willReturn('Chaz Hoodie');
         $item->method('getQty')->willReturn(2.0);
         $item->method('getCalculationPrice')->willReturn(52.0);
-        $item->setData(['row_total' => 104.0, 'row_total_incl_tax' => 112.32, 'price_incl_tax' => 56.16]);
+        $item->setData(['sku' => 'MH01-M-Gray', 'row_total' => 104.0, 'row_total_incl_tax' => 112.32, 'price_incl_tax' => 56.16]);
         $item->method('getProduct')->willReturn($product);
         $item->method('getProductType')->willReturn('configurable');
 
@@ -75,6 +75,7 @@ class CartItemsTest extends TestCase
         $this->assertSame([
             'id' => 15,
             'name' => 'Chaz Hoodie',
+            'sku' => 'MH01-M-Gray',
             'url' => 'https://shop.test/chaz.html',
             'image' => 'https://shop.test/media/chaz.jpg',
             'qty' => 2.0,

@@ -1615,3 +1615,147 @@ describe("useCheckout — billing from the saved addresses", () => {
         expect(fetchMock).not.toHaveBeenCalled();
     });
 });
+
+describe("useCheckout — carrier renderers", () => {
+    const COMPLETE = {
+        firstname: "Ada", lastname: "Lovelace", company: "", street: ["1 Rue", ""],
+        city: "Paris", region: "", regionId: null, postcode: "75001", countryId: "FR",
+        telephone: "0102030405",
+    };
+    const PICKUP = { carrier_code: "instore", method_code: "pickup", carrier_title: "Pick in Store", available: true };
+    const DESTINATION = {
+        carrierCode: "instore",
+        address: { ...COMPLETE, firstname: "Austin Studio", lastname: "Store", postcode: "78701", countryId: "US" },
+        extensionAttributes: { pickup_location_code: "austin" },
+    };
+    const SAVE_RESPONSE = { payment_methods: [{ code: "checkmo", title: "Check" }], totals: { grand_total: 39 } };
+
+    beforeEach(() => {
+        setActivePinia(createPinia());
+        vi.restoreAllMocks();
+    });
+
+    function ready() {
+        const checkout = useCheckout();
+        checkout.init({
+            ...GUEST_CONFIG,
+            shippingRenderers: { instore: { component: "https://shop.test/pickup.js", config: { radius: 200 } } },
+        });
+        checkout.email = "ada@shop.test";
+        Object.assign(checkout.shippingAddress, COMPLETE);
+        return checkout;
+    }
+
+    it("seeds the carrier renderers with their component and config", () => {
+        const checkout = ready();
+
+        expect(checkout.shippingRenderers).toEqual({
+            instore: { component: "https://shop.test/pickup.js", config: { radius: 200 } },
+        });
+        expect(checkout.carrierOwned("instore")).toBe(true);
+        expect(checkout.carrierOwned("flatrate")).toBe(false);
+    });
+
+    it("ignores a carrier descriptor without a component", () => {
+        const checkout = useCheckout();
+        checkout.initPublic({ shippingRenderers: { instore: { component: " " }, acme: "nonsense" } });
+
+        expect(checkout.shippingRenderers).toEqual({});
+    });
+
+    it("does not preselect a carrier that has its own renderer", async () => {
+        const checkout = ready();
+        mockFetch([PICKUP, FLATRATE]);
+
+        await checkout.estimateShipping();
+
+        expect(checkout.selectedMethod?.carrier_code).toBe("flatrate");
+    });
+
+    it("holds the payment back while a carrier method is chosen without its destination", async () => {
+        const checkout = ready();
+        mockFetch([PICKUP, FLATRATE]);
+        await checkout.estimateShipping();
+
+        checkout.selectMethod(PICKUP);
+
+        expect(checkout.destinationPending).toBe(true);
+        mockFetch(SAVE_RESPONSE);
+        checkout.setCarrierDestination(DESTINATION);
+        expect(checkout.destinationPending).toBe(false);
+    });
+
+    it("saves the destination as the shipping address and keeps the shopper's address as billing", async () => {
+        const checkout = ready();
+        mockFetch([PICKUP]);
+        await checkout.estimateShipping();
+        checkout.selectMethod(PICKUP);
+        checkout.setCarrierDestination(DESTINATION);
+        const fetchMock = mockFetch(SAVE_RESPONSE);
+
+        await checkout.saveShipping();
+
+        const body = JSON.parse(fetchMock.mock.calls[0][1].body).addressInformation;
+        expect(body.shipping_carrier_code).toBe("instore");
+        expect(body.shipping_method_code).toBe("pickup");
+        expect(body.shipping_address.postcode).toBe("78701");
+        expect(body.shipping_address.extension_attributes).toEqual({ pickup_location_code: "austin" });
+        expect(body.billing_address.postcode).toBe("75001");
+        expect(body.billing_address.extension_attributes).toBeUndefined();
+    });
+
+    it("drops the destination when another carrier is chosen", async () => {
+        const checkout = ready();
+        mockFetch([PICKUP, FLATRATE]);
+        await checkout.estimateShipping();
+        checkout.selectMethod(PICKUP);
+        checkout.setCarrierDestination(DESTINATION);
+
+        checkout.selectMethod(FLATRATE);
+
+        expect(checkout.carrierDestination).toBeNull();
+    });
+
+    it("takes the payment methods down when the shopper switches to a carrier needing a destination", async () => {
+        const checkout = ready();
+        mockFetch([PICKUP, FLATRATE]);
+        await checkout.estimateShipping();
+        mockFetch(SAVE_RESPONSE);
+        await checkout.saveShipping();
+        expect(checkout.paymentMethods).toHaveLength(1);
+
+        checkout.selectMethod(PICKUP);
+        await nextTick();
+
+        expect(checkout.paymentMethods).toEqual([]);
+    });
+
+    it("does not restore a quote that was shipping through a carrier renderer", () => {
+        const checkout = useCheckout();
+        checkout.initPublic({ shippingRenderers: { instore: { component: "https://shop.test/pickup.js" } } });
+        checkout.applyPrivate({
+            ...GUEST_CONFIG,
+            shipping: {
+                address: { ...COMPLETE, street: ["900 Store Row"] },
+                method: { carrier_code: "instore", method_code: "pickup" },
+                email: "ada@shop.test",
+            },
+        });
+
+        expect(checkout.shippingAddress.street[0]).toBe("");
+        expect(checkout.selectedMethod).toBeNull();
+    });
+
+    it("withdraws a renderer that failed and lists its methods no more", async () => {
+        const checkout = ready();
+        mockFetch([PICKUP, FLATRATE]);
+        await checkout.estimateShipping();
+        checkout.selectMethod(PICKUP);
+
+        checkout.withdrawShippingRenderer("instore");
+
+        expect(checkout.shippingRenderers).toEqual({});
+        expect(checkout.shippingMethods.map((m) => m.carrier_code)).toEqual(["flatrate"]);
+        expect(checkout.selectedMethod?.carrier_code).toBe("flatrate");
+    });
+});
