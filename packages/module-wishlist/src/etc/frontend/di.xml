@@ -20,6 +20,7 @@
                     <item name="label" xsi:type="string" translate="true">My Wish List</item>
                     <item name="icon" xsi:type="string">heart</item>
                     <item name="counter" xsi:type="object">MageObsidian\Wishlist\Model\AccountNavCounter\Wishlist\Proxy</item>
+                    <item name="config" xsi:type="string">wishlist/general/active</item>
                     <item name="sortOrder" xsi:type="string">35</item>
                 </item>
             </argument>

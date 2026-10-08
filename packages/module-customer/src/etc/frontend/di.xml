@@ -43,6 +43,7 @@
                     <item name="match" xsi:type="string">newsletter_manage</item>
                     <item name="label" xsi:type="string" translate="true">Newsletter Subscriptions</item>
                     <item name="icon" xsi:type="string">envelope</item>
+                    <item name="config" xsi:type="string">newsletter/general/active</item>
                     <item name="sortOrder" xsi:type="string">50</item>
                 </item>
             </argument>

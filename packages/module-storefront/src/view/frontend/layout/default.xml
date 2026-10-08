@@ -45,7 +45,8 @@
              suppressed, so it is re-added here to give the contact page an entry
              point in the footer. -->
         <referenceBlock name="footer_links">
-            <block class="Magento\Framework\View\Element\Html\Link\Current" name="contact-us-link">
+            <block class="Magento\Framework\View\Element\Html\Link\Current" name="contact-us-link"
+                   ifconfig="contact/contact/enabled">
                 <arguments>
                     <argument name="label" xsi:type="string" translate="true">Contact Us</argument>
                     <argument name="path" xsi:type="string">contact</argument>

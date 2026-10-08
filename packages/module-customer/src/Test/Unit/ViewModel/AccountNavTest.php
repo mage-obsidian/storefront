@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace MageObsidian\Customer\Test\Unit\ViewModel;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Request\Http;
 use Magento\Framework\UrlInterface;
 use MageObsidian\Customer\Api\AccountNavCounterInterface;
@@ -35,7 +36,7 @@ class AccountNavTest extends TestCase
         }
     }
 
-    private function buildViewModel(string $fullActionName, ?array $links = null): AccountNav
+    private function buildViewModel(string $fullActionName, ?array $links = null, array $flags = []): AccountNav
     {
         $url = $this->createMock(UrlInterface::class);
         $url->method('getUrl')->willReturnCallback(static fn (string $route): string => '/' . $route);
@@ -43,7 +44,10 @@ class AccountNavTest extends TestCase
         $request = $this->createMock(Http::class);
         $request->method('getFullActionName')->willReturn($fullActionName);
 
-        return new AccountNav($url, $request, $links ?? self::LINKS);
+        $config = $this->createMock(ScopeConfigInterface::class);
+        $config->method('isSetFlag')->willReturnCallback(static fn (string $path): bool => $flags[$path] ?? true);
+
+        return new AccountNav($url, $request, $config, $links ?? self::LINKS);
     }
 
     public function testReturnsInjectedLinksWithUrlAndLabel(): void
@@ -147,5 +151,33 @@ class AccountNavTest extends TestCase
         ])->getLinks();
 
         $this->assertNull($links[0]['count']);
+    }
+
+    public function testDropsALinkWhoseFeatureIsSwitchedOff(): void
+    {
+        $links = $this->buildViewModel('cms_index_index', [
+            'orders' => ['route' => 'sales/order/history', 'label' => 'Orders'],
+            'newsletter' => ['route' => 'newsletter/manage', 'label' => 'Newsletter', 'config' => 'newsletter/general/active'],
+        ], ['newsletter/general/active' => false])->getLinks();
+
+        $this->assertSame(['orders'], array_column($links, 'id'));
+    }
+
+    public function testKeepsALinkWhoseFeatureIsSwitchedOn(): void
+    {
+        $links = $this->buildViewModel('cms_index_index', [
+            'newsletter' => ['route' => 'newsletter/manage', 'label' => 'Newsletter', 'config' => 'newsletter/general/active'],
+        ], ['newsletter/general/active' => true])->getLinks();
+
+        $this->assertSame(['newsletter'], array_column($links, 'id'));
+    }
+
+    public function testAnUngatedLinkIsNeverAskedAboutConfiguration(): void
+    {
+        $links = $this->buildViewModel('cms_index_index', [
+            'orders' => ['route' => 'sales/order/history', 'label' => 'Orders'],
+        ], ['anything' => false])->getLinks();
+
+        $this->assertSame(['orders'], array_column($links, 'id'));
     }
 }

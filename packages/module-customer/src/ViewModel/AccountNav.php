@@ -10,9 +10,11 @@ declare(strict_types=1);
 
 namespace MageObsidian\Customer\ViewModel;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Request\Http;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
+use Magento\Store\Model\ScopeInterface;
 use MageObsidian\Customer\Api\AccountNavCounterInterface;
 
 /**
@@ -25,12 +27,14 @@ class AccountNav implements ArgumentInterface
     /**
      * @param UrlInterface $url
      * @param Http $request
+     * @param ScopeConfigInterface $scopeConfig
      * @param array $links Account-nav link defs keyed by id
-     *                     (route/match/label/sortOrder/icon/counter)
+     *                     (route/match/label/sortOrder/icon/counter/config)
      */
     public function __construct(
         private readonly UrlInterface $url,
         private readonly Http $request,
+        private readonly ScopeConfigInterface $scopeConfig,
         private readonly array $links = []
     ) {
     }
@@ -46,7 +50,7 @@ class AccountNav implements ArgumentInterface
 
         $items = [];
         foreach ($this->links as $id => $link) {
-            if (empty($link['route'])) {
+            if (empty($link['route']) || !$this->isEnabled($link)) {
                 continue;
             }
             $items[] = [
@@ -72,6 +76,12 @@ class AccountNav implements ArgumentInterface
             ],
             $items
         );
+    }
+
+    private function isEnabled(array $link): bool
+    {
+        return empty($link['config'])
+            || $this->scopeConfig->isSetFlag((string)$link['config'], ScopeInterface::SCOPE_STORE);
     }
 
     /**
