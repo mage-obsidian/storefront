@@ -40,6 +40,9 @@ export default defineConfig({
             "MageObsidian_Storefront::js/slider": fileURLToPath(
                 new URL("./src/view/frontend/web/js/slider.ts", import.meta.url),
             ),
+            "MageObsidian_Storefront::js/consent": fileURLToPath(
+                new URL("./src/view/frontend/web/js/consent.ts", import.meta.url),
+            ),
             "MageObsidian_Storefront::js/deferred-scripts": fileURLToPath(
                 new URL("./src/view/frontend/web/js/deferred-scripts.ts", import.meta.url),
             ),

@@ -3,7 +3,15 @@
 // SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
 // SPDX-License-Identifier: MIT
 import { beforeEach, describe, expect, it } from "vitest";
-import { mayReport, report, startAnalytics, type AnalyticsConfig } from "./analytics.ts";
+import {
+    advertise,
+    mayAdvertise,
+    mayReport,
+    report,
+    startAnalytics,
+    type AdsConfig,
+    type AnalyticsConfig,
+} from "./analytics.ts";
 
 const CONFIG: AnalyticsConfig = {
     isCookieRestrictionModeEnabled: false,
@@ -145,6 +153,123 @@ describe("startAnalytics", () => {
 
     it("survives a payload it cannot read", () => {
         document.body.innerHTML = '<div data-analytics="{oops"></div>';
+
+        expect(() => startAnalytics(document, window)).not.toThrow();
+    });
+});
+
+const ADS: AdsConfig = {
+    isCookieRestrictionModeEnabled: false,
+    currentWebsite: 1,
+    cookieName: "user_allowed_save_cookie",
+    conversionId: "AW-123456",
+    src: "https://www.googletagmanager.com/gtag/js?id=AW-123456",
+};
+
+const declareAds = (config: Partial<AdsConfig>, attributes = ""): void => {
+    const payload = JSON.stringify({ ...ADS, ...config }).replace(/"/g, "&quot;");
+    document.body.innerHTML = `<div data-google-ads="${payload}" ${attributes} hidden></div>`;
+};
+
+const queued = (): unknown[][] => (holder().dataLayer ?? []).map((entry) => Array.from(entry as ArrayLike<unknown>));
+
+describe("mayAdvertise", () => {
+    it("advertises when the store asks for no consent", () => {
+        expect(mayAdvertise(ADS)).toBe(true);
+    });
+
+    it("waits for consent when the store restricts cookies", () => {
+        expect(mayAdvertise({ ...ADS, isCookieRestrictionModeEnabled: true })).toBe(false);
+    });
+
+    it("advertises once this website has been accepted", () => {
+        document.cookie = `user_allowed_save_cookie=${encodeURIComponent('{"1":1}')}; path=/`;
+
+        expect(mayAdvertise({ ...ADS, isCookieRestrictionModeEnabled: true })).toBe(true);
+    });
+
+    it("says nothing without a conversion id", () => {
+        expect(mayAdvertise({ ...ADS, conversionId: "" })).toBe(false);
+    });
+});
+
+describe("advertise", () => {
+    it("queues the tag for the configured id", () => {
+        advertise(ADS, window);
+
+        expect(queued()).toEqual([expect.arrayContaining(["js"]), ["config", "AW-123456"]]);
+    });
+
+    it("reports the conversion with the order value and currency", () => {
+        advertise(
+            {
+                ...ADS,
+                conversion: { sendTo: "AW-123456/label", value: 99.5, currency: "USD", transactionId: "000000123" },
+            },
+            window,
+        );
+
+        expect(queued()).toContainEqual([
+            "event",
+            "conversion",
+            { send_to: "AW-123456/label", value: 99.5, currency: "USD", transaction_id: "000000123" },
+        ]);
+    });
+
+    it("reports no conversion on a page that placed no order", () => {
+        advertise(ADS, window);
+
+        expect(queued().some((entry) => entry[1] === "conversion")).toBe(false);
+    });
+
+    it("does not start the queue twice when analytics already did", () => {
+        report(CONFIG, window);
+        advertise(ADS, window);
+
+        expect(queued().filter((entry) => entry[0] === "js")).toHaveLength(1);
+    });
+});
+
+describe("startAnalytics for Google Ads", () => {
+    it("fetches the library only once the shopper has done something", () => {
+        declareAds({});
+
+        startAnalytics(document, window);
+        expect(document.head.querySelectorAll('script[src*="AW-123456"]')).toHaveLength(0);
+
+        window.dispatchEvent(new Event("pointerdown"));
+
+        expect(document.head.querySelectorAll('script[src*="AW-123456"]')).toHaveLength(1);
+    });
+
+    it("fetches it straight away where the page declares a bypass", () => {
+        declareAds({}, 'data-until="now" data-reason="a purchase that waits is never reported"');
+
+        startAnalytics(document, window);
+
+        expect(document.head.querySelectorAll('script[src*="AW-123456"]')).toHaveLength(1);
+    });
+
+    it("loads and queues nothing when consent is missing", () => {
+        declareAds({ isCookieRestrictionModeEnabled: true }, 'data-until="now"');
+
+        startAnalytics(document, window);
+
+        expect(holder().dataLayer).toBeUndefined();
+        expect(document.head.querySelectorAll("script")).toHaveLength(0);
+    });
+
+    it("does not fetch the same library twice", () => {
+        declareAds({}, 'data-until="now"');
+
+        startAnalytics(document, window);
+        startAnalytics(document, window);
+
+        expect(document.head.querySelectorAll('script[src*="AW-123456"]')).toHaveLength(1);
+    });
+
+    it("survives a payload it cannot read", () => {
+        document.body.innerHTML = '<div data-google-ads="{oops"></div>';
 
         expect(() => startAnalytics(document, window)).not.toThrow();
     });

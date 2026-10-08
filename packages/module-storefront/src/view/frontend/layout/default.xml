@@ -45,6 +45,12 @@
              suppressed, so it is re-added here to give the contact page an entry
              point in the footer. -->
         <referenceBlock name="footer_links">
+            <block class="Magento\Framework\View\Element\Html\Link\Current" name="rss-link" ifconfig="rss/config/active">
+                <arguments>
+                    <argument name="label" xsi:type="string" translate="true">RSS</argument>
+                    <argument name="path" xsi:type="string">rss</argument>
+                </arguments>
+            </block>
             <block class="Magento\Framework\View\Element\Html\Link\Current" name="contact-us-link"
                    ifconfig="contact/contact/enabled">
                 <arguments>
@@ -85,8 +91,20 @@
              interacts. The name is not ours to choose — Magento's success-page
              observer looks the block up by it to hand over the order. -->
         <referenceBlock name="head.additional">
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="head_rss"
+                   template="Magento_Rss::head.twig" ifconfig="rss/config/active">
+                <arguments>
+                    <argument name="rss_links" xsi:type="object">MageObsidian\Storefront\ViewModel\Head\RssLinks</argument>
+                </arguments>
+            </block>
             <block class="Magento\GoogleGtag\Block\Ga" name="google_gtag_analytics" as="google_gtag_analytics"
                    template="Magento_GoogleGtag::ga.twig" ifconfig="google/gtag/analytics4/active"/>
+            <block class="MageObsidian\ModernFrontend\Block\Template" name="gtag_google_adwords" as="gtag_google_adwords"
+                   template="Magento_GoogleGtag::ads.twig" ifconfig="google/gtag/adwords/active">
+                <arguments>
+                    <argument name="google_ads" xsi:type="object">MageObsidian\Storefront\ViewModel\GoogleAds</argument>
+                </arguments>
+            </block>
         </referenceBlock>
 
         <!-- Head links Magento has no page asset for: a canonical on the pages

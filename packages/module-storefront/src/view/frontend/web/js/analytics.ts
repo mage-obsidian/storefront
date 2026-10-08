@@ -13,6 +13,7 @@
  * one that declares otherwise, because a purchase that waits for an interaction
  * is a purchase that is never reported.
  */
+import { hasConsent } from "MageObsidian_Storefront::js/consent";
 import { whenReady, type DeferUntil } from "MageObsidian_Storefront::js/deferred-scripts";
 
 export interface OrderTracking {
@@ -33,41 +34,41 @@ export interface AnalyticsConfig {
     googleAnalyticsAvailable: boolean;
 }
 
+export interface AdsConversion {
+    sendTo: string;
+    value: number;
+    currency: string;
+    transactionId: string;
+}
+
+export interface AdsConfig {
+    isCookieRestrictionModeEnabled: boolean;
+    currentWebsite: number;
+    cookieName: string;
+    conversionId: string;
+    src: string;
+    conversion?: AdsConversion;
+}
+
 type Gtag = (...args: unknown[]) => void;
 type Holder = Window & { dataLayer?: unknown[]; gtag?: Gtag };
 
 const SELECTOR = "[data-analytics]";
+const ADS_SELECTOR = "[data-google-ads]";
 const LIBRARY = "https://www.googletagmanager.com/gtag/js?id=";
 
-const cookie = (name: string, doc: Document): string | null => {
-    const match = doc.cookie.match(new RegExp(`(?:^|; )${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}=([^;]*)`));
-    return match ? decodeURIComponent(match[1]) : null;
-};
-
-/**
- * Magento's rule, not one of our own: with cookie restriction on, nothing is
- * reported until the shopper has accepted for this website.
- */
 export function mayReport(config: AnalyticsConfig, doc: Document = document): boolean {
     if (!config.googleAnalyticsAvailable || !config.pageTrackingData?.measurementId) {
         return false;
     }
-    if (!config.isCookieRestrictionModeEnabled) {
-        return true;
-    }
-
-    const accepted = cookie(config.cookieName, doc);
-    if (!accepted) {
-        return false;
-    }
-    try {
-        return (JSON.parse(accepted) as Record<string, number>)[config.currentWebsite] === 1;
-    } catch {
-        return false;
-    }
+    return hasConsent(config, doc);
 }
 
-export function report(config: AnalyticsConfig, view: Window = window): void {
+export function mayAdvertise(config: AdsConfig, doc: Document = document): boolean {
+    return Boolean(config.conversionId) && hasConsent(config, doc);
+}
+
+function queueOf(view: Window): Gtag {
     const holder = view as Holder;
     holder.dataLayer = holder.dataLayer ?? [];
     const gtag: Gtag =
@@ -76,8 +77,44 @@ export function report(config: AnalyticsConfig, view: Window = window): void {
             holder.dataLayer?.push(args);
         };
     holder.gtag = gtag;
+    return gtag;
+}
 
-    gtag("js", new Date());
+function startQueue(gtag: Gtag, view: Window): void {
+    const started = ((view as Holder).dataLayer ?? []).some((entry) => (entry as ArrayLike<unknown>)[0] === "js");
+    if (!started) {
+        gtag("js", new Date());
+    }
+}
+
+function fetchLibrary(doc: Document, src: string): void {
+    if (Array.from(doc.querySelectorAll("script")).some((script) => script.getAttribute("src") === src)) {
+        return;
+    }
+    const script = doc.createElement("script");
+    script.async = true;
+    script.src = src;
+    doc.head.appendChild(script);
+}
+
+export function advertise(config: AdsConfig, view: Window = window): void {
+    const gtag = queueOf(view);
+    startQueue(gtag, view);
+    gtag("config", config.conversionId);
+
+    if (config.conversion) {
+        gtag("event", "conversion", {
+            send_to: config.conversion.sendTo,
+            value: config.conversion.value,
+            currency: config.conversion.currency,
+            transaction_id: config.conversion.transactionId,
+        });
+    }
+}
+
+export function report(config: AnalyticsConfig, view: Window = window): void {
+    const gtag = queueOf(view);
+    startQueue(gtag, view);
     gtag("config", config.pageTrackingData.measurementId, { anonymize_ip: true });
 
     const order = config.ordersTrackingData?.orders?.[0];
@@ -109,17 +146,26 @@ export function startAnalytics(root: ParentNode = document, view: Window = windo
         const until = (element.getAttribute("data-until") as DeferUntil | null) ?? "interaction";
         whenReady(
             until,
-            () => {
-                if (doc.querySelector(`script[src^="${LIBRARY}"]`)) {
-                    return;
-                }
-                const script = doc.createElement("script");
-                script.async = true;
-                script.src = LIBRARY + encodeURIComponent(config.pageTrackingData.measurementId);
-                doc.head.appendChild(script);
-            },
+            () => fetchLibrary(doc, LIBRARY + encodeURIComponent(config.pageTrackingData.measurementId)),
             view,
         );
+    });
+
+    root.querySelectorAll<HTMLElement>(ADS_SELECTOR).forEach((element) => {
+        let config: AdsConfig;
+        try {
+            config = JSON.parse(element.getAttribute("data-google-ads") ?? "") as AdsConfig;
+        } catch {
+            return;
+        }
+        if (!mayAdvertise(config, doc)) {
+            return;
+        }
+
+        advertise(config, view);
+
+        const until = (element.getAttribute("data-until") as DeferUntil | null) ?? "interaction";
+        whenReady(until, () => fetchLibrary(doc, config.src), view);
     });
 }
 
