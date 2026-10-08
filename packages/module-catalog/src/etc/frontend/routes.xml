@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+ This file is part of the MageObsidian - Catalog project.
+
+ SPDX-FileCopyrightText: 2026 Jeanmarcos Juarez
+ SPDX-License-Identifier: MIT
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/routes.xsd">
+    <router id="standard">
+        <route id="mageobsidian_catalog" frontName="mageobsidian-catalog">
+            <module name="MageObsidian_Catalog"/>
+        </route>
+    </router>
+</config>

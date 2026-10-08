@@ -50,6 +50,12 @@ export default defineConfig({
             ),
             // Intra-module specifier (kept as Vendor_Module::path so the resolver's
             // inheritance applies at build time) pointed at the real source here.
+            "MageObsidian_Catalog::js/recently": fileURLToPath(
+                new URL("./src/view/frontend/web/js/recently.ts", import.meta.url),
+            ),
+            "MageObsidian_ModernFrontend::js/customer-data": fileURLToPath(
+                new URL("../module-storefront/src/Test/Js/stubs/customerData.ts", import.meta.url),
+            ),
             "MageObsidian_Catalog::js/product-options": fileURLToPath(
                 new URL("./src/view/frontend/web/js/product-options.ts", import.meta.url),
             ),

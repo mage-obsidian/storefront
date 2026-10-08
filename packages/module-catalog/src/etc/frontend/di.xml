@@ -20,6 +20,19 @@
                 type="MageObsidian\Catalog\Plugin\CatalogWidget\RenderProductListWidget"/>
     </type>
 
+    <type name="Magento\Catalog\Block\Product\Widget\NewWidget">
+        <plugin name="mageObsidian_swapNewProductsTemplate"
+                type="MageObsidian\Catalog\Plugin\Widget\SwapWidgetTemplate"/>
+    </type>
+    <type name="Magento\Catalog\Block\Widget\RecentlyViewed">
+        <plugin name="mageObsidian_swapRecentlyViewedTemplate"
+                type="MageObsidian\Catalog\Plugin\Widget\SwapWidgetTemplate"/>
+    </type>
+    <type name="Magento\Catalog\Block\Widget\RecentlyCompared">
+        <plugin name="mageObsidian_swapRecentlyComparedTemplate"
+                type="MageObsidian\Catalog\Plugin\Widget\SwapWidgetTemplate"/>
+    </type>
+
     <!-- Fixed product tax is looked up once per product by the platform, so a
          listing asks the database once per card for rows that differ only by
          the product. The ids a collection loaded are recorded on load and the

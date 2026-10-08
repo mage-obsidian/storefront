@@ -4,9 +4,6 @@
 // SPDX-License-Identifier: MIT
 import { getFormKey } from "MageObsidian_Storefront::js/form-key-provider";
 
-export const RECENTLY_VIEWED_KEY = "mage-obsidian-recently-viewed";
-
-const RECENTLY_VIEWED_CAP = 20;
 const MARKER = "[data-report-beacon]";
 const IDLE_TIMEOUT_MS = 4000;
 const FALLBACK_DELAY_MS = 200;
@@ -18,23 +15,6 @@ type Idle = (task: () => void) => void;
 export interface Transport {
     beacon?: Beacon;
     request?: Request;
-}
-
-export function remember(productId: string, storage?: Storage): void {
-    try {
-        const target = storage ?? window.localStorage;
-        let ids: string[] = [];
-        try {
-            const parsed: unknown = JSON.parse(target.getItem(RECENTLY_VIEWED_KEY) ?? "[]");
-            ids = Array.isArray(parsed) ? parsed.map(String) : [];
-        } catch {
-            ids = [];
-        }
-        const next = [productId, ...ids.filter((id) => id !== productId)].slice(0, RECENTLY_VIEWED_CAP);
-        target.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(next));
-    } catch {
-        return;
-    }
 }
 
 function defaultBeacon(url: string, body: FormData): boolean {
@@ -55,7 +35,6 @@ function sendProductView(marker: HTMLElement, transport: Required<Transport>): v
     if (!url || !productId) {
         return;
     }
-    remember(productId);
     const body = new FormData();
     body.set("product_id", productId);
     body.set("form_key", getFormKey());
