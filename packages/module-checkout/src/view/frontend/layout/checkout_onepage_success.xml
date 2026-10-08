@@ -29,7 +29,12 @@
         </referenceBlock>
         <referenceContainer name="content">
             <block class="Magento\Checkout\Block\Onepage\Success" name="checkout.success"
-                   template="Magento_Checkout::checkout/success.twig" cacheable="false"/>
+                   template="Magento_Checkout::checkout/success.twig" cacheable="false">
+                <block class="Magento\Checkout\Block\Onepage\Success" name="checkout.success.print.button"
+                       template="Magento_Checkout::checkout/print-button.twig" cacheable="false"/>
+            </block>
+            <block class="Magento\Checkout\Block\Registration" name="checkout.registration"
+                   template="Magento_Checkout::checkout/registration.twig" cacheable="false"/>
         </referenceContainer>
     </body>
 </page>
