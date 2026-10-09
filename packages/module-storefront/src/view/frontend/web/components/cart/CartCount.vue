@@ -45,7 +45,7 @@ const syncing = computed(() => activity.isBusy(CART_DOMAIN));
             class="cart-count__badge mo-badge"
             aria-hidden="true"
         ><span :style="{ translate: digitNudge(count) }">{{ count }}</span></span>
-        <span class="sr-only" role="status" aria-live="polite">
+        <span class="sr-only" aria-live="polite">
             {{ syncing ? syncingLabel : `${count} ${label}` }}
         </span>
     </span>

@@ -18,8 +18,9 @@ describe("CartCount", () => {
         const wrapper = mount(CartCount, { props: { label: "in your bag" } });
 
         expect(wrapper.get(".cart-count").text()).toContain("2");
-        const live = wrapper.get('[role="status"]');
+        const live = wrapper.get('[aria-live="polite"]');
         expect(live.attributes("aria-live")).toBe("polite");
+        expect(live.attributes("role")).toBeUndefined();
         expect(live.text()).toContain("2");
     });
 
@@ -43,7 +44,7 @@ describe("CartCount", () => {
         const wrapper = mount(CartCount);
 
         expect(wrapper.find("span[aria-hidden='true']").exists()).toBe(false);
-        expect(wrapper.get("[role='status']").text()).toBe("0 in your bag");
+        expect(wrapper.get("[aria-live='polite']").text()).toBe("0 in your bag");
     });
 
     it("floats the badge over the icon so the header never reflows", () => {
@@ -100,7 +101,7 @@ describe("CartCount while the cart is syncing", () => {
         await events.dispatch("cart_add_before", { cancelled: false });
         await wrapper.vm.$nextTick();
 
-        expect(wrapper.get("[role='status']").text()).toBe("Updating your bag");
+        expect(wrapper.get("[aria-live='polite']").text()).toBe("Updating your bag");
 
         await close();
     });
