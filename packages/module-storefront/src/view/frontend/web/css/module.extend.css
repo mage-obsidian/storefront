@@ -801,8 +801,13 @@
   max-width: var(--shell-max, 90rem);
 }
 
+#root {
+  overflow-x: clip;
+}
+
 [data-content-type="row"][data-appearance="full-bleed"] {
-  width: 100%;
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
 }
 
 /* A column group is a flex row of percentage-width columns; the widths
