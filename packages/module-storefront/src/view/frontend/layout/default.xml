@@ -160,7 +160,7 @@
                    name="obsidian.navigation_retention"/>
         </referenceBlock>
 
-        <referenceContainer name="main.content">
+        <referenceContainer name="page.bottom.container">
             <block class="MageObsidian\Storefront\Block\NavigationMarker"
                    name="obsidian.navigation_marker" after="-"/>
         </referenceContainer>

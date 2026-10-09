@@ -17,7 +17,7 @@ class NavigationContinuity implements ArgumentInterface
 {
     public const string CONFIG_RETAIN = 'mage_obsidian/navigation/retain';
 
-    private const string MARKER_ID = 'obsidian-main-end';
+    private const string MARKER_ID = 'obsidian-page-end';
 
     public function __construct(
         private readonly ScopeConfigInterface $scopeConfig

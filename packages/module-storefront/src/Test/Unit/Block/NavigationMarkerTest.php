@@ -27,8 +27,8 @@ class NavigationMarkerTest extends TestCase
     public function testEmitsAnEmptyHiddenElementCarryingTheMarkerId(): void
     {
         $this->assertSame(
-            '<div id="obsidian-main-end" hidden></div>',
-            $this->render(enabled: true, markerId: 'obsidian-main-end')
+            '<div id="obsidian-page-end" hidden></div>',
+            $this->render(enabled: true, markerId: 'obsidian-page-end')
         );
     }
 
@@ -42,7 +42,7 @@ class NavigationMarkerTest extends TestCase
 
     public function testEmitsNothingWhenRetentionIsOff(): void
     {
-        $this->assertSame('', $this->render(enabled: false, markerId: 'obsidian-main-end'));
+        $this->assertSame('', $this->render(enabled: false, markerId: 'obsidian-page-end'));
     }
 
     private function render(bool $enabled, string $markerId): string

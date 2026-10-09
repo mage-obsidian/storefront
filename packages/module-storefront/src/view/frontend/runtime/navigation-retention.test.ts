@@ -10,7 +10,7 @@ const source = readFileSync(join(import.meta.dirname, "navigation-retention.head
 
 type Activation = { from: object | null; navigationType: string } | null;
 
-function run(activation: Activation, marker: string | null = "obsidian-main-end", withApi = true): void {
+function run(activation: Activation, marker: string | null = "obsidian-page-end", withApi = true): void {
     const script = document.createElement("script");
     if (marker !== null) {
         script.setAttribute("data-marker", marker);
@@ -32,7 +32,7 @@ describe("navigation retention", () => {
 
         const [link] = expectLinks();
         expect(expectLinks()).toHaveLength(1);
-        expect(link.getAttribute("href")).toBe("#obsidian-main-end");
+        expect(link.getAttribute("href")).toBe("#obsidian-page-end");
         expect(link.getAttribute("blocking")).toBe("render");
     });
 
@@ -61,7 +61,7 @@ describe("navigation retention", () => {
     });
 
     it("does nothing in a browser without the Navigation API", () => {
-        run({ from: {}, navigationType: "push" }, "obsidian-main-end", false);
+        run({ from: {}, navigationType: "push" }, "obsidian-page-end", false);
 
         expect(expectLinks()).toHaveLength(0);
     });
