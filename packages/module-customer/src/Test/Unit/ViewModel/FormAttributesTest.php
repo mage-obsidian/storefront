@@ -16,7 +16,6 @@ use Magento\Customer\Api\Data\OptionInterface;
 use Magento\Customer\Helper\Address as AddressHelper;
 use Magento\Customer\Model\Options;
 use Magento\Directory\Helper\Data as DirectoryHelper;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Locale\ResolverInterface;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use MageObsidian\Customer\ViewModel\FormAttributes;
@@ -43,12 +42,13 @@ class FormAttributesTest extends TestCase
 
     private function metadata(string $interface, array $attributes): CustomerMetadataInterface|AddressMetadataInterface
     {
+        foreach ($attributes as $code => $attribute) {
+            $attribute->method('getAttributeCode')->willReturn($code);
+        }
+
         $metadata = $this->createMock($interface);
-        $metadata->method('getAttributeMetadata')->willReturnCallback(
-            static function (string $code) use ($attributes) {
-                return $attributes[$code] ?? throw new NoSuchEntityException(__('No such attribute.'));
-            }
-        );
+        $metadata->expects($this->never())->method('getAttributeMetadata');
+        $metadata->expects($this->atMost(1))->method('getAllAttributesMetadata')->willReturn(array_values($attributes));
 
         return $metadata;
     }
@@ -245,6 +245,23 @@ class FormAttributesTest extends TestCase
         $this->assertSame(['visible' => false, 'required' => false, 'options' => []], $config['fields']['fax']);
         $this->assertSame(3, $config['streetLines']);
         $this->assertSame(['IE'], $config['optionalZipCountries']);
+    }
+
+    public function testEveryFieldIsDescribedFromASingleReadOfEachMetadata(): void
+    {
+        $gender = $this->attribute(true, false);
+        $gender->method('getOptions')->willReturn([]);
+        $viewModel = $this->viewModel(
+            ['prefix' => $this->attribute(true, false), 'dob' => $this->attribute(true, false), 'gender' => $gender],
+            ['telephone' => $this->attribute(true, false), 'street' => $this->attribute(true, true, 3)]
+        );
+
+        $viewModel->customerFields();
+        $viewModel->genderOptions();
+        $viewModel->checkoutConfig();
+        $viewModel->addressField('telephone');
+
+        $this->assertSame(3, $viewModel->streetLines());
     }
 
     private function option(string $value, string $label): OptionInterface

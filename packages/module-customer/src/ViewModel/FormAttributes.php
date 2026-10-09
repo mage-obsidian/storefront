@@ -15,10 +15,10 @@ use DateTimeZone;
 use IntlDateFormatter;
 use Magento\Customer\Api\AddressMetadataInterface;
 use Magento\Customer\Api\CustomerMetadataInterface;
+use Magento\Customer\Api\Data\AttributeMetadataInterface;
 use Magento\Customer\Helper\Address as AddressHelper;
 use Magento\Customer\Model\Options;
 use Magento\Directory\Helper\Data as DirectoryHelper;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Locale\ResolverInterface;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
@@ -29,6 +29,8 @@ class FormAttributes implements ArgumentInterface
     private const ADDRESS_FIELDS = ['prefix', 'middlename', 'suffix', 'company', 'telephone', 'fax', 'vat_id'];
     private const CUSTOMER_FIELDS = ['prefix', 'middlename', 'suffix', 'dob', 'gender', 'taxvat'];
     private const DEFAULT_STREET_LINES = 2;
+
+    private array $attributes = [];
 
     public function __construct(
         private readonly CustomerMetadataInterface $customerMetadata,
@@ -87,11 +89,7 @@ class FormAttributes implements ArgumentInterface
 
     public function streetLines(): int
     {
-        try {
-            $lines = $this->addressMetadata->getAttributeMetadata('street')->getMultilineCount();
-        } catch (NoSuchEntityException) {
-            return self::DEFAULT_STREET_LINES;
-        }
+        $lines = (int)$this->attribute($this->addressMetadata, 'street')?->getMultilineCount();
 
         return $lines > 0 ? $lines : self::DEFAULT_STREET_LINES;
     }
@@ -127,14 +125,8 @@ class FormAttributes implements ArgumentInterface
 
     public function genderOptions(): array
     {
-        try {
-            $options = $this->customerMetadata->getAttributeMetadata('gender')->getOptions();
-        } catch (NoSuchEntityException) {
-            return [];
-        }
-
         $pairs = [];
-        foreach ($options as $option) {
+        foreach ($this->attribute($this->customerMetadata, 'gender')?->getOptions() ?? [] as $option) {
             if (trim((string)$option->getValue()) === '') {
                 continue;
             }
@@ -146,9 +138,8 @@ class FormAttributes implements ArgumentInterface
 
     private function describe(CustomerMetadataInterface|AddressMetadataInterface $metadata, string $code): array
     {
-        try {
-            $attribute = $metadata->getAttributeMetadata($code);
-        } catch (NoSuchEntityException) {
+        $attribute = $this->attribute($metadata, $code);
+        if ($attribute === null) {
             return ['visible' => false, 'required' => false, 'options' => []];
         }
 
@@ -159,6 +150,19 @@ class FormAttributes implements ArgumentInterface
             'required' => $visible && (bool)$attribute->isRequired(),
             'options' => $visible ? $this->optionsFor($code) : [],
         ];
+    }
+
+    private function attribute(CustomerMetadataInterface|AddressMetadataInterface $metadata, string $code): ?AttributeMetadataInterface
+    {
+        $key = spl_object_id($metadata);
+        if (!isset($this->attributes[$key])) {
+            $this->attributes[$key] = [];
+            foreach ($metadata->getAllAttributesMetadata() as $attribute) {
+                $this->attributes[$key][$attribute->getAttributeCode()] = $attribute;
+            }
+        }
+
+        return $this->attributes[$key][$code] ?? null;
     }
 
     private function optionsFor(string $code): array
