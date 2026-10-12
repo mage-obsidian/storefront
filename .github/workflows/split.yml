@@ -23,6 +23,7 @@ jobs:
           - module-downloadable
           - module-gift-message
           - module-instant-purchase
+          - module-inventory-in-store-pickup
           - module-multishipping
           - module-persistent
           - module-product-alert
