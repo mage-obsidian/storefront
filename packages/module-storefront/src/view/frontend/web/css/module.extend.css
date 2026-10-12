@@ -1179,6 +1179,8 @@
   }
 }
 
+#after-body-start { display: contents; }
+
 /* The banner that says an administrator is inside this customer's session. It
    sits above everything because it is not part of the shop: it is the only
    thing on the page that says whose session this is. */

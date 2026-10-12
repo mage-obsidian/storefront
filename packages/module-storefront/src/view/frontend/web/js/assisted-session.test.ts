@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
 // SPDX-License-Identifier: MIT
 import { beforeEach, describe, expect, it } from "vitest";
-import { noticeFor, renderNotice } from "./assisted-session.ts";
+import { PINNED_OFFSET, noticeFor, renderNotice, syncPinnedOffset, trackPinnedOffset } from "./assisted-session.ts";
 
 const banner = (): HTMLElement => {
     document.body.innerHTML = `
@@ -18,7 +18,15 @@ const text = (): string => document.querySelector("[data-assisted-session-text]"
 
 beforeEach(() => {
     document.body.innerHTML = "";
+    document.documentElement.style.removeProperty(PINNED_OFFSET);
 });
+
+const withHeight = (element: HTMLElement, height: number): HTMLElement => {
+    element.getBoundingClientRect = () => ({ height }) as DOMRect;
+    return element;
+};
+
+const offset = (): string => document.documentElement.style.getPropertyValue(PINNED_OFFSET);
 
 describe("noticeFor", () => {
     it("names the customer and the store the session belongs to", () => {
@@ -61,5 +69,57 @@ describe("renderNotice", () => {
     // An id of zero is not an administrator, and neither is an empty string.
     it("does not take an empty administrator for a real one", () => {
         expect(renderNotice(banner(), { adminUserId: "", websiteName: "Main" }, { fullname: "Ada" })).toBe(false);
+    });
+});
+
+describe("syncPinnedOffset", () => {
+    it("publishes the height of a shown banner so the pinned header sits below it", () => {
+        const element = withHeight(banner(), 44.4);
+        element.hidden = false;
+
+        syncPinnedOffset(element);
+
+        expect(offset()).toBe("44px");
+    });
+
+    it("clears the offset once the banner is hidden again", () => {
+        const element = withHeight(banner(), 44);
+        element.hidden = false;
+        syncPinnedOffset(element);
+
+        element.hidden = true;
+        syncPinnedOffset(element);
+
+        expect(offset()).toBe("");
+    });
+});
+
+describe("trackPinnedOffset", () => {
+    it("follows the banner when it wraps onto more lines", () => {
+        const element = withHeight(banner(), 44);
+        element.hidden = false;
+        let resized: () => void = () => undefined;
+        class FakeObserver {
+            constructor(callback: () => void) {
+                resized = callback;
+            }
+            observe(): void {}
+            unobserve(): void {}
+            disconnect(): void {}
+        }
+
+        trackPinnedOffset(element, document.documentElement, FakeObserver as unknown as typeof ResizeObserver);
+        expect(offset()).toBe("44px");
+
+        withHeight(element, 88);
+        resized();
+
+        expect(offset()).toBe("88px");
+    });
+
+    it("publishes nothing while the banner stays hidden", () => {
+        trackPinnedOffset(withHeight(banner(), 44), document.documentElement, undefined);
+
+        expect(offset()).toBe("");
     });
 });

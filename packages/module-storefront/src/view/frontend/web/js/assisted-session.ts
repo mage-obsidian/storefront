@@ -26,6 +26,7 @@ export interface AssistedSession {
 const BANNER = "[data-assisted-session]";
 const SECTION = "loggedAsCustomer";
 const CUSTOMER_SECTION = "customer";
+export const PINNED_OFFSET = "--obsidian-pinned-offset";
 
 export function noticeFor(session: AssistedSession, fullname: string, template: string): string {
     return template.replace("%1", fullname).replace("%2", session.websiteName ?? "");
@@ -60,6 +61,25 @@ export function renderNotice(
     return true;
 }
 
+export function syncPinnedOffset(banner: HTMLElement, target: HTMLElement = document.documentElement): void {
+    if (banner.hidden) {
+        target.style.removeProperty(PINNED_OFFSET);
+        return;
+    }
+    target.style.setProperty(PINNED_OFFSET, `${Math.round(banner.getBoundingClientRect().height)}px`);
+}
+
+export function trackPinnedOffset(
+    banner: HTMLElement,
+    target: HTMLElement = document.documentElement,
+    Observer: typeof ResizeObserver | undefined = globalThis.ResizeObserver,
+): void {
+    syncPinnedOffset(banner, target);
+    if (Observer) {
+        new Observer(() => syncPinnedOffset(banner, target)).observe(banner);
+    }
+}
+
 export async function watchAssistedSession(root: ParentNode = document): Promise<void> {
     const banner = root.querySelector<HTMLElement>(BANNER);
     if (!banner) {
@@ -75,7 +95,10 @@ export async function watchAssistedSession(root: ParentNode = document): Promise
             customerData.section(SECTION) as AssistedSession | undefined,
             customerData.section(CUSTOMER_SECTION) as { fullname?: string } | undefined,
         );
+        syncPinnedOffset(banner);
     };
+
+    trackPinnedOffset(banner);
 
     paint();
     // The banner ships empty on a cacheable page, so the sections arriving is
