@@ -67,16 +67,46 @@ describe("IdentificationStep", () => {
         expect(checkout.step).toBe("shipping");
     });
 
-    it("surfaces a sign-in link when an account already exists", async () => {
+    it("offers to sign in when an account already exists, before advancing", async () => {
         mockFetch(false);
         const wrapper = render();
         await wrapper.find("input[type=email]").setValue("ada@shop.test");
         await wrapper.find("form").trigger("submit");
         await new Promise((r) => setTimeout(r));
 
-        expect(wrapper.text()).toContain("account already exists");
-        expect(wrapper.find("a[href*='login']").exists()).toBe(true);
+        const notice = wrapper.find("[data-account-exists]");
+        expect(notice.text()).toContain("continue as guest");
+        expect(notice.find("a[href*='login']").exists()).toBe(true);
         expect(useCheckout().step).toBe("identification");
+    });
+
+    it("lets a shopper with an account continue as a guest", async () => {
+        mockFetch(false);
+        const wrapper = render();
+        await wrapper.find("input[type=email]").setValue("ada@shop.test");
+        await wrapper.find("form").trigger("submit");
+        await new Promise((r) => setTimeout(r));
+
+        await wrapper.find("[data-continue-as-guest]").trigger("click");
+
+        const checkout = useCheckout();
+        expect(checkout.email).toBe("ada@shop.test");
+        expect(checkout.step).toBe("shipping");
+    });
+
+    it("keeps an email with an account in the one-page checkout and says it can sign in", async () => {
+        mockFetch(false);
+        const wrapper = mount(IdentificationStep, {
+            props: { loginUrl: "https://shop.test/customer/account/login", hideAdvance: true },
+            global: { plugins: [pinia] },
+        });
+        await wrapper.find("input[type=email]").setValue("ada@shop.test");
+        await wrapper.find("input[type=email]").trigger("blur");
+        await new Promise((r) => setTimeout(r));
+
+        expect(useCheckout().email).toBe("ada@shop.test");
+        expect(wrapper.find("[data-account-exists]").exists()).toBe(true);
+        expect(wrapper.find("[data-continue-as-guest]").exists()).toBe(false);
     });
 
     it("offers the way in to a customer who already has an account", () => {

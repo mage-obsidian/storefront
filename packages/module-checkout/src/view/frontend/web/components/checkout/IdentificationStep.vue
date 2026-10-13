@@ -12,9 +12,9 @@ import { useCheckout } from "MageObsidian_Checkout::js/useCheckout";
 
 // First step of the guest flow: collect the email and continue. It runs Magento's
 // native availability check (customers/isEmailAvailable) — if an account already
-// exists, guest checkout would be rejected at order placement, so we surface a
-// sign-in link and block continuing instead of failing late. Logged-in shoppers
-// never reach this step (the store seeds straight to shipping).
+// exists, it offers to sign in and still lets the shopper continue as a guest, as
+// Luma does. Logged-in shoppers never reach this step (the store seeds straight
+// to shipping).
 interface IdentificationLabels {
     heading?: string;
     intro?: string;
@@ -24,6 +24,7 @@ interface IdentificationLabels {
     hasAccount?: string;
     accountExists?: string;
     signIn?: string;
+    continueAsGuest?: string;
 }
 
 const props = withDefaults(
@@ -71,6 +72,10 @@ async function submit(): Promise<void> {
     }
 }
 
+function continueAsGuest(): void {
+    checkout.setEmail(email.value.trim());
+}
+
 // One-page commit: silently sync a valid email into the store on blur (no error
 // nag mid-typing). Invalid/empty is left for the shopper to finish.
 async function syncEmail(): Promise<void> {
@@ -79,9 +84,7 @@ async function syncEmail(): Promise<void> {
         return;
     }
     accountExists.value = !(await checkout.checkEmailAvailable(value));
-    if (!accountExists.value) {
-        checkout.setEmail(value);
-    }
+    checkout.setEmail(value);
 }
 
 defineExpose({ submit });
@@ -107,10 +110,21 @@ defineExpose({ submit });
             @blur="hideAdvance ? syncEmail() : undefined"
         />
 
-        <p v-if="accountExists" role="alert" class="rounded-edge border border-ash-300 bg-alabaster p-4 text-sm text-ink-soft">
-            {{ t("accountExists", "An account already exists with this email.") }}
-            <a v-if="loginUrl" :href="loginUrl" class="font-mono text-xs uppercase tracking-eyebrow text-ink underline">{{ t("signIn", "Sign in") }}</a>
-        </p>
+        <div v-if="accountExists" data-account-exists role="status" class="flex flex-col gap-3 rounded-edge border border-ash-300 bg-alabaster p-4 text-sm text-ink-soft">
+            <p>{{ t("accountExists", "You already have an account with us. Sign in or continue as guest.") }}</p>
+            <div class="flex flex-wrap items-center gap-4">
+                <a v-if="loginUrl" :href="loginUrl" class="font-mono text-xs uppercase tracking-eyebrow text-ink underline">{{ t("signIn", "Sign in") }}</a>
+                <button
+                    v-if="!hideAdvance"
+                    type="button"
+                    data-continue-as-guest
+                    class="font-mono text-xs uppercase tracking-eyebrow text-ink underline"
+                    @click="continueAsGuest"
+                >
+                    {{ t("continueAsGuest", "Continue as guest") }}
+                </button>
+            </div>
+        </div>
 
         <button
             v-if="!hideAdvance"
