@@ -15,9 +15,12 @@
  */
 ?>
 <?php $criticalCssViewModel = $block->getData('criticalCssViewModel'); ?>
+<?php $criticalCssData = (string)$criticalCssViewModel->getCriticalCssData(); ?>
+<?php if ($criticalCssData !== ''): ?>
 <?= /* @noEscape */ $secureRenderer->renderTag(
     'style',
     ['type' => 'text/css', 'data-type' => 'criticalCss'],
-    (string)$criticalCssViewModel->getCriticalCssData(),
+    $criticalCssData,
     false
 ) ?>
+<?php endif; ?>
