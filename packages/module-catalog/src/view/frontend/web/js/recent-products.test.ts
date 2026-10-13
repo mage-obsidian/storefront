@@ -125,6 +125,45 @@ describe("filling the recently viewed and compared widgets", () => {
         expect(fetcher).not.toHaveBeenCalled();
     });
 
+    it("does not ask again for the products it is already showing", async () => {
+        document.body.innerHTML = CONFIG + widget("viewed");
+        remember("viewed", "4");
+        const fetcher = vi.fn(async () => "<article>Card</article>");
+
+        await Promise.all([fillWidgets({ now: NOW + 1000, fetcher }), fillWidgets({ now: NOW + 1000, fetcher })]);
+        await fillWidgets({ now: NOW + 1000, fetcher });
+
+        expect(fetcher).toHaveBeenCalledTimes(1);
+    });
+
+    it("asks again once the history changes", async () => {
+        document.body.innerHTML = CONFIG + widget("viewed");
+        remember("viewed", "4");
+        const fetcher = vi.fn(async () => "<article>Card</article>");
+
+        await fillWidgets({ now: NOW + 1000, fetcher });
+        record("viewed", "9", readConfig()!, { now: NOW + 2000 });
+        await fillWidgets({ now: NOW + 3000, fetcher });
+
+        expect(fetcher).toHaveBeenCalledTimes(2);
+        expect(fetcher).toHaveBeenLastCalledWith(expect.stringContaining("ids=9%2C4"));
+    });
+
+    it("tries again after a request that failed", async () => {
+        document.body.innerHTML = CONFIG + widget("viewed");
+        remember("viewed", "4");
+        const fetcher = vi
+            .fn<(url: string) => Promise<string>>()
+            .mockRejectedValueOnce(new Error("offline"))
+            .mockResolvedValue("<article>Card</article>");
+
+        await fillWidgets({ now: NOW + 1000, fetcher });
+        await fillWidgets({ now: NOW + 1000, fetcher });
+
+        expect(fetcher).toHaveBeenCalledTimes(2);
+        expect(section().hidden).toBe(false);
+    });
+
     it("hides a widget again once its history has lapsed", async () => {
         document.body.innerHTML = CONFIG + widget("viewed");
         remember("viewed", "4");

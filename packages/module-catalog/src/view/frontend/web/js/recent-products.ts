@@ -19,6 +19,8 @@ export interface FillOptions {
     remote?: (kind: RecentKind) => Entry[];
 }
 
+const requested = new WeakMap<HTMLElement, string>();
+
 async function defaultFetcher(url: string): Promise<string> {
     const response = await fetch(url, { credentials: "same-origin", headers: { "X-Requested-With": "XMLHttpRequest" } });
     if (!response.ok) {
@@ -47,15 +49,21 @@ async function fillOne(widget: HTMLElement, options: FillOptions): Promise<void>
         remote: config.sync ? options.remote?.(kind) : undefined,
     }).slice(0, count);
     if (ids.length === 0) {
+        requested.delete(widget);
         widget.hidden = true;
         return;
     }
-    const query = new URLSearchParams({ ids: ids.join(","), count: String(count) });
+    const target = `${url}?${new URLSearchParams({ ids: ids.join(","), count: String(count) }).toString()}`;
+    if (requested.get(widget) === target) {
+        return;
+    }
+    requested.set(widget, target);
     try {
-        const html = (await (options.fetcher ?? defaultFetcher)(`${url}?${query.toString()}`)).trim();
+        const html = (await (options.fetcher ?? defaultFetcher)(target)).trim();
         list.innerHTML = html;
         widget.hidden = html === "";
     } catch {
+        requested.delete(widget);
         widget.hidden = true;
     }
 }
