@@ -24,6 +24,7 @@
                    as="account_content" template="Magento_Wishlist::sharing.twig" cacheable="false">
                 <arguments>
                     <argument name="rss_allowed" xsi:type="helper" helper="Magento\Wishlist\Helper\Rss::isRssAllow"/>
+                    <argument name="view_model" xsi:type="object">MageObsidian\Wishlist\ViewModel\SharingTarget</argument>
                 </arguments>
                 <block class="Magento\Wishlist\Block\Customer\Sharing" name="customer.wishlist.sharing" as="sharing"/>
                 <block class="MageObsidian\ModernFrontend\Block\Template" name="captcha" as="captcha"
