@@ -12,3 +12,14 @@
 [data-add-to-wishlist].is-saved svg {
     fill: var(--color-accent);
 }
+
+textarea.wishlist-item__note {
+    min-height: 4rem;
+    resize: vertical;
+}
+
+@media (min-width: 40rem) {
+    textarea.wishlist-item__note {
+        min-height: 2.75rem;
+    }
+}
