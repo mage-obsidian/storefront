@@ -10,6 +10,9 @@
  * add/remove via AJAX. Guests fall through to the native POST (redirect to login).
  */
 import { watchEffect } from 'vue';
+import events from 'MageObsidian_ModernFrontend::js/events';
+import { MutationPhase } from 'mage-obsidian/runtime/mutationEvent.ts';
+import { listingEvent } from 'MageObsidian_Storefront::js/listing-events';
 import { requireCookies } from 'mage-obsidian/runtime/cookies.ts';
 import { useWishlist } from 'MageObsidian_Storefront::js/useWishlist';
 import { ensureFormKey } from 'MageObsidian_Storefront::js/form-key-provider';
@@ -20,14 +23,17 @@ function init(): void {
     ensureFormKey();
     const wishlist = useWishlist();
 
-    watchEffect(() => {
+    const reflect = (): void => {
         const saved = wishlist.saved.value;
         document.querySelectorAll<HTMLElement>('[data-add-to-wishlist]').forEach((form) => {
             const inList = String(form.dataset.productId ?? '') in saved;
             form.classList.toggle('is-saved', inList);
             form.querySelector('button')?.setAttribute('aria-pressed', inList ? 'true' : 'false');
         });
-    });
+    };
+
+    watchEffect(reflect);
+    events.observe(listingEvent(MutationPhase.After), reflect);
 
     document.addEventListener('submit', async (event) => {
         const form = (event.target as HTMLElement | null)?.closest?.<HTMLFormElement>('form[data-add-to-wishlist]');

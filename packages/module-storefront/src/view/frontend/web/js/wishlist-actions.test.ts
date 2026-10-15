@@ -4,6 +4,10 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { withCookiesOff, NO_COOKIES_URL } from "../../../../Test/Js/cookiesOff.ts";
+import events from "MageObsidian_ModernFrontend::js/events";
+import { __setSection, __reset } from "MageObsidian_ModernFrontend::js/customer-data";
+import { MutationPhase } from "mage-obsidian/runtime/mutationEvent.ts";
+import { listingEvent } from "./listing-events.ts";
 
 function heart(): HTMLFormElement {
     document.body.innerHTML = `
@@ -16,6 +20,7 @@ function heart(): HTMLFormElement {
 
 afterEach(() => {
     document.body.innerHTML = "";
+    __reset();
     vi.resetModules();
 });
 
@@ -41,5 +46,17 @@ describe("wishlist-actions", () => {
         form.dispatchEvent(submit);
 
         expect(submit.defaultPrevented).toBe(false);
+    });
+
+    it("marks the saved products on the cards a filtered listing swaps in", async () => {
+        __setSection("wishlist", { saved: { "7": "/wishlist/index/remove/item/1" } });
+        document.body.innerHTML = "";
+        await import("./wishlist-actions.ts");
+
+        const form = heart();
+        await events.dispatch(listingEvent(MutationPhase.After), { url: "/women.html", result: ["products"] });
+
+        expect(form.classList.contains("is-saved")).toBe(true);
+        expect(form.querySelector("button")?.getAttribute("aria-pressed")).toBe("true");
     });
 });

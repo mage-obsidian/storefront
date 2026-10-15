@@ -9,6 +9,9 @@
  * is-compared) reactively from the customer-data section and toggles via AJAX.
  */
 import { watchEffect } from 'vue';
+import events from 'MageObsidian_ModernFrontend::js/events';
+import { MutationPhase } from 'mage-obsidian/runtime/mutationEvent.ts';
+import { listingEvent } from 'MageObsidian_Storefront::js/listing-events';
 import { useCompare } from 'MageObsidian_Storefront::js/useCompare';
 import { ensureFormKey } from 'MageObsidian_Storefront::js/form-key-provider';
 import { i18n } from 'mage-obsidian/runtime/i18nCore.ts';
@@ -18,15 +21,17 @@ function init(): void {
     ensureFormKey();
     const compare = useCompare();
 
-    watchEffect(() => {
-        const items = compare.items.value;
-        const ids = new Set(items.map((item) => String(item.id)));
+    const reflect = (): void => {
+        const ids = new Set(compare.items.value.map((item) => String(item.id)));
         document.querySelectorAll<HTMLElement>('[data-add-to-compare]').forEach((form) => {
             const inList = ids.has(String(form.dataset.productId ?? ''));
             form.classList.toggle('is-compared', inList);
             form.querySelector('button')?.setAttribute('aria-pressed', inList ? 'true' : 'false');
         });
-    });
+    };
+
+    watchEffect(reflect);
+    events.observe(listingEvent(MutationPhase.After), reflect);
 
     document.addEventListener('submit', async (event) => {
         const form = (event.target as HTMLElement | null)?.closest?.<HTMLFormElement>('form[data-add-to-compare]');
