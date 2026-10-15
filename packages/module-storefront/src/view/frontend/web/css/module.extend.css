@@ -178,10 +178,53 @@
   }
 }
 
+button[aria-pressed="true"] > .toggle-label--off,
+button:not([aria-pressed="true"]) > .toggle-label--on {
+  display: none;
+}
+
+:is([data-add-to-compare], [data-add-to-wishlist]) button[aria-busy="true"] {
+  position: relative;
+  cursor: progress;
+}
+
+:is([data-add-to-compare], [data-add-to-wishlist]) .btn--icon[aria-busy="true"]::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  border: 2px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
+  border-top-color: var(--color-accent);
+  animation: obsidian-spin 0.7s linear infinite;
+  pointer-events: none;
+}
+
+:is([data-add-to-compare], [data-add-to-wishlist]) button:not(.btn--icon)[aria-busy="true"] svg {
+  display: none;
+}
+
+:is([data-add-to-compare], [data-add-to-wishlist]) button:not(.btn--icon)[aria-busy="true"]::before {
+  content: "";
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 9999px;
+  border: 2px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
+  border-top-color: var(--color-accent);
+  animation: obsidian-spin 0.7s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cart-count__ring,
-  .btn__spinner {
+  .btn__spinner,
+  :is([data-add-to-compare], [data-add-to-wishlist]) button[aria-busy="true"]::before,
+  :is([data-add-to-compare], [data-add-to-wishlist]) button[aria-busy="true"]::after {
     animation: none;
+  }
+
+  :is([data-add-to-compare], [data-add-to-wishlist]) button[aria-busy="true"]::before,
+  :is([data-add-to-compare], [data-add-to-wishlist]) .btn--icon[aria-busy="true"]::after {
+    border-color: var(--color-accent);
   }
 }
 
