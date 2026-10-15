@@ -394,6 +394,27 @@
     padding-block: 0.625rem;
   }
 
+  select.field__control:not([multiple], [size]),
+  .field-slot select:not([multiple], [size]) {
+    appearance: none;
+    padding-inline-end: 2.5rem;
+    background-image:
+      linear-gradient(45deg, transparent calc(50% - 0.7px), currentColor calc(50% - 0.7px), currentColor calc(50% + 0.7px), transparent calc(50% + 0.7px)),
+      linear-gradient(135deg, transparent calc(50% - 0.7px), currentColor calc(50% - 0.7px), currentColor calc(50% + 0.7px), transparent calc(50% + 0.7px));
+    background-position:
+      right 1.3125rem center,
+      right 0.9375rem center;
+    background-size: 0.375rem 0.375rem;
+    background-repeat: no-repeat;
+  }
+
+  select.field__control--compact:not([multiple], [size]) {
+    padding-inline-end: 2rem;
+    background-position:
+      right 1.0625rem center,
+      right 0.6875rem center;
+  }
+
   .field__control:focus,
   .field-slot :is(input, select, textarea):focus {
     border-color: var(--color-ink);
