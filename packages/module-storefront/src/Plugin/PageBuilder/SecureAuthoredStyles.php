@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace MageObsidian\Storefront\Plugin\PageBuilder;
 
 use Magento\Framework\Filter\Template;
+use MageObsidian\ModernFrontend\Service\Theme\ObsidianThemeDetector;
 use MageObsidian\Storefront\Model\PageBuilder\Enhancer;
 use MageObsidian\Storefront\Model\PageBuilder\ImageDimensions;
 use MageObsidian\Storefront\Model\PageBuilder\MapProvider;
@@ -33,12 +34,14 @@ class SecureAuthoredStyles
      * @param Enhancer $enhancer
      * @param ImageDimensions $imageDimensions
      * @param MapProvider $mapProvider
+     * @param ObsidianThemeDetector $themeDetector
      */
     public function __construct(
         private readonly StyleBlock $styleBlock,
         private readonly Enhancer $enhancer,
         private readonly ImageDimensions $imageDimensions,
-        private readonly MapProvider $mapProvider
+        private readonly MapProvider $mapProvider,
+        private readonly ObsidianThemeDetector $themeDetector
     ) {
     }
 
@@ -51,6 +54,10 @@ class SecureAuthoredStyles
      */
     public function afterFilter(Template $subject, $result): string
     {
+        if (!$this->themeDetector->isActive()) {
+            return (string)$result;
+        }
+
         return $this->enhancer->enhance(
             $this->mapProvider->inject(
                 $this->imageDimensions->inject($this->styleBlock->rewrite((string)$result))

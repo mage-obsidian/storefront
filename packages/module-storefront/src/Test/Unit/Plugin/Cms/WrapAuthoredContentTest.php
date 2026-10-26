@@ -11,6 +11,7 @@ namespace MageObsidian\Storefront\Test\Unit\Plugin\Cms;
 
 use Magento\Cms\Block\Block as CmsBlock;
 use Magento\Cms\Block\Page as CmsPage;
+use MageObsidian\ModernFrontend\Service\Theme\ObsidianThemeDetector;
 use MageObsidian\Storefront\Plugin\Cms\WrapAuthoredContent;
 use PHPUnit\Framework\TestCase;
 
@@ -26,7 +27,26 @@ class WrapAuthoredContentTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->plugin = new WrapAuthoredContent();
+        $this->plugin = new WrapAuthoredContent($this->detector(true));
+    }
+
+    public function testLeavesContentUnwrappedOutsideAnObsidianTheme(): void
+    {
+        $plugin = new WrapAuthoredContent($this->detector(false));
+
+        $page = $this->createStub(CmsPage::class);
+        $block = $this->createStub(CmsBlock::class);
+
+        $this->assertSame('<h2>Privacy</h2>', $plugin->afterToHtml($page, '<h2>Privacy</h2>'));
+        $this->assertSame('<p>Free shipping</p>', $plugin->afterToHtml($block, '<p>Free shipping</p>'));
+    }
+
+    private function detector(bool $active): ObsidianThemeDetector
+    {
+        $detector = $this->createStub(ObsidianThemeDetector::class);
+        $detector->method('isActive')->willReturn($active);
+
+        return $detector;
     }
 
     public function testWrapsPageContent(): void

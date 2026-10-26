@@ -11,6 +11,7 @@ namespace MageObsidian\Storefront\Plugin\View\Page\Config;
 
 use Magento\Framework\View\Page\Config as PageConfig;
 use Magento\Framework\View\Page\Config\Renderer;
+use MageObsidian\ModernFrontend\Service\Theme\ObsidianThemeDetector;
 use MageObsidian\Storefront\Model\Config\SeoConfig;
 use MageObsidian\Storefront\Model\Seo\MetaDescription;
 use MageObsidian\Storefront\Model\Seo\RobotsDirectives;
@@ -23,12 +24,17 @@ class HeadMetadata
         private readonly MetaDescription $metaDescription,
         private readonly RobotsDirectives $robotsDirectives,
         private readonly SocialMetaBuilder $socialMetaBuilder,
-        private readonly SeoConfig $config
+        private readonly SeoConfig $config,
+        private readonly ObsidianThemeDetector $themeDetector
     ) {
     }
 
     public function beforeRenderMetadata(Renderer $subject): void
     {
+        if (!$this->themeDetector->isActive()) {
+            return;
+        }
+
         $description = $this->metaDescription->derive();
         if ($description !== '') {
             $this->pageConfig->setDescription($description);

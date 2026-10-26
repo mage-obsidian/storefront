@@ -11,6 +11,7 @@ namespace MageObsidian\Storefront\Test\Unit\Plugin\View\Page\Config;
 
 use Magento\Framework\View\Page\Config as PageConfig;
 use Magento\Framework\View\Page\Config\Renderer;
+use MageObsidian\ModernFrontend\Service\Theme\ObsidianThemeDetector;
 use MageObsidian\Storefront\Model\Config\SeoConfig;
 use MageObsidian\Storefront\Model\Seo\MetaDescription;
 use MageObsidian\Storefront\Model\Seo\RobotsDirectives;
@@ -33,6 +34,7 @@ class HeadMetadataTest extends TestCase
     private SocialMetaBuilder&MockObject $socialMetaBuilder;
     private SeoConfig&MockObject $config;
     private Renderer&MockObject $renderer;
+    private ObsidianThemeDetector $themeDetector;
 
     protected function setUp(): void
     {
@@ -45,6 +47,8 @@ class HeadMetadataTest extends TestCase
         $this->socialMetaBuilder = $this->createMock(SocialMetaBuilder::class);
         $this->config = $this->createMock(SeoConfig::class);
         $this->renderer = $this->createMock(Renderer::class);
+        $this->themeDetector = $this->createStub(ObsidianThemeDetector::class);
+        $this->themeDetector->method('isActive')->willReturn(true);
 
         $this->pageConfig->method('getRobots')->willReturn('INDEX,FOLLOW');
         $this->pageConfig->method('getMetadata')->willReturn([]);
@@ -61,7 +65,8 @@ class HeadMetadataTest extends TestCase
             $this->metaDescription,
             $this->robotsDirectives,
             $this->socialMetaBuilder,
-            $this->config
+            $this->config,
+            $this->themeDetector
         );
     }
 
@@ -76,7 +81,8 @@ class HeadMetadataTest extends TestCase
             $metaDescription,
             $this->robotsDirectives,
             $this->socialMetaBuilder,
-            $this->config
+            $this->config,
+            $this->themeDetector
         ))->beforeRenderMetadata($this->renderer);
     }
 
@@ -100,7 +106,8 @@ class HeadMetadataTest extends TestCase
             $this->metaDescription,
             $robots,
             $this->socialMetaBuilder,
-            $this->config
+            $this->config,
+            $this->themeDetector
         ))->beforeRenderMetadata($this->renderer);
     }
 
@@ -131,7 +138,8 @@ class HeadMetadataTest extends TestCase
             $this->metaDescription,
             $this->robotsDirectives,
             $builder,
-            $this->config
+            $this->config,
+            $this->themeDetector
         ))->beforeRenderMetadata($this->renderer);
 
         $this->assertSame(
@@ -155,7 +163,8 @@ class HeadMetadataTest extends TestCase
             $this->metaDescription,
             $this->robotsDirectives,
             $builder,
-            $this->config
+            $this->config,
+            $this->themeDetector
         ))->beforeRenderMetadata($this->renderer);
     }
 
@@ -171,7 +180,33 @@ class HeadMetadataTest extends TestCase
             $this->metaDescription,
             $this->robotsDirectives,
             $builder,
-            $config
+            $config,
+            $this->themeDetector
+        ))->beforeRenderMetadata($this->renderer);
+    }
+
+    public function testLeavesTheHeadAsMagentoBuiltItOutsideAnObsidianTheme(): void
+    {
+        $detector = $this->createStub(ObsidianThemeDetector::class);
+        $detector->method('isActive')->willReturn(false);
+        $pageConfig = $this->createMock(PageConfig::class);
+        $pageConfig->expects($this->never())->method('setDescription');
+        $pageConfig->expects($this->never())->method('setRobots');
+        $pageConfig->expects($this->never())->method('setMetadata');
+        $metaDescription = $this->createMock(MetaDescription::class);
+        $metaDescription->expects($this->never())->method('derive');
+        $robots = $this->createMock(RobotsDirectives::class);
+        $robots->expects($this->never())->method('extend');
+        $builder = $this->createMock(SocialMetaBuilder::class);
+        $builder->expects($this->never())->method('build');
+
+        (new HeadMetadata(
+            $pageConfig,
+            $metaDescription,
+            $robots,
+            $builder,
+            $this->config,
+            $detector
         ))->beforeRenderMetadata($this->renderer);
     }
 }

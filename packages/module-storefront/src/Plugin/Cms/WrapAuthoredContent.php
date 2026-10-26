@@ -11,6 +11,7 @@ namespace MageObsidian\Storefront\Plugin\Cms;
 
 use Magento\Cms\Block\Block as CmsBlock;
 use Magento\Cms\Block\Page as CmsPage;
+use MageObsidian\ModernFrontend\Service\Theme\ObsidianThemeDetector;
 
 /**
  * Wraps merchant-authored CMS output in a class the theme can style.
@@ -29,6 +30,11 @@ class WrapAuthoredContent
 {
     public const string CONTENT_CLASS = 'cms-content';
 
+    public function __construct(
+        private readonly ObsidianThemeDetector $themeDetector
+    ) {
+    }
+
     /**
      * @param CmsPage|CmsBlock $subject
      * @param string $result
@@ -39,7 +45,7 @@ class WrapAuthoredContent
     {
         $html = (string)$result;
 
-        return trim($html) === ''
+        return trim($html) === '' || !$this->themeDetector->isActive()
             ? $html
             : sprintf('<div class="%s">%s</div>', self::CONTENT_CLASS, $html);
     }
