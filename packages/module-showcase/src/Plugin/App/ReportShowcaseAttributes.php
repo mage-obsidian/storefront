@@ -12,6 +12,7 @@ namespace MageObsidian\Showcase\Plugin\App;
 use Magento\Framework\App\FrontControllerInterface;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultInterface;
+use MageObsidian\ModernFrontend\Service\Theme\ObsidianThemeDetector;
 use MageObsidian\Showcase\Model\Telemetry\Attributes;
 use MageObsidian\Showcase\Model\Telemetry\RecorderInterface;
 use Throwable;
@@ -27,7 +28,8 @@ class ReportShowcaseAttributes
 {
     public function __construct(
         private readonly Attributes $attributes,
-        private readonly RecorderInterface $recorder
+        private readonly RecorderInterface $recorder,
+        private readonly ObsidianThemeDetector $themeDetector
     ) {
     }
 
@@ -37,6 +39,10 @@ class ReportShowcaseAttributes
         FrontControllerInterface $subject,
         ResponseInterface|ResultInterface $result
     ): ResponseInterface|ResultInterface {
+        if (!$this->themeDetector->isActive()) {
+            return $result;
+        }
+
         try {
             foreach ($this->attributes->collect() as $name => $value) {
                 $this->recorder->record($name, $value);

@@ -12,6 +12,7 @@ namespace MageObsidian\Showcase\Test\Unit\Plugin;
 use Magento\Framework\App\FrontControllerInterface;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultInterface;
+use MageObsidian\ModernFrontend\Service\Theme\ObsidianThemeDetector;
 use MageObsidian\Showcase\Model\Telemetry\Attributes;
 use MageObsidian\Showcase\Model\Telemetry\RecorderInterface;
 use MageObsidian\Showcase\Plugin\App\ReportShowcaseAttributes;
@@ -93,9 +94,22 @@ class ReportShowcaseAttributesTest extends TestCase
         $attributes->method('collect')->willThrowException(new RuntimeException('no store'));
         $response = $this->response();
 
-        $plugin = new ReportShowcaseAttributes($attributes, $this->recorder());
+        $plugin = new ReportShowcaseAttributes($attributes, $this->recorder(), $this->detector(true));
 
         $this->assertSame($response, $plugin->afterDispatch($this->frontController(), $response));
+    }
+
+    public function testReportsNothingOutsideAnObsidianTheme(): void
+    {
+        $attributes = $this->createMock(Attributes::class);
+        $attributes->expects($this->never())->method('collect');
+        $recorder = $this->recorder();
+        $response = $this->response();
+
+        $plugin = new ReportShowcaseAttributes($attributes, $recorder, $this->detector(false));
+
+        $this->assertSame($response, $plugin->afterDispatch($this->frontController(), $response));
+        $this->assertSame([], $recorder->recorded);
     }
 
     /**
@@ -106,7 +120,15 @@ class ReportShowcaseAttributesTest extends TestCase
         $attributes = $this->createMock(Attributes::class);
         $attributes->method('collect')->willReturn($collected);
 
-        return new ReportShowcaseAttributes($attributes, $recorder);
+        return new ReportShowcaseAttributes($attributes, $recorder, $this->detector(true));
+    }
+
+    private function detector(bool $active): ObsidianThemeDetector
+    {
+        $detector = $this->createStub(ObsidianThemeDetector::class);
+        $detector->method('isActive')->willReturn($active);
+
+        return $detector;
     }
 
     private function recorder(): RecorderInterface

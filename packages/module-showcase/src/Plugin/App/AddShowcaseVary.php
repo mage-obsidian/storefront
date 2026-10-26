@@ -11,6 +11,7 @@ namespace MageObsidian\Showcase\Plugin\App;
 
 use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\Http\Context as HttpContext;
+use MageObsidian\ModernFrontend\Service\Theme\ObsidianThemeDetector;
 use MageObsidian\Showcase\Model\Profile;
 
 /**
@@ -27,12 +28,17 @@ class AddShowcaseVary
 
     public function __construct(
         private readonly HttpContext $httpContext,
-        private readonly Profile $profile
+        private readonly Profile $profile,
+        private readonly ObsidianThemeDetector $themeDetector
     ) {
     }
 
     public function beforeExecute(ActionInterface $subject): void
     {
+        if (!$this->themeDetector->isActive()) {
+            return;
+        }
+
         $this->httpContext->setValue(
             self::CONTEXT_KEY,
             $this->profile->signature(),

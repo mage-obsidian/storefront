@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace MageObsidian\Showcase\Plugin\Config;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use MageObsidian\ModernFrontend\Service\Theme\ObsidianThemeDetector;
 use MageObsidian\Showcase\Model\Profile;
 
 /**
@@ -23,8 +24,10 @@ use MageObsidian\Showcase\Model\Profile;
  */
 class ApplyShowcaseOverrides
 {
-    public function __construct(private readonly Profile $profile)
-    {
+    public function __construct(
+        private readonly Profile $profile,
+        private readonly ObsidianThemeDetector $themeDetector
+    ) {
     }
 
     /**
@@ -46,7 +49,7 @@ class ApplyShowcaseOverrides
         }
 
         $override = $this->profile->overrides()[$path] ?? null;
-        if ($override === null) {
+        if ($override === null || !$this->themeDetector->isActive()) {
             return $result;
         }
         $this->profile->rememberOriginal($path, $result);
