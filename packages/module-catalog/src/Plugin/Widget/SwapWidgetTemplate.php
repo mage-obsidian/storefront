@@ -12,6 +12,7 @@ namespace MageObsidian\Catalog\Plugin\Widget;
 use Magento\Framework\View\Element\Template;
 use MageObsidian\Catalog\ViewModel\ProductCard;
 use MageObsidian\Catalog\ViewModel\RecentlyProducts;
+use MageObsidian\ModernFrontend\Service\Theme\ObsidianThemeDetector;
 
 class SwapWidgetTemplate
 {
@@ -37,12 +38,17 @@ class SwapWidgetTemplate
 
     public function __construct(
         private readonly ProductCard $card,
-        private readonly RecentlyProducts $recently
+        private readonly RecentlyProducts $recently,
+        private readonly ObsidianThemeDetector $themeDetector
     ) {
     }
 
     public function beforeToHtml(Template $subject): void
     {
+        if (!$this->themeDetector->isActive()) {
+            return;
+        }
+
         $key = $this->keyOf((string)$subject->getTemplate());
         if (!isset(self::TEMPLATES[$key])) {
             return;

@@ -11,6 +11,7 @@ namespace MageObsidian\Catalog\Plugin\CatalogWidget;
 
 use Magento\CatalogWidget\Block\Product\ProductsList;
 use MageObsidian\Catalog\ViewModel\ProductCard;
+use MageObsidian\ModernFrontend\Service\Theme\ObsidianThemeDetector;
 
 /**
  * Renders the product-list widget with this theme's own card.
@@ -42,9 +43,11 @@ class RenderProductListWidget
 
     /**
      * @param ProductCard $card
+     * @param ObsidianThemeDetector $themeDetector
      */
     public function __construct(
-        private readonly ProductCard $card
+        private readonly ProductCard $card,
+        private readonly ObsidianThemeDetector $themeDetector
     ) {
     }
 
@@ -55,6 +58,10 @@ class RenderProductListWidget
      */
     public function beforeToHtml(ProductsList $subject): void
     {
+        if (!$this->themeDetector->isActive()) {
+            return;
+        }
+
         if ($subject->getData('card') === null) {
             $subject->setData('card', $this->card);
         }

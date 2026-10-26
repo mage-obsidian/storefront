@@ -13,6 +13,7 @@ use Magento\Framework\View\Element\Template;
 use MageObsidian\Catalog\Plugin\Widget\SwapWidgetTemplate;
 use MageObsidian\Catalog\ViewModel\ProductCard;
 use MageObsidian\Catalog\ViewModel\RecentlyProducts;
+use MageObsidian\ModernFrontend\Service\Theme\ObsidianThemeDetector;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -44,9 +45,32 @@ class SwapWidgetTemplateTest extends TestCase
         return $block;
     }
 
-    private function plugin(): SwapWidgetTemplate
+    private function plugin(bool $obsidianTheme = true): SwapWidgetTemplate
     {
-        return new SwapWidgetTemplate($this->card, $this->recently);
+        $detector = $this->createStub(ObsidianThemeDetector::class);
+        $detector->method('isActive')->willReturn($obsidianTheme);
+
+        return new SwapWidgetTemplate($this->card, $this->recently, $detector);
+    }
+
+    public static function nativeWidgets(): array
+    {
+        return [
+            'new products' => ['product/widget/new/content/new_grid.phtml'],
+            'recently viewed' => ['product/widget/viewed/grid.phtml'],
+            'recently compared' => ['product/widget/compared/sidebar.phtml'],
+        ];
+    }
+
+    #[DataProvider('nativeWidgets')]
+    public function testOutsideAnObsidianThemeTheWidgetKeepsItsNativeTemplateAndData(string $core): void
+    {
+        $block = $this->block($core);
+
+        $this->plugin(false)->beforeToHtml($block);
+
+        $this->assertSame($core, $block->getTemplate());
+        $this->assertSame([], $block->getData());
     }
 
     public static function swapped(): array

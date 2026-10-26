@@ -12,6 +12,8 @@ namespace MageObsidian\Catalog\Test\Unit\Plugin\CatalogWidget;
 use Magento\CatalogWidget\Block\Product\ProductsList;
 use MageObsidian\Catalog\Plugin\CatalogWidget\RenderProductListWidget;
 use MageObsidian\Catalog\ViewModel\ProductCard;
+use MageObsidian\ModernFrontend\Service\Theme\ObsidianThemeDetector;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -60,7 +62,7 @@ class RenderProductListWidgetTest extends TestCase
         $widget = $this->widget(RenderProductListWidget::CORE_TEMPLATE);
         $card = $this->createMock(ProductCard::class);
 
-        (new RenderProductListWidget($card))->beforeToHtml($widget);
+        (new RenderProductListWidget($card, $this->detector(true)))->beforeToHtml($widget);
 
         $this->assertSame($card, $widget->getData('card'));
     }
@@ -105,14 +107,43 @@ class RenderProductListWidgetTest extends TestCase
         $widget = $this->widget(RenderProductListWidget::CORE_CAROUSEL_TEMPLATE);
         $card = $this->createMock(ProductCard::class);
 
-        (new RenderProductListWidget($card))->beforeToHtml($widget);
+        (new RenderProductListWidget($card, $this->detector(true)))->beforeToHtml($widget);
 
         $this->assertSame($card, $widget->getData('card'));
     }
 
+    public static function coreTemplates(): array
+    {
+        return [
+            'grid' => [RenderProductListWidget::CORE_TEMPLATE],
+            'carousel' => [RenderProductListWidget::CORE_CAROUSEL_TEMPLATE],
+            'no template' => [''],
+        ];
+    }
+
+    #[DataProvider('coreTemplates')]
+    public function testLeavesTheWidgetAsTheCoreBuiltItOutsideAnObsidianTheme(string $template): void
+    {
+        $widget = $this->widget($template);
+
+        (new RenderProductListWidget($this->createStub(ProductCard::class), $this->detector(false)))
+            ->beforeToHtml($widget);
+
+        $this->assertSame($template, $widget->getTemplate());
+        $this->assertNull($widget->getData('card'));
+    }
+
     private function plugin(): RenderProductListWidget
     {
-        return new RenderProductListWidget($this->createMock(ProductCard::class));
+        return new RenderProductListWidget($this->createMock(ProductCard::class), $this->detector(true));
+    }
+
+    private function detector(bool $active): ObsidianThemeDetector
+    {
+        $detector = $this->createStub(ObsidianThemeDetector::class);
+        $detector->method('isActive')->willReturn($active);
+
+        return $detector;
     }
 
     /**
