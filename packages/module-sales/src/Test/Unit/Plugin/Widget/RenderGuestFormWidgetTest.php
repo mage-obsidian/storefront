@@ -11,6 +11,7 @@ namespace MageObsidian\Sales\Test\Unit\Plugin\Widget;
 
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\LayoutInterface;
+use MageObsidian\ModernFrontend\Service\Theme\ObsidianThemeDetector;
 use MageObsidian\Sales\Plugin\Widget\RenderGuestFormWidget;
 use MageObsidian\Sales\ViewModel\OrdersReturnsForm;
 use PHPUnit\Framework\TestCase;
@@ -59,7 +60,7 @@ class RenderGuestFormWidgetTest extends TestCase
     {
         $block = $this->block('widget/guest/form.phtml');
 
-        (new RenderGuestFormWidget($this->viewModel))->beforeToHtml($block);
+        $this->plugin()->beforeToHtml($block);
 
         $this->assertSame(RenderGuestFormWidget::OBSIDIAN_TEMPLATE, $block->getTemplate());
         $this->assertCount(1, $this->created);
@@ -74,7 +75,7 @@ class RenderGuestFormWidgetTest extends TestCase
     {
         $block = $this->block('Magento_Sales::widget/guest/form.phtml');
 
-        (new RenderGuestFormWidget($this->viewModel))->beforeToHtml($block);
+        $this->plugin()->beforeToHtml($block);
 
         $this->assertSame(RenderGuestFormWidget::OBSIDIAN_TEMPLATE, $block->getTemplate());
     }
@@ -83,7 +84,7 @@ class RenderGuestFormWidgetTest extends TestCase
     {
         $block = $this->block('Vendor_Module::my/form.phtml');
 
-        (new RenderGuestFormWidget($this->viewModel))->beforeToHtml($block);
+        $this->plugin()->beforeToHtml($block);
 
         $this->assertSame('Vendor_Module::my/form.phtml', $block->getTemplate());
         $this->assertNull($block->getData('island'));
@@ -95,9 +96,28 @@ class RenderGuestFormWidgetTest extends TestCase
         $other = $this->createStub(Template::class);
         $block = $this->block('widget/guest/form.phtml', ['island' => $other]);
 
-        (new RenderGuestFormWidget($this->viewModel))->beforeToHtml($block);
+        $this->plugin()->beforeToHtml($block);
 
         $this->assertSame($other, $block->getData('island'));
         $this->assertSame([], $this->created);
+    }
+
+    public function testOutsideAnObsidianThemeTheCoreFormIsLeftToRender(): void
+    {
+        $block = $this->block('widget/guest/form.phtml');
+
+        $this->plugin(false)->beforeToHtml($block);
+
+        $this->assertSame('widget/guest/form.phtml', $block->getTemplate());
+        $this->assertNull($block->getData('island'));
+        $this->assertSame([], $this->created);
+    }
+
+    private function plugin(bool $obsidianTheme = true): RenderGuestFormWidget
+    {
+        $detector = $this->createStub(ObsidianThemeDetector::class);
+        $detector->method('isActive')->willReturn($obsidianTheme);
+
+        return new RenderGuestFormWidget($this->viewModel, $detector);
     }
 }

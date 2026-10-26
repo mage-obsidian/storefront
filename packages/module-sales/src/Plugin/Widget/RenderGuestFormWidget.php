@@ -11,6 +11,7 @@ namespace MageObsidian\Sales\Plugin\Widget;
 
 use Magento\Framework\View\Element\Template;
 use MageObsidian\ModernFrontend\Block\Template as IslandTemplate;
+use MageObsidian\ModernFrontend\Service\Theme\ObsidianThemeDetector;
 use MageObsidian\Sales\ViewModel\OrdersReturnsForm;
 
 class RenderGuestFormWidget
@@ -22,12 +23,17 @@ class RenderGuestFormWidget
     public const string ISLAND_TEMPLATE = 'Magento_Sales::widget/guest/island.twig';
 
     public function __construct(
-        private readonly OrdersReturnsForm $ordersReturns
+        private readonly OrdersReturnsForm $ordersReturns,
+        private readonly ObsidianThemeDetector $themeDetector
     ) {
     }
 
     public function beforeToHtml(Template $subject): void
     {
+        if (!$this->themeDetector->isActive()) {
+            return;
+        }
+
         $template = (string)$subject->getTemplate();
         $position = strpos($template, '::');
         $key = $position === false ? $template : substr($template, $position + 2);
