@@ -76,6 +76,14 @@ describe("bindPasswordToggles", () => {
         expect(href()).toContain("eye-slash.svg");
     });
 
+    it("draws its icon from the base the page publishes in its data block", () => {
+        document.head.innerHTML =
+            '<script type="application/json" data-mage-obsidian-config="icons">{"baseUrl":"/static/icons/"}</script>';
+        passwordField();
+
+        expect(toggle().querySelector("use")?.getAttribute("href")).toBe("/static/icons/20/solid/eye.svg#icon");
+    });
+
     it("keeps the caret in the field after toggling", () => {
         const input = passwordField();
 

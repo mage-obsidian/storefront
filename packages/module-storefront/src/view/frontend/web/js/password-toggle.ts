@@ -2,9 +2,10 @@
 //
 // SPDX-FileCopyrightText: 2024 Jeanmarcos Juarez
 // SPDX-License-Identifier: MIT
+import { PageConfig, readPageConfig } from "mage-obsidian/runtime/pageConfig.ts";
+
 const WRAPPER_CLASS = "field-password";
 const BUTTON_CLASS = "field-password__toggle";
-const ICON_BASE = "__MAGE_OBSIDIAN_ICONS__";
 
 interface ToggleLabels {
     show: string;
@@ -20,7 +21,7 @@ function labelsFor(input: HTMLInputElement): ToggleLabels {
 }
 
 function icon(name: string, doc: Document): SVGElement {
-    const base = (window as Window & { [ICON_BASE]?: { baseUrl?: string } })[ICON_BASE]?.baseUrl ?? "";
+    const base = (readPageConfig(PageConfig.Icons) as { baseUrl?: string } | undefined)?.baseUrl ?? "";
     const svg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("viewBox", "0 0 20 20");
     svg.setAttribute("fill", "currentColor");
