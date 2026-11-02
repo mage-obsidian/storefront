@@ -6,7 +6,7 @@
         "MIT"
     ],
     "require": {
-        "mage-obsidian/component-modern-frontend": "^4.1",
+        "mage-obsidian/component-modern-frontend": "^4.3",
         "mage-obsidian/module-catalog": "^4.2",
         "mage-obsidian/module-catalog-search": "^4.2",
         "mage-obsidian/module-checkout": "^4.2",
