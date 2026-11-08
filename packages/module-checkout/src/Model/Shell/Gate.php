@@ -40,7 +40,7 @@ class Gate
      */
     public function isCacheable(): bool
     {
-        if ((string)$this->request->getParam(self::BYPASS_PARAM) === self::BYPASS_VALUE_OFF) {
+        if ($this->request->getParam(self::BYPASS_PARAM) === self::BYPASS_VALUE_OFF) {
             return false;
         }
 

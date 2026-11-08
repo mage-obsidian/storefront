@@ -41,7 +41,7 @@ class ListingNavigation implements ArgumentInterface
             return false;
         }
 
-        if ((string)$this->request->getParam(RequestParameter::OptOut->value, '') === RequestParameter::VALUE_OFF) {
+        if ($this->request->getParam(RequestParameter::OptOut->value) === RequestParameter::VALUE_OFF) {
             return false;
         }
 

@@ -30,7 +30,9 @@ class CheckoutContext implements ArgumentInterface
 
     public function getReferer(): string
     {
-        return (string)$this->request->getParam('referer', '');
+        $referer = $this->request->getParam('referer');
+
+        return is_string($referer) ? $referer : '';
     }
 
     public function urlTo(string $route): string

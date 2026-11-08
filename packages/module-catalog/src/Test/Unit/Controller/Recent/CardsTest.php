@@ -91,6 +91,17 @@ class CardsTest extends TestCase
         $this->assertSame('', $this->contents);
     }
 
+    public function testIdsArrivingAsAnArrayAnswerLikeNoIdsAtAll(): void
+    {
+        $controller = $this->controller(['ids' => ['1']], [], watch: true);
+        $this->selection->expects($this->once())->method('load')->with([], Cards::DEFAULT_COUNT)->willReturn([]);
+
+        $controller->execute();
+
+        $this->assertSame('', $this->contents);
+        $this->assertNull($this->code);
+    }
+
     public function testTheCardsBlockIsRenderedWithTheProductsFound(): void
     {
         $products = [$this->createStub(Product::class)];

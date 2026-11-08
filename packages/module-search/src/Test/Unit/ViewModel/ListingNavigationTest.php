@@ -37,6 +37,11 @@ class ListingNavigationTest extends TestCase
         $this->assertFalse($this->viewModel(true, self::ACTION, RequestParameter::VALUE_OFF)->isEnabled());
     }
 
+    public function testAnOptOutArrivingAsAnArrayIsIgnored(): void
+    {
+        $this->assertTrue($this->viewModel(true, self::ACTION, [RequestParameter::VALUE_OFF])->isEnabled());
+    }
+
     public function testItIsOffOnAPageWithNoConfiguredSections(): void
     {
         $this->assertFalse($this->viewModel(true, 'cms_index_index', '')->isEnabled());
@@ -86,7 +91,7 @@ class ListingNavigationTest extends TestCase
     private function viewModel(
         bool $enabled,
         string $actionName,
-        string $optOut,
+        string|array $optOut,
         string $generatedUrl = 'https://shop.test/men/tops-men.html',
         string $requestUri = '/men/tops-men.html'
     ): ListingNavigation {

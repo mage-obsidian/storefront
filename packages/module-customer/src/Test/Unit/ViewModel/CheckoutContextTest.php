@@ -77,6 +77,11 @@ class CheckoutContextTest extends TestCase
         $this->assertSame('abc', $this->viewModel(['context' => 'checkout', 'referer' => 'abc'])->getReferer());
     }
 
+    public function testAWayBackArrivingAsAnArrayCountsAsNone(): void
+    {
+        $this->assertSame('', $this->viewModel(['context' => 'checkout', 'referer' => ['abc']])->getReferer());
+    }
+
     public function testItHasNoWayBackWhenNoneWasGiven(): void
     {
         $this->assertSame('', $this->viewModel(['context' => 'checkout'])->getReferer());

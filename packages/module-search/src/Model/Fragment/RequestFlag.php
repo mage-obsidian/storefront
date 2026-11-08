@@ -42,7 +42,7 @@ class RequestFlag
 
         $name = RequestParameter::Fragment->value;
         $query = $this->request->getQuery();
-        $this->requested = ((string)($query[$name] ?? '')) === RequestParameter::VALUE_ON;
+        $this->requested = ($query[$name] ?? null) === RequestParameter::VALUE_ON;
 
         if ($this->requested) {
             unset($query[$name]);

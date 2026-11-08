@@ -36,6 +36,14 @@ class RequestFlagTest extends TestCase
         $this->assertFalse((new RequestFlag($request))->consume());
     }
 
+    public function testItIsNotRequestedWhenTheParameterArrivesAsAnArray(): void
+    {
+        $request = $this->request([self::PARAM => ['1']], '/men/tops-men.html?obsidian_fragment[]=1');
+        $request->expects($this->never())->method('setRequestUri');
+
+        $this->assertFalse((new RequestFlag($request))->consume());
+    }
+
     public function testItStripsTheParameterFromTheQueryContainer(): void
     {
         $query = new ArrayObject([self::PARAM => '1', 'color' => '59']);

@@ -37,8 +37,9 @@ class Cards implements HttpGetActionInterface
         $result->setHeader('Content-Type', 'text/html; charset=UTF-8', true);
         $result->setHeader('Cache-Control', 'no-store, private', true);
 
+        $ids = $this->request->getParam('ids');
         $products = $this->selection->load(
-            $this->selection->idsFrom((string)$this->request->getParam('ids', '')),
+            $this->selection->idsFrom(is_string($ids) ? $ids : ''),
             $this->count()
         );
         if ($products === []) {

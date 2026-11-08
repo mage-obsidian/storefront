@@ -54,7 +54,12 @@ class GateTest extends TestCase
         $this->assertTrue($this->gate(flagOn: true, bypass: 'yes')->isCacheable());
     }
 
-    private function gate(bool $flagOn, ?string $bypass): Gate
+    public function testABypassArrivingAsAnArrayIsIgnored(): void
+    {
+        $this->assertTrue($this->gate(flagOn: true, bypass: ['0'])->isCacheable());
+    }
+
+    private function gate(bool $flagOn, string|array|null $bypass): Gate
     {
         $config = $this->createMock(ConfigProvider::class);
         $config->method('isCheckoutShellCacheable')->willReturn($flagOn);
