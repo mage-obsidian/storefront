@@ -19,7 +19,7 @@
     <body>
         <referenceContainer name="content">
             <block class="Magento\SendFriend\Block\Send" name="sendfriend.send"
-                   template="Magento_SendFriend::send.twig">
+                   template="Magento_SendFriend::send.twig" cacheable="false">
                 <!-- The reCAPTCHA slot. Renders nothing unless the store configured a
                      challenge for this form. -->
                 <block class="MageObsidian\ModernFrontend\Block\Template" name="sendfriend.recaptcha" as="recaptcha"
