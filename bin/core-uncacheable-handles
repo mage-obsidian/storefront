@@ -1,0 +1,23 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use MageObsidian\Monorepo\UncacheableHandles;
+
+require __DIR__ . '/../vendor/autoload.php';
+
+$magentoRoot = $argv[1] ?? '';
+if ($magentoRoot === '' || !is_dir($magentoRoot . '/vendor')) {
+    fwrite(STDERR, "usage: bin/core-uncacheable-handles <magento root with vendor/>\n");
+    exit(2);
+}
+
+$snapshot = UncacheableHandles::core(realpath($magentoRoot));
+$target = dirname(__DIR__) . '/tools/data/core-uncacheable-handles.json';
+if (!is_dir(dirname($target))) {
+    mkdir(dirname($target), 0777, true);
+}
+file_put_contents($target, json_encode($snapshot, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . "\n");
+
+fwrite(STDOUT, sprintf("%d handles from %s written to tools/data/core-uncacheable-handles.json\n", count($snapshot['handles']), $snapshot['magento']));

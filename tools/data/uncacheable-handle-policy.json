@@ -1,0 +1,9 @@
+{
+    "exceptions": {
+        "checkout_index_index": "the checkout shell is cached on purpose, and MakeCheckoutUncacheable takes the page out of the cache whenever the shell is off"
+    },
+    "required": {
+        "checkout_cart_configure": "it renders the options, text and quantity the cart owner chose, and core leaves it to the VCL pass on /checkout",
+        "wishlist_index_configure": "it renders the selection the customer saved in the wish list, and core leaves it unmarked"
+    }
+}
