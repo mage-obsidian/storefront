@@ -431,7 +431,16 @@ class CheckoutConfig implements ArgumentInterface
             $data = $this->agreementsConfigProvider->getConfig()['checkoutAgreements'] ?? [];
             return [
                 'enabled' => (bool)($data['isEnabled'] ?? false),
-                'items' => $data['agreements'] ?? [],
+                'items' => array_map(
+                    static fn (array $agreement): array => [
+                        'agreementId' => (int)($agreement['agreementId'] ?? 0),
+                        'mode' => (int)($agreement['mode'] ?? 0),
+                        'content' => (string)($agreement['content'] ?? ''),
+                        'checkboxText' => (string)($agreement['checkboxText'] ?? ''),
+                        'contentHeight' => (string)($agreement['contentHeight'] ?? ''),
+                    ] + $agreement,
+                    array_values($data['agreements'] ?? [])
+                ),
             ];
         } catch (Throwable) {
             return ['enabled' => false, 'items' => []];

@@ -69,7 +69,7 @@ class CheckoutConfigTest extends TestCase
             isLoggedIn: false,
             maskedId: 'guestmask123',
             agreementsEnabled: true,
-            agreementItems: [['agreementId' => 7, 'mode' => 1, 'content' => 'Terms', 'checkboxText' => 'I agree', 'contentHeight' => '']]
+            agreementItems: [['agreementId' => '7', 'mode' => '1', 'content' => 'Terms', 'checkboxText' => 'I agree', 'contentHeight' => '']]
         )->getConfig();
 
         $this->assertTrue($config['guestCheckout']);
@@ -78,6 +78,41 @@ class CheckoutConfigTest extends TestCase
         $this->assertSame(25, $config['maxSummaryItems']);
         $this->assertTrue($config['agreements']['enabled']);
         $this->assertSame(7, $config['agreements']['items'][0]['agreementId']);
+    }
+
+    public function testAgreementsArriveWithTheTypesTheCheckoutComparesAgainst(): void
+    {
+        $config = $this->viewModel(
+            isLoggedIn: false,
+            maskedId: 'guestmask123',
+            agreementsEnabled: true,
+            agreementItems: [
+                ['agreementId' => '7', 'mode' => '1', 'content' => 'Terms', 'checkboxText' => 'I agree', 'contentHeight' => null],
+                ['agreementId' => '8', 'mode' => '0', 'content' => 'Auto', 'checkboxText' => 'Placing the order accepts', 'contentHeight' => '4rem'],
+            ]
+        )->getConfig();
+
+        $this->assertSame(
+            [
+                ['agreementId' => 7, 'mode' => 1, 'content' => 'Terms', 'checkboxText' => 'I agree', 'contentHeight' => ''],
+                ['agreementId' => 8, 'mode' => 0, 'content' => 'Auto', 'checkboxText' => 'Placing the order accepts', 'contentHeight' => '4rem'],
+            ],
+            $config['agreements']['items']
+        );
+    }
+
+    public function testAgreementsKeepTheFieldsAnotherModuleAdds(): void
+    {
+        $config = $this->viewModel(
+            isLoggedIn: false,
+            maskedId: 'guestmask123',
+            agreementsEnabled: true,
+            agreementItems: [
+                ['agreementId' => '7', 'mode' => '1', 'content' => 'Terms', 'checkboxText' => 'I agree', 'contentHeight' => '', 'region' => 'eu'],
+            ]
+        )->getConfig();
+
+        $this->assertSame('eu', $config['agreements']['items'][0]['region']);
     }
 
     /**
